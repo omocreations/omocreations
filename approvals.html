@@ -45,7 +45,13 @@
       100% { box-shadow: 0 0 0 0 rgba(255, 77, 166, 0); }
     }
     
-    /* Sidebar with Gradient Background matching homepage */
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 5px #ff4da6, 0 0 10px #ff4da6; }
+      50% { box-shadow: 0 0 15px #ff4da6, 0 0 30px #ff4da6; }
+      100% { box-shadow: 0 0 5px #ff4da6, 0 0 10px #ff4da6; }
+    }
+    
+    /* Sidebar with Gradient Background */
     .sidebar { 
       width: var(--sidebar-width); 
       background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%); 
@@ -53,12 +59,34 @@
       position: fixed; 
       height: 100vh; 
       overflow-y: auto; 
-      transition: transform 0.3s ease, width 0.25s ease; 
+      transition: width 0.25s ease, transform 0.3s ease; 
       z-index: 1000; 
       border-right: 1px solid rgba(255, 77, 166, 0.2);
     }
     
-    /* Mobile sidebar - hidden by default */
+    /* Desktop collapsed sidebar - expands on hover */
+    @media (min-width: 769px) {
+      .sidebar.collapsed { 
+        width: var(--sidebar-collapsed); 
+      }
+      .sidebar.collapsed:hover {
+        width: var(--sidebar-width);
+      }
+      .sidebar.collapsed:hover .logo-text,
+      .sidebar.collapsed:hover .nav-text,
+      .sidebar.collapsed:hover .user-details,
+      .sidebar.collapsed:hover .nav-section-title {
+        display: block;
+      }
+      .sidebar.collapsed .logo-text,
+      .sidebar.collapsed .nav-text,
+      .sidebar.collapsed .user-details,
+      .sidebar.collapsed .nav-section-title {
+        display: none;
+      }
+    }
+    
+    /* Mobile sidebar - slides in */
     @media (max-width: 768px) {
       .sidebar {
         transform: translateX(-100%);
@@ -67,12 +95,8 @@
       .sidebar.mobile-open {
         transform: translateX(0);
       }
-    }
-    
-    /* Desktop collapsed sidebar */
-    @media (min-width: 769px) {
-      .sidebar.collapsed { 
-        width: var(--sidebar-collapsed); 
+      .sidebar.collapsed {
+        transform: translateX(-100%);
       }
     }
     
@@ -142,11 +166,6 @@
       }
     }
     
-    .sidebar.collapsed .logo-text, 
-    .sidebar.collapsed .nav-text, 
-    .sidebar.collapsed .user-details, 
-    .sidebar.collapsed .nav-section-title { display: none; }
-    
     .sidebar-nav { 
       padding: 20px 12px; 
       display: flex; 
@@ -208,17 +227,6 @@
     .nav-item.logout:hover {
       background: rgba(239,68,68,0.15);
       color: #ef4444;
-    }
-    
-    .nav-item .nav-badge { 
-      margin-left: auto; 
-      background: linear-gradient(135deg, var(--danger), #dc2626);
-      color: white; 
-      font-size: 0.65rem; 
-      font-weight: 700; 
-      padding: 2px 8px; 
-      border-radius: 30px; 
-      display: inline-block; 
     }
     
     .sidebar-footer { 
@@ -394,12 +402,6 @@
       color: white;
     }
     
-    @keyframes pulseGlow {
-      0% { box-shadow: 0 0 5px #ff4da6, 0 0 10px #ff4da6; }
-      50% { box-shadow: 0 0 15px #ff4da6, 0 0 30px #ff4da6; }
-      100% { box-shadow: 0 0 5px #ff4da6, 0 0 10px #ff4da6; }
-    }
-    
     /* Panels */
     .panel { 
       background: white; 
@@ -457,8 +459,6 @@
     /* Badges */
     .badge { padding: 5px 12px; border-radius: 40px; font-size: 0.7rem; font-weight: 600; display: inline-block; }
     .badge-pending { background: rgba(107,114,128,0.1); color: var(--gray); }
-    .badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
-    .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
     .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
     
     /* Buttons */
@@ -524,7 +524,7 @@
       .content-wrapper { padding: 16px; } 
       .top-bar { padding: 0 16px; }
       .page-title { font-size: 1.2rem; }
-      .tab { padding: 8px 12px; font-size: 0.75rem; }
+      .tab { padding: 10px 12px; font-size: 0.75rem; }
     }
   </style>
 </head>
@@ -534,7 +534,7 @@
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Sidebar -->
-<aside class="sidebar" id="sidebar">
+<aside class="sidebar collapsed" id="sidebar">
   <div class="sidebar-header">
     <div class="logo-area">
       <div class="logo-icon">✨</div>
@@ -631,7 +631,7 @@
     <div id="itemsPanel" class="page-view active">
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-box"></i> Pending Stock Items</h3><button class="btn btn-outline btn-sm" onclick="refreshAll()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Unit Price</th><th>Added By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="itemsTable"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div></div>NonNull</tr></tbody></table></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Unit Price</th><th>Added By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="itemsTable"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div></div>NonNull</tbody></table></div>
       </div>
     </div>
     
@@ -639,7 +639,7 @@
     <div id="purchasesPanel" class="page-view">
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-shopping-cart"></i> Pending Purchase Requests</h3><button class="btn btn-outline btn-sm" onclick="refreshAll()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Requested By</th><th>Items</th><th>Est. Total</th><th>Date</th><th>Note</th><th>Actions</th></tr></thead><tbody id="purchasesTable"><tr><td colspan="6"><div class="loading-state"><div class="spinner"></div></div>NonNull</tr></tbody></table></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Requested By</th><th>Items</th><th>Est. Total</th><th>Date</th><th>Note</th><th>Actions</th></tr></thead><tbody id="purchasesTable"><tr><td colspan="6"><div class="loading-state"><div class="spinner"></div></div>NonNull</tbody></table></div>
       </div>
     </div>
     
@@ -647,7 +647,7 @@
     <div id="customersPanel" class="page-view">
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-users"></i> Pending Customer Approvals</h3><button class="btn btn-outline btn-sm" onclick="refreshAll()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Birthday</th><th>Added By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="customersTable"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div></div>NonNull</tr></tbody></td></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Birthday</th><th>Added By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="customersTable"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div></div>NonNull</tbody></table></div>
       </div>
     </div>
     
@@ -655,7 +655,7 @@
     <div id="leavePanel" class="page-view">
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-calendar-check"></i> Pending Leave Requests</h3><button class="btn btn-outline btn-sm" onclick="refreshAll()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Staff</th><th>Requested Dates</th><th>Reason</th><th>Requested On</th><th>Actions</th></tr></thead><tbody id="leaveTable"><tr><td colspan="5"><div class="loading-state"><div class="spinner"></div></div>NonNull</tr></tbody></table></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Staff</th><th>Requested Dates</th><th>Reason</th><th>Requested On</th><th>Actions</th></tr></thead><tbody id="leaveTable"><tr><td colspan="5"><div class="loading-state"><div class="spinner"></div></div>NonNull</tbody><tr></div>
       </div>
     </div>
     
@@ -720,7 +720,7 @@
       items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       updateCountBadge('itemCount', items.length);
       const tbody = document.getElementById('itemsTable'); tbody.innerHTML = '';
-      if (items.length === 0) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-box"></i><p>No pending stock items</p></div>NonNull</td></tr>'; return; }
+      if (items.length === 0) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-box"></i><p>No pending stock items</p></div>NonNull</div>'; return; }
       items.forEach(i => { tbody.innerHTML += `<tr>
         <td><strong>${i.name||'-'}</strong></td>
         <td><span class="badge badge-info">${i.category||'-'}</span></td>
@@ -744,13 +744,10 @@
       purchases.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       updateCountBadge('purchaseCount', purchases.length);
       const tbody = document.getElementById('purchasesTable'); tbody.innerHTML = '';
-      if (purchases.length === 0) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-shopping-cart"></i><p>No pending purchase requests</p></div>NonNull</tr></tr>'; return; }
+      if (purchases.length === 0) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-shopping-cart"></i><p>No pending purchase requests</p></div>NonNull</div>'; return; }
       purchases.forEach(p => { const total = p.items?.reduce((s,i)=>s+((i.suggested||0)*(i.price||0)),0)||0; tbody.innerHTML += `<tr>
         <td>${p.requestedByName||'-'}</td>
-        <td>${p.items?.length||0} items</td>
-        <td>${formatCurrency(total)}</td>
-        <td>${formatDate(p.createdAt)}</td>
-        <td>${p.note||'-'}NonNull</td>
+        <td>${p.items?.length||0} items</td><td>${formatCurrency(total)}</td><td>${formatDate(p.createdAt)}</td><td>${p.note||'-'}</td>
         <td style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="window.approvePurchase('${p.id}')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-sm btn-danger" onclick="window.rejectPurchase('${p.id}')"><i class="fas fa-times"></i> Reject</button></td>
       </div>`; });
     }));
@@ -767,7 +764,7 @@
       customers.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       updateCountBadge('customerCount', customers.length);
       const tbody = document.getElementById('customersTable'); tbody.innerHTML = '';
-      if (customers.length === 0) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No pending customers</p></div>NonNull</tr></tr>'; return; }
+      if (customers.length === 0) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No pending customers</p></div>NonNull</div>'; return; }
       customers.forEach(c => { tbody.innerHTML += `<tr>
         <td><strong>${c.fullName||'-'}</strong></td>
         <td>${c.phone||'-'}</td>
@@ -791,7 +788,7 @@
       requests.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       updateCountBadge('leaveCount', requests.length);
       const tbody = document.getElementById('leaveTable'); tbody.innerHTML = '';
-      if (requests.length === 0) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-calendar"></i><p>No pending leave requests</p></div>NonNull</tr></tr>'; return; }
+      if (requests.length === 0) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-calendar"></i><p>No pending leave requests</p></div>NonNull</div>'; return; }
       for (const l of requests) { 
         const u = await getDoc(doc(db, 'users', l.userId)); 
         const name = u.exists() ? u.data().fullName : 'Unknown'; 
