@@ -16,8 +16,27 @@
     /* Top Bar */
     .top-bar { height: var(--header-height); background: rgba(255,255,255,0.98); backdrop-filter: blur(12px); padding: 0 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,77,166,0.15); position: sticky; top: 0; z-index: 50; }
     .top-bar-left { display: flex; align-items: center; gap: 18px; }
-    .back-btn { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 10px 24px; border-radius: 30px; text-decoration: none; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; font-family: 'Poppins', sans-serif; }
-    .back-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255,77,166,0.3); }
+    .back-btn { 
+      background: var(--primary-soft); 
+      border: none; 
+      color: var(--primary); 
+      cursor: pointer; 
+      padding: 10px 16px; 
+      border-radius: 10px; 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+      transition: all 0.2s; 
+      font-family: 'Poppins', sans-serif; 
+      text-decoration: none; 
+    }
+    .back-btn:hover { 
+      background: var(--primary); 
+      color: white;
+      transform: translateX(-3px);
+    }
     .page-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
     .content-wrapper { padding: 28px; max-width: 1600px; margin: 0 auto; }
     
@@ -100,15 +119,15 @@
     .export-item:hover { background: var(--primary-soft); }
     
     @media (max-width: 992px) { .charts-row { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .revenue-breakdown { grid-template-columns: 1fr; } }
-    @media (max-width: 768px) { .content-wrapper { padding: 16px; } .stats-grid { grid-template-columns: 1fr; } .settings-card { flex-direction: column; text-align: center; } .top-bar { padding: 0 16px; } .page-title { font-size: 1.2rem; } .back-btn { padding: 6px 16px; font-size: 0.75rem; } }
+    @media (max-width: 768px) { .content-wrapper { padding: 16px; } .stats-grid { grid-template-columns: 1fr; } .settings-card { flex-direction: column; text-align: center; } .top-bar { padding: 0 16px; } .page-title { font-size: 1.2rem; } }
   </style>
 </head>
 <body>
 
-<main class="main-content">
+<main>
   <header class="top-bar">
     <div class="top-bar-left">
-      <a href="admin-dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+      <a href="admin-dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Admin Dashboard</a>
       <h1 class="page-title">Finance & Accounting</h1>
     </div>
     <div style="color:var(--gray); font-size:0.85rem;">
@@ -195,36 +214,62 @@
   import { getFirestore, doc, getDoc, collection, getDocs, query, where, updateDoc, setDoc, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
-  const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig); 
+  const auth = getAuth(app); 
+  const db = getFirestore(app);
   let currentUser = null, userData = null, barChart = null, pieChart = null, globalPointValue = 500;
 
-  function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
-  function showToast(msg, type='success') { const c = document.getElementById('toastContainer'); const t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i><span>${msg}</span>`; c.appendChild(t); setTimeout(() => t.classList.add('show'), 10); setTimeout(() => t.remove(), 4000); }
+  function formatCurrency(n) { 
+    return '₦' + (n || 0).toLocaleString(); 
+  }
+  
+  function showToast(msg, type='success') { 
+    const c = document.getElementById('toastContainer'); 
+    const t = document.createElement('div'); 
+    t.className = `toast ${type}`; 
+    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i><span>${msg}</span>`; 
+    c.appendChild(t); 
+    setTimeout(() => t.classList.add('show'), 10); 
+    setTimeout(() => t.remove(), 4000); 
+  }
 
   async function loadPointValue() {
     const snap = await getDoc(doc(db, 'system_settings', 'points'));
-    if (snap.exists()) { globalPointValue = snap.data().value || 500; document.getElementById('pointValueInput').value = globalPointValue; }
-    else { await setDoc(doc(db, 'system_settings', 'points'), { value: 500, updatedAt: serverTimestamp() }); globalPointValue = 500; }
+    if (snap.exists()) { 
+      globalPointValue = snap.data().value || 500; 
+      document.getElementById('pointValueInput').value = globalPointValue; 
+    } else { 
+      await setDoc(doc(db, 'system_settings', 'points'), { value: 500, updatedAt: serverTimestamp() }); 
+      globalPointValue = 500; 
+    }
   }
 
   window.updatePointValue = async () => {
     const newValue = parseInt(document.getElementById('pointValueInput').value) || 500;
     await setDoc(doc(db, 'system_settings', 'points'), { value: newValue, updatedBy: currentUser.uid, updatedAt: serverTimestamp() });
     const users = await getDocs(query(collection(db, 'users'), where('role', 'in', ['staff','attendant','attendant_chief'])));
-    const batch = writeBatch(db); users.forEach(d => batch.update(d.ref, { pointValueNaira: newValue })); await batch.commit();
-    globalPointValue = newValue; showToast(`Point value set to ₦${newValue} per 5 points`, 'success'); loadFinanceData();
+    const batch = writeBatch(db); 
+    users.forEach(d => batch.update(d.ref, { pointValueNaira: newValue })); 
+    await batch.commit();
+    globalPointValue = newValue; 
+    showToast(`Point value set to ₦${newValue} per 5 points`, 'success'); 
+    loadFinanceData();
   };
 
   async function loadFinanceData() {
     await loadPointValue();
-    const now = new Date(); const thisMonth = now.getMonth(); const thisYear = now.getFullYear();
+    const now = new Date(); 
+    const thisMonth = now.getMonth(); 
+    const thisYear = now.getFullYear();
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     
-    const salesSnap = await getDocs(collection(db, 'sales')); const monthlyData = {}; 
+    const salesSnap = await getDocs(collection(db, 'sales')); 
+    const monthlyData = {}; 
     let revenueMTD = 0, revenueLastMonth = 0, cashSales = 0, posSales = 0, walkinSales = 0;
     
     salesSnap.forEach(d => { 
-      const s = d.data(); const date = s.createdAt?.toDate(); 
+      const s = d.data(); 
+      const date = s.createdAt?.toDate(); 
       if (date) { 
         const key = `${date.getFullYear()}-${date.getMonth()}`; 
         if (!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0 }; 
@@ -242,25 +287,41 @@
     const purchaseSnap = await getDocs(collection(db, 'purchase_requests')); 
     let expensesMTD = 0, expensesLastMonth = 0, purchasesMTD = 0;
     purchaseSnap.forEach(d => { 
-      const p = d.data(); if (p.status === 'purchased') { 
-        const date = p.purchasedAt?.toDate(); if (date) { 
+      const p = d.data(); 
+      if (p.status === 'purchased') { 
+        const date = p.purchasedAt?.toDate(); 
+        if (date) { 
           const key = `${date.getFullYear()}-${date.getMonth()}`; 
           if (!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0 }; 
           const total = p.receivedItems?.reduce((s,i) => s + ((i.received||i.suggested) * (i.price||i.unitPrice)), 0) || 0; 
           monthlyData[key].purchases += total; 
-          if (date.getMonth() === thisMonth && date.getFullYear() === thisYear) { expensesMTD += total; purchasesMTD += total; }
+          if (date.getMonth() === thisMonth && date.getFullYear() === thisYear) { 
+            expensesMTD += total; 
+            purchasesMTD += total; 
+          }
           if (date.getMonth() === thisMonth-1 && date.getFullYear() === thisYear) expensesLastMonth += total; 
         } 
       } 
     });
     
     const usersSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['staff','attendant','attendant_chief']), where('status', '==', 'active')));
-    let totalPayroll = 0; const salaryRows = [];
-    usersSnap.forEach(d => { const u = d.data(); const baseSalary = u.baseSalary || 0; const points = u.totalPoints || 0; const pointBonus = points * (globalPointValue / 5); const finalSalary = baseSalary + pointBonus; totalPayroll += finalSalary; salaryRows.push({ name: u.fullName, role: u.role, baseSalary, points, pointBonus, finalSalary }); });
+    let totalPayroll = 0; 
+    const salaryRows = [];
+    usersSnap.forEach(d => { 
+      const u = d.data(); 
+      const baseSalary = u.baseSalary || 0; 
+      const points = u.totalPoints || 0; 
+      const pointBonus = points * (globalPointValue / 5); 
+      const finalSalary = baseSalary + pointBonus; 
+      totalPayroll += finalSalary; 
+      salaryRows.push({ name: u.fullName, role: u.role, baseSalary, points, pointBonus, finalSalary }); 
+    });
     
     Object.keys(monthlyData).forEach(k => { monthlyData[k].salaries = totalPayroll; });
-    expensesMTD += totalPayroll; expensesLastMonth += totalPayroll;
-    const netProfit = revenueMTD - expensesMTD; const lastProfit = revenueLastMonth - expensesLastMonth;
+    expensesMTD += totalPayroll; 
+    expensesLastMonth += totalPayroll;
+    const netProfit = revenueMTD - expensesMTD; 
+    const lastProfit = revenueLastMonth - expensesLastMonth;
     
     document.getElementById('revenueMTD').textContent = formatCurrency(revenueMTD);
     document.getElementById('expensesMTD').textContent = formatCurrency(expensesMTD);
@@ -289,49 +350,95 @@
     document.getElementById('expensesChange').innerHTML = `<span class="${expChange<=0?'positive':'negative'}"><i class="fas fa-arrow-${expChange<=0?'down':'up'}"></i> ${Math.abs(expChange)}%</span> vs last month`;
     document.getElementById('profitChange').innerHTML = `<span class="${profChange>=0?'positive':'negative'}"><i class="fas fa-arrow-${profChange>=0?'up':'down'}"></i> ${Math.abs(profChange)}%</span> vs last month`;
     
-    const salaryTbody = document.getElementById('salaryTable'); salaryTbody.innerHTML = '';
-    salaryRows.sort((a,b) => b.finalSalary - a.finalSalary).forEach(s => { salaryTbody.innerHTML += `<tr>
-      <td><strong>${s.name}</strong></td>
-      <td><span class="badge badge-info">${s.role}</span></td>
-      <td>${formatCurrency(s.baseSalary)}</td><td>${s.points}</td><td>₦${(globalPointValue/5).toFixed(0)}/pt</td>
-      <td class="${s.pointBonus>=0?'positive':'negative'}">${s.pointBonus>=0?'+':''}${formatCurrency(s.pointBonus)}</td>
-      <td><strong>${formatCurrency(s.finalSalary)}</strong></td>
-    </div>`; });
+    const salaryTbody = document.getElementById('salaryTable'); 
+    salaryTbody.innerHTML = '';
+    salaryRows.sort((a,b) => b.finalSalary - a.finalSalary).forEach(s => { 
+      salaryTbody.innerHTML += `<tr>
+        <td><strong>${s.name}</strong></td>
+        <td><span class="badge badge-info">${s.role}</span></td>
+        <td>${formatCurrency(s.baseSalary)}</td>
+        <td>${s.points}</td>
+        <td>₦${(globalPointValue/5).toFixed(0)}/pt</td>
+        <td class="${s.pointBonus>=0?'positive':'negative'}">${s.pointBonus>=0?'+':''}${formatCurrency(s.pointBonus)}</td>
+        <td><strong>${formatCurrency(s.finalSalary)}</strong></td>
+      </tr>`; 
+    });
     
-    const monthlyTbody = document.getElementById('monthlyTable'); monthlyTbody.innerHTML = '';
-    const sorted = Object.entries(monthlyData).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 12); let prevProfit = 0;
+    const monthlyTbody = document.getElementById('monthlyTable'); 
+    monthlyTbody.innerHTML = '';
+    const sorted = Object.entries(monthlyData).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 12); 
+    let prevProfit = 0;
     sorted.reverse().forEach(([key, data], i) => { 
-      const [y, m] = key.split('-'); const totalExp = data.purchases + data.salaries; const profit = data.revenue - totalExp; 
+      const [y, m] = key.split('-'); 
+      const totalExp = data.purchases + data.salaries; 
+      const profit = data.revenue - totalExp; 
       const change = i > 0 ? ((profit - prevProfit) / (Math.abs(prevProfit) || 1) * 100).toFixed(1) : '-'; 
       monthlyTbody.innerHTML += `<tr>
-        <td><strong>${months[parseInt(m)]} ${y}</strong></td><td>${formatCurrency(data.revenue)}</td><td>${formatCurrency(data.purchases)}</td>
-        <td>${formatCurrency(data.salaries)}</td><td>${formatCurrency(totalExp)}</td><td>${formatCurrency(profit)}</td>
+        <td><strong>${months[parseInt(m)]} ${y}</strong></td>
+        <td>${formatCurrency(data.revenue)}</td>
+        <td>${formatCurrency(data.purchases)}</td>
+        <td>${formatCurrency(data.salaries)}</td>
+        <td>${formatCurrency(totalExp)}</td>
+        <td>${formatCurrency(profit)}</td>
         <td><span class="badge ${change>0?'badge-success':change<0?'badge-danger':'badge-warning'}">${change>0?'+':''}${change}%</span></td>
-      </div>`; 
+      </tr>`; 
       prevProfit = profit; 
     });
     
-    if (barChart) barChart.destroy(); const barCtx = document.getElementById('barChart').getContext('2d');
+    if (barChart) barChart.destroy(); 
+    const barCtx = document.getElementById('barChart').getContext('2d');
     const chartData = sorted.slice(-6);
-    barChart = new Chart(barCtx, { type: 'bar', data: { labels: chartData.map(([k]) => months[parseInt(k.split('-')[1])] + ' ' + k.split('-')[0]), datasets: [{ label: 'Revenue', data: chartData.map(([,d]) => d.revenue), backgroundColor: '#10b981', borderRadius: 8 }, { label: 'Expenses', data: chartData.map(([,d]) => d.purchases + d.salaries), backgroundColor: '#ef4444', borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: false } });
+    barChart = new Chart(barCtx, { 
+      type: 'bar', 
+      data: { 
+        labels: chartData.map(([k]) => months[parseInt(k.split('-')[1])] + ' ' + k.split('-')[0]), 
+        datasets: [
+          { label: 'Revenue', data: chartData.map(([,d]) => d.revenue), backgroundColor: '#10b981', borderRadius: 8 }, 
+          { label: 'Expenses', data: chartData.map(([,d]) => d.purchases + d.salaries), backgroundColor: '#ef4444', borderRadius: 8 }
+        ] 
+      }, 
+      options: { responsive: true, maintainAspectRatio: false } 
+    });
     
-    if (pieChart) pieChart.destroy(); const pieCtx = document.getElementById('pieChart').getContext('2d');
-    pieChart = new Chart(pieCtx, { type: 'pie', data: { labels: ['Stock Purchases', 'Staff Salaries'], datasets: [{ data: [purchasesMTD, totalPayroll], backgroundColor: ['#f59e0b', '#3b82f6'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+    if (pieChart) pieChart.destroy(); 
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    pieChart = new Chart(pieCtx, { 
+      type: 'pie', 
+      data: { 
+        labels: ['Stock Purchases', 'Staff Salaries'], 
+        datasets: [{ data: [purchasesMTD, totalPayroll], backgroundColor: ['#f59e0b', '#3b82f6'] }] 
+      }, 
+      options: { responsive: true, maintainAspectRatio: false } 
+    });
   }
 
   window.exportSalaries = (format) => { 
-    const rows = []; document.querySelectorAll('#salaryTable tr').forEach(r => { const cols = r.querySelectorAll('td'); if (cols.length) rows.push(Array.from(cols).map(c => c.textContent.replace(/[₦,+]/g,'').trim()).join(',')); }); 
+    const rows = []; 
+    document.querySelectorAll('#salaryTable tr').forEach(r => { 
+      const cols = r.querySelectorAll('td'); 
+      if (cols.length) rows.push(Array.from(cols).map(c => c.textContent.replace(/[₦,+]/g,'').trim()).join(',')); 
+    }); 
     const csv = ['Staff,Role,Base Salary,Points,Point Value,Points Bonus,Final Salary'].concat(rows).join('\n'); 
     const b = new Blob([csv], {type: format==='csv'?'text/csv':'application/vnd.ms-excel'}); 
-    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `salaries_${new Date().toISOString().split('T')[0]}.${format}`; a.click(); 
-    showToast('Exported', 'success'); document.getElementById('exportMenu').classList.remove('show'); 
+    const a = document.createElement('a'); 
+    a.href = URL.createObjectURL(b); 
+    a.download = `salaries_${new Date().toISOString().split('T')[0]}.${format}`; 
+    a.click(); 
+    showToast('Exported', 'success'); 
+    document.getElementById('exportMenu').classList.remove('show'); 
   };
 
-  document.getElementById('exportSalaryBtn').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('exportMenu').classList.toggle('show'); });
+  document.getElementById('exportSalaryBtn').addEventListener('click', (e) => { 
+    e.stopPropagation(); 
+    document.getElementById('exportMenu').classList.toggle('show'); 
+  });
   document.addEventListener('click', () => document.getElementById('exportMenu').classList.remove('show'));
 
   onAuthStateChanged(auth, async (u) => { 
-    if (!u) { window.location.href = 'auth.html'; return; } 
+    if (!u) { 
+      window.location.href = 'auth.html'; 
+      return; 
+    } 
     currentUser = u; 
     const snap = await getDoc(doc(db, 'users', u.uid)); 
     if (!snap.exists() || (snap.data().role !== 'admin' && snap.data().role !== 'super_admin')) { 
