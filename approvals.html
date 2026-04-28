@@ -26,23 +26,13 @@
       --warning: #f59e0b; 
       --danger: #ef4444; 
       --info: #3b82f6; 
-      --sidebar-width: 280px; 
-      --sidebar-collapsed: 80px; 
       --header-height: 70px; 
     }
     
     body { 
       font-family: 'Poppins', sans-serif; 
       background: linear-gradient(135deg, #f9fafb 0%, #fff0f6 100%);
-      display: flex; 
       min-height: 100vh; 
-    }
-    
-    /* Flame Ring Animation */
-    @keyframes flameRing {
-      0% { box-shadow: 0 0 0 0 rgba(255, 77, 166, 0.4); }
-      50% { box-shadow: 0 0 0 5px rgba(255, 77, 166, 0.2); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 77, 166, 0); }
     }
     
     @keyframes pulseGlow {
@@ -51,250 +41,7 @@
       100% { box-shadow: 0 0 5px #ff4da6, 0 0 10px #ff4da6; }
     }
     
-    /* Sidebar with Gradient Background */
-    .sidebar { 
-      width: var(--sidebar-width); 
-      background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%); 
-      color: white; 
-      position: fixed; 
-      height: 100vh; 
-      overflow-y: auto; 
-      transition: width 0.25s ease, transform 0.3s ease; 
-      z-index: 1000; 
-      border-right: 1px solid rgba(255, 77, 166, 0.2);
-    }
-    
-    /* Desktop collapsed sidebar - expands on hover */
-    @media (min-width: 769px) {
-      .sidebar.collapsed { 
-        width: var(--sidebar-collapsed); 
-      }
-      .sidebar.collapsed:hover {
-        width: var(--sidebar-width);
-      }
-      .sidebar.collapsed:hover .logo-text,
-      .sidebar.collapsed:hover .nav-text,
-      .sidebar.collapsed:hover .user-details,
-      .sidebar.collapsed:hover .nav-section-title {
-        display: block;
-      }
-      .sidebar.collapsed .logo-text,
-      .sidebar.collapsed .nav-text,
-      .sidebar.collapsed .user-details,
-      .sidebar.collapsed .nav-section-title {
-        display: none;
-      }
-    }
-    
-    /* Mobile sidebar - slides in */
-    @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-        width: 280px;
-      }
-      .sidebar.mobile-open {
-        transform: translateX(0);
-      }
-      .sidebar.collapsed {
-        transform: translateX(-100%);
-      }
-    }
-    
-    .sidebar::-webkit-scrollbar { width: 4px; }
-    .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-    .sidebar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
-    
-    .sidebar-header { 
-      padding: 24px 18px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(255,77,166,0.2);
-    }
-    
-    .logo-area {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    
-    .logo-icon { 
-      width: 42px; 
-      height: 42px; 
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
-      border-radius: 12px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      font-size: 1.3rem; 
-      font-weight: 700;
-      animation: flameRing 2s ease-in-out infinite;
-    }
-    
-    .logo-text { 
-      font-size: 1.25rem; 
-      font-weight: 800; 
-      font-family: 'Playfair Display', serif;
-      white-space: nowrap;
-    } 
-    
-    .logo-text span { color: var(--primary); }
-    
-    .close-sidebar {
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: white;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      transition: all 0.2s;
-    }
-    
-    .close-sidebar:hover {
-      background: var(--primary);
-      transform: rotate(90deg);
-    }
-    
-    @media (max-width: 768px) {
-      .close-sidebar {
-        display: flex;
-      }
-    }
-    
-    .sidebar-nav { 
-      padding: 20px 12px; 
-      display: flex; 
-      flex-direction: column; 
-      height: calc(100vh - 100px); 
-      overflow-y: auto; 
-    }
-    
-    .nav-section { margin-bottom: 24px; }
-    
-    .nav-section-title { 
-      font-size: 0.7rem; 
-      text-transform: uppercase; 
-      letter-spacing: 2px; 
-      color: rgba(255,255,255,0.4); 
-      margin-bottom: 10px; 
-      padding-left: 14px; 
-      font-weight: 600; 
-    }
-    
-    .nav-item { 
-      display: flex; 
-      align-items: center; 
-      gap: 14px; 
-      padding: 12px 14px; 
-      border-radius: 12px; 
-      color: rgba(255,255,255,0.7); 
-      cursor: pointer; 
-      border: none; 
-      background: none; 
-      width: 100%; 
-      font-size: 0.9rem; 
-      font-weight: 500; 
-      text-align: left; 
-      margin-bottom: 3px; 
-      transition: all 0.2s; 
-      font-family: 'Poppins', sans-serif;
-    }
-    
-    .nav-item i { width: 22px; font-size: 1.1rem; }
-    
-    .nav-item:hover { 
-      background: rgba(255,77,166,0.15); 
-      color: white; 
-      transform: translateX(5px);
-    }
-    
-    .nav-item.active { 
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
-      color: white; 
-      box-shadow: 0 5px 15px rgba(255,77,166,0.3);
-    }
-    
-    .nav-item.logout { 
-      color: rgba(239,68,68,0.7); 
-      margin-top: auto; 
-    }
-    
-    .nav-item.logout:hover {
-      background: rgba(239,68,68,0.15);
-      color: #ef4444;
-    }
-    
-    .sidebar-footer { 
-      padding: 20px 16px; 
-      border-top: 1px solid rgba(255,77,166,0.2); 
-      margin-top: auto;
-    }
-    
-    /* Sidebar Overlay for Mobile */
-    .sidebar-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 999;
-      display: none;
-    }
-    
-    .sidebar-overlay.active {
-      display: block;
-    }
-    
-    .user-profile { 
-      display: flex; 
-      align-items: center; 
-      gap: 12px; 
-    }
-    
-    .user-avatar { 
-      width: 44px; 
-      height: 44px; 
-      border-radius: 12px; 
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      font-weight: 700; 
-      color: white; 
-      font-size: 1.1rem;
-    }
-    
-    .user-details h4 { font-size: 0.85rem; font-weight: 600; } 
-    .user-details p { font-size: 0.7rem; opacity: 0.6; }
-    
-    /* Main content */
-    .main-content { 
-      flex: 1; 
-      margin-left: var(--sidebar-width); 
-      transition: margin-left 0.25s ease; 
-      min-height: 100vh; 
-      width: calc(100% - var(--sidebar-width)); 
-    }
-    
-    @media (max-width: 768px) {
-      .main-content { 
-        margin-left: 0 !important; 
-        width: 100% !important; 
-      }
-    }
-    
-    @media (min-width: 769px) {
-      .sidebar.collapsed + .main-content { 
-        margin-left: var(--sidebar-collapsed); 
-        width: calc(100% - var(--sidebar-collapsed)); 
-      }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
     
     /* Top Bar */
     .top-bar { 
@@ -317,21 +64,27 @@
       gap: 18px; 
     }
     
-    .menu-toggle { 
-      background: none; 
-      border: none; 
-      font-size: 1.2rem; 
-      color: var(--gray); 
-      cursor: pointer; 
-      padding: 10px; 
-      border-radius: 10px; 
+    .back-btn {
+      background: var(--primary-soft);
+      border: none;
+      color: var(--primary);
+      cursor: pointer;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       transition: all 0.2s;
+      font-family: 'Poppins', sans-serif;
+      text-decoration: none;
     }
     
-    .menu-toggle:hover { 
-      background: var(--primary-soft); 
-      color: var(--primary); 
-      transform: scale(1.05);
+    .back-btn:hover { 
+      background: var(--primary); 
+      color: white;
+      transform: translateX(-3px);
     }
     
     .page-title { 
@@ -344,6 +97,7 @@
     .content-wrapper { 
       padding: 28px; 
       max-width: 1600px; 
+      margin: 0 auto;
     }
     
     /* Tabs Container */
@@ -491,7 +245,6 @@
     /* Loading State */
     .loading-state { display: flex; justify-content: center; padding: 40px; }
     .spinner { width: 32px; height: 32px; border: 3px solid var(--primary-soft); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
     
     /* Toast */
     .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; }
@@ -515,11 +268,6 @@
     .page-view.active { display: block; }
     
     /* Responsive */
-    @media (max-width: 992px) { 
-      .sidebar { width: var(--sidebar-collapsed); } 
-      .sidebar .logo-text, .sidebar .nav-text, .sidebar .user-details, .sidebar .nav-section-title { display: none; } 
-      .main-content { margin-left: var(--sidebar-collapsed); } 
-    }
     @media (max-width: 768px) { 
       .content-wrapper { padding: 16px; } 
       .top-bar { padding: 0 16px; }
@@ -530,87 +278,13 @@
 </head>
 <body>
 
-<!-- Sidebar Overlay -->
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-
-<!-- Sidebar -->
-<aside class="sidebar collapsed" id="sidebar">
-  <div class="sidebar-header">
-    <div class="logo-area">
-      <div class="logo-icon">✨</div>
-      <div class="logo-text"><span>Omo</span>creations</div>
-    </div>
-    <button class="close-sidebar" onclick="closeSidebar()">
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
-  
-  <nav class="sidebar-nav">
-    <div class="nav-section">
-      <div class="nav-section-title">OVERVIEW</div>
-      <button class="nav-item" onclick="window.location.href='admin-dashboard.html'">
-        <i class="fas fa-chart-pie"></i><span class="nav-text">Dashboard</span>
-      </button>
-      <button class="nav-item active" onclick="window.location.href='approvals.html'">
-        <i class="fas fa-check-circle"></i><span class="nav-text">Approvals</span>
-      </button>
-      <button class="nav-item" onclick="window.location.href='announcements.html'">
-        <i class="fas fa-bullhorn"></i><span class="nav-text">Announcements</span>
-      </button>
-    </div>
-    
-    <div class="nav-section">
-      <div class="nav-section-title">MANAGEMENT</div>
-      <button class="nav-item" onclick="window.location.href='staff-management.html'">
-        <i class="fas fa-users-cog"></i><span class="nav-text">Staff Management</span>
-      </button>
-      <button class="nav-item" onclick="window.location.href='finance.html'">
-        <i class="fas fa-chart-line"></i><span class="nav-text">Finance</span>
-      </button>
-      <button class="nav-item" onclick="window.location.href='audit.html'">
-        <i class="fas fa-history"></i><span class="nav-text">Audit Logs</span>
-      </button>
-    </div>
-    
-    <div class="nav-section">
-      <div class="nav-section-title">MONITORING</div>
-      <button class="nav-item" onclick="window.location.href='inventory.html'">
-        <i class="fas fa-box"></i><span class="nav-text">Inventory</span>
-      </button>
-      <button class="nav-item" onclick="window.location.href='purchases.html'">
-        <i class="fas fa-shopping-cart"></i><span class="nav-text">Purchases</span>
-      </button>
-      <button class="nav-item" onclick="window.location.href='customers.html'">
-        <i class="fas fa-users"></i><span class="nav-text">Customers</span>
-      </button>
-      <button class="nav-item" onclick="window.location.href='sales.html'">
-        <i class="fas fa-cash-register"></i><span class="nav-text">Sales</span>
-      </button>
-    </div>
-    
-    <button class="nav-item logout" id="logoutBtn">
-      <i class="fas fa-sign-out-alt"></i><span class="nav-text">Logout</span>
-    </button>
-  </nav>
-  
-  <div class="sidebar-footer">
-    <div class="user-profile">
-      <div class="user-avatar" id="userAvatar">A</div>
-      <div class="user-details">
-        <h4 id="userName">Admin</h4>
-        <p id="userRole">Administrator</p>
-      </div>
-    </div>
-  </div>
-</aside>
-
 <!-- Main Content -->
-<main class="main-content">
+<main>
   <header class="top-bar">
     <div class="top-bar-left">
-      <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-      </button>
+      <a href="admin-dashboard.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Admin Dashboard
+      </a>
       <h1 class="page-title">Approval Center</h1>
     </div>
     <div style="color:var(--gray); font-size:0.85rem;">
@@ -631,7 +305,7 @@
     <div id="itemsPanel" class="page-view active">
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-box"></i> Pending Stock Items</h3><button class="btn btn-outline btn-sm" onclick="refreshAll()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Unit Price</th><th>Added By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="itemsTable"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div></div>NonNull</tbody></table></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Unit Price</th><th>Added By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="itemsTable"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody></table></div>
       </div>
     </div>
     
@@ -639,7 +313,7 @@
     <div id="purchasesPanel" class="page-view">
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-shopping-cart"></i> Pending Purchase Requests</h3><button class="btn btn-outline btn-sm" onclick="refreshAll()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Requested By</th><th>Items</th><th>Est. Total</th><th>Date</th><th>Note</th><th>Actions</th></tr></thead><tbody id="purchasesTable"><tr><td colspan="6"><div class="loading-state"><div class="spinner"></div></div>NonNull</tbody></table></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Requested By</th><th>Items</th><th>Est. Total</th><th>Date</th><th>Note</th><th>Actions</th></tr></thead><tbody id="purchasesTable"><tr><td colspan="6"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody></table></div>
       </div>
     </div>
     
@@ -647,7 +321,7 @@
     <div id="customersPanel" class="page-view">
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-users"></i> Pending Customer Approvals</h3><button class="btn btn-outline btn-sm" onclick="refreshAll()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Birthday</th><th>Added By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="customersTable"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div></div>NonNull</tbody></table></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Birthday</th><th>Added By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="customersTable"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody></table></div>
       </div>
     </div>
     
@@ -655,7 +329,7 @@
     <div id="leavePanel" class="page-view">
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-calendar-check"></i> Pending Leave Requests</h3><button class="btn btn-outline btn-sm" onclick="refreshAll()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Staff</th><th>Requested Dates</th><th>Reason</th><th>Requested On</th><th>Actions</th></tr></thead><tbody id="leaveTable"><tr><td colspan="5"><div class="loading-state"><div class="spinner"></div></div>NonNull</tbody><tr></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Staff</th><th>Requested Dates</th><th>Reason</th><th>Requested On</th><th>Actions</th></tr></thead><tbody id="leaveTable"><tr><td colspan="5"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody></table></div>
       </div>
     </div>
     
@@ -671,37 +345,47 @@
   import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
-  const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig); 
+  const auth = getAuth(app); 
+  const db = getFirestore(app);
   let currentUser = null, userData = null, unsubscribes = [];
 
-  // Sidebar functions
-  window.toggleSidebar = function() { 
-    const sidebar = document.getElementById('sidebar'); 
-    const overlay = document.getElementById('sidebarOverlay'); 
-    if (window.innerWidth <= 768) { 
-      sidebar.classList.add('mobile-open'); 
-      overlay.classList.add('active'); 
-    } else { 
-      sidebar.classList.toggle('collapsed'); 
-    } 
-  };
+  function formatDate(d) { 
+    if (!d) return '-'; 
+    const date = d.toDate ? d.toDate() : new Date(d); 
+    return date.toLocaleDateString('en-GB', {day:'2-digit',month:'short'}); 
+  }
   
-  window.closeSidebar = function() { 
-    const sidebar = document.getElementById('sidebar'); 
-    const overlay = document.getElementById('sidebarOverlay'); 
-    sidebar.classList.remove('mobile-open'); 
-    overlay.classList.remove('active'); 
-    if (window.innerWidth > 768) {
-      sidebar.classList.add('collapsed');
-    }
-  };
+  function formatCurrency(n) { 
+    return '₦' + (n || 0).toLocaleString(); 
+  }
+  
+  function showToast(msg, type='success') { 
+    const c = document.getElementById('toastContainer'); 
+    const t = document.createElement('div'); 
+    t.className = `toast ${type}`; 
+    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i><span>${msg}</span>`; 
+    c.appendChild(t); 
+    setTimeout(() => t.classList.add('show'), 10); 
+    setTimeout(() => t.remove(), 4000); 
+  }
+  
+  async function logAudit(action, note) { 
+    try { 
+      await addDoc(collection(db, 'audit_logs'), { 
+        actionType: action, 
+        performedBy: currentUser?.uid, 
+        performedByName: userData?.fullName, 
+        performedAt: serverTimestamp(), 
+        note 
+      }); 
+    } catch(e) {} 
+  }
 
-  function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', {day:'2-digit',month:'short'}); }
-  function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
-  function showToast(msg, type='success') { const c = document.getElementById('toastContainer'); const t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i><span>${msg}</span>`; c.appendChild(t); setTimeout(() => t.classList.add('show'), 10); setTimeout(() => t.remove(), 4000); }
-  async function logAudit(action, note) { try { await addDoc(collection(db, 'audit_logs'), { actionType: action, performedBy: currentUser?.uid, performedByName: userData?.fullName, performedAt: serverTimestamp(), note }); } catch(e) {} }
-
-  function cleanup() { unsubscribes.forEach(u => u()); unsubscribes = []; }
+  function cleanup() { 
+    unsubscribes.forEach(u => u()); 
+    unsubscribes = []; 
+  }
 
   function updateCountBadge(elementId, count) {
     const el = document.getElementById(elementId);
@@ -719,22 +403,37 @@
       const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       updateCountBadge('itemCount', items.length);
-      const tbody = document.getElementById('itemsTable'); tbody.innerHTML = '';
-      if (items.length === 0) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-box"></i><p>No pending stock items</p></div>NonNull</div>'; return; }
-      items.forEach(i => { tbody.innerHTML += `<tr>
-        <td><strong>${i.name||'-'}</strong></td>
-        <td><span class="badge badge-info">${i.category||'-'}</span></td>
-        <td>${i.quantityAvailable||0} units</td>
-        <td>${formatCurrency(i.unitPrice)}</td>
-        <td>${i.createdByName||'-'}</td>
-        <td>${formatDate(i.createdAt)}</td>
-        <td style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="window.approveItem('${i.id}')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-sm btn-danger" onclick="window.rejectItem('${i.id}')"><i class="fas fa-times"></i> Reject</button></td>
-      </div>`; });
+      const tbody = document.getElementById('itemsTable'); 
+      tbody.innerHTML = '';
+      if (items.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-box"></i><p>No pending stock items</p></div></td></tr>'; 
+        return; 
+      }
+      items.forEach(i => { 
+        tbody.innerHTML += `<tr>
+          <td><strong>${i.name||'-'}</strong></td>
+          <td><span class="badge badge-info">${i.category||'-'}</span></td>
+          <td>${i.quantityAvailable||0} units</td>
+          <td>${formatCurrency(i.unitPrice)}</td>
+          <td>${i.createdByName||'-'}</td>
+          <td>${formatDate(i.createdAt)}</td>
+          <td style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="window.approveItem('${i.id}')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-sm btn-danger" onclick="window.rejectItem('${i.id}')"><i class="fas fa-times"></i> Reject</button></td>
+        </tr>`; 
+      });
     }));
   }
 
-  window.approveItem = async (id) => { await updateDoc(doc(db, 'stock_items', id), { status: 'available', approvedBy: currentUser.uid, approvedAt: serverTimestamp() }); await logAudit('approve_item', 'Approved stock item'); showToast('Item approved', 'success'); };
-  window.rejectItem = async (id) => { await updateDoc(doc(db, 'stock_items', id), { status: 'rejected' }); await logAudit('reject_item', 'Rejected stock item'); showToast('Item rejected', 'info'); };
+  window.approveItem = async (id) => { 
+    await updateDoc(doc(db, 'stock_items', id), { status: 'available', approvedBy: currentUser.uid, approvedAt: serverTimestamp() }); 
+    await logAudit('approve_item', 'Approved stock item'); 
+    showToast('Item approved', 'success'); 
+  };
+  
+  window.rejectItem = async (id) => { 
+    await updateDoc(doc(db, 'stock_items', id), { status: 'rejected' }); 
+    await logAudit('reject_item', 'Rejected stock item'); 
+    showToast('Item rejected', 'info'); 
+  };
 
   // ========== PURCHASES ==========
   function loadPurchases() {
@@ -743,18 +442,38 @@
       const purchases = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       purchases.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       updateCountBadge('purchaseCount', purchases.length);
-      const tbody = document.getElementById('purchasesTable'); tbody.innerHTML = '';
-      if (purchases.length === 0) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-shopping-cart"></i><p>No pending purchase requests</p></div>NonNull</div>'; return; }
-      purchases.forEach(p => { const total = p.items?.reduce((s,i)=>s+((i.suggested||0)*(i.price||0)),0)||0; tbody.innerHTML += `<tr>
-        <td>${p.requestedByName||'-'}</td>
-        <td>${p.items?.length||0} items</td><td>${formatCurrency(total)}</td><td>${formatDate(p.createdAt)}</td><td>${p.note||'-'}</td>
-        <td style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="window.approvePurchase('${p.id}')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-sm btn-danger" onclick="window.rejectPurchase('${p.id}')"><i class="fas fa-times"></i> Reject</button></td>
-      </div>`; });
+      const tbody = document.getElementById('purchasesTable'); 
+      tbody.innerHTML = '';
+      if (purchases.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-shopping-cart"></i><p>No pending purchase requests</p></div></td></tr>'; 
+        return; 
+      }
+      purchases.forEach(p => { 
+        const total = p.items?.reduce((s,i)=>s+((i.suggested||0)*(i.price||0)),0)||0; 
+        tbody.innerHTML += `<tr>
+          <td>${p.requestedByName||'-'}</td>
+          <td>${p.items?.length||0} items</td>
+          <td>${formatCurrency(total)}</td>
+          <td>${formatDate(p.createdAt)}</td>
+          <td>${p.note||'-'}</td>
+          <td style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="window.approvePurchase('${p.id}')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-sm btn-danger" onclick="window.rejectPurchase('${p.id}')"><i class="fas fa-times"></i> Reject</button></td>
+        </tr>`; 
+      });
     }));
   }
 
-  window.approvePurchase = async (id) => { await updateDoc(doc(db, 'purchase_requests', id), { status: 'approved', approvedBy: currentUser.uid, approvedAt: serverTimestamp() }); await logAudit('approve_purchase', 'Approved purchase request'); showToast('Request approved', 'success'); };
-  window.rejectPurchase = async (id) => { const reason = prompt('Rejection reason:') || 'No reason'; await updateDoc(doc(db, 'purchase_requests', id), { status: 'rejected', rejectionReason: reason }); await logAudit('reject_purchase', `Rejected. Reason: ${reason}`); showToast('Request rejected', 'info'); };
+  window.approvePurchase = async (id) => { 
+    await updateDoc(doc(db, 'purchase_requests', id), { status: 'approved', approvedBy: currentUser.uid, approvedAt: serverTimestamp() }); 
+    await logAudit('approve_purchase', 'Approved purchase request'); 
+    showToast('Request approved', 'success'); 
+  };
+  
+  window.rejectPurchase = async (id) => { 
+    const reason = prompt('Rejection reason:') || 'No reason'; 
+    await updateDoc(doc(db, 'purchase_requests', id), { status: 'rejected', rejectionReason: reason }); 
+    await logAudit('reject_purchase', `Rejected. Reason: ${reason}`); 
+    showToast('Request rejected', 'info'); 
+  };
 
   // ========== CUSTOMERS ==========
   function loadCustomers() {
@@ -763,22 +482,37 @@
       const customers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       customers.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       updateCountBadge('customerCount', customers.length);
-      const tbody = document.getElementById('customersTable'); tbody.innerHTML = '';
-      if (customers.length === 0) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No pending customers</p></div>NonNull</div>'; return; }
-      customers.forEach(c => { tbody.innerHTML += `<tr>
-        <td><strong>${c.fullName||'-'}</strong></td>
-        <td>${c.phone||'-'}</td>
-        <td>${c.email||'-'}</td>
-        <td>${c.birthday||'-'}</td>
-        <td>${c.createdByName||'-'}</td>
-        <td>${formatDate(c.createdAt)}</td>
-        <td style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="window.approveCustomer('${c.id}')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-sm btn-danger" onclick="window.rejectCustomer('${c.id}')"><i class="fas fa-times"></i> Reject</button></td>
-      </div>`; });
+      const tbody = document.getElementById('customersTable'); 
+      tbody.innerHTML = '';
+      if (customers.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No pending customers</p></div></td></tr>'; 
+        return; 
+      }
+      customers.forEach(c => { 
+        tbody.innerHTML += `<tr>
+          <td><strong>${c.fullName||'-'}</strong></td>
+          <td>${c.phone||'-'}</td>
+          <td>${c.email||'-'}</td>
+          <td>${c.birthday||'-'}</td>
+          <td>${c.createdByName||'-'}</td>
+          <td>${formatDate(c.createdAt)}</td>
+          <td style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="window.approveCustomer('${c.id}')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-sm btn-danger" onclick="window.rejectCustomer('${c.id}')"><i class="fas fa-times"></i> Reject</button></td>
+        </tr>`; 
+      });
     }));
   }
 
-  window.approveCustomer = async (id) => { await updateDoc(doc(db, 'customers', id), { status: 'approved', approvedBy: currentUser.uid, approvedAt: serverTimestamp() }); await logAudit('approve_customer', 'Approved customer'); showToast('Customer approved', 'success'); };
-  window.rejectCustomer = async (id) => { await updateDoc(doc(db, 'customers', id), { status: 'rejected' }); await logAudit('reject_customer', 'Rejected customer'); showToast('Customer rejected', 'info'); };
+  window.approveCustomer = async (id) => { 
+    await updateDoc(doc(db, 'customers', id), { status: 'approved', approvedBy: currentUser.uid, approvedAt: serverTimestamp() }); 
+    await logAudit('approve_customer', 'Approved customer'); 
+    showToast('Customer approved', 'success'); 
+  };
+  
+  window.rejectCustomer = async (id) => { 
+    await updateDoc(doc(db, 'customers', id), { status: 'rejected' }); 
+    await logAudit('reject_customer', 'Rejected customer'); 
+    showToast('Customer rejected', 'info'); 
+  };
 
   // ========== LEAVE REQUESTS ==========
   function loadLeave() {
@@ -787,8 +521,12 @@
       const requests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       requests.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       updateCountBadge('leaveCount', requests.length);
-      const tbody = document.getElementById('leaveTable'); tbody.innerHTML = '';
-      if (requests.length === 0) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-calendar"></i><p>No pending leave requests</p></div>NonNull</div>'; return; }
+      const tbody = document.getElementById('leaveTable'); 
+      tbody.innerHTML = '';
+      if (requests.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-calendar"></i><p>No pending leave requests</p></div></td></tr>'; 
+        return; 
+      }
       for (const l of requests) { 
         const u = await getDoc(doc(db, 'users', l.userId)); 
         const name = u.exists() ? u.data().fullName : 'Unknown'; 
@@ -798,7 +536,7 @@
           <td>${l.reason||'-'}</td>
           <td>${formatDate(l.createdAt)}</td>
           <td style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="window.approveLeave('${l.id}','${l.userId}')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-sm btn-danger" onclick="window.rejectLeave('${l.id}')"><i class="fas fa-times"></i> Reject</button></td>
-        </div>`; 
+        </tr>`; 
       }
     }));
   }
@@ -816,9 +554,18 @@
     showToast('Leave approved', 'success'); 
   };
   
-  window.rejectLeave = async (id) => { await updateDoc(doc(db, 'leave_requests', id), { status: 'rejected', rejectedBy: currentUser.uid, rejectedAt: serverTimestamp() }); showToast('Leave rejected', 'info'); };
+  window.rejectLeave = async (id) => { 
+    await updateDoc(doc(db, 'leave_requests', id), { status: 'rejected', rejectedBy: currentUser.uid, rejectedAt: serverTimestamp() }); 
+    showToast('Leave rejected', 'info'); 
+  };
 
-  window.refreshAll = () => { cleanup(); loadItems(); loadPurchases(); loadCustomers(); loadLeave(); };
+  window.refreshAll = () => { 
+    cleanup(); 
+    loadItems(); 
+    loadPurchases(); 
+    loadCustomers(); 
+    loadLeave(); 
+  };
 
   // Tab switching
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function() { 
@@ -830,7 +577,10 @@
   }));
 
   onAuthStateChanged(auth, async (u) => { 
-    if (!u) { window.location.href = 'auth.html'; return; } 
+    if (!u) { 
+      window.location.href = 'auth.html'; 
+      return; 
+    } 
     currentUser = u; 
     const snap = await getDoc(doc(db, 'users', u.uid)); 
     if (!snap.exists() || (snap.data().role !== 'admin' && snap.data().role !== 'super_admin')) { 
@@ -839,14 +589,10 @@
       return; 
     }
     userData = snap.data(); 
-    document.getElementById('userName').textContent = userData.fullName?.split(' ')[0] || 'Admin'; 
-    document.getElementById('userRole').textContent = userData.role === 'super_admin' ? 'Super Admin' : 'Admin'; 
-    document.getElementById('userAvatar').textContent = (userData.fullName||'A').charAt(0); 
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}); 
     refreshAll(); 
   });
   
-  document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'auth.html'; });
   window.addEventListener('beforeunload', cleanup);
 </script>
 </body>
