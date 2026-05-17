@@ -188,6 +188,29 @@
     .financial-warning.healthy { background: rgba(16,185,129,0.1); border-left-color: var(--success); }
     .financial-warning.healthy i { color: var(--success); }
 
+    /* ===== TOGGLE SWITCH ===== */
+    .toggle-wrapper {
+      display: flex; align-items: center; gap: 12px;
+      background: white; padding: 8px 16px; border-radius: 40px;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+    .toggle-wrapper span { font-size: 0.75rem; font-weight: 600; color: var(--gray); white-space: nowrap; }
+    .toggle-wrapper span.active-label { color: var(--primary); }
+    .toggle-switch {
+      position: relative; width: 48px; height: 26px;
+      background: var(--gray-light); border-radius: 26px;
+      cursor: pointer; transition: background 0.3s;
+      flex-shrink: 0;
+    }
+    .toggle-switch.active { background: var(--primary); }
+    .toggle-switch::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 20px; height: 20px; background: white;
+      border-radius: 50%; transition: transform 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    .toggle-switch.active::after { transform: translateX(22px); }
+
     /* ===== SETTINGS CARD ===== */
     .settings-card {
       background: linear-gradient(135deg, var(--primary-soft), white);
@@ -255,7 +278,6 @@
     .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
     .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
     .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
-    .badge-pending { background: rgba(107,114,128,0.1); color: var(--gray); }
     .badge-purple { background: rgba(139,92,246,0.1); color: #8b5cf6; }
 
     .text-positive { color: var(--success); font-weight: 700; }
@@ -275,7 +297,6 @@
     .btn-sm { padding: 6px 12px; font-size: 0.7rem; }
     .btn-success { background: var(--success); color: white; border: none; }
     .btn-danger { background: var(--danger); color: white; border: none; }
-    .btn-warning { background: var(--warning); color: white; border: none; }
 
     /* ===== TABS ===== */
     .tabs-container {
@@ -462,7 +483,14 @@
       </button>
       <h1 class="page-title">Finance & Accounting</h1>
     </div>
-    <span class="current-date" id="currentDate"></span>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="toggle-wrapper" id="adminSalaryToggle">
+        <span id="toggleLabelOff">Workers Only</span>
+        <div class="toggle-switch" id="toggleSwitch" onclick="toggleAdminSalary()"></div>
+        <span id="toggleLabelOn" class="active-label">+ Admins</span>
+      </div>
+      <span class="current-date" id="currentDate"></span>
+    </div>
   </header>
 
   <div class="content-wrapper">
@@ -491,7 +519,7 @@
       <div class="stat-card"><div class="stat-header"><span>Revenue (MTD)</span><div class="stat-icon"><i class="fas fa-arrow-up"></i></div></div><div class="stat-value" id="revenueMTD">₦0</div><div class="stat-change" id="revenueChange">vs last month</div></div>
       <div class="stat-card"><div class="stat-header"><span>Expenses (MTD)</span><div class="stat-icon"><i class="fas fa-arrow-down"></i></div></div><div class="stat-value" id="expensesMTD">₦0</div><div class="stat-change" id="expensesChange">vs last month</div></div>
       <div class="stat-card"><div class="stat-header"><span>Net Profit</span><div class="stat-icon"><i class="fas fa-chart-line"></i></div></div><div class="stat-value" id="netProfit">₦0</div><div class="stat-change" id="profitChange">vs last month</div></div>
-      <div class="stat-card"><div class="stat-header"><span>Total Payroll</span><div class="stat-icon"><i class="fas fa-users"></i></div></div><div class="stat-value" id="totalPayroll">₦0</div><div class="stat-change">Base + Points</div></div>
+      <div class="stat-card"><div class="stat-header"><span id="payrollLabel">Workers Payroll</span><div class="stat-icon"><i class="fas fa-users"></i></div></div><div class="stat-value" id="totalPayroll">₦0</div><div class="stat-change">Base + Points</div></div>
       <div class="stat-card"><div class="stat-header"><span>Pending Expenses</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-value" id="pendingExpenses">₦0</div><div class="stat-change">Awaiting approval</div></div>
     </div>
 
@@ -529,8 +557,13 @@
     <div id="salaryPanel" class="page-view active">
       <div class="panel">
         <div class="panel-header">
-          <h3><i class="fas fa-users"></i> Staff Salary Breakdown</h3>
+          <h3><i class="fas fa-users"></i> <span id="salaryTableTitle">Workers Salary Breakdown</span></h3>
           <div style="display:flex;gap:10px;">
+            <div class="toggle-wrapper" style="padding:6px 12px;">
+              <span style="font-size:0.7rem;">Workers</span>
+              <div class="toggle-switch" id="salaryTableToggle" onclick="toggleAdminSalary()"></div>
+              <span style="font-size:0.7rem;">+ Admins</span>
+            </div>
             <div class="export-dropdown">
               <button class="btn btn-outline btn-sm" id="exportSalaryBtn"><i class="fas fa-download"></i> Export</button>
               <div class="export-menu" id="exportSalaryMenu">
@@ -542,7 +575,7 @@
         </div>
         <div class="table-wrapper">
           <table class="data-table">
-            <thead><tr><th>Staff</th><th>Role</th><th>Base Salary</th><th>Points</th><th>Point Value</th><th>Points Bonus</th><th>Final Salary</th></tr></thead>
+            <thead><tr><th>Name</th><th>Role</th><th>Base Salary</th><th>Points</th><th>Point Value</th><th>Points Bonus</th><th>Final Salary</th></tr></thead>
             <tbody id="salaryTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody>
           </table>
         </div>
@@ -583,7 +616,7 @@
       <div class="panel-header"><h3><i class="fas fa-calendar-alt"></i> Monthly Comparison</h3></div>
       <div class="table-wrapper">
         <table class="data-table">
-          <thead><tr><th>Month</th><th>Revenue</th><th>Purchases</th><th>Salaries</th><th>Misc Expenses</th><th>Total Expenses</th><th>Profit</th><th>vs Previous</th></tr></thead>
+          <thead><tr><th>Month</th><th>Revenue</th><th>Purchases</th><th>Salaries</th><th>Misc</th><th>Total Expenses</th><th>Profit</th><th>vs Prev</th></tr></thead>
           <tbody id="monthlyTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody>
         </table>
       </div>
@@ -625,6 +658,7 @@
   let globalPointValue = 500, currentTab = 'salary';
   let barChart = null, pieChart = null;
   let allUsers = [], allSales = [], allPurchases = [], allMiscExpenses = [];
+  let includeAdminSalary = false;
 
   // ========== UTILITIES ==========
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
@@ -651,23 +685,16 @@
   }
 
   async function logAudit(action, note) {
-    try {
-      await addDoc(collection(db, 'audit_logs'), {
-        actionType: action, performedBy: currentUser?.uid || 'unknown',
-        performedByName: userData?.fullName || 'Admin', performedAt: serverTimestamp(), note: note || ''
-      });
-    } catch (e) {}
+    try { await addDoc(collection(db, 'audit_logs'), { actionType: action, performedBy: currentUser?.uid || 'unknown', performedByName: userData?.fullName || 'Admin', performedAt: serverTimestamp(), note: note || '' }); } catch (e) {}
   }
 
   function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
   window.hideModal = hideModal;
-
   function showModal(title, content) {
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalContent').innerHTML = content;
     document.getElementById('modalOverlay').classList.add('active');
   }
-
   function cleanup() { unsubscribes.forEach(u => u()); unsubscribes = []; }
 
   // ========== SIDEBAR ==========
@@ -689,6 +716,40 @@
   };
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
 
+  // ========== ADMIN SALARY TOGGLE ==========
+  window.toggleAdminSalary = function() {
+    includeAdminSalary = !includeAdminSalary;
+    updateToggleUI();
+    renderAll();
+  };
+
+  function updateToggleUI() {
+    const switch1 = document.getElementById('toggleSwitch');
+    const switch2 = document.getElementById('salaryTableToggle');
+    const labelOff = document.getElementById('toggleLabelOff');
+    const labelOn = document.getElementById('toggleLabelOn');
+    const payrollLabel = document.getElementById('payrollLabel');
+    const tableTitle = document.getElementById('salaryTableTitle');
+
+    [switch1, switch2].forEach(el => {
+      if (el) {
+        if (includeAdminSalary) el.classList.add('active');
+        else el.classList.remove('active');
+      }
+    });
+
+    if (labelOff) {
+      labelOff.classList.toggle('active-label', !includeAdminSalary);
+      labelOff.style.color = includeAdminSalary ? 'var(--gray)' : 'var(--primary)';
+    }
+    if (labelOn) {
+      labelOn.classList.toggle('active-label', includeAdminSalary);
+      labelOn.style.color = includeAdminSalary ? 'var(--primary)' : 'var(--gray)';
+    }
+    if (payrollLabel) payrollLabel.textContent = includeAdminSalary ? 'Total Payroll' : 'Workers Payroll';
+    if (tableTitle) tableTitle.textContent = includeAdminSalary ? 'All Staff Salary Breakdown (Workers + Admins)' : 'Workers Salary Breakdown';
+  }
+
   // ========== POINT VALUE ==========
   async function loadPointValue() {
     try {
@@ -704,9 +765,7 @@
     const val = parseInt(document.getElementById('pointValueInput')?.value) || 500;
     if (val < 100) { showToast('Minimum ₦100', 'error'); return; }
     try {
-      await setDoc(doc(db, 'system_settings', 'points'), {
-        value: val, updatedBy: currentUser?.uid, updatedByName: userData?.fullName || 'Admin', updatedAt: serverTimestamp()
-      });
+      await setDoc(doc(db, 'system_settings', 'points'), { value: val, updatedBy: currentUser?.uid, updatedByName: userData?.fullName || 'Admin', updatedAt: serverTimestamp() });
       const staffSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['staff', 'attendant', 'attendant_chief'])));
       const batch = writeBatch(db);
       staffSnap.forEach(d => batch.update(d.ref, { pointValueNaira: val }));
@@ -729,34 +788,60 @@
     return (staff.baseSalary || 0) + getPointBonus(staff);
   }
 
+  function getTotalPayroll() {
+    const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active');
+    let total = workers.reduce((s, u) => s + getFinalSalary(u), 0);
+    if (includeAdminSalary) {
+      const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role) && u.status === 'active');
+      total += admins.reduce((s, u) => s + (u.baseSalary || 0), 0);
+    }
+    return total;
+  }
+
+  function getSalaryRows() {
+    const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active');
+    const rows = workers.map(u => ({
+      name: u.fullName || '-',
+      role: u.role || 'staff',
+      baseSalary: u.baseSalary || 0,
+      points: u.totalPoints || 0,
+      pointValue: u.pointValueNaira || globalPointValue || 500,
+      pointBonus: getPointBonus(u),
+      finalSalary: getFinalSalary(u),
+      isAdmin: false
+    }));
+
+    if (includeAdminSalary) {
+      const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role) && u.status === 'active');
+      admins.forEach(u => {
+        rows.push({
+          name: u.fullName || '-',
+          role: u.role || 'admin',
+          baseSalary: u.baseSalary || 0,
+          points: 0,
+          pointValue: 0,
+          pointBonus: 0,
+          finalSalary: u.baseSalary || 0,
+          isAdmin: true
+        });
+      });
+    }
+
+    return rows.sort((a, b) => b.finalSalary - a.finalSalary);
+  }
+
   // ========== DATA LOADING ==========
   function loadAllData() {
     cleanup();
-
-    unsubscribes.push(onSnapshot(collection(db, 'users'), (snap) => {
-      allUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
-      renderAll();
-    }));
-
-    unsubscribes.push(onSnapshot(collection(db, 'sales'), (snap) => {
-      allSales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderAll();
-    }));
-
-    unsubscribes.push(onSnapshot(collection(db, 'purchase_requests'), (snap) => {
-      allPurchases = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderAll();
-    }));
-
-    unsubscribes.push(onSnapshot(query(collection(db, 'misc_expenses'), orderBy('createdAt', 'desc')), (snap) => {
-      allMiscExpenses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderAll();
-    }));
+    unsubscribes.push(onSnapshot(collection(db, 'users'), (snap) => { allUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() })); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'sales'), (snap) => { allSales = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'purchase_requests'), (snap) => { allPurchases = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
+    unsubscribes.push(onSnapshot(query(collection(db, 'misc_expenses'), orderBy('createdAt', 'desc')), (snap) => { allMiscExpenses = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
   }
 
-  // ========== RENDER ALL ==========
   function renderAll() {
     loadPointValue().then(() => {
+      updateToggleUI();
       renderStats();
       renderCharts();
       renderSalaryTable();
@@ -772,7 +857,6 @@
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const monthlyData = {};
 
-    // Sales revenue
     allSales.forEach(s => {
       const date = s.createdAt?.toDate();
       if (!date) return;
@@ -781,18 +865,15 @@
       monthlyData[key].revenue += s.totalAmount || 0;
     });
 
-    // Purchases (completed)
     allPurchases.forEach(p => {
       if (p.status !== 'purchased') return;
       const date = p.purchasedAt?.toDate();
       if (!date) return;
       const key = `${date.getFullYear()}-${date.getMonth()}`;
       if (!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0, misc: 0 };
-      const total = p.receivedItems?.reduce((s, i) => s + ((i.received || i.suggested) * (i.price || i.unitPrice)), 0) || 0;
-      monthlyData[key].purchases += total;
+      monthlyData[key].purchases += p.receivedItems?.reduce((s, i) => s + ((i.received || i.suggested) * (i.price || i.unitPrice)), 0) || 0;
     });
 
-    // Misc expenses (approved)
     allMiscExpenses.forEach(e => {
       if (e.status !== 'approved') return;
       const date = e.approvedAt?.toDate() || e.createdAt?.toDate();
@@ -802,13 +883,8 @@
       monthlyData[key].misc += e.amount || 0;
     });
 
-    // Salaries (monthly constant based on active workers)
-    const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active');
-    const totalPayroll = workers.reduce((s, u) => s + getFinalSalary(u), 0);
-
-    Object.keys(monthlyData).forEach(k => {
-      monthlyData[k].salaries = totalPayroll;
-    });
+    const totalPayroll = getTotalPayroll();
+    Object.keys(monthlyData).forEach(k => { monthlyData[k].salaries = totalPayroll; });
 
     return { monthlyData, totalPayroll, thisMonth, thisYear, months };
   }
@@ -817,22 +893,17 @@
     const { monthlyData, totalPayroll, thisMonth, thisYear } = getMonthlyData();
     const thisKey = `${thisYear}-${thisMonth}`;
     const lastKey = thisMonth === 0 ? `${thisYear-1}-11` : `${thisYear}-${thisMonth-1}`;
-
     const current = monthlyData[thisKey] || { revenue: 0, purchases: 0, salaries: totalPayroll, misc: 0 };
     const last = monthlyData[lastKey] || { revenue: 0, purchases: 0, salaries: totalPayroll, misc: 0 };
 
     const revenueMTD = current.revenue;
     const expensesMTD = current.purchases + current.salaries + current.misc;
     const netProfit = revenueMTD - expensesMTD;
-
     const lastRevenue = last.revenue;
     const lastExpenses = last.purchases + last.salaries + last.misc;
     const lastProfit = lastRevenue - lastExpenses;
 
-    // Pending misc expenses
-    const pendingMisc = allMiscExpenses
-      .filter(e => e.status === 'pending_approval')
-      .reduce((s, e) => s + (e.amount || 0), 0);
+    const pendingMisc = allMiscExpenses.filter(e => e.status === 'pending_approval').reduce((s, e) => s + (e.amount || 0), 0);
 
     document.getElementById('revenueMTD').textContent = formatCurrency(revenueMTD);
     document.getElementById('expensesMTD').textContent = formatCurrency(expensesMTD);
@@ -840,7 +911,6 @@
     document.getElementById('totalPayroll').textContent = formatCurrency(totalPayroll);
     document.getElementById('pendingExpenses').textContent = formatCurrency(pendingMisc);
 
-    // Cash / POS / Walk-in / Online breakdown
     let cashSales = 0, posSales = 0, walkinSales = 0, onlineSales = 0;
     allSales.forEach(s => {
       const date = s.createdAt?.toDate();
@@ -856,7 +926,6 @@
     document.getElementById('walkinSales').textContent = formatCurrency(walkinSales);
     document.getElementById('onlineSales').textContent = formatCurrency(onlineSales);
 
-    // Changes
     const revPct = lastRevenue ? ((revenueMTD - lastRevenue) / lastRevenue * 100).toFixed(1) : 0;
     const expPct = lastExpenses ? ((expensesMTD - lastExpenses) / lastExpenses * 100).toFixed(1) : 0;
     const profPct = lastProfit ? ((netProfit - lastProfit) / Math.abs(lastProfit) * 100).toFixed(1) : 0;
@@ -865,7 +934,6 @@
     document.getElementById('expensesChange').innerHTML = `<span class="${expPct<=0?'positive':'negative'}"><i class="fas fa-arrow-${expPct<=0?'down':'up'}"></i> ${Math.abs(expPct)}%</span> vs last month`;
     document.getElementById('profitChange').innerHTML = `<span class="${profPct>=0?'positive':'negative'}"><i class="fas fa-arrow-${profPct>=0?'up':'down'}"></i> ${Math.abs(profPct)}%</span> vs last month`;
 
-    // Warning
     const warningDiv = document.getElementById('financialWarning');
     const warningMsg = document.getElementById('warningMessage');
     if (expensesMTD > revenueMTD) {
@@ -882,7 +950,6 @@
     const { monthlyData, months } = getMonthlyData();
     const sorted = Object.entries(monthlyData).sort((a, b) => a[0].localeCompare(b[0])).slice(-6);
 
-    // Bar chart
     if (barChart) barChart.destroy();
     const barCtx = document.getElementById('barChart')?.getContext('2d');
     if (barCtx) {
@@ -899,13 +966,9 @@
       });
     }
 
-    // Pie chart (current month expenses)
     const now = new Date();
     const thisKey = `${now.getFullYear()}-${now.getMonth()}`;
     const current = monthlyData[thisKey] || { purchases: 0, salaries: 0, misc: 0 };
-    const purchMTD = current.purchases;
-    const salMTD = current.salaries;
-    const miscMTD = current.misc;
 
     if (pieChart) pieChart.destroy();
     const pieCtx = document.getElementById('pieChart')?.getContext('2d');
@@ -914,7 +977,7 @@
         type: 'doughnut',
         data: {
           labels: ['Stock Purchases', 'Staff Salaries', 'Misc Expenses'],
-          datasets: [{ data: [purchMTD, salMTD, miscMTD], backgroundColor: ['#f59e0b', '#3b82f6', '#8b5cf6'] }]
+          datasets: [{ data: [current.purchases, current.salaries, current.misc], backgroundColor: ['#f59e0b', '#3b82f6', '#8b5cf6'] }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
       });
@@ -922,28 +985,32 @@
   }
 
   function renderSalaryTable() {
-    const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active');
-    document.getElementById('salaryCount').textContent = workers.length;
+    const rows = getSalaryRows();
+    document.getElementById('salaryCount').textContent = rows.length;
     const tbody = document.getElementById('salaryTable');
     if (!tbody) return;
-    if (workers.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No active workers</p></div></td></tr>';
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No staff found</p></div></td></tr>';
       return;
     }
-    workers.sort((a, b) => getFinalSalary(b) - getFinalSalary(a));
-    tbody.innerHTML = workers.map(u => {
-      const bonus = getPointBonus(u);
-      const final = getFinalSalary(u);
-      const pv = u.pointValueNaira || globalPointValue || 500;
+    tbody.innerHTML = rows.map(r => {
+      const roleBadge = r.isAdmin
+        ? '<span class="badge badge-purple">' + (r.role === 'super_admin' ? 'Super Admin' : 'Admin') + '</span>'
+        : '<span class="badge badge-info">' + r.role + '</span>';
+      const pointsCol = r.isAdmin ? '<span style="color:var(--gray);">-</span>' : r.points;
+      const pvCol = r.isAdmin ? '<span style="color:var(--gray);">-</span>' : '₦' + r.pointValue + '/5pts';
+      const bonusCol = r.isAdmin
+        ? '<span style="color:var(--gray);">-</span>'
+        : `<span class="${r.pointBonus >= 0 ? 'text-positive' : 'text-negative'}">${r.pointBonus >= 0 ? '+' : ''}${formatCurrency(r.pointBonus)}</span>`;
       return `
         <tr>
-          <td><strong>${u.fullName || '-'}</strong></td>
-          <td><span class="badge badge-info">${u.role || 'staff'}</span></td>
-          <td>${formatCurrency(u.baseSalary)}</td>
-          <td>${u.totalPoints || 0}</td>
-          <td>₦${pv}/5pts</td>
-          <td class="${bonus >= 0 ? 'text-positive' : 'text-negative'}">${bonus >= 0 ? '+' : ''}${formatCurrency(bonus)}</td>
-          <td><strong>${formatCurrency(final)}</strong></td>
+          <td><strong>${r.name}</strong>${r.isAdmin ? ' <i class="fas fa-crown" style="color:#f59e0b;font-size:0.7rem;"></i>' : ''}</td>
+          <td>${roleBadge}</td>
+          <td>${formatCurrency(r.baseSalary)}</td>
+          <td>${pointsCol}</td>
+          <td>${pvCol}</td>
+          <td>${bonusCol}</td>
+          <td><strong>${formatCurrency(r.finalSalary)}</strong></td>
         </tr>
       `;
     }).join('');
@@ -961,15 +1028,7 @@
     completed.sort((a, b) => (b.purchasedAt?.seconds || 0) - (a.purchasedAt?.seconds || 0));
     tbody.innerHTML = completed.slice(0, 20).map(p => {
       const total = p.receivedItems?.reduce((s, i) => s + ((i.received || i.suggested) * (i.price || i.unitPrice)), 0) || 0;
-      return `
-        <tr>
-          <td>${formatDate(p.purchasedAt)}</td>
-          <td>${p.items?.length || 0} items</td>
-          <td>${p.supplier || '-'}</td>
-          <td>${formatCurrency(total)}</td>
-          <td><span class="badge badge-success">Completed</span></td>
-        </tr>
-      `;
+      return `<tr><td>${formatDate(p.purchasedAt)}</td><td>${p.items?.length || 0} items</td><td>${p.supplier || '-'}</td><td>${formatCurrency(total)}</td><td><span class="badge badge-success">Completed</span></td></tr>`;
     }).join('');
   }
 
@@ -978,33 +1037,15 @@
     const tbody = document.getElementById('miscTable');
     if (!tbody) return;
     if (allMiscExpenses.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-receipt"></i><p>No miscellaneous expenses. Click "Add Expense" to record one.</p></div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-receipt"></i><p>No expenses yet. Click "Add Expense" to record one.</p></div></td></tr>';
       return;
     }
     tbody.innerHTML = allMiscExpenses.map(e => {
-      const statusBadge = e.status === 'approved'
-        ? '<span class="badge badge-success">Approved</span>'
-        : e.status === 'rejected'
-          ? '<span class="badge badge-danger">Rejected</span>'
-          : '<span class="badge badge-warning">Pending</span>';
+      const statusBadge = e.status === 'approved' ? '<span class="badge badge-success">Approved</span>' : e.status === 'rejected' ? '<span class="badge badge-danger">Rejected</span>' : '<span class="badge badge-warning">Pending</span>';
       const actions = e.status === 'pending_approval'
-        ? `<div style="display:flex;gap:5px;">
-            <button class="btn btn-sm btn-success" onclick="approveExpense('${e.id}')"><i class="fas fa-check"></i></button>
-            <button class="btn btn-sm btn-danger" onclick="rejectExpense('${e.id}')"><i class="fas fa-times"></i></button>
-          </div>`
+        ? `<div style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="approveExpense('${e.id}')"><i class="fas fa-check"></i></button><button class="btn btn-sm btn-danger" onclick="rejectExpense('${e.id}')"><i class="fas fa-times"></i></button></div>`
         : '-';
-      return `
-        <tr>
-          <td>${formatDate(e.createdAt)}</td>
-          <td><strong>${e.name || '-'}</strong></td>
-          <td><span class="badge badge-purple">${e.category || 'General'}</span></td>
-          <td>${formatCurrency(e.amount)}</td>
-          <td>${e.issuedByName || '-'}</td>
-          <td>${e.boughtByName || '-'}</td>
-          <td>${statusBadge}</td>
-          <td>${actions}</td>
-        </tr>
-      `;
+      return `<tr><td>${formatDate(e.createdAt)}</td><td><strong>${e.name || '-'}</strong></td><td><span class="badge badge-purple">${e.category || 'General'}</span></td><td>${formatCurrency(e.amount)}</td><td>${e.issuedByName || '-'}</td><td>${e.boughtByName || '-'}</td><td>${statusBadge}</td><td>${actions}</td></tr>`;
     }).join('');
   }
 
@@ -1023,52 +1064,20 @@
       const totalExp = data.purchases + data.salaries + data.misc;
       const profit = data.revenue - totalExp;
       const change = i > 0 ? ((profit - prevProfit) / (Math.abs(prevProfit) || 1) * 100).toFixed(1) : '-';
-      const changeClass = change > 0 ? 'badge-success' : change < 0 ? 'badge-danger' : 'badge-warning';
+      const cls = change > 0 ? 'badge-success' : change < 0 ? 'badge-danger' : 'badge-warning';
       prevProfit = profit;
-      return `
-        <tr>
-          <td><strong>${months[parseInt(m)]} ${y}</strong></td>
-          <td>${formatCurrency(data.revenue)}</td>
-          <td>${formatCurrency(data.purchases)}</td>
-          <td>${formatCurrency(data.salaries)}</td>
-          <td>${formatCurrency(data.misc)}</td>
-          <td>${formatCurrency(totalExp)}</td>
-          <td><strong>${formatCurrency(profit)}</strong></td>
-          <td><span class="badge ${changeClass}">${change > 0 ? '+' : ''}${change}%</span></td>
-        </tr>
-      `;
+      return `<tr><td><strong>${months[parseInt(m)]} ${y}</strong></td><td>${formatCurrency(data.revenue)}</td><td>${formatCurrency(data.purchases)}</td><td>${formatCurrency(data.salaries)}</td><td>${formatCurrency(data.misc)}</td><td>${formatCurrency(totalExp)}</td><td><strong>${formatCurrency(profit)}</strong></td><td><span class="badge ${cls}">${change > 0 ? '+' : ''}${change}%</span></td></tr>`;
     }).join('');
   }
 
-  // ========== MISC EXPENSE ACTIONS ==========
+  // ========== MISC EXPENSES ==========
   window.openAddExpenseModal = function() {
     showModal('Add Miscellaneous Expense', `
-      <div class="form-row">
-        <div class="form-group"><label>Expense Name *</label><input class="form-control" id="expName" placeholder="e.g., Generator Fuel"></div>
-        <div class="form-group"><label>Category</label>
-          <select class="form-control" id="expCategory">
-            <option value="Fuel">Fuel</option>
-            <option value="Transport">Transport</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Utilities">Utilities</option>
-            <option value="Supplies">Office Supplies</option>
-            <option value="Miscellaneous">Miscellaneous</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Amount (₦) *</label><input type="number" class="form-control" id="expAmount" placeholder="0" min="1"></div>
-        <div class="form-group"><label>Date</label><input type="date" class="form-control" id="expDate"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Money Issued By *</label><input class="form-control" id="expIssuedBy" placeholder="e.g., Admin Name"></div>
-        <div class="form-group"><label>Item Bought By *</label><input class="form-control" id="expBoughtBy" placeholder="e.g., Staff Name"></div>
-      </div>
-      <div class="form-group"><label>Notes / Description</label><textarea class="form-control" id="expNotes" rows="2" placeholder="Optional details..."></textarea></div>
-      <div style="display:flex;gap:10px;margin-top:10px;">
-        <button class="btn btn-primary" onclick="submitExpense()"><i class="fas fa-paper-plane"></i> Submit for Approval</button>
-        <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
-      </div>
+      <div class="form-row"><div class="form-group"><label>Expense Name *</label><input class="form-control" id="expName" placeholder="e.g., Generator Fuel"></div><div class="form-group"><label>Category</label><select class="form-control" id="expCategory"><option value="Fuel">Fuel</option><option value="Transport">Transport</option><option value="Maintenance">Maintenance</option><option value="Utilities">Utilities</option><option value="Supplies">Office Supplies</option><option value="Miscellaneous">Miscellaneous</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Amount (₦) *</label><input type="number" class="form-control" id="expAmount" placeholder="0" min="1"></div><div class="form-group"><label>Date</label><input type="date" class="form-control" id="expDate"></div></div>
+      <div class="form-row"><div class="form-group"><label>Money Issued By *</label><input class="form-control" id="expIssuedBy" placeholder="e.g., Admin Name"></div><div class="form-group"><label>Item Bought By *</label><input class="form-control" id="expBoughtBy" placeholder="e.g., Staff Name"></div></div>
+      <div class="form-group"><label>Notes</label><textarea class="form-control" id="expNotes" rows="2" placeholder="Optional details..."></textarea></div>
+      <div style="display:flex;gap:10px;margin-top:10px;"><button class="btn btn-primary" onclick="submitExpense()"><i class="fas fa-paper-plane"></i> Submit for Approval</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
     `);
     document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
   };
@@ -1081,67 +1090,37 @@
     const category = document.getElementById('expCategory')?.value;
     const notes = document.getElementById('expNotes')?.value?.trim();
     const dateStr = document.getElementById('expDate')?.value;
-
-    if (!name || !amount || !issuedBy || !boughtBy) {
-      showToast('Name, amount, issued by, and bought by are required', 'error');
-      return;
-    }
-
+    if (!name || !amount || !issuedBy || !boughtBy) { showToast('Name, amount, issued by & bought by required', 'error'); return; }
     try {
-      await addDoc(collection(db, 'misc_expenses'), {
-        name, amount, category, notes: notes || '',
-        issuedByName: issuedBy, boughtByName: boughtBy,
-        expenseDate: dateStr || new Date().toISOString().split('T')[0],
-        status: 'pending_approval',
-        createdBy: currentUser?.uid,
-        createdByName: userData?.fullName || 'Admin',
-        createdAt: serverTimestamp()
-      });
-      await logAudit('add_misc_expense', `Added expense: ${name} - ${formatCurrency(amount)}`);
+      await addDoc(collection(db, 'misc_expenses'), { name, amount, category, notes: notes || '', issuedByName: issuedBy, boughtByName: boughtBy, expenseDate: dateStr || new Date().toISOString().split('T')[0], status: 'pending_approval', createdBy: currentUser?.uid, createdByName: userData?.fullName || 'Admin', createdAt: serverTimestamp() });
+      await logAudit('add_misc_expense', `Added: ${name} - ${formatCurrency(amount)}`);
       showToast('Expense submitted for approval', 'success');
       hideModal();
-    } catch (e) {
-      showToast('Failed to submit expense', 'error');
-    }
+    } catch (e) { showToast('Failed to submit', 'error'); }
   };
 
-  window.approveExpense = async function(expenseId) {
+  window.approveExpense = async function(id) {
     try {
-      await updateDoc(doc(db, 'misc_expenses', expenseId), {
-        status: 'approved',
-        approvedBy: currentUser?.uid,
-        approvedByName: userData?.fullName || 'Admin',
-        approvedAt: serverTimestamp()
-      });
-      await logAudit('approve_misc_expense', `Approved expense ${expenseId}`);
+      await updateDoc(doc(db, 'misc_expenses', id), { status: 'approved', approvedBy: currentUser?.uid, approvedByName: userData?.fullName || 'Admin', approvedAt: serverTimestamp() });
+      await logAudit('approve_misc_expense', `Approved expense ${id}`);
       showToast('Expense approved', 'success');
     } catch (e) { showToast('Approval failed', 'error'); }
   };
 
-  window.rejectExpense = async function(expenseId) {
+  window.rejectExpense = async function(id) {
     const reason = prompt('Rejection reason:') || 'Not specified';
     try {
-      await updateDoc(doc(db, 'misc_expenses', expenseId), {
-        status: 'rejected',
-        rejectedBy: currentUser?.uid,
-        rejectedByName: userData?.fullName || 'Admin',
-        rejectedAt: serverTimestamp(),
-        rejectionReason: reason
-      });
-      await logAudit('reject_misc_expense', `Rejected expense ${expenseId}. Reason: ${reason}`);
+      await updateDoc(doc(db, 'misc_expenses', id), { status: 'rejected', rejectedBy: currentUser?.uid, rejectedByName: userData?.fullName || 'Admin', rejectedAt: serverTimestamp(), rejectionReason: reason });
+      await logAudit('reject_misc_expense', `Rejected ${id}. Reason: ${reason}`);
       showToast('Expense rejected', 'info');
     } catch (e) { showToast('Rejection failed', 'error'); }
   };
 
   // ========== EXPORT ==========
   window.exportSalaries = function(format) {
-    const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active');
-    const headers = 'Staff,Role,Base Salary,Points,Point Value,Points Bonus,Final Salary';
-    const rows = workers.map(u => {
-      const bonus = getPointBonus(u);
-      return `"${u.fullName||''}","${u.role}","${u.baseSalary||0}","${u.totalPoints||0}","₦${(u.pointValueNaira||globalPointValue||500)/5}/pt","${bonus>=0?'+':''}${bonus}","${getFinalSalary(u)}"`;
-    });
-    const csv = [headers, ...rows].join('\n');
+    const rows = getSalaryRows();
+    const headers = 'Name,Role,Base Salary,Points,Point Value,Points Bonus,Final Salary';
+    const csv = [headers, ...rows.map(r => `"${r.name}","${r.role}","${r.baseSalary}","${r.points}","₦${r.pointValue}/5pts","${r.pointBonus>=0?'+':''}${r.pointBonus}","${r.finalSalary}"`)].join('\n');
     const blob = new Blob([csv], { type: format === 'csv' ? 'text/csv' : 'application/vnd.ms-excel' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1152,23 +1131,15 @@
   };
 
   // ========== EVENT LISTENERS ==========
-  document.getElementById('exportSalaryBtn')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    document.getElementById('exportSalaryMenu')?.classList.toggle('show');
-  });
-  document.addEventListener('click', () => {
-    document.getElementById('exportSalaryMenu')?.classList.remove('show');
-  });
-
-  document.querySelectorAll('.tab').forEach(t => {
-    t.addEventListener('click', function() {
-      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-      this.classList.add('active');
-      currentTab = this.dataset.tab;
-      document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
-      document.getElementById(currentTab + 'Panel').classList.add('active');
-    });
-  });
+  document.getElementById('exportSalaryBtn')?.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('exportSalaryMenu')?.classList.toggle('show'); });
+  document.addEventListener('click', () => document.getElementById('exportSalaryMenu')?.classList.remove('show'));
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    currentTab = this.dataset.tab;
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    document.getElementById(currentTab + 'Panel').classList.add('active');
+  }));
 
   // ========== AUTH ==========
   onAuthStateChanged(auth, async (u) => {
@@ -1176,9 +1147,7 @@
     currentUser = u;
     try {
       const snap = await getDoc(doc(db, 'users', u.uid));
-      if (!snap.exists() || (snap.data().role !== 'admin' && snap.data().role !== 'super_admin')) {
-        await signOut(auth); window.location.href = 'auth.html'; return;
-      }
+      if (!snap.exists() || (snap.data().role !== 'admin' && snap.data().role !== 'super_admin')) { await signOut(auth); window.location.href = 'auth.html'; return; }
       userData = snap.data();
       document.getElementById('userName').textContent = userData.fullName?.split(' ')[0] || 'Admin';
       document.getElementById('userRole').textContent = userData.role === 'super_admin' ? 'Super Admin' : 'Admin';
@@ -1187,14 +1156,13 @@
       await loadPointValue();
       loadAllData();
       await logAudit('view_finance', 'Viewed finance page');
-    } catch (e) { console.error('Auth error:', e); showToast('Error loading data', 'error'); }
+    } catch (e) { showToast('Error loading data', 'error'); }
   });
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     try { await logAudit('logout', 'Logged out'); } catch (e) {}
     await signOut(auth); window.location.href = 'auth.html';
   });
-
   window.addEventListener('beforeunload', cleanup);
 </script>
 </body>
