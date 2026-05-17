@@ -7,15 +7,15 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Staff Management · OmoCreations</title>
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    
+
     :root {
       --primary: #ff4da6;
       --primary-dark: #e6398c;
@@ -29,11 +29,12 @@
       --danger: #ef4444;
       --info: #3b82f6;
       --sidebar-width: 280px;
+      --sidebar-collapsed: 80px;
       --header-height: 70px;
     }
-    
+
     html { font-size: 16px; -webkit-text-size-adjust: 100%; }
-    
+
     body {
       font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #f9fafb 0%, #fff0f6 100%);
@@ -42,22 +43,27 @@
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
     }
-    
+
+    @keyframes flameRing {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 77, 166, 0.4); }
+      50% { box-shadow: 0 0 0 10px rgba(255, 77, 166, 0); }
+    }
+
     @keyframes fadeInUp {
       from { transform: translateY(20px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
-    
+
     @keyframes slideIn {
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
-    
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
     }
-    
+
     /* ===== SIDEBAR ===== */
     .sidebar {
       width: var(--sidebar-width);
@@ -67,58 +73,54 @@
       position: fixed;
       top: 0; left: 0;
       height: 100vh;
-      overflow-y: auto;
-      overflow-x: hidden;
-      transition: transform 0.3s ease;
+      overflow-y: auto; overflow-x: hidden;
+      transition: transform 0.3s ease, width 0.3s ease, min-width 0.3s ease;
       z-index: 1000;
-      border-right: 1px solid rgba(255,77,166,0.2);
+      border-right: 1px solid rgba(255, 77, 166, 0.2);
     }
-    
+
     .sidebar::-webkit-scrollbar { width: 4px; }
     .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
     .sidebar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
-    
+
     .sidebar-header {
       padding: 24px 18px;
       display: flex; align-items: center; gap: 12px;
       border-bottom: 1px solid rgba(255,77,166,0.2);
-      position: sticky; top: 0;
+      position: sticky; top: 0; z-index: 10;
       background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
-      z-index: 10;
     }
-    
+
     .sidebar-header .close-sidebar {
-      display: none;
-      background: rgba(255,255,255,0.1);
+      display: none; background: rgba(255,255,255,0.1);
       border: none; color: white;
       width: 32px; height: 32px; border-radius: 50%;
       cursor: pointer; font-size: 1.2rem;
-      margin-left: auto;
-      align-items: center; justify-content: center;
+      margin-left: auto; align-items: center; justify-content: center;
     }
-    
+
     .logo-icon {
       width: 42px; height: 42px;
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
       font-size: 1.3rem; font-weight: 700; flex-shrink: 0;
+      animation: flameRing 2s ease-in-out infinite;
     }
-    
+
     .logo-text { font-size: 1.25rem; font-weight: 800; font-family: 'Playfair Display', serif; white-space: nowrap; }
     .logo-text span { color: var(--primary); }
-    
+
     .sidebar-nav { padding: 20px 12px; display: flex; flex-direction: column; }
-    
+
     .nav-section { margin-bottom: 20px; }
-    
+
     .nav-section-title {
       font-size: 0.65rem; text-transform: uppercase;
       letter-spacing: 2px; color: rgba(255,255,255,0.4);
-      padding: 8px 14px 6px; font-weight: 600;
-      white-space: nowrap;
+      padding: 8px 14px 6px; font-weight: 600; white-space: nowrap;
     }
-    
+
     .nav-item {
       display: flex; align-items: center; gap: 14px;
       padding: 12px 14px; border-radius: 12px;
@@ -126,144 +128,127 @@
       cursor: pointer; border: none; background: none;
       width: 100%; font-size: 0.9rem; font-weight: 500;
       text-align: left; margin-bottom: 3px;
-      transition: all 0.2s;
-      font-family: 'Poppins', sans-serif;
+      transition: all 0.2s; font-family: 'Poppins', sans-serif;
       white-space: nowrap; text-decoration: none;
     }
-    
+
     .nav-item i { width: 22px; font-size: 1.1rem; text-align: center; flex-shrink: 0; }
     .nav-item:hover { background: rgba(255,77,166,0.15); color: white; transform: translateX(5px); }
-    
+
     .nav-item.active {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      box-shadow: 0 5px 15px rgba(255,77,166,0.3);
+      color: white; box-shadow: 0 5px 15px rgba(255,77,166,0.3);
     }
-    
+
     .nav-item.logout { color: rgba(239,68,68,0.7); margin-top: auto; }
     .nav-item.logout:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
-    
+
     .sidebar-footer {
-      padding: 20px;
-      border-top: 1px solid rgba(255,77,166,0.2);
+      padding: 20px; border-top: 1px solid rgba(255,77,166,0.2);
       position: sticky; bottom: 0;
       background: linear-gradient(0deg, #0f0f1a 0%, transparent 100%);
     }
-    
+
     .user-profile { display: flex; align-items: center; gap: 12px; }
-    
+
     .user-avatar {
       width: 44px; height: 44px; border-radius: 12px;
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       display: flex; align-items: center; justify-content: center;
       font-weight: 700; color: white; flex-shrink: 0; font-size: 1.1rem;
     }
-    
+
+    .user-details { white-space: nowrap; }
     .user-details h4 { font-size: 0.85rem; font-weight: 600; }
     .user-details p { font-size: 0.7rem; opacity: 0.6; }
-    
-    /* Sidebar Overlay */
+
     .sidebar-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
       z-index: 999; display: none;
     }
     .sidebar-overlay.active { display: block; }
-    
+
     /* ===== MAIN CONTENT ===== */
     .main-content {
-      flex: 1;
-      margin-left: var(--sidebar-width);
+      flex: 1; margin-left: var(--sidebar-width);
       transition: margin-left 0.3s ease;
-      min-height: 100vh;
-      width: calc(100% - var(--sidebar-width));
+      min-height: 100vh; width: calc(100% - var(--sidebar-width));
     }
-    
+
     .top-bar {
       height: var(--header-height);
       background: rgba(255,255,255,0.98);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       padding: 0 28px;
       display: flex; align-items: center; justify-content: space-between;
       border-bottom: 1px solid rgba(255,77,166,0.15);
       position: sticky; top: 0; z-index: 50;
     }
-    
+
     .top-bar-left { display: flex; align-items: center; gap: 14px; }
-    
+
     .menu-toggle {
-      background: none; border: none;
-      font-size: 1.3rem; color: var(--gray);
+      background: none; border: none; font-size: 1.3rem; color: var(--gray);
       cursor: pointer; padding: 10px; border-radius: 10px;
-      transition: all 0.2s;
-      display: none;
+      transition: all 0.2s; display: none;
       align-items: center; justify-content: center;
     }
     .menu-toggle:hover { background: var(--primary-soft); color: var(--primary); }
-    
-    .page-title {
-      font-size: 1.5rem; font-weight: 700;
-      color: var(--dark);
-      font-family: 'Playfair Display', serif;
-    }
-    
+
+    .page-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
     .current-date { color: var(--gray); font-size: 0.85rem; white-space: nowrap; }
-    
+
     .content-wrapper { padding: 28px; max-width: 1600px; }
-    
+
     /* ===== STATS ===== */
     .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
-      margin-bottom: 24px;
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 16px; margin-bottom: 24px;
     }
-    
+
     .stat-card {
-      background: white;
-      padding: 20px; border-radius: 20px;
+      background: white; padding: 18px 16px; border-radius: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.03);
       border: 1px solid rgba(255,77,166,0.1);
       transition: all 0.3s;
-      animation: fadeInUp 0.5s ease forwards;
-      opacity: 0;
+      animation: fadeInUp 0.5s ease forwards; opacity: 0;
+      position: relative; overflow: hidden;
     }
     .stat-card:nth-child(1) { animation-delay: 0.05s; }
-    .stat-card:nth-child(2) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.10s; }
     .stat-card:nth-child(3) { animation-delay: 0.15s; }
-    .stat-card:nth-child(4) { animation-delay: 0.2s; }
-    
+    .stat-card:nth-child(4) { animation-delay: 0.20s; }
+    .stat-card:nth-child(5) { animation-delay: 0.25s; }
+
+    .stat-card::before {
+      content: ''; position: absolute; inset: -2px;
+      background: linear-gradient(45deg, var(--primary), var(--primary-light), var(--primary));
+      background-size: 400%; border-radius: 20px;
+      opacity: 0; transition: opacity 0.3s; z-index: -1;
+    }
     .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(255,77,166,0.15); }
-    
+    .stat-card:hover::before { opacity: 0.3; animation: flameRing 2s linear infinite; }
+
     .stat-header {
-      display: flex; justify-content: space-between;
-      margin-bottom: 12px;
+      display: flex; justify-content: space-between; margin-bottom: 12px;
     }
     .stat-header span {
-      font-size: 0.7rem; color: var(--gray);
-      text-transform: uppercase; font-weight: 600;
-      letter-spacing: 1px;
+      font-size: 0.65rem; color: var(--gray); text-transform: uppercase;
+      font-weight: 600; letter-spacing: 1px;
     }
     .stat-icon {
-      width: 40px; height: 40px; border-radius: 14px;
+      width: 36px; height: 36px; border-radius: 12px;
       background: var(--primary-soft);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--primary);
+      display: flex; align-items: center; justify-content: center; color: var(--primary);
     }
-    .stat-value {
-      font-size: 2rem; font-weight: 800;
-      color: var(--dark);
-      font-family: 'Playfair Display', serif;
-    }
-    
+    .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--dark); font-family: 'Playfair Display', serif; line-height: 1; }
+    .stat-change { font-size: 0.65rem; margin-top: 4px; color: var(--gray); }
+
     /* ===== SETTINGS CARD ===== */
     .settings-card {
       background: linear-gradient(135deg, var(--primary-soft), white);
-      border-radius: 20px; padding: 24px;
-      margin-bottom: 24px;
+      border-radius: 20px; padding: 24px; margin-bottom: 24px;
       display: flex; align-items: center; justify-content: space-between;
       flex-wrap: wrap; gap: 20px;
       border: 1px solid rgba(255,77,166,0.15);
@@ -271,135 +256,105 @@
     .settings-card h3 { font-size: 1rem; display: flex; align-items: center; gap: 10px; }
     .point-value-input { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
     .point-value-input input {
-      width: 150px; padding: 12px 16px;
-      border: 1.5px solid rgba(0,0,0,0.08);
-      border-radius: 40px; font-size: 1rem;
-      font-weight: 600; text-align: center;
-      outline: none;
-      font-family: 'Poppins', sans-serif;
+      width: 150px; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08);
+      border-radius: 40px; font-size: 1rem; font-weight: 600; text-align: center;
+      outline: none; font-family: 'Poppins', sans-serif;
     }
     .point-value-input input:focus { border-color: var(--primary); }
     .point-info { font-size: 0.75rem; color: var(--gray); width: 100%; margin-top: 4px; }
-    
+
     /* ===== TABS ===== */
     .tabs-container {
-      background: white; border-radius: 20px;
-      padding: 6px; margin-bottom: 24px;
-      display: flex; gap: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-      flex-wrap: wrap;
+      background: white; border-radius: 20px; padding: 6px;
+      margin-bottom: 24px; display: flex; gap: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap;
     }
     .tab {
-      padding: 12px 20px; border-radius: 16px;
-      font-weight: 600; font-size: 0.85rem;
-      cursor: pointer; border: none; background: none;
-      color: var(--gray);
-      display: flex; align-items: center; gap: 8px;
-      transition: all 0.2s;
-      font-family: 'Poppins', sans-serif;
+      padding: 12px 20px; border-radius: 16px; font-weight: 600;
+      font-size: 0.85rem; cursor: pointer; border: none; background: none;
+      color: var(--gray); display: flex; align-items: center; gap: 8px;
+      transition: all 0.2s; font-family: 'Poppins', sans-serif;
     }
     .tab:hover { background: var(--primary-soft); color: var(--primary); }
     .tab.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
     .tab .count {
-      background: rgba(255,255,255,0.25);
-      padding: 2px 10px; border-radius: 30px;
-      font-size: 0.7rem; font-weight: 700;
+      background: rgba(255,255,255,0.25); padding: 2px 10px;
+      border-radius: 30px; font-size: 0.7rem; font-weight: 700;
       min-width: 24px; text-align: center;
     }
-    
+
     /* ===== FILTER BAR ===== */
     .filter-bar {
-      display: flex; gap: 12px;
-      margin-bottom: 20px; flex-wrap: wrap;
+      display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
     }
     .search-wrapper { flex: 1; min-width: 200px; position: relative; }
-    .search-wrapper i {
-      position: absolute; left: 14px; top: 50%;
-      transform: translateY(-50%); color: var(--gray);
-    }
+    .search-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray); }
     .search-input {
       width: 100%; padding: 12px 16px 12px 42px;
-      border: 1.5px solid rgba(0,0,0,0.08);
-      border-radius: 40px; font-size: 0.85rem;
-      outline: none; font-family: 'Poppins', sans-serif;
+      border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px;
+      font-size: 0.85rem; outline: none; font-family: 'Poppins', sans-serif;
       transition: border 0.2s;
     }
     .search-input:focus { border-color: var(--primary); }
-    
     .filter-select {
-      padding: 12px 20px;
-      border: 1.5px solid rgba(0,0,0,0.08);
-      border-radius: 40px; font-size: 0.85rem;
-      background: white; cursor: pointer;
-      outline: none; font-family: 'Poppins', sans-serif;
+      padding: 12px 20px; border: 1.5px solid rgba(0,0,0,0.08);
+      border-radius: 40px; font-size: 0.85rem; background: white;
+      cursor: pointer; outline: none; font-family: 'Poppins', sans-serif;
     }
-    
+
     /* ===== PANELS ===== */
     .panel {
-      background: white; border-radius: 24px;
-      padding: 24px; margin-bottom: 24px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      background: white; border-radius: 24px; padding: 24px;
+      margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
       border: 1px solid rgba(255,77,166,0.08);
     }
     .panel-header {
-      display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 20px;
-      flex-wrap: wrap; gap: 10px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
     }
-    .panel-header h3 {
-      font-size: 1.1rem; font-weight: 700;
-      display: flex; align-items: center; gap: 10px;
-    }
+    .panel-header h3 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
     .panel-header h3 i { color: var(--primary); }
-    
+
     /* ===== TABLES ===== */
     .table-wrapper {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      border-radius: 12px;
+      overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px;
     }
-    .data-table {
-      width: 100%; border-collapse: collapse;
-      min-width: 1000px;
-    }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 1100px; }
     .data-table th {
-      text-align: left; padding: 14px 10px;
-      font-size: 0.7rem; font-weight: 600;
-      color: var(--gray); text-transform: uppercase;
-      letter-spacing: 1px;
-      border-bottom: 2px solid var(--primary-soft);
-      white-space: nowrap; background: white;
+      text-align: left; padding: 14px 10px; font-size: 0.7rem;
+      font-weight: 600; color: var(--gray); text-transform: uppercase;
+      letter-spacing: 1px; border-bottom: 2px solid var(--primary-soft);
+      white-space: nowrap; background: white; position: sticky; top: 0;
     }
     .data-table td {
-      padding: 14px 10px;
-      border-bottom: 1px solid rgba(0,0,0,0.04);
-      font-size: 0.85rem;
+      padding: 14px 10px; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 0.85rem;
     }
     .data-table tbody tr { transition: background 0.2s; }
     .data-table tbody tr:hover { background: var(--primary-soft); }
-    
+
     /* ===== BADGES ===== */
     .badge {
-      padding: 5px 12px; border-radius: 40px;
-      font-size: 0.7rem; font-weight: 600;
-      display: inline-block; white-space: nowrap;
+      padding: 5px 12px; border-radius: 40px; font-size: 0.7rem;
+      font-weight: 600; display: inline-block; white-space: nowrap;
     }
     .badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
     .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
     .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
     .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
     .badge-pending { background: rgba(107,114,128,0.1); color: var(--gray); }
-    
+    .badge-purple { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+
+    .points-positive { color: var(--success); font-weight: 700; }
+    .points-negative { color: var(--danger); font-weight: 700; }
+    .points-zero { color: var(--gray); }
+
     /* ===== BUTTONS ===== */
     .btn {
-      padding: 8px 16px; border-radius: 40px;
-      font-weight: 600; font-size: 0.75rem;
-      cursor: pointer;
+      padding: 8px 16px; border-radius: 40px; font-weight: 600;
+      font-size: 0.75rem; cursor: pointer;
       display: inline-flex; align-items: center; gap: 6px;
       background: white; border: 1px solid rgba(0,0,0,0.08);
-      transition: all 0.2s;
-      font-family: 'Poppins', sans-serif;
-      white-space: nowrap;
+      transition: all 0.2s; font-family: 'Poppins', sans-serif; white-space: nowrap;
     }
     .btn:hover { transform: translateY(-2px); }
     .btn:active { transform: translateY(0); }
@@ -409,93 +364,75 @@
     .btn-success { background: var(--success); color: white; border: none; }
     .btn-danger { background: var(--danger); color: white; border: none; }
     .btn-warning { background: var(--warning); color: white; border: none; }
-    
+
+    .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+
     /* ===== EMPTY STATE ===== */
     .empty-state { text-align: center; padding: 40px 20px; color: var(--gray); }
     .empty-state i { font-size: 2.5rem; color: var(--primary-light); margin-bottom: 10px; display: block; }
-    
+
     /* ===== MODAL ===== */
     .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      display: none;
-      align-items: center; justify-content: center;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center;
       z-index: 2000; padding: 16px;
     }
     .modal-overlay.active { display: flex; }
     .modal {
-      background: white; border-radius: 28px;
-      padding: 28px; max-width: 550px;
-      width: 100%; max-height: 85vh;
-      overflow-y: auto;
-      animation: fadeInUp 0.3s ease;
+      background: white; border-radius: 28px; padding: 28px;
+      max-width: 550px; width: 100%; max-height: 85vh;
+      overflow-y: auto; animation: fadeInUp 0.3s ease;
     }
     .modal-header {
-      display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 20px;
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
     }
     .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
     .modal-close {
-      background: none; border: none;
-      font-size: 1.5rem; cursor: pointer;
-      color: var(--gray); padding: 5px;
-      transition: all 0.2s;
+      background: none; border: none; font-size: 1.5rem;
+      cursor: pointer; color: var(--gray); padding: 5px; transition: all 0.2s;
     }
     .modal-close:hover { color: var(--danger); transform: rotate(90deg); }
-    
+
     .form-group { margin-bottom: 18px; }
-    .form-group label {
-      display: block; font-size: 0.8rem;
-      font-weight: 600; color: var(--dark);
-      margin-bottom: 6px;
-    }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
     .form-control {
-      width: 100%; padding: 12px 16px;
-      border: 1.5px solid rgba(0,0,0,0.08);
-      border-radius: 14px; font-size: 0.9rem;
-      outline: none; background: white;
-      font-family: 'Poppins', sans-serif;
-      transition: border 0.2s;
+      width: 100%; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08);
+      border-radius: 14px; font-size: 0.9rem; outline: none; background: white;
+      font-family: 'Poppins', sans-serif; transition: border 0.2s;
     }
     .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,77,166,0.1); }
-    
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
     /* ===== PAGE VIEWS ===== */
     .page-view { display: none; }
     .page-view.active { display: block; }
-    
-    /* ===== EXPORT DROPDOWN ===== */
+
+    /* ===== EXPORT ===== */
     .export-dropdown { position: relative; display: inline-block; }
     .export-menu {
-      position: absolute; top: 100%; right: 0;
-      background: white; border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      min-width: 150px; display: none; z-index: 50;
-      overflow: hidden;
+      position: absolute; top: 100%; right: 0; background: white;
+      border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      min-width: 150px; display: none; z-index: 50; overflow: hidden;
     }
     .export-menu.show { display: block; }
     .export-item {
-      padding: 12px 16px; cursor: pointer;
-      font-size: 0.85rem; transition: background 0.2s;
-      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; cursor: pointer; font-size: 0.85rem;
+      transition: background 0.2s; display: flex; align-items: center; gap: 10px;
     }
     .export-item:hover { background: var(--primary-soft); }
-    
+
     /* ===== TOAST ===== */
     .toast-container {
-      position: fixed; bottom: 24px; right: 24px;
-      z-index: 3000;
+      position: fixed; bottom: 24px; right: 24px; z-index: 3000;
       display: flex; flex-direction: column; gap: 10px;
     }
     .toast {
-      background: white; color: var(--dark);
-      padding: 14px 20px; border-radius: 50px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      background: white; color: var(--dark); padding: 14px 20px;
+      border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
       display: flex; align-items: center; gap: 10px;
       font-weight: 500; font-size: 0.85rem;
-      animation: slideIn 0.3s ease;
-      border-left: 4px solid var(--primary);
+      animation: slideIn 0.3s ease; border-left: 4px solid var(--primary);
       transition: all 0.3s ease;
     }
     .toast.success { border-left-color: var(--success); }
@@ -503,59 +440,39 @@
     .toast i { font-size: 1.1rem; }
     .toast.success i { color: var(--success); }
     .toast.error i { color: var(--danger); }
-    
+
     /* ===== RESPONSIVE ===== */
-    @media (max-width: 1400px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    
+    @media (max-width: 1400px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
     @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-        width: 280px !important;
-      }
-      .sidebar.mobile-open {
-        transform: translateX(0);
-        box-shadow: 10px 0 40px rgba(0,0,0,0.3);
-      }
+      .sidebar { transform: translateX(-100%); width: 280px !important; min-width: 280px !important; }
+      .sidebar.mobile-open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.3); }
       .sidebar-header .close-sidebar { display: flex !important; }
-      
       .menu-toggle { display: flex !important; }
-      
-      .main-content {
-        margin-left: 0 !important;
-        width: 100% !important;
-      }
-      
+      .main-content { margin-left: 0 !important; width: 100% !important; }
       .content-wrapper { padding: 16px 12px; }
       .top-bar { padding: 0 16px; }
       .page-title { font-size: 1.1rem; }
       .current-date { display: none; }
-      
       .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
       .stat-card { padding: 14px 12px; }
       .stat-value { font-size: 1.4rem; }
-      
       .settings-card { flex-direction: column; align-items: flex-start; }
       .point-value-input { width: 100%; }
       .point-value-input input { flex: 1; }
-      
       .tabs-container { overflow-x: auto; flex-wrap: nowrap; }
       .tab { white-space: nowrap; }
-      
       .filter-bar { flex-direction: column; }
       .search-wrapper { min-width: 100%; }
-      
       .panel { padding: 16px 12px; border-radius: 18px; }
-      
-      .data-table { min-width: 800px; }
+      .data-table { min-width: 900px; }
       .data-table th, .data-table td { padding: 10px 6px; font-size: 0.75rem; }
-      
       .btn { font-size: 0.7rem; padding: 6px 10px; }
-      
       .modal { padding: 20px; border-radius: 20px; }
+      .form-row { grid-template-columns: 1fr; }
     }
-    
+
     @media (max-width: 480px) {
       .stats-grid { grid-template-columns: 1fr; }
       .stat-value { font-size: 1.5rem; }
@@ -577,7 +494,7 @@
       <i class="fas fa-times"></i>
     </button>
   </div>
-  
+
   <nav class="sidebar-nav">
     <div class="nav-section">
       <div class="nav-section-title">OVERVIEW</div>
@@ -585,7 +502,7 @@
       <button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>
       <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
     </div>
-    
+
     <div class="nav-section">
       <div class="nav-section-title">MANAGEMENT</div>
       <button class="nav-item active"><i class="fas fa-users-cog"></i><span>Staff Management</span></button>
@@ -593,7 +510,7 @@
       <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
       <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit Logs</span></button>
     </div>
-    
+
     <div class="nav-section">
       <div class="nav-section-title">MONITORING</div>
       <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
@@ -602,7 +519,7 @@
       <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
       <button class="nav-item" onclick="navigateTo('orders-admin.html')"><i class="fas fa-clipboard-list"></i><span>Orders Admin</span></button>
     </div>
-    
+
     <div class="nav-section">
       <div class="nav-section-title">SHOP &amp; KIOSK</div>
       <button class="nav-item" onclick="window.open('kiosk.html','_blank')"><i class="fas fa-desktop"></i><span>Launch Kiosk</span></button>
@@ -610,10 +527,10 @@
       <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
       <button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><span>Catalog</span></button>
     </div>
-    
+
     <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
   </nav>
-  
+
   <div class="sidebar-footer">
     <div class="user-profile">
       <div class="user-avatar" id="userAvatar">A</div>
@@ -627,7 +544,7 @@
 
 <!-- Main Content -->
 <main class="main-content">
-  
+
   <header class="top-bar">
     <div class="top-bar-left">
       <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">
@@ -637,34 +554,43 @@
     </div>
     <span class="current-date" id="currentDate"></span>
   </header>
-  
+
   <div class="content-wrapper">
-    
+
     <!-- Stats -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-header"><span>Total Staff</span><div class="stat-icon"><i class="fas fa-users"></i></div></div>
         <div class="stat-value" id="totalStaff">0</div>
+        <div class="stat-change">Workers + Admins</div>
       </div>
       <div class="stat-card">
-        <div class="stat-header"><span>Active Staff</span><div class="stat-icon"><i class="fas fa-user-check"></i></div></div>
-        <div class="stat-value" id="activeStaff">0</div>
+        <div class="stat-header"><span>Workers</span><div class="stat-icon"><i class="fas fa-hard-hat"></i></div></div>
+        <div class="stat-value" id="activeWorkers">0</div>
+        <div class="stat-change">Active staff</div>
       </div>
       <div class="stat-card">
-        <div class="stat-header"><span>Pending Approval</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div>
+        <div class="stat-header"><span>Admins</span><div class="stat-icon"><i class="fas fa-user-shield"></i></div></div>
+        <div class="stat-value" id="adminCount">0</div>
+        <div class="stat-change">Administrators</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><span>Pending</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div>
         <div class="stat-value" id="pendingStaff">0</div>
+        <div class="stat-change">Awaiting approval</div>
       </div>
       <div class="stat-card">
-        <div class="stat-header"><span>Monthly Payroll</span><div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div></div>
-        <div class="stat-value" id="monthlyPayroll">₦0</div>
+        <div class="stat-header"><span>Total Payroll</span><div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div></div>
+        <div class="stat-value" id="totalPayroll">₦0</div>
+        <div class="stat-change">Monthly (incl. points)</div>
       </div>
     </div>
-    
+
     <!-- Point Value Configuration -->
     <div class="settings-card">
       <div>
         <h3><i class="fas fa-coins" style="color:var(--primary);"></i> Point Value Configuration</h3>
-        <p class="point-info">Staff earn +5 points for early attendance, -5 for late. This sets the ₦ value per 5 points. Payroll updates automatically.</p>
+        <p class="point-info">Staff earn <strong style="color:var(--success);">+5 points</strong> for early attendance, <strong style="color:var(--danger);">-5 points</strong> for late. This sets ₦ value per 5 points. Payroll auto-calculates.</p>
       </div>
       <div class="point-value-input">
         <label style="font-weight:600;white-space:nowrap;">₦ per 5 points:</label>
@@ -672,15 +598,16 @@
         <button class="btn btn-primary" onclick="updatePointValue()"><i class="fas fa-save"></i> Save &amp; Update All</button>
       </div>
     </div>
-    
+
     <!-- Tabs -->
     <div class="tabs-container">
-      <button class="tab active" data-tab="all"><i class="fas fa-users"></i> Active <span class="count" id="allCount">0</span></button>
+      <button class="tab active" data-tab="workers"><i class="fas fa-hard-hat"></i> Workers <span class="count" id="workersCount">0</span></button>
+      <button class="tab" data-tab="admins"><i class="fas fa-user-shield"></i> Admins <span class="count" id="adminsCount">0</span></button>
       <button class="tab" data-tab="pending"><i class="fas fa-clock"></i> Pending <span class="count" id="pendingCount">0</span></button>
       <button class="tab" data-tab="suspended"><i class="fas fa-pause-circle"></i> Suspended <span class="count" id="suspendedCount">0</span></button>
       <button class="tab" data-tab="terminated"><i class="fas fa-ban"></i> Terminated <span class="count" id="terminatedCount">0</span></button>
     </div>
-    
+
     <!-- Filter Bar -->
     <div class="filter-bar">
       <div class="search-wrapper">
@@ -692,6 +619,8 @@
         <option value="staff">Staff</option>
         <option value="attendant">Attendant</option>
         <option value="attendant_chief">Chief Attendant</option>
+        <option value="admin">Admin</option>
+        <option value="super_admin">Super Admin</option>
       </select>
       <div class="export-dropdown">
         <button class="btn btn-outline" id="exportDropdownBtn"><i class="fas fa-download"></i> Export</button>
@@ -702,34 +631,53 @@
       </div>
       <button class="btn btn-primary" onclick="openAddStaffModal()"><i class="fas fa-plus"></i> Add Staff</button>
     </div>
-    
-    <!-- All Staff Panel -->
-    <div id="allPanel" class="page-view active">
+
+    <!-- Workers Panel -->
+    <div id="workersPanel" class="page-view active">
       <div class="panel">
         <div class="panel-header">
-          <h3><i class="fas fa-list"></i> Staff Directory</h3>
+          <h3><i class="fas fa-hard-hat"></i> Workers Directory</h3>
           <button class="btn btn-outline btn-sm" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
         </div>
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th>
-                <th>Base Salary</th><th>Points</th><th>Point Value (₦)</th><th>Tasks</th><th>Leave</th><th>Actions</th>
+                <th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Base Salary</th>
+                <th>Points</th><th>Point Value</th><th>Point Bonus</th><th>Remaining Salary</th>
+                <th>Tasks</th><th>Leave</th><th>Actions</th>
               </tr>
             </thead>
-            <tbody id="staffTable">
-              <tr><td colspan="11"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading staff...</p></div></td></tr>
+            <tbody id="workersTable">
+              <tr><td colspan="12"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading workers...</p></div></td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
-    
+
+    <!-- Admins Panel -->
+    <div id="adminsPanel" class="page-view">
+      <div class="panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-user-shield"></i> Administrators</h3>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Base Salary</th><th>Status</th></tr></thead>
+            <tbody id="adminsTable">
+              <tr><td colspan="6"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading admins...</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- Pending Panel -->
     <div id="pendingPanel" class="page-view">
       <div class="panel">
-        <div class="panel-header"><h3>Pending Approvals</h3></div>
+        <div class="panel-header"><h3><i class="fas fa-clock"></i> Pending Approvals</h3></div>
         <div class="table-wrapper">
           <table class="data-table">
             <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Registered</th><th>Assign Role</th><th>Salary (₦)</th><th>Actions</th></tr></thead>
@@ -738,11 +686,11 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Suspended Panel -->
     <div id="suspendedPanel" class="page-view">
       <div class="panel">
-        <div class="panel-header"><h3>Suspended Staff</h3></div>
+        <div class="panel-header"><h3><i class="fas fa-pause-circle"></i> Suspended Staff</h3></div>
         <div class="table-wrapper">
           <table class="data-table">
             <thead><tr><th>Name</th><th>Role</th><th>Suspended Date</th><th>Reason</th><th>Actions</th></tr></thead>
@@ -751,20 +699,20 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Terminated Panel -->
     <div id="terminatedPanel" class="page-view">
       <div class="panel">
-        <div class="panel-header"><h3>Terminated Staff</h3></div>
+        <div class="panel-header"><h3><i class="fas fa-ban"></i> Terminated Staff</h3></div>
         <div class="table-wrapper">
           <table class="data-table">
-            <thead><tr><th>Name</th><th>Role</th><th>Terminated Date</th><th>Reason</th><th>Terminated By</th></tr></thead>
+            <thead><tr><th>Name</th><th>Role</th><th>Terminated Date</th><th>Reason</th><th>Terminated By</th><th>Actions</th></tr></thead>
             <tbody id="terminatedTable"></tbody>
           </table>
         </div>
       </div>
     </div>
-    
+
   </div>
 </main>
 
@@ -795,17 +743,13 @@
     messagingSenderId: "408062284317",
     appId: "1:408062284317:web:eb905bce68926c10a0ecf4"
   };
-  
+
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  
-  let currentUser = null;
-  let userData = null;
-  let unsubscribes = [];
-  let allUsers = [];
-  let currentTab = 'all';
-  let globalPointValue = 500;
+
+  let currentUser = null, userData = null, unsubscribes = [], allUsers = [];
+  let currentTab = 'workers', globalPointValue = 500;
 
   // ========== UTILITIES ==========
   function formatDate(d) {
@@ -813,16 +757,12 @@
     const date = d.toDate ? d.toDate() : new Date(d);
     return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
   }
-  
-  function formatCurrency(n) {
-    return '₦' + (n || 0).toLocaleString();
-  }
-  
-  function navigateTo(url) {
-    window.location.href = url;
-  }
+
+  function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
+
+  function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
-  
+
   function showToast(msg, type = 'success') {
     const container = document.getElementById('toastContainer');
     if (!container) return;
@@ -831,185 +771,163 @@
     toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${msg}`;
     container.appendChild(toast);
     setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(100%)';
+      toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)';
       toast.style.transition = 'all 0.3s ease';
       setTimeout(() => toast.remove(), 300);
     }, 3500);
   }
-  
+
   async function logAudit(action, note) {
     try {
       await addDoc(collection(db, 'audit_logs'), {
-        actionType: action,
-        performedBy: currentUser?.uid || 'unknown',
-        performedByName: userData?.fullName || 'Admin',
-        performedAt: serverTimestamp(),
-        note: note || ''
+        actionType: action, performedBy: currentUser?.uid || 'unknown',
+        performedByName: userData?.fullName || 'Admin', performedAt: serverTimestamp(), note: note || ''
       });
-    } catch (e) {
-      console.warn('Audit log error:', e.message);
-    }
+    } catch (e) {}
   }
-  
-  function hideModal() {
-    document.getElementById('modalOverlay').classList.remove('active');
-  }
+
+  function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
   window.hideModal = hideModal;
-  
+
   function showModal(title, content) {
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalContent').innerHTML = content;
     document.getElementById('modalOverlay').classList.add('active');
   }
-  
-  function cleanup() {
-    unsubscribes.forEach(u => u());
-    unsubscribes = [];
-  }
+
+  function cleanup() { unsubscribes.forEach(u => u()); unsubscribes = []; }
 
   // ========== SIDEBAR TOGGLE ==========
   window.toggleSidebar = function() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
     if (sidebar.classList.contains('mobile-open')) {
-      sidebar.classList.remove('mobile-open');
-      overlay.classList.remove('active');
+      sidebar.classList.remove('mobile-open'); overlay.classList.remove('active');
       document.body.style.overflow = '';
     } else {
-      sidebar.classList.add('mobile-open');
-      overlay.classList.add('active');
+      sidebar.classList.add('mobile-open'); overlay.classList.add('active');
       document.body.style.overflow = 'hidden';
     }
   };
-  
+
   window.closeSidebar = function() {
     document.getElementById('sidebar').classList.remove('mobile-open');
     document.getElementById('sidebarOverlay').classList.remove('active');
     document.body.style.overflow = '';
   };
-  
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeSidebar();
-  });
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
 
   // ========== POINT VALUE ==========
   async function loadPointValue() {
     try {
       const snap = await getDoc(doc(db, 'system_settings', 'points'));
-      if (snap.exists()) {
-        globalPointValue = snap.data().value || 500;
-      } else {
-        await setDoc(doc(db, 'system_settings', 'points'), { value: 500, updatedAt: serverTimestamp() });
-        globalPointValue = 500;
-      }
-      document.getElementById('pointValueInput').value = globalPointValue;
-    } catch (e) {
-      console.warn('Point value load error:', e.message);
-      globalPointValue = 500;
-    }
+      globalPointValue = snap.exists() ? (snap.data().value || 500) : 500;
+      if (!snap.exists()) await setDoc(doc(db, 'system_settings', 'points'), { value: 500, updatedAt: serverTimestamp() });
+      const input = document.getElementById('pointValueInput');
+      if (input) input.value = globalPointValue;
+    } catch (e) { globalPointValue = 500; }
   }
-  
+
   window.updatePointValue = async function() {
-    const val = parseInt(document.getElementById('pointValueInput').value) || 500;
-    if (val < 100) {
-      showToast('Minimum point value is ₦100', 'error');
-      return;
-    }
-    
+    const val = parseInt(document.getElementById('pointValueInput')?.value) || 500;
+    if (val < 100) { showToast('Minimum ₦100', 'error'); return; }
     try {
-      // Save to system settings
       await setDoc(doc(db, 'system_settings', 'points'), {
-        value: val,
-        updatedBy: currentUser?.uid || 'unknown',
-        updatedByName: userData?.fullName || 'Admin',
-        updatedAt: serverTimestamp()
+        value: val, updatedBy: currentUser?.uid, updatedByName: userData?.fullName || 'Admin', updatedAt: serverTimestamp()
       });
-      
-      // Update all staff records
-      const staffSnap = await getDocs(query(
-        collection(db, 'users'),
-        where('role', 'in', ['staff', 'attendant', 'attendant_chief'])
-      ));
-      
+      const staffSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['staff', 'attendant', 'attendant_chief'])));
       const batch = writeBatch(db);
-      staffSnap.forEach(d => {
-        batch.update(d.ref, { pointValueNaira: val });
-      });
+      staffSnap.forEach(d => batch.update(d.ref, { pointValueNaira: val }));
       await batch.commit();
-      
       globalPointValue = val;
-      await logAudit('update_point_value', `Point value set to ₦${val} per 5 points`);
-      
-      // Re-render with new value
-      renderTables();
-      showToast(`Point value updated to ₦${val} per 5 points. Payroll recalculated.`, 'success');
-    } catch (e) {
-      console.error('Update point value error:', e);
-      showToast('Failed to update point value', 'error');
-    }
+      await logAudit('update_point_value', `Set to ₦${val} per 5 points`);
+      renderAllTables();
+      showToast(`Point value: ₦${val}/5pts. Payroll updated.`, 'success');
+    } catch (e) { showToast('Update failed', 'error'); }
   };
 
-  // ========== RENDER TABLES ==========
-  function renderTables() {
-    const staffUsers = allUsers.filter(u =>
-      u.role === 'staff' || u.role === 'attendant' || u.role === 'attendant_chief'
-    );
-    
-    const activeStaff = staffUsers.filter(u => u.status === 'active');
-    const pendingStaff = staffUsers.filter(u => u.status === 'pending_approval');
-    const suspendedStaff = staffUsers.filter(u => u.status === 'suspended');
-    const terminatedStaff = staffUsers.filter(u => u.status === 'terminated');
-    
-    // Calculate monthly payroll: base salary + (points * (valuePer5Points / 5))
-    const monthlyPayroll = activeStaff.reduce((sum, u) => {
-      const base = u.baseSalary || 0;
-      const points = u.totalPoints || 0;
-      const pointValue = u.pointValueNaira || globalPointValue || 500;
-      const pointBonus = points * (pointValue / 5);
-      return sum + base + pointBonus;
-    }, 0);
-    
+  // ========== CALCULATIONS ==========
+  function getPointBonus(staff) {
+    const points = staff.totalPoints || 0;
+    const pv = staff.pointValueNaira || globalPointValue || 500;
+    return points * (pv / 5); // +5 points = +₦pv, -5 points = -₦pv
+  }
+
+  function getRemainingSalary(staff) {
+    return (staff.baseSalary || 0) + getPointBonus(staff);
+  }
+
+  function formatPoints(points) {
+    if (!points || points === 0) return '<span class="points-zero">0</span>';
+    return points > 0
+      ? `<span class="points-positive">+${points}</span>`
+      : `<span class="points-negative">${points}</span>`;
+  }
+
+  function formatPointBonus(bonus) {
+    if (!bonus || bonus === 0) return '<span class="points-zero">₦0</span>';
+    return bonus > 0
+      ? `<span class="points-positive">+₦${bonus.toLocaleString()}</span>`
+      : `<span class="points-negative">-₦${Math.abs(bonus).toLocaleString()}</span>`;
+  }
+
+  // ========== RENDER ALL TABLES ==========
+  function renderAllTables() {
+    // Workers = staff, attendant, attendant_chief
+    const workers = allUsers.filter(u => ['staff', 'attendant', 'attendant_chief'].includes(u.role));
+    const activeWorkers = workers.filter(u => u.status === 'active');
+    const pendingStaff = workers.filter(u => u.status === 'pending_approval');
+    const suspendedStaff = workers.filter(u => u.status === 'suspended');
+    const terminatedStaff = workers.filter(u => u.status === 'terminated');
+
+    // Admins
+    const admins = allUsers.filter(u => ['admin', 'super_admin'].includes(u.role));
+    const activeAdmins = admins.filter(u => u.status === 'active');
+
+    // Payroll: workers only
+    const workersPayroll = activeWorkers.reduce((sum, u) => sum + getRemainingSalary(u), 0);
+    const adminsPayroll = activeAdmins.reduce((sum, u) => sum + (u.baseSalary || 0), 0);
+    const totalPayroll = workersPayroll + adminsPayroll;
+
     // Update stats
-    document.getElementById('totalStaff').textContent = staffUsers.length;
-    document.getElementById('activeStaff').textContent = activeStaff.length;
+    document.getElementById('totalStaff').textContent = workers.length + admins.length;
+    document.getElementById('activeWorkers').textContent = activeWorkers.length;
+    document.getElementById('adminCount').textContent = activeAdmins.length;
     document.getElementById('pendingStaff').textContent = pendingStaff.length;
-    document.getElementById('monthlyPayroll').textContent = formatCurrency(monthlyPayroll);
-    
-    // Update tab counts
-    document.getElementById('allCount').textContent = activeStaff.length;
+    document.getElementById('totalPayroll').textContent = formatCurrency(totalPayroll);
+
+    document.getElementById('workersCount').textContent = activeWorkers.length;
+    document.getElementById('adminsCount').textContent = activeAdmins.length;
     document.getElementById('pendingCount').textContent = pendingStaff.length;
     document.getElementById('suspendedCount').textContent = suspendedStaff.length;
     document.getElementById('terminatedCount').textContent = terminatedStaff.length;
-    
-    // Apply filters
-    let filtered = [...staffUsers];
+
+    // Filters
     const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
-    if (search) {
-      filtered = filtered.filter(u =>
+    const roleFilter = document.getElementById('roleFilter')?.value || 'all';
+
+    function applyFilters(list) {
+      let filtered = [...list];
+      if (search) filtered = filtered.filter(u =>
         (u.fullName || '').toLowerCase().includes(search) ||
         (u.email || '').toLowerCase().includes(search) ||
         (u.phone || '').includes(search)
       );
+      if (roleFilter !== 'all') filtered = filtered.filter(u => u.role === roleFilter);
+      return filtered;
     }
-    const role = document.getElementById('roleFilter')?.value || 'all';
-    if (role !== 'all') {
-      filtered = filtered.filter(u => u.role === role);
-    }
-    
-    const activeFiltered = filtered.filter(u => u.status === 'active');
-    const pendingFiltered = filtered.filter(u => u.status === 'pending_approval');
-    const suspendedFiltered = filtered.filter(u => u.status === 'suspended');
-    const terminatedFiltered = filtered.filter(u => u.status === 'terminated');
-    
-    // Render Active Staff Table
-    const tbody = document.getElementById('staffTable');
-    if (tbody) {
-      activeFiltered.sort((a, b) => (b.baseSalary || 0) - (a.baseSalary || 0));
-      if (activeFiltered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><i class="fas fa-users"></i><p>No active staff found</p></div></td></tr>';
+
+    // ===== WORKERS TABLE =====
+    const workersFiltered = applyFilters(activeWorkers).sort((a, b) => (b.baseSalary || 0) - (a.baseSalary || 0));
+    const wTbody = document.getElementById('workersTable');
+    if (wTbody) {
+      if (workersFiltered.length === 0) {
+        wTbody.innerHTML = '<tr><td colspan="12"><div class="empty-state"><i class="fas fa-hard-hat"></i><p>No workers found</p></div></td></tr>';
       } else {
-        tbody.innerHTML = activeFiltered.map(u => {
+        wTbody.innerHTML = workersFiltered.map(u => {
+          const bonus = getPointBonus(u);
+          const remaining = getRemainingSalary(u);
           const pv = u.pointValueNaira || globalPointValue || 500;
           return `
             <tr>
@@ -1017,30 +935,54 @@
               <td>${u.email || '-'}</td>
               <td>${u.phone || '-'}</td>
               <td><span class="badge badge-${u.role === 'attendant_chief' ? 'info' : 'success'}">${u.role || 'staff'}</span></td>
-              <td><span class="badge badge-success">Active</span></td>
               <td>${formatCurrency(u.baseSalary)}</td>
-              <td><strong>${u.totalPoints || 0}</strong></td>
+              <td>${formatPoints(u.totalPoints || 0)}</td>
               <td>₦${pv}</td>
+              <td>${formatPointBonus(bonus)}</td>
+              <td><strong>${formatCurrency(remaining)}</strong></td>
               <td>${u.tasksCompleted || 0}</td>
               <td>${u.leaveDaysRemaining ?? 2}</td>
-              <td style="display:flex;gap:5px;flex-wrap:wrap;">
-                <button class="btn btn-sm btn-outline" onclick="openEditStaff('${u.uid}')" title="Edit"><i class="fas fa-edit"></i></button>
-                <button class="btn btn-sm btn-warning" onclick="suspendStaff('${u.uid}')" title="Suspend"><i class="fas fa-pause"></i></button>
-                <button class="btn btn-sm btn-danger" onclick="terminateStaff('${u.uid}')" title="Terminate"><i class="fas fa-ban"></i></button>
+              <td>
+                <div class="action-btns">
+                  <button class="btn btn-sm btn-outline" onclick="openEditStaff('${u.uid}')" title="Edit"><i class="fas fa-edit"></i></button>
+                  <button class="btn btn-sm btn-warning" onclick="suspendStaff('${u.uid}')" title="Suspend"><i class="fas fa-pause"></i></button>
+                  <button class="btn btn-sm btn-danger" onclick="terminateStaff('${u.uid}')" title="Terminate"><i class="fas fa-ban"></i></button>
+                </div>
               </td>
             </tr>
           `;
         }).join('');
       }
     }
-    
-    // Render Pending Table
-    const pendingTbody = document.getElementById('pendingTable');
-    if (pendingTbody) {
-      if (pendingFiltered.length === 0) {
-        pendingTbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-check-circle"></i><p>No pending approvals</p></div></td></tr>';
+
+    // ===== ADMINS TABLE =====
+    const adminsFiltered = applyFilters(admins).sort((a, b) => (b.baseSalary || 0) - (a.baseSalary || 0));
+    const aTbody = document.getElementById('adminsTable');
+    if (aTbody) {
+      if (adminsFiltered.length === 0) {
+        aTbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-user-shield"></i><p>No admins found</p></div></td></tr>';
       } else {
-        pendingTbody.innerHTML = pendingFiltered.map(u => `
+        aTbody.innerHTML = adminsFiltered.map(u => `
+          <tr>
+            <td><strong>${u.fullName || '-'}</strong></td>
+            <td>${u.email || '-'}</td>
+            <td>${u.phone || '-'}</td>
+            <td><span class="badge badge-purple">${u.role === 'super_admin' ? 'Super Admin' : 'Admin'}</span></td>
+            <td>${formatCurrency(u.baseSalary)}</td>
+            <td><span class="badge badge-success">Active</span></td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // ===== PENDING TABLE =====
+    const pendingFiltered = applyFilters(pendingStaff);
+    const pTbody = document.getElementById('pendingTable');
+    if (pTbody) {
+      if (pendingFiltered.length === 0) {
+        pTbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-check-circle"></i><p>No pending approvals</p></div></td></tr>';
+      } else {
+        pTbody.innerHTML = pendingFiltered.map(u => `
           <tr>
             <td><strong>${u.fullName || '-'}</strong></td>
             <td>${u.email || '-'}</td>
@@ -1054,22 +996,25 @@
               </select>
             </td>
             <td><input type="number" id="salary-${u.uid}" style="width:90px;padding:6px;border-radius:8px;border:1px solid rgba(0,0,0,0.1);" value="50000"></td>
-            <td style="display:flex;gap:5px;">
-              <button class="btn btn-sm btn-success" onclick="approveUser('${u.uid}')"><i class="fas fa-check"></i> Approve</button>
-              <button class="btn btn-sm btn-danger" onclick="rejectUser('${u.uid}')"><i class="fas fa-times"></i> Reject</button>
+            <td>
+              <div class="action-btns">
+                <button class="btn btn-sm btn-success" onclick="approveUser('${u.uid}')"><i class="fas fa-check"></i> Approve</button>
+                <button class="btn btn-sm btn-danger" onclick="rejectUser('${u.uid}')"><i class="fas fa-times"></i> Reject</button>
+              </div>
             </td>
           </tr>
         `).join('');
       }
     }
-    
-    // Render Suspended Table
-    const suspendedTbody = document.getElementById('suspendedTable');
-    if (suspendedTbody) {
+
+    // ===== SUSPENDED TABLE =====
+    const suspendedFiltered = applyFilters(suspendedStaff);
+    const sTbody = document.getElementById('suspendedTable');
+    if (sTbody) {
       if (suspendedFiltered.length === 0) {
-        suspendedTbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-pause-circle"></i><p>No suspended staff</p></div></td></tr>';
+        sTbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-pause-circle"></i><p>No suspended staff</p></div></td></tr>';
       } else {
-        suspendedTbody.innerHTML = suspendedFiltered.map(u => `
+        sTbody.innerHTML = suspendedFiltered.map(u => `
           <tr>
             <td><strong>${u.fullName || '-'}</strong></td>
             <td>${u.role || 'staff'}</td>
@@ -1080,20 +1025,22 @@
         `).join('');
       }
     }
-    
-    // Render Terminated Table
-    const terminatedTbody = document.getElementById('terminatedTable');
-    if (terminatedTbody) {
+
+    // ===== TERMINATED TABLE =====
+    const terminatedFiltered = applyFilters(terminatedStaff);
+    const tTbody = document.getElementById('terminatedTable');
+    if (tTbody) {
       if (terminatedFiltered.length === 0) {
-        terminatedTbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-ban"></i><p>No terminated staff</p></div></td></tr>';
+        tTbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-ban"></i><p>No terminated staff</p></div></td></tr>';
       } else {
-        terminatedTbody.innerHTML = terminatedFiltered.map(u => `
+        tTbody.innerHTML = terminatedFiltered.map(u => `
           <tr>
             <td><strong>${u.fullName || '-'}</strong></td>
             <td>${u.role || 'staff'}</td>
             <td>${formatDate(u.terminatedAt)}</td>
             <td>${u.terminationReason || '-'}</td>
             <td>${u.terminatedByName || 'Admin'}</td>
+            <td><button class="btn btn-sm btn-success" onclick="reinstateTerminated('${u.uid}')"><i class="fas fa-undo"></i> Reinstate</button></td>
           </tr>
         `).join('');
       }
@@ -1103,345 +1050,207 @@
   // ========== DATA LOADING ==========
   function loadUsers() {
     cleanup();
-    
-    // Real-time listener for all users
     unsubscribes.push(onSnapshot(
       query(collection(db, 'users'), orderBy('createdAt', 'desc')),
       async (snap) => {
         allUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
         await loadPointValue();
-        renderTables();
+        renderAllTables();
       },
-      (error) => {
-        console.error('Users listener error:', error);
-        showToast('Error loading staff data', 'error');
-      }
+      (error) => { console.error('Users listener error:', error); showToast('Error loading data', 'error'); }
     ));
   }
 
   // ========== STAFF ACTIONS ==========
   window.approveUser = async function(uid) {
-    const roleEl = document.getElementById(`role-${uid}`);
-    const salaryEl = document.getElementById(`salary-${uid}`);
-    const role = roleEl?.value || 'staff';
-    const salary = parseFloat(salaryEl?.value) || 50000;
-    
+    const role = document.getElementById(`role-${uid}`)?.value || 'staff';
+    const salary = parseFloat(document.getElementById(`salary-${uid}`)?.value) || 50000;
     try {
       await updateDoc(doc(db, 'users', uid), {
-        role,
-        baseSalary: salary,
-        status: 'active',
-        approvedBy: currentUser?.uid,
-        approvedByName: userData?.fullName || 'Admin',
-        approvedAt: serverTimestamp(),
-        pointValueNaira: globalPointValue
+        role, baseSalary: salary, status: 'active',
+        approvedBy: currentUser?.uid, approvedByName: userData?.fullName || 'Admin',
+        approvedAt: serverTimestamp(), pointValueNaira: globalPointValue
       });
-      
-      // Notify user
-      try {
-        await addDoc(collection(db, 'notifications'), {
-          userId: uid,
-          type: 'approved',
-          title: 'Account Approved',
-          message: `Your account has been approved as ${role} with base salary ${formatCurrency(salary)}.`,
-          isRead: false,
-          createdAt: serverTimestamp()
-        });
-      } catch (e) {}
-      
-      await logAudit('approve_user', `Approved ${uid} as ${role} with salary ₦${salary}`);
-      showToast('Staff approved successfully', 'success');
-    } catch (e) {
-      showToast('Failed to approve staff', 'error');
-    }
+      try { await addDoc(collection(db, 'notifications'), { userId: uid, type: 'approved', title: 'Account Approved', message: `Approved as ${role}. Base salary: ${formatCurrency(salary)}.`, isRead: false, createdAt: serverTimestamp() }); } catch (e) {}
+      await logAudit('approve_user', `Approved ${uid} as ${role} ₦${salary}`);
+      showToast('Staff approved', 'success');
+    } catch (e) { showToast('Approval failed', 'error'); }
   };
-  
+
   window.rejectUser = async function(uid) {
-    const reason = prompt('Rejection reason:') || 'No reason provided';
+    const reason = prompt('Rejection reason:') || 'No reason';
     try {
-      await updateDoc(doc(db, 'users', uid), {
-        status: 'rejected',
-        rejectedBy: currentUser?.uid,
-        rejectedByName: userData?.fullName || 'Admin',
-        rejectedAt: serverTimestamp(),
-        rejectionReason: reason
-      });
+      await updateDoc(doc(db, 'users', uid), { status: 'rejected', rejectedBy: currentUser?.uid, rejectedByName: userData?.fullName || 'Admin', rejectedAt: serverTimestamp(), rejectionReason: reason });
       await logAudit('reject_user', `Rejected ${uid}. Reason: ${reason}`);
       showToast('User rejected', 'info');
-    } catch (e) {
-      showToast('Failed to reject user', 'error');
-    }
+    } catch (e) { showToast('Rejection failed', 'error'); }
   };
-  
+
   window.suspendStaff = async function(uid) {
     const staff = allUsers.find(u => u.uid === uid);
-    const reason = prompt(`Suspension reason for ${staff?.fullName || 'staff'}:`) || 'No reason provided';
+    const reason = prompt(`Suspension reason for ${staff?.fullName || 'staff'}:`) || 'No reason';
     if (!reason) return;
-    
     try {
-      await updateDoc(doc(db, 'users', uid), {
-        status: 'suspended',
-        suspendedBy: currentUser?.uid,
-        suspendedByName: userData?.fullName || 'Admin',
-        suspendedAt: serverTimestamp(),
-        suspensionReason: reason
-      });
+      await updateDoc(doc(db, 'users', uid), { status: 'suspended', suspendedBy: currentUser?.uid, suspendedByName: userData?.fullName || 'Admin', suspendedAt: serverTimestamp(), suspensionReason: reason });
       await logAudit('suspend_staff', `Suspended ${staff?.fullName || uid}. Reason: ${reason}`);
       showToast('Staff suspended', 'warning');
-    } catch (e) {
-      showToast('Failed to suspend staff', 'error');
-    }
+    } catch (e) { showToast('Suspension failed', 'error'); }
   };
-  
+
   window.reinstateStaff = async function(uid) {
+    try {
+      await updateDoc(doc(db, 'users', uid), { status: 'active', reinstatedBy: currentUser?.uid, reinstatedByName: userData?.fullName || 'Admin', reinstatedAt: serverTimestamp(), suspensionReason: null, suspendedAt: null, suspendedBy: null, suspendedByName: null });
+      await logAudit('reinstate_staff', `Reinstated ${uid}`);
+      showToast('Staff reinstated', 'success');
+    } catch (e) { showToast('Reinstatement failed', 'error'); }
+  };
+
+  window.terminateStaff = async function(uid) {
+    const staff = allUsers.find(u => u.uid === uid);
+    if (!staff) return;
+    const reason = prompt(`Termination reason for ${staff.fullName || 'staff'}:`) || 'No reason';
+    if (!reason) return;
+    if (!confirm(`TERMINATE ${staff.fullName || 'this staff'}?\n\nReason: ${reason}\n\nThis is reversible via the Terminated tab.`)) return;
+    try {
+      await updateDoc(doc(db, 'users', uid), { status: 'terminated', terminatedBy: currentUser?.uid, terminatedByName: userData?.fullName || 'Admin', terminatedAt: serverTimestamp(), terminationReason: reason });
+      await logAudit('terminate_staff', `Terminated ${staff.fullName || uid}. Reason: ${reason}`);
+      showToast(`${staff.fullName || 'Staff'} terminated`, 'info');
+    } catch (e) { showToast('Termination failed', 'error'); }
+  };
+
+  // ===== REINSTATE TERMINATED =====
+  window.reinstateTerminated = async function(uid) {
+    const staff = allUsers.find(u => u.uid === uid);
+    if (!staff) return;
+    if (!confirm(`Reinstate ${staff.fullName || 'this staff'}?\nThey will return to Active status.`)) return;
     try {
       await updateDoc(doc(db, 'users', uid), {
         status: 'active',
         reinstatedBy: currentUser?.uid,
         reinstatedByName: userData?.fullName || 'Admin',
         reinstatedAt: serverTimestamp(),
-        suspensionReason: null
+        terminatedAt: null, terminationReason: null,
+        terminatedBy: null, terminatedByName: null
       });
-      await logAudit('reinstate_staff', `Reinstated ${uid}`);
-      showToast('Staff reinstated', 'success');
-    } catch (e) {
-      showToast('Failed to reinstate staff', 'error');
-    }
+      await logAudit('reinstate_terminated', `Reinstated ${staff.fullName || uid} from termination`);
+      showToast(`${staff.fullName || 'Staff'} reinstated`, 'success');
+    } catch (e) { showToast('Reinstatement failed', 'error'); }
   };
-  
-  // ===== DIRECT TERMINATE (Super Admin or sole Admin) =====
-  window.terminateStaff = async function(uid) {
-    const staff = allUsers.find(u => u.uid === uid);
-    if (!staff) return;
-    
-    const reason = prompt(`Termination reason for ${staff.fullName || 'staff'}:`) || 'No reason provided';
-    if (!reason) return;
-    
-    // Confirm
-    if (!confirm(`Are you sure you want to TERMINATE ${staff.fullName || 'this staff'}?\n\nReason: ${reason}\n\nThis action cannot be undone.`)) return;
-    
-    try {
-      await updateDoc(doc(db, 'users', uid), {
-        status: 'terminated',
-        terminatedBy: currentUser?.uid,
-        terminatedByName: userData?.fullName || 'Admin',
-        terminatedAt: serverTimestamp(),
-        terminationReason: reason
-      });
-      await logAudit('terminate_staff', `Terminated ${staff.fullName || uid}. Reason: ${reason}`);
-      showToast(`${staff.fullName || 'Staff'} has been terminated`, 'info');
-    } catch (e) {
-      showToast('Failed to terminate staff', 'error');
-    }
-  };
-  
-  // Legacy: request termination (sends to other admin for approval)
-  window.requestTermination = async function(uid) {
-    const staff = allUsers.find(u => u.uid === uid);
-    if (!staff) return;
-    
-    const reason = prompt(`Termination reason for ${staff.fullName || 'staff'}:`) || 'No reason provided';
-    if (!reason) return;
-    
-    try {
-      const reqRef = await addDoc(collection(db, 'termination_requests'), {
-        userId: uid,
-        staffName: staff.fullName,
-        requestedBy: currentUser?.uid,
-        requestedByName: userData?.fullName || 'Admin',
-        reason,
-        status: 'pending_approval',
-        createdAt: serverTimestamp(),
-        approvedBy: []
-      });
-      
-      // Notify other admins
-      const adminsSnap = await getDocs(query(
-        collection(db, 'users'),
-        where('role', 'in', ['admin', 'super_admin'])
-      ));
-      
-      adminsSnap.forEach(async (d) => {
-        if (d.id !== currentUser?.uid) {
-          try {
-            await addDoc(collection(db, 'notifications'), {
-              userId: d.id,
-              type: 'termination_approval',
-              title: 'Termination Request',
-              message: `${userData?.fullName || 'Admin'} requested termination of ${staff.fullName}. Reason: ${reason}`,
-              isRead: false,
-              requestId: reqRef.id,
-              createdAt: serverTimestamp()
-            });
-          } catch (e) {}
-        }
-      });
-      
-      await logAudit('termination_request', `Requested termination of ${staff.fullName}. Reason: ${reason}`);
-      showToast('Termination request sent for approval', 'info');
-    } catch (e) {
-      showToast('Failed to send termination request', 'error');
-    }
-  };
-  
+
   // ===== EDIT STAFF =====
   window.openEditStaff = function(uid) {
     const u = allUsers.find(x => x.uid === uid);
     if (!u) { showToast('Staff not found', 'error'); return; }
-    
     const pv = u.pointValueNaira || globalPointValue || 500;
-    
     showModal('Edit Staff', `
-      <div class="form-group"><label>Full Name</label><input class="form-control" id="editName" value="${u.fullName || ''}"></div>
-      <div class="form-group"><label>Email</label><input class="form-control" id="editEmail" value="${u.email || ''}"></div>
-      <div class="form-group"><label>Phone</label><input class="form-control" id="editPhone" value="${u.phone || ''}"></div>
-      <div class="form-group">
-        <label>Role</label>
-        <select class="form-control" id="editRole">
-          <option value="staff" ${u.role === 'staff' ? 'selected' : ''}>Staff</option>
-          <option value="attendant" ${u.role === 'attendant' ? 'selected' : ''}>Attendant</option>
-          <option value="attendant_chief" ${u.role === 'attendant_chief' ? 'selected' : ''}>Chief Attendant</option>
-        </select>
+      <div class="form-row">
+        <div class="form-group"><label>Full Name</label><input class="form-control" id="editName" value="${u.fullName || ''}"></div>
+        <div class="form-group"><label>Email</label><input class="form-control" id="editEmail" value="${u.email || ''}"></div>
       </div>
-      <div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="editSalary" value="${u.baseSalary || 0}"></div>
-      <div class="form-group"><label>Point Value (₦ per 5 pts)</label><input type="number" class="form-control" id="editPointValue" value="${pv}"></div>
-      <div class="form-group"><label>Leave Days Remaining</label><input type="number" class="form-control" id="editLeave" value="${u.leaveDaysRemaining ?? 2}"></div>
-      <div class="form-group"><label>Total Points</label><input type="number" class="form-control" id="editPoints" value="${u.totalPoints || 0}"></div>
-      <div class="form-group"><label>Tasks Completed</label><input type="number" class="form-control" id="editTasks" value="${u.tasksCompleted || 0}"></div>
-      ${u.role?.includes('attendant') ? `
-        <div class="form-group">
-          <label>Reset Attendant PIN</label>
-          <button class="btn btn-warning btn-sm" onclick="resetAttendantPin('${uid}')"><i class="fas fa-key"></i> Reset PIN</button>
-          <small style="display:block;color:var(--gray);margin-top:4px;">User will set new PIN on next login</small>
-        </div>
-      ` : ''}
-      <div style="display:flex;gap:10px;">
-        <button class="btn btn-primary" onclick="saveEdit('${uid}')"><i class="fas fa-save"></i> Save Changes</button>
+      <div class="form-row">
+        <div class="form-group"><label>Phone</label><input class="form-control" id="editPhone" value="${u.phone || ''}"></div>
+        <div class="form-group"><label>Role</label><select class="form-control" id="editRole"><option value="staff" ${u.role==='staff'?'selected':''}>Staff</option><option value="attendant" ${u.role==='attendant'?'selected':''}>Attendant</option><option value="attendant_chief" ${u.role==='attendant_chief'?'selected':''}>Chief Attendant</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="editSalary" value="${u.baseSalary || 0}"></div>
+        <div class="form-group"><label>Point Value (₦/5pts)</label><input type="number" class="form-control" id="editPointValue" value="${pv}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Total Points</label><input type="number" class="form-control" id="editPoints" value="${u.totalPoints || 0}"><small style="color:var(--gray);">+5 for early, -5 for late</small></div>
+        <div class="form-group"><label>Tasks Completed</label><input type="number" class="form-control" id="editTasks" value="${u.tasksCompleted || 0}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Leave Days Remaining</label><input type="number" class="form-control" id="editLeave" value="${u.leaveDaysRemaining ?? 2}"></div>
+        ${u.role?.includes('attendant') ? `<div class="form-group"><label>Reset PIN</label><button class="btn btn-warning btn-sm" onclick="resetAttendantPin('${uid}')"><i class="fas fa-key"></i> Reset PIN</button></div>` : '<div class="form-group"></div>'}
+      </div>
+      <div style="display:flex;gap:10px;margin-top:10px;">
+        <button class="btn btn-primary" onclick="saveEdit('${uid}')"><i class="fas fa-save"></i> Save</button>
         <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
       </div>
     `);
   };
-  
+
   window.saveEdit = async function(uid) {
     const name = document.getElementById('editName')?.value?.trim();
-    const email = document.getElementById('editEmail')?.value?.trim();
-    const phone = document.getElementById('editPhone')?.value?.trim();
-    
-    if (!name) { showToast('Name is required', 'error'); return; }
-    
+    if (!name) { showToast('Name required', 'error'); return; }
     try {
       await updateDoc(doc(db, 'users', uid), {
-        fullName: name,
-        email: email,
-        phone: phone,
+        fullName: name, email: document.getElementById('editEmail')?.value?.trim() || '',
+        phone: document.getElementById('editPhone')?.value?.trim() || '',
         role: document.getElementById('editRole')?.value || 'staff',
         baseSalary: parseFloat(document.getElementById('editSalary')?.value) || 0,
         pointValueNaira: parseFloat(document.getElementById('editPointValue')?.value) || globalPointValue,
-        leaveDaysRemaining: parseInt(document.getElementById('editLeave')?.value) ?? 2,
         totalPoints: parseInt(document.getElementById('editPoints')?.value) || 0,
-        tasksCompleted: parseInt(document.getElementById('editTasks')?.value) || 0
+        tasksCompleted: parseInt(document.getElementById('editTasks')?.value) || 0,
+        leaveDaysRemaining: parseInt(document.getElementById('editLeave')?.value) ?? 2
       });
-      await logAudit('edit_staff', `Updated profile for ${name}`);
-      showToast('Staff updated successfully', 'success');
+      await logAudit('edit_staff', `Updated ${name}`);
+      showToast('Staff updated', 'success');
       hideModal();
-    } catch (e) {
-      showToast('Failed to update staff', 'error');
-    }
+    } catch (e) { showToast('Update failed', 'error'); }
   };
-  
+
   window.resetAttendantPin = async function(uid) {
     try {
-      await updateDoc(doc(db, 'users', uid), {
-        attendantPin: null,
-        pinResetRequired: true
-      });
-      showToast('PIN reset. User will set new PIN on next login.', 'success');
-    } catch (e) {
-      showToast('Failed to reset PIN', 'error');
-    }
+      await updateDoc(doc(db, 'users', uid), { attendantPin: null, pinResetRequired: true });
+      showToast('PIN reset. User sets new PIN on next login.', 'success');
+    } catch (e) { showToast('PIN reset failed', 'error'); }
   };
-  
+
   // ===== ADD STAFF =====
   window.openAddStaffModal = function() {
     showModal('Add New Staff', `
-      <div class="form-group"><label>Full Name *</label><input class="form-control" id="newName" placeholder="e.g., John Doe"></div>
-      <div class="form-group"><label>Email *</label><input type="email" class="form-control" id="newEmail" placeholder="john@example.com"></div>
-      <div class="form-group"><label>Phone *</label><input class="form-control" id="newPhone" placeholder="08012345678"></div>
-      <div class="form-group">
-        <label>Role *</label>
-        <select class="form-control" id="newRole">
-          <option value="staff">Staff</option>
-          <option value="attendant">Attendant</option>
-          <option value="attendant_chief">Chief Attendant</option>
-        </select>
+      <div class="form-row">
+        <div class="form-group"><label>Full Name *</label><input class="form-control" id="newName" placeholder="John Doe"></div>
+        <div class="form-group"><label>Email *</label><input type="email" class="form-control" id="newEmail" placeholder="john@example.com"></div>
       </div>
-      <div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="newSalary" value="50000"></div>
-      <div class="form-group"><label>Leave Days</label><input type="number" class="form-control" id="newLeave" value="2"></div>
-      <div style="display:flex;gap:10px;">
+      <div class="form-row">
+        <div class="form-group"><label>Phone *</label><input class="form-control" id="newPhone" placeholder="08012345678"></div>
+        <div class="form-group"><label>Role *</label><select class="form-control" id="newRole"><option value="staff">Staff</option><option value="attendant">Attendant</option><option value="attendant_chief">Chief Attendant</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="newSalary" value="50000"></div>
+        <div class="form-group"><label>Leave Days</label><input type="number" class="form-control" id="newLeave" value="2"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:10px;">
         <button class="btn btn-primary" onclick="addStaff()"><i class="fas fa-plus"></i> Add Staff</button>
         <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
       </div>
     `);
   };
-  
+
   window.addStaff = async function() {
     const name = document.getElementById('newName')?.value?.trim();
     const email = document.getElementById('newEmail')?.value?.trim();
     const phone = document.getElementById('newPhone')?.value?.trim();
-    
-    if (!name || !email || !phone) {
-      showToast('Name, email, and phone are required', 'error');
-      return;
-    }
-    
+    if (!name || !email || !phone) { showToast('Name, email & phone required', 'error'); return; }
     try {
       const ref = doc(collection(db, 'users'));
       await setDoc(ref, {
-        uid: ref.id,
-        fullName: name,
-        email,
-        phone,
+        uid: ref.id, fullName: name, email, phone,
         role: document.getElementById('newRole')?.value || 'staff',
         baseSalary: parseFloat(document.getElementById('newSalary')?.value) || 50000,
         leaveDaysRemaining: parseInt(document.getElementById('newLeave')?.value) || 2,
-        pointValueNaira: globalPointValue,
-        status: 'active',
-        totalPoints: 0,
-        tasksCompleted: 0,
-        createdAt: serverTimestamp(),
-        addedBy: currentUser?.uid,
-        addedByName: userData?.fullName || 'Admin'
+        pointValueNaira: globalPointValue, status: 'active',
+        totalPoints: 0, tasksCompleted: 0,
+        createdAt: serverTimestamp(), addedBy: currentUser?.uid, addedByName: userData?.fullName || 'Admin'
       });
-      
-      await logAudit('add_staff', `Added new staff: ${name} (${email})`);
-      showToast('Staff added successfully', 'success');
+      await logAudit('add_staff', `Added ${name} (${email})`);
+      showToast('Staff added', 'success');
       hideModal();
-    } catch (e) {
-      console.error('Add staff error:', e);
-      showToast('Failed to add staff', 'error');
-    }
+    } catch (e) { showToast('Failed to add staff', 'error'); }
   };
 
   // ========== EXPORT ==========
   window.exportData = function(format) {
-    const staffUsers = allUsers.filter(u =>
-      u.role === 'staff' || u.role === 'attendant' || u.role === 'attendant_chief'
-    );
-    
-    const headers = ['Name', 'Email', 'Phone', 'Role', 'Status', 'Base Salary', 'Points', 'Point Value (₦)', 'Tasks', 'Leave'];
-    const rows = staffUsers.map(u => [
-      u.fullName || '',
-      u.email || '',
-      u.phone || '',
-      u.role,
-      u.status,
-      u.baseSalary || 0,
-      u.totalPoints || 0,
-      u.pointValueNaira || globalPointValue,
-      u.tasksCompleted || 0,
-      u.leaveDaysRemaining ?? 2
-    ]);
-    
+    const workers = allUsers.filter(u => ['staff', 'attendant', 'attendant_chief'].includes(u.role));
+    const admins = allUsers.filter(u => ['admin', 'super_admin'].includes(u.role));
+    const all = [...workers, ...admins];
+    const headers = ['Name','Email','Phone','Role','Status','Base Salary','Points','Point Value','Remaining Salary','Tasks','Leave'];
+    const rows = all.map(u => {
+      const remaining = u.role === 'admin' || u.role === 'super_admin' ? (u.baseSalary || 0) : getRemainingSalary(u);
+      return [u.fullName||'', u.email||'', u.phone||'', u.role, u.status, u.baseSalary||0, u.totalPoints||0, u.pointValueNaira||globalPointValue, remaining, u.tasksCompleted||0, u.leaveDaysRemaining??2];
+    });
     const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: format === 'csv' ? 'text/csv' : 'application/vnd.ms-excel' });
     const a = document.createElement('a');
@@ -1449,32 +1258,25 @@
     a.download = `staff_export_${new Date().toISOString().split('T')[0]}.${format}`;
     a.click();
     document.getElementById('exportMenu').classList.remove('show');
-    showToast(`Exported ${staffUsers.length} staff records`, 'success');
-  };
-  
-  window.refreshData = function() {
-    loadUsers();
-    showToast('Data refreshed', 'success');
+    showToast(`Exported ${all.length} records`, 'success');
   };
 
+  window.refreshData = function() { loadUsers(); showToast('Refreshed', 'success'); };
+
   // ========== EVENT LISTENERS ==========
-  document.getElementById('searchInput').addEventListener('input', renderTables);
-  document.getElementById('roleFilter').addEventListener('change', renderTables);
-  
+  document.getElementById('searchInput').addEventListener('input', renderAllTables);
+  document.getElementById('roleFilter').addEventListener('change', renderAllTables);
+
   document.getElementById('exportDropdownBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     document.getElementById('exportMenu').classList.toggle('show');
   });
-  
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('exportMenu');
     const btn = document.getElementById('exportDropdownBtn');
-    if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
-      menu.classList.remove('show');
-    }
+    if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) menu.classList.remove('show');
   });
-  
-  // Tabs
+
   document.querySelectorAll('.tab').forEach(t => {
     t.addEventListener('click', function() {
       document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -1482,51 +1284,34 @@
       currentTab = this.dataset.tab;
       document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
       document.getElementById(currentTab + 'Panel').classList.add('active');
-      renderTables();
+      renderAllTables();
     });
   });
 
   // ========== AUTH ==========
   onAuthStateChanged(auth, async (u) => {
-    if (!u) {
-      window.location.href = 'auth.html';
-      return;
-    }
-    
+    if (!u) { window.location.href = 'auth.html'; return; }
     currentUser = u;
-    
     try {
       const snap = await getDoc(doc(db, 'users', u.uid));
-      
       if (!snap.exists() || (snap.data().role !== 'admin' && snap.data().role !== 'super_admin')) {
-        await signOut(auth);
-        window.location.href = 'auth.html';
-        return;
+        await signOut(auth); window.location.href = 'auth.html'; return;
       }
-      
       userData = snap.data();
-      
       document.getElementById('userName').textContent = userData.fullName?.split(' ')[0] || 'Admin';
       document.getElementById('userRole').textContent = userData.role === 'super_admin' ? 'Super Admin' : 'Admin';
       document.getElementById('userAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
-      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {
-        day: '2-digit', month: 'short', year: 'numeric'
-      });
-      
+      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
       loadUsers();
-      await logAudit('view_staff_management', 'Viewed staff management page');
-    } catch (e) {
-      console.error('Auth error:', e);
-      showToast('Error loading user data', 'error');
-    }
+      await logAudit('view_staff_management', 'Viewed staff management');
+    } catch (e) { console.error('Auth error:', e); showToast('Error loading user data', 'error'); }
   });
-  
+
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     try { await logAudit('logout', 'Logged out'); } catch (e) {}
-    await signOut(auth);
-    window.location.href = 'auth.html';
+    await signOut(auth); window.location.href = 'auth.html';
   });
-  
+
   window.addEventListener('beforeunload', cleanup);
 </script>
 </body>
