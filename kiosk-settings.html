@@ -127,6 +127,12 @@
     .photo-badge.late { background:#fee2e2; color:var(--danger); }
     .photo-badge.early { background:#fee2e2; color:var(--danger); }
 
+    .debug-panel { background:#1a1a2e; color:#10b981; border-radius:12px; padding:15px; margin-bottom:15px; font-family:monospace; font-size:0.75rem; max-height:200px; overflow-y:auto; display:none; }
+    .debug-panel.show { display:block; }
+    .debug-panel .debug-line { margin-bottom:3px; }
+    .debug-panel .debug-error { color:#ef4444; }
+    .debug-panel .debug-warn { color:#f59e0b; }
+
     .toast-container { position:fixed; bottom:24px; right:24px; z-index:3000; display:flex; flex-direction:column; gap:10px; }
     .toast { background:white; color:var(--dark); padding:14px 20px; border-radius:50px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px; font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease; border-left:4px solid var(--primary); transition:all 0.3s ease; }
     .toast.success { border-left-color:var(--success); }
@@ -196,8 +202,17 @@
 
   <div class="content-wrapper">
 
+    <!-- Debug Panel -->
+    <div class="debug-panel" id="debugPanel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <strong>🐛 Debug Log</strong>
+        <button onclick="document.getElementById('debugPanel').classList.remove('show')" style="background:none;border:none;color:white;cursor:pointer;font-size:1rem;">&times;</button>
+      </div>
+      <div id="debugContent"></div>
+    </div>
+
     <div class="settings-card">
-      <div class="settings-header"><h2><i class="fas fa-cloud-upload-alt"></i> Cloudinary Configuration</h2><p>Your Cloudinary account for storing attendance photos.</p></div>
+      <div class="settings-header"><h2><i class="fas fa-cloud-upload-alt"></i> Cloudinary Configuration</h2><p>Your Cloudinary account for storing attendance photos. Images are uploaded to Cloudinary and only URLs are stored in Firestore.</p></div>
       <div class="form-group"><label>Cloudinary Cloud Name</label><input type="text" id="cloudinaryCloudName" class="form-control" value="dw80fw9un" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;font-family:'Poppins',sans-serif;"><p class="hint">Found in your Cloudinary Dashboard.</p></div>
       <div class="form-group"><label>Upload Preset (Unsigned)</label><input type="text" id="cloudinaryUploadPreset" class="form-control" value="kiosk_attendance" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;font-family:'Poppins',sans-serif;"><p class="hint">Unsigned upload preset for kiosk photo uploads.</p></div>
     </div>
@@ -217,8 +232,13 @@
     </div>
 
     <div class="settings-card">
-      <div class="settings-header"><h2><i class="fas fa-images"></i> Today's Attendance Photos</h2><p>Photos captured by the kiosk today with time and staff name.</p></div>
-      <div id="attendancePhotosContainer"><div class="loading-state" style="display:flex;justify-content:center;padding:30px;"><div class="spinner" style="width:32px;height:32px;border:3px solid var(--primary-soft);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;"></div></div></div>
+      <div class="settings-header">
+        <h2><i class="fas fa-images"></i> Today's Attendance Photos</h2>
+        <p>Photos captured by the kiosk today with time and staff name. <button onclick="loadTodayPhotos()" style="background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;font-size:0.8rem;">↻ Refresh</button></p>
+      </div>
+      <div id="attendancePhotosContainer">
+        <div style="text-align:center;padding:30px;"><div style="width:32px;height:32px;border:3px solid var(--primary-soft);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 15px;"></div><p style="color:var(--gray);">Loading photos...</p></div>
+      </div>
     </div>
 
   </div>
@@ -229,7 +249,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
@@ -256,6 +276,19 @@
     setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500);
   }
 
+  // ========== DEBUG LOGGER ==========
+  function debugLog(msg, type='info') {
+    console.log(`[KioskSettings] ${msg}`);
+    const panel = document.getElementById('debugPanel');
+    const content = document.getElementById('debugContent');
+    if(panel && content) {
+      panel.classList.add('show');
+      const color = type==='error'?'debug-error':type==='warn'?'debug-warn':'';
+      content.innerHTML += `<div class="debug-line ${color}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+      panel.scrollTop = panel.scrollHeight;
+    }
+  }
+
   window.toggleSidebar = function() {
     const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay');
     if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}
@@ -268,9 +301,11 @@
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
 
   async function loadSettings() {
+    debugLog('Loading kiosk settings...');
     const snap = await getDoc(doc(db, 'system_settings', 'kiosk'));
     if(snap.exists()) {
       const s = snap.data();
+      debugLog(`Settings loaded: checkIn=${s.checkInHour}:${s.checkInMinute}, checkOut=${s.checkOutHour}:${s.checkOutMinute}`);
       document.getElementById('checkInHour').value = s.checkInHour || 9;
       document.getElementById('checkInMinute').value = s.checkInMinute || 0;
       document.getElementById('checkOutHour').value = s.checkOutHour || 18;
@@ -281,6 +316,8 @@
       document.getElementById('adminPin').value = s.adminPin || '1234';
       document.getElementById('cloudinaryCloudName').value = s.cloudinaryCloudName || 'dw80fw9un';
       document.getElementById('cloudinaryUploadPreset').value = s.cloudinaryUploadPreset || 'kiosk_attendance';
+    } else {
+      debugLog('No settings found, using defaults', 'warn');
     }
   }
 
@@ -299,43 +336,127 @@
       updatedAt: serverTimestamp(),
       updatedBy: currentUser?.uid
     };
+    debugLog('Saving settings: ' + JSON.stringify(settings, null, 2));
     await setDoc(doc(db, 'system_settings', 'kiosk'), settings);
+    debugLog('Settings saved successfully!');
     showToast('All settings saved!', 'success');
   };
 
-  async function loadTodayPhotos() {
+  window.loadTodayPhotos = async function() {
     const container = document.getElementById('attendancePhotosContainer');
     const today = new Date().toISOString().split('T')[0];
+    
+    debugLog(`Loading photos for date: ${today}`);
+    debugLog(`Cloudinary: ${document.getElementById('cloudinaryCloudName').value || 'dw80fw9un'}`);
+    debugLog(`Upload Preset: ${document.getElementById('cloudinaryUploadPreset').value || 'kiosk_attendance'}`);
+    
+    container.innerHTML = '<div style="text-align:center;padding:30px;"><div style="width:32px;height:32px;border:3px solid var(--primary-soft);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 15px;"></div><p style="color:var(--gray);">Loading photos...</p></div>';
+    
     try {
-      const q = query(collection(db, 'kiosk_photos'), where('date','==',today), orderBy('timestamp','desc'));
+      debugLog('Querying kiosk_photos collection...');
+      const q = query(collection(db, 'kiosk_photos'), where('date', '==', today));
       const snap = await getDocs(q);
-      if(snap.empty) {
-        container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray);"><i class="fas fa-camera" style="font-size:2rem;margin-bottom:10px;display:block;"></i><p>No attendance photos today</p></div>';
+      
+      debugLog(`Query returned ${snap.size} photos`);
+      debugLog(`Collection exists: ${snap.size >= 0 ? 'YES' : 'NO'}`);
+      
+      if (snap.empty) {
+        debugLog('No photos found for today', 'warn');
+        debugLog('This means no staff has checked in/out via the kiosk today yet.');
+        container.innerHTML = `
+          <div style="text-align:center;padding:30px;color:var(--gray);">
+            <i class="fas fa-camera" style="font-size:2.5rem;margin-bottom:12px;display:block;opacity:0.5;"></i>
+            <p><strong>No attendance photos today</strong></p>
+            <p style="font-size:0.8rem;margin-top:5px;">Photos will appear here when staff check in/out via the kiosk.</p>
+            <p style="font-size:0.75rem;margin-top:8px;color:var(--primary);">Cloudinary: ${document.getElementById('cloudinaryCloudName').value || 'dw80fw9un'}</p>
+            <button onclick="loadTodayPhotos()" style="margin-top:15px;padding:8px 20px;background:var(--primary);color:white;border:none;border-radius:20px;cursor:pointer;font-family:'Poppins',sans-serif;">🔄 Refresh</button>
+          </div>
+        `;
         return;
       }
-      let html = '<div class="attendance-photos">';
-      snap.forEach(doc => {
-        const p = doc.data();
-        const time = p.timestamp?.toDate().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) || '-';
-        html += `<div class="photo-card"><img src="${p.photoUrl}" onclick="window.open('${p.photoUrl}')" alt="${p.staffName}"><div class="photo-info"><h4>${p.staffName||'Unknown'}</h4><p>${p.type==='checkin'?'Check-in':'Check-out'}: ${time}</p><span class="photo-badge on-time">${p.type||'photo'}</span></div></div>`;
+      
+      // Sort manually by timestamp (newest first)
+      const photos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      photos.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+      
+      debugLog(`Rendering ${photos.length} photos`);
+      photos.forEach((p, i) => {
+        debugLog(`Photo ${i+1}: ${p.staffName} - ${p.type} - ${p.photoUrl?.substring(0,50)}...`);
       });
-      html += '</div>'; container.innerHTML = html;
-    } catch(e) { container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--danger);">Error loading photos</div>'; }
-  }
+      
+      let html = '<div class="attendance-photos">';
+      photos.forEach(p => {
+        const time = p.timestamp?.toDate ? p.timestamp.toDate().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : '-';
+        const typeLabel = p.type === 'checkin' ? 'Check-in' : 'Check-out';
+        html += `
+          <div class="photo-card">
+            <img src="${p.photoUrl}" onclick="window.open('${p.photoUrl}')" alt="${p.staffName || 'Staff'}" 
+                 onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22140%22><rect fill=%22%23f0f0f0%22 width=%22200%22 height=%22140%22/><text x=%22100%22 y=%2275%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2212%22>Image Load Error</text></svg>';console.log('Image load failed for: ${p.photoUrl}');">
+            <div class="photo-info">
+              <h4>${p.staffName || 'Unknown'}</h4>
+              <p>${typeLabel}: ${time}</p>
+              <span class="photo-badge on-time">${typeLabel}</span>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+      debugLog('Photos rendered successfully!');
+      
+    } catch (e) {
+      debugLog(`ERROR: ${e.code} - ${e.message}`, 'error');
+      console.error('Full error:', e);
+      
+      if (e.code === 'failed-precondition' || (e.message && e.message.includes('index'))) {
+        debugLog('Firestore index required!', 'warn');
+        const indexMatch = e.message.match(/https:\/\/console\.firebase\.google\.com[^\s)]+/);
+        const indexLink = indexMatch ? indexMatch[0] : '#';
+        container.innerHTML = `
+          <div style="text-align:center;padding:30px;">
+            <i class="fas fa-tools" style="font-size:2rem;color:var(--warning);margin-bottom:10px;display:block;"></i>
+            <p style="color:var(--gray);margin-bottom:10px;"><strong>Database index required</strong></p>
+            <p style="font-size:0.8rem;color:var(--gray);margin-bottom:15px;">The kiosk_photos collection needs a composite index on: date (Ascending) + timestamp (Descending)</p>
+            <a href="${indexLink}" target="_blank" style="display:inline-block;padding:10px 20px;background:var(--primary);color:white;border-radius:40px;text-decoration:none;font-weight:600;font-size:0.85rem;">Click here to create index</a>
+            <p style="font-size:0.75rem;color:var(--gray);margin-top:10px;">After creating the index, refresh this page.</p>
+          </div>
+        `;
+      } else if (e.code === 'permission-denied') {
+        debugLog('Permission denied - check Firestore rules', 'error');
+        container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--danger);"><i class="fas fa-lock" style="font-size:2rem;margin-bottom:10px;display:block;"></i><p>Permission denied</p><p style="font-size:0.75rem;">Check Firestore security rules</p></div>`;
+      } else {
+        container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--danger);"><i class="fas fa-exclamation-circle" style="font-size:2rem;margin-bottom:10px;display:block;"></i><p>Error loading photos</p><p style="font-size:0.75rem;color:var(--gray);">${e.message || 'Unknown error'}</p><button onclick="loadTodayPhotos()" style="margin-top:15px;padding:8px 20px;background:var(--primary);color:white;border:none;border-radius:20px;cursor:pointer;">Retry</button></div>`;
+      }
+    }
+  };
 
   onAuthStateChanged(auth, async (u) => {
-    if(!u){window.location.href='auth.html';return;} currentUser=u;
+    if(!u){debugLog('Not logged in, redirecting...');window.location.href='auth.html';return;} 
+    currentUser=u;
+    debugLog(`Logged in as UID: ${u.uid}`);
+    
     const snap = await getDoc(doc(db,'users',u.uid));
-    if(!snap.exists()||(snap.data().role!=='admin'&&snap.data().role!=='super_admin')){window.location.href='auth.html';return;}
+    if(!snap.exists()||(snap.data().role!=='admin'&&snap.data().role!=='super_admin')){
+      debugLog('Not admin, redirecting...','warn');
+      window.location.href='auth.html';return;
+    }
     const data = snap.data();
+    debugLog(`User: ${data.fullName} (${data.role})`);
+    
     document.getElementById('userName').textContent = data.fullName?.split(' ')[0]||'Admin';
     document.getElementById('userRole').textContent = data.role==='super_admin'?'Super Admin':'Admin';
     document.getElementById('userAvatar').textContent = (data.fullName||'A').charAt(0).toUpperCase();
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-    await loadSettings(); await loadTodayPhotos();
+    
+    await loadSettings();
+    await loadTodayPhotos();
+    debugLog('✅ Kiosk settings page fully loaded');
   });
 
-  document.getElementById('logoutBtn').addEventListener('click',async()=>{await signOut(auth);window.location.href='auth.html';});
+  document.getElementById('logoutBtn').addEventListener('click',async()=>{
+    debugLog('Logging out...');
+    await signOut(auth);window.location.href='auth.html';
+  });
 </script>
 </body>
 </html>
