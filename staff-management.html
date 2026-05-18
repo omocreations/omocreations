@@ -17,20 +17,11 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --primary: #ff4da6;
-      --primary-dark: #e6398c;
-      --primary-light: #ffb3d9;
-      --primary-soft: #fff0f6;
-      --dark: #1a1a2e;
-      --gray: #6b7280;
-      --gray-light: #f3f4f6;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --info: #3b82f6;
-      --sidebar-width: 280px;
-      --sidebar-collapsed: 80px;
-      --header-height: 70px;
+      --primary: #ff4da6; --primary-dark: #e6398c; --primary-light: #ffb3d9;
+      --primary-soft: #fff0f6; --dark: #1a1a2e; --gray: #6b7280;
+      --gray-light: #f3f4f6; --success: #10b981; --warning: #f59e0b;
+      --danger: #ef4444; --info: #3b82f6;
+      --sidebar-width: 280px; --header-height: 70px;
     }
 
     html { font-size: 16px; -webkit-text-size-adjust: 100%; }
@@ -38,126 +29,88 @@
     body {
       font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #f9fafb 0%, #fff0f6 100%);
-      display: flex;
-      min-height: 100vh;
-      overflow-x: hidden;
+      display: flex; min-height: 100vh; overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
     }
 
     @keyframes flameRing {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 77, 166, 0.4); }
-      50% { box-shadow: 0 0 0 10px rgba(255, 77, 166, 0); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,77,166,0.4); }
+      50% { box-shadow: 0 0 0 10px rgba(255,77,166,0); }
     }
-
     @keyframes fadeInUp {
       from { transform: translateY(20px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
-
     @keyframes slideIn {
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
 
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.15); }
-    }
-
-    /* ===== SIDEBAR ===== */
     .sidebar {
-      width: var(--sidebar-width);
-      min-width: var(--sidebar-width);
+      width: var(--sidebar-width); min-width: var(--sidebar-width);
       background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
-      color: white;
-      position: fixed;
-      top: 0; left: 0;
-      height: 100vh;
+      color: white; position: fixed; top: 0; left: 0; height: 100vh;
       overflow-y: auto; overflow-x: hidden;
-      transition: transform 0.3s ease, width 0.3s ease, min-width 0.3s ease;
-      z-index: 1000;
-      border-right: 1px solid rgba(255, 77, 166, 0.2);
+      transition: transform 0.3s ease; z-index: 1000;
+      border-right: 1px solid rgba(255,77,166,0.2);
     }
-
     .sidebar::-webkit-scrollbar { width: 4px; }
     .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
     .sidebar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
     .sidebar-header {
-      padding: 24px 18px;
-      display: flex; align-items: center; gap: 12px;
+      padding: 24px 18px; display: flex; align-items: center; gap: 12px;
       border-bottom: 1px solid rgba(255,77,166,0.2);
       position: sticky; top: 0; z-index: 10;
       background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
     }
-
     .sidebar-header .close-sidebar {
-      display: none; background: rgba(255,255,255,0.1);
-      border: none; color: white;
-      width: 32px; height: 32px; border-radius: 50%;
-      cursor: pointer; font-size: 1.2rem;
-      margin-left: auto; align-items: center; justify-content: center;
+      display: none; background: rgba(255,255,255,0.1); border: none; color: white;
+      width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+      font-size: 1.2rem; margin-left: auto; align-items: center; justify-content: center;
     }
-
     .logo-icon {
-      width: 42px; height: 42px;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
+      width: 42px; height: 42px; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
       font-size: 1.3rem; font-weight: 700; flex-shrink: 0;
       animation: flameRing 2s ease-in-out infinite;
     }
-
     .logo-text { font-size: 1.25rem; font-weight: 800; font-family: 'Playfair Display', serif; white-space: nowrap; }
     .logo-text span { color: var(--primary); }
 
     .sidebar-nav { padding: 20px 12px; display: flex; flex-direction: column; }
-
     .nav-section { margin-bottom: 20px; }
-
     .nav-section-title {
-      font-size: 0.65rem; text-transform: uppercase;
-      letter-spacing: 2px; color: rgba(255,255,255,0.4);
-      padding: 8px 14px 6px; font-weight: 600; white-space: nowrap;
+      font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px;
+      color: rgba(255,255,255,0.4); padding: 8px 14px 6px; font-weight: 600; white-space: nowrap;
     }
-
     .nav-item {
-      display: flex; align-items: center; gap: 14px;
-      padding: 12px 14px; border-radius: 12px;
-      color: rgba(255,255,255,0.7);
-      cursor: pointer; border: none; background: none;
-      width: 100%; font-size: 0.9rem; font-weight: 500;
-      text-align: left; margin-bottom: 3px;
-      transition: all 0.2s; font-family: 'Poppins', sans-serif;
-      white-space: nowrap; text-decoration: none;
+      display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+      border-radius: 12px; color: rgba(255,255,255,0.7); cursor: pointer;
+      border: none; background: none; width: 100%; font-size: 0.9rem; font-weight: 500;
+      text-align: left; margin-bottom: 3px; transition: all 0.2s;
+      font-family: 'Poppins', sans-serif; white-space: nowrap; text-decoration: none;
     }
-
     .nav-item i { width: 22px; font-size: 1.1rem; text-align: center; flex-shrink: 0; }
     .nav-item:hover { background: rgba(255,77,166,0.15); color: white; transform: translateX(5px); }
-
     .nav-item.active {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: white; box-shadow: 0 5px 15px rgba(255,77,166,0.3);
     }
-
     .nav-item.logout { color: rgba(239,68,68,0.7); margin-top: auto; }
     .nav-item.logout:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
 
     .sidebar-footer {
       padding: 20px; border-top: 1px solid rgba(255,77,166,0.2);
-      position: sticky; bottom: 0;
-      background: linear-gradient(0deg, #0f0f1a 0%, transparent 100%);
+      position: sticky; bottom: 0; background: linear-gradient(0deg, #0f0f1a 0%, transparent 100%);
     }
-
     .user-profile { display: flex; align-items: center; gap: 12px; }
-
     .user-avatar {
       width: 44px; height: 44px; border-radius: 12px;
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       display: flex; align-items: center; justify-content: center;
       font-weight: 700; color: white; flex-shrink: 0; font-size: 1.1rem;
     }
-
     .user-details { white-space: nowrap; }
     .user-details h4 { font-size: 0.85rem; font-weight: 600; }
     .user-details p { font-size: 0.7rem; opacity: 0.6; }
@@ -169,89 +122,61 @@
     }
     .sidebar-overlay.active { display: block; }
 
-    /* ===== MAIN CONTENT ===== */
     .main-content {
       flex: 1; margin-left: var(--sidebar-width);
-      transition: margin-left 0.3s ease;
-      min-height: 100vh; width: calc(100% - var(--sidebar-width));
+      transition: margin-left 0.3s ease; min-height: 100vh;
+      width: calc(100% - var(--sidebar-width));
     }
 
     .top-bar {
-      height: var(--header-height);
-      background: rgba(255,255,255,0.98);
+      height: var(--header-height); background: rgba(255,255,255,0.98);
       backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-      padding: 0 28px;
-      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; display: flex; align-items: center; justify-content: space-between;
       border-bottom: 1px solid rgba(255,77,166,0.15);
       position: sticky; top: 0; z-index: 50;
     }
-
     .top-bar-left { display: flex; align-items: center; gap: 14px; }
-
     .menu-toggle {
       background: none; border: none; font-size: 1.3rem; color: var(--gray);
-      cursor: pointer; padding: 10px; border-radius: 10px;
-      transition: all 0.2s; display: none;
-      align-items: center; justify-content: center;
+      cursor: pointer; padding: 10px; border-radius: 10px; transition: all 0.2s;
+      display: none; align-items: center; justify-content: center;
     }
     .menu-toggle:hover { background: var(--primary-soft); color: var(--primary); }
-
     .page-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
     .current-date { color: var(--gray); font-size: 0.85rem; white-space: nowrap; }
 
     .content-wrapper { padding: 28px; max-width: 1600px; }
 
-    /* ===== STATS ===== */
-    .stats-grid {
-      display: grid; grid-template-columns: repeat(5, 1fr);
-      gap: 16px; margin-bottom: 24px;
-    }
-
+    .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
     .stat-card {
       background: white; padding: 18px 16px; border-radius: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-      border: 1px solid rgba(255,77,166,0.1);
-      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(255,77,166,0.1);
+      transition: all 0.3s; position: relative; overflow: hidden;
       animation: fadeInUp 0.5s ease forwards; opacity: 0;
-      position: relative; overflow: hidden;
     }
     .stat-card:nth-child(1) { animation-delay: 0.05s; }
     .stat-card:nth-child(2) { animation-delay: 0.10s; }
     .stat-card:nth-child(3) { animation-delay: 0.15s; }
     .stat-card:nth-child(4) { animation-delay: 0.20s; }
     .stat-card:nth-child(5) { animation-delay: 0.25s; }
-
     .stat-card::before {
       content: ''; position: absolute; inset: -2px;
       background: linear-gradient(45deg, var(--primary), var(--primary-light), var(--primary));
-      background-size: 400%; border-radius: 20px;
-      opacity: 0; transition: opacity 0.3s; z-index: -1;
+      background-size: 400%; border-radius: 20px; opacity: 0; transition: opacity 0.3s; z-index: -1;
     }
     .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(255,77,166,0.15); }
     .stat-card:hover::before { opacity: 0.3; animation: flameRing 2s linear infinite; }
-
-    .stat-header {
-      display: flex; justify-content: space-between; margin-bottom: 12px;
-    }
-    .stat-header span {
-      font-size: 0.65rem; color: var(--gray); text-transform: uppercase;
-      font-weight: 600; letter-spacing: 1px;
-    }
-    .stat-icon {
-      width: 36px; height: 36px; border-radius: 12px;
-      background: var(--primary-soft);
-      display: flex; align-items: center; justify-content: center; color: var(--primary);
-    }
+    .stat-header { display: flex; justify-content: space-between; margin-bottom: 12px; }
+    .stat-header span { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
+    .stat-icon { width: 36px; height: 36px; border-radius: 12px; background: var(--primary-soft); display: flex; align-items: center; justify-content: center; color: var(--primary); }
     .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--dark); font-family: 'Playfair Display', serif; line-height: 1; }
     .stat-change { font-size: 0.65rem; margin-top: 4px; color: var(--gray); }
 
-    /* ===== SETTINGS CARD ===== */
     .settings-card {
       background: linear-gradient(135deg, var(--primary-soft), white);
       border-radius: 20px; padding: 24px; margin-bottom: 24px;
       display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 20px;
-      border: 1px solid rgba(255,77,166,0.15);
+      flex-wrap: wrap; gap: 20px; border: 1px solid rgba(255,77,166,0.15);
     }
     .settings-card h3 { font-size: 1rem; display: flex; align-items: center; gap: 10px; }
     .point-value-input { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
@@ -263,46 +188,38 @@
     .point-value-input input:focus { border-color: var(--primary); }
     .point-info { font-size: 0.75rem; color: var(--gray); width: 100%; margin-top: 4px; }
 
-    /* ===== TABS ===== */
     .tabs-container {
-      background: white; border-radius: 20px; padding: 6px;
-      margin-bottom: 24px; display: flex; gap: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap;
+      background: white; border-radius: 20px; padding: 6px; margin-bottom: 24px;
+      display: flex; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap;
     }
     .tab {
-      padding: 12px 20px; border-radius: 16px; font-weight: 600;
-      font-size: 0.85rem; cursor: pointer; border: none; background: none;
-      color: var(--gray); display: flex; align-items: center; gap: 8px;
-      transition: all 0.2s; font-family: 'Poppins', sans-serif;
+      padding: 12px 20px; border-radius: 16px; font-weight: 600; font-size: 0.85rem;
+      cursor: pointer; border: none; background: none; color: var(--gray);
+      display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+      font-family: 'Poppins', sans-serif;
     }
     .tab:hover { background: var(--primary-soft); color: var(--primary); }
     .tab.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
     .tab .count {
-      background: rgba(255,255,255,0.25); padding: 2px 10px;
-      border-radius: 30px; font-size: 0.7rem; font-weight: 700;
-      min-width: 24px; text-align: center;
+      background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 30px;
+      font-size: 0.7rem; font-weight: 700; min-width: 24px; text-align: center;
     }
 
-    /* ===== FILTER BAR ===== */
-    .filter-bar {
-      display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
-    }
+    .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
     .search-wrapper { flex: 1; min-width: 200px; position: relative; }
     .search-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray); }
     .search-input {
-      width: 100%; padding: 12px 16px 12px 42px;
-      border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px;
-      font-size: 0.85rem; outline: none; font-family: 'Poppins', sans-serif;
+      width: 100%; padding: 12px 16px 12px 42px; border: 1.5px solid rgba(0,0,0,0.08);
+      border-radius: 40px; font-size: 0.85rem; outline: none; font-family: 'Poppins', sans-serif;
       transition: border 0.2s;
     }
     .search-input:focus { border-color: var(--primary); }
     .filter-select {
       padding: 12px 20px; border: 1.5px solid rgba(0,0,0,0.08);
-      border-radius: 40px; font-size: 0.85rem; background: white;
-      cursor: pointer; outline: none; font-family: 'Poppins', sans-serif;
+      border-radius: 40px; font-size: 0.85rem; background: white; cursor: pointer;
+      outline: none; font-family: 'Poppins', sans-serif;
     }
 
-    /* ===== PANELS ===== */
     .panel {
       background: white; border-radius: 24px; padding: 24px;
       margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
@@ -315,24 +232,17 @@
     .panel-header h3 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
     .panel-header h3 i { color: var(--primary); }
 
-    /* ===== TABLES ===== */
-    .table-wrapper {
-      overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px;
-    }
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; }
     .data-table { width: 100%; border-collapse: collapse; min-width: 1100px; }
     .data-table th {
-      text-align: left; padding: 14px 10px; font-size: 0.7rem;
-      font-weight: 600; color: var(--gray); text-transform: uppercase;
-      letter-spacing: 1px; border-bottom: 2px solid var(--primary-soft);
-      white-space: nowrap; background: white; position: sticky; top: 0;
+      text-align: left; padding: 14px 10px; font-size: 0.7rem; font-weight: 600;
+      color: var(--gray); text-transform: uppercase; letter-spacing: 1px;
+      border-bottom: 2px solid var(--primary-soft); white-space: nowrap; background: white; position: sticky; top: 0;
     }
-    .data-table td {
-      padding: 14px 10px; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 0.85rem;
-    }
+    .data-table td { padding: 14px 10px; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 0.85rem; }
     .data-table tbody tr { transition: background 0.2s; }
     .data-table tbody tr:hover { background: var(--primary-soft); }
 
-    /* ===== BADGES ===== */
     .badge {
       padding: 5px 12px; border-radius: 40px; font-size: 0.7rem;
       font-weight: 600; display: inline-block; white-space: nowrap;
@@ -348,13 +258,11 @@
     .points-negative { color: var(--danger); font-weight: 700; }
     .points-zero { color: var(--gray); }
 
-    /* ===== BUTTONS ===== */
     .btn {
-      padding: 8px 16px; border-radius: 40px; font-weight: 600;
-      font-size: 0.75rem; cursor: pointer;
-      display: inline-flex; align-items: center; gap: 6px;
-      background: white; border: 1px solid rgba(0,0,0,0.08);
-      transition: all 0.2s; font-family: 'Poppins', sans-serif; white-space: nowrap;
+      padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+      background: white; border: 1px solid rgba(0,0,0,0.08); transition: all 0.2s;
+      font-family: 'Poppins', sans-serif; white-space: nowrap;
     }
     .btn:hover { transform: translateY(-2px); }
     .btn:active { transform: translateY(0); }
@@ -367,11 +275,9 @@
 
     .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
 
-    /* ===== EMPTY STATE ===== */
     .empty-state { text-align: center; padding: 40px 20px; color: var(--gray); }
     .empty-state i { font-size: 2.5rem; color: var(--primary-light); margin-bottom: 10px; display: block; }
 
-    /* ===== MODAL ===== */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.5);
       backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
@@ -381,19 +287,18 @@
     .modal-overlay.active { display: flex; }
     .modal {
       background: white; border-radius: 28px; padding: 28px;
-      max-width: 550px; width: 100%; max-height: 85vh;
-      overflow-y: auto; animation: fadeInUp 0.3s ease;
+      max-width: 550px; width: 100%; max-height: 85vh; overflow-y: auto;
+      animation: fadeInUp 0.3s ease;
     }
     .modal-header {
       display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
     }
     .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
     .modal-close {
-      background: none; border: none; font-size: 1.5rem;
-      cursor: pointer; color: var(--gray); padding: 5px; transition: all 0.2s;
+      background: none; border: none; font-size: 1.5rem; cursor: pointer;
+      color: var(--gray); padding: 5px; transition: all 0.2s;
     }
     .modal-close:hover { color: var(--danger); transform: rotate(90deg); }
-
     .form-group { margin-bottom: 18px; }
     .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
     .form-control {
@@ -404,11 +309,9 @@
     .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,77,166,0.1); }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-    /* ===== PAGE VIEWS ===== */
     .page-view { display: none; }
     .page-view.active { display: block; }
 
-    /* ===== EXPORT ===== */
     .export-dropdown { position: relative; display: inline-block; }
     .export-menu {
       position: absolute; top: 100%; right: 0; background: white;
@@ -422,7 +325,6 @@
     }
     .export-item:hover { background: var(--primary-soft); }
 
-    /* ===== TOAST ===== */
     .toast-container {
       position: fixed; bottom: 24px; right: 24px; z-index: 3000;
       display: flex; flex-direction: column; gap: 10px;
@@ -430,10 +332,9 @@
     .toast {
       background: white; color: var(--dark); padding: 14px 20px;
       border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      display: flex; align-items: center; gap: 10px;
-      font-weight: 500; font-size: 0.85rem;
-      animation: slideIn 0.3s ease; border-left: 4px solid var(--primary);
-      transition: all 0.3s ease;
+      display: flex; align-items: center; gap: 10px; font-weight: 500;
+      font-size: 0.85rem; animation: slideIn 0.3s ease;
+      border-left: 4px solid var(--primary); transition: all 0.3s ease;
     }
     .toast.success { border-left-color: var(--success); }
     .toast.error { border-left-color: var(--danger); }
@@ -441,10 +342,8 @@
     .toast.success i { color: var(--success); }
     .toast.error i { color: var(--danger); }
 
-    /* ===== RESPONSIVE ===== */
     @media (max-width: 1400px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); width: 280px !important; min-width: 280px !important; }
       .sidebar.mobile-open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.3); }
@@ -472,7 +371,6 @@
       .modal { padding: 20px; border-radius: 20px; }
       .form-row { grid-template-columns: 1fr; }
     }
-
     @media (max-width: 480px) {
       .stats-grid { grid-template-columns: 1fr; }
       .stat-value { font-size: 1.5rem; }
@@ -482,74 +380,53 @@
 </head>
 <body>
 
-<!-- Sidebar Overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="logo-icon">✨</div>
     <div class="logo-text"><span>Omo</span>creations</div>
-    <button class="close-sidebar" onclick="closeSidebar()" aria-label="Close menu">
-      <i class="fas fa-times"></i>
-    </button>
+    <button class="close-sidebar" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
   </div>
-
   <nav class="sidebar-nav">
-    <div class="nav-section">
-      <div class="nav-section-title">OVERVIEW</div>
+    <div class="nav-section"><div class="nav-section-title">OVERVIEW</div>
       <button class="nav-item" onclick="navigateTo('admin-dashboard.html')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
       <button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>
       <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
     </div>
-
-    <div class="nav-section">
-      <div class="nav-section-title">MANAGEMENT</div>
+    <div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
       <button class="nav-item active"><i class="fas fa-users-cog"></i><span>Staff Management</span></button>
       <button class="nav-item" onclick="navigateTo('make-admin.html')"><i class="fas fa-user-shield"></i><span>Make Admin</span></button>
       <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
       <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit Logs</span></button>
     </div>
-
-    <div class="nav-section">
-      <div class="nav-section-title">MONITORING</div>
+    <div class="nav-section"><div class="nav-section-title">MONITORING</div>
       <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
       <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
       <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
       <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
       <button class="nav-item" onclick="navigateTo('orders-admin.html')"><i class="fas fa-clipboard-list"></i><span>Orders Admin</span></button>
     </div>
-
-    <div class="nav-section">
-      <div class="nav-section-title">SHOP &amp; KIOSK</div>
+    <div class="nav-section"><div class="nav-section-title">SHOP &amp; KIOSK</div>
       <button class="nav-item" onclick="window.open('kiosk.html','_blank')"><i class="fas fa-desktop"></i><span>Launch Kiosk</span></button>
       <button class="nav-item" onclick="navigateTo('kiosk-settings.html')"><i class="fas fa-cog"></i><span>Kiosk Settings</span></button>
       <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
       <button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><span>Catalog</span></button>
     </div>
-
     <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
   </nav>
-
   <div class="sidebar-footer">
     <div class="user-profile">
       <div class="user-avatar" id="userAvatar">A</div>
-      <div class="user-details">
-        <h4 id="userName">Admin</h4>
-        <p id="userRole">Admin</p>
-      </div>
+      <div class="user-details"><h4 id="userName">Admin</h4><p id="userRole">Admin</p></div>
     </div>
   </div>
 </aside>
 
-<!-- Main Content -->
 <main class="main-content">
-
   <header class="top-bar">
     <div class="top-bar-left">
-      <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">
-        <i class="fas fa-bars"></i>
-      </button>
+      <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
       <h1 class="page-title">Staff Management</h1>
     </div>
     <span class="current-date" id="currentDate"></span>
@@ -557,40 +434,18 @@
 
   <div class="content-wrapper">
 
-    <!-- Stats -->
     <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-header"><span>Total Staff</span><div class="stat-icon"><i class="fas fa-users"></i></div></div>
-        <div class="stat-value" id="totalStaff">0</div>
-        <div class="stat-change">Workers + Admins</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-header"><span>Workers</span><div class="stat-icon"><i class="fas fa-hard-hat"></i></div></div>
-        <div class="stat-value" id="activeWorkers">0</div>
-        <div class="stat-change">Active staff</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-header"><span>Admins</span><div class="stat-icon"><i class="fas fa-user-shield"></i></div></div>
-        <div class="stat-value" id="adminCount">0</div>
-        <div class="stat-change">Administrators</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-header"><span>Pending</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div>
-        <div class="stat-value" id="pendingStaff">0</div>
-        <div class="stat-change">Awaiting approval</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-header"><span>Total Payroll</span><div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div></div>
-        <div class="stat-value" id="totalPayroll">₦0</div>
-        <div class="stat-change">Monthly (incl. points)</div>
-      </div>
+      <div class="stat-card"><div class="stat-header"><span>Total Staff</span><div class="stat-icon"><i class="fas fa-users"></i></div></div><div class="stat-value" id="totalStaff">0</div><div class="stat-change">Workers + Admins</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Workers</span><div class="stat-icon"><i class="fas fa-hard-hat"></i></div></div><div class="stat-value" id="activeWorkers">0</div><div class="stat-change">Active staff</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Admins</span><div class="stat-icon"><i class="fas fa-user-shield"></i></div></div><div class="stat-value" id="adminCount">0</div><div class="stat-change">Administrators</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Pending</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-value" id="pendingStaff">0</div><div class="stat-change">Awaiting approval</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Total Payroll</span><div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div></div><div class="stat-value" id="totalPayroll">₦0</div><div class="stat-change">Monthly (incl. points)</div></div>
     </div>
 
-    <!-- Point Value Configuration -->
     <div class="settings-card">
       <div>
         <h3><i class="fas fa-coins" style="color:var(--primary);"></i> Point Value Configuration</h3>
-        <p class="point-info">Staff earn <strong style="color:var(--success);">+5 points</strong> for early attendance, <strong style="color:var(--danger);">-5 points</strong> for late. This sets ₦ value per 5 points. Payroll auto-calculates.</p>
+        <p class="point-info">Staff earn <strong style="color:var(--success);">+5 points</strong> for early, <strong style="color:var(--danger);">-5 points</strong> for late. ₦ value per 5 points. Payroll auto-calculates.</p>
       </div>
       <div class="point-value-input">
         <label style="font-weight:600;white-space:nowrap;">₦ per 5 points:</label>
@@ -599,7 +454,6 @@
       </div>
     </div>
 
-    <!-- Tabs -->
     <div class="tabs-container">
       <button class="tab active" data-tab="workers"><i class="fas fa-hard-hat"></i> Workers <span class="count" id="workersCount">0</span></button>
       <button class="tab" data-tab="admins"><i class="fas fa-user-shield"></i> Admins <span class="count" id="adminsCount">0</span></button>
@@ -608,132 +462,50 @@
       <button class="tab" data-tab="terminated"><i class="fas fa-ban"></i> Terminated <span class="count" id="terminatedCount">0</span></button>
     </div>
 
-    <!-- Filter Bar -->
     <div class="filter-bar">
-      <div class="search-wrapper">
-        <i class="fas fa-search"></i>
-        <input type="text" class="search-input" id="searchInput" placeholder="Search by name, email, or phone...">
-      </div>
-      <select class="filter-select" id="roleFilter">
-        <option value="all">All Roles</option>
-        <option value="staff">Staff</option>
-        <option value="attendant">Attendant</option>
-        <option value="attendant_chief">Chief Attendant</option>
-        <option value="admin">Admin</option>
-        <option value="super_admin">Super Admin</option>
-      </select>
+      <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search by name, email, or phone..."></div>
+      <select class="filter-select" id="roleFilter"><option value="all">All Roles</option><option value="staff">Staff</option><option value="attendant">Attendant</option><option value="attendant_chief">Chief Attendant</option><option value="admin">Admin</option><option value="super_admin">Super Admin</option></select>
       <div class="export-dropdown">
         <button class="btn btn-outline" id="exportDropdownBtn"><i class="fas fa-download"></i> Export</button>
-        <div class="export-menu" id="exportMenu">
-          <div class="export-item" onclick="exportData('csv')"><i class="fas fa-file-csv"></i> CSV</div>
-          <div class="export-item" onclick="exportData('excel')"><i class="fas fa-file-excel"></i> Excel</div>
-        </div>
+        <div class="export-menu" id="exportMenu"><div class="export-item" onclick="exportData('csv')"><i class="fas fa-file-csv"></i> CSV</div><div class="export-item" onclick="exportData('excel')"><i class="fas fa-file-excel"></i> Excel</div></div>
       </div>
       <button class="btn btn-primary" onclick="openAddStaffModal()"><i class="fas fa-plus"></i> Add Staff</button>
     </div>
 
-    <!-- Workers Panel -->
+    <!-- Panels (same as original) -->
     <div id="workersPanel" class="page-view active">
-      <div class="panel">
-        <div class="panel-header">
-          <h3><i class="fas fa-hard-hat"></i> Workers Directory</h3>
-          <button class="btn btn-outline btn-sm" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
-        </div>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Base Salary</th>
-                <th>Points</th><th>Point Value</th><th>Point Bonus</th><th>Remaining Salary</th>
-                <th>Tasks</th><th>Leave</th><th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="workersTable">
-              <tr><td colspan="12"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading workers...</p></div></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <div class="panel"><div class="panel-header"><h3><i class="fas fa-hard-hat"></i> Workers Directory</h3><button class="btn btn-outline btn-sm" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Base Salary</th><th>Points</th><th>Point Value</th><th>Point Bonus</th><th>Remaining Salary</th><th>Tasks</th><th>Leave</th><th>Actions</th></tr></thead><tbody id="workersTable"><tr><td colspan="12"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading workers...</p></div></td></tr></tbody></table></div></div>
     </div>
 
-    <!-- Admins Panel -->
     <div id="adminsPanel" class="page-view">
-      <div class="panel">
-        <div class="panel-header">
-          <h3><i class="fas fa-user-shield"></i> Administrators</h3>
-        </div>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Base Salary</th><th>Status</th></tr></thead>
-            <tbody id="adminsTable">
-              <tr><td colspan="6"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading admins...</p></div></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <div class="panel"><div class="panel-header"><h3><i class="fas fa-user-shield"></i> Administrators</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Base Salary</th><th>Status</th></tr></thead><tbody id="adminsTable"><tr><td colspan="6"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading admins...</p></div></td></tr></tbody></table></div></div>
     </div>
 
-    <!-- Pending Panel -->
     <div id="pendingPanel" class="page-view">
-      <div class="panel">
-        <div class="panel-header"><h3><i class="fas fa-clock"></i> Pending Approvals</h3></div>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Registered</th><th>Assign Role</th><th>Salary (₦)</th><th>Actions</th></tr></thead>
-            <tbody id="pendingTable"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="panel"><div class="panel-header"><h3><i class="fas fa-clock"></i> Pending Approvals</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Assign Role</th><th>Salary (₦)</th><th>Actions</th></tr></thead><tbody id="pendingTable"></tbody></table></div></div>
     </div>
 
-    <!-- Suspended Panel -->
     <div id="suspendedPanel" class="page-view">
-      <div class="panel">
-        <div class="panel-header"><h3><i class="fas fa-pause-circle"></i> Suspended Staff</h3></div>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead><tr><th>Name</th><th>Role</th><th>Suspended Date</th><th>Reason</th><th>Actions</th></tr></thead>
-            <tbody id="suspendedTable"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="panel"><div class="panel-header"><h3><i class="fas fa-pause-circle"></i> Suspended Staff</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Name</th><th>Role</th><th>Suspended Date</th><th>Reason</th><th>Actions</th></tr></thead><tbody id="suspendedTable"></tbody></table></div></div>
     </div>
 
-    <!-- Terminated Panel -->
     <div id="terminatedPanel" class="page-view">
-      <div class="panel">
-        <div class="panel-header"><h3><i class="fas fa-ban"></i> Terminated Staff</h3></div>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead><tr><th>Name</th><th>Role</th><th>Terminated Date</th><th>Reason</th><th>Terminated By</th><th>Actions</th></tr></thead>
-            <tbody id="terminatedTable"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="panel"><div class="panel-header"><h3><i class="fas fa-ban"></i> Terminated Staff</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Name</th><th>Role</th><th>Terminated Date</th><th>Reason</th><th>Terminated By</th><th>Actions</th></tr></thead><tbody id="terminatedTable"></tbody></table></div></div>
     </div>
 
   </div>
 </main>
 
-<!-- Modal -->
 <div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="modalTitle">Modal</h3>
-      <button class="modal-close" onclick="hideModal()">&times;</button>
-    </div>
-    <div id="modalContent"></div>
-  </div>
+  <div class="modal"><div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="hideModal()">&times;</button></div><div id="modalContent"></div></div>
 </div>
 
-<!-- Toast -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, updateDoc, serverTimestamp, addDoc, getDocs, where, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, updateDoc, serverTimestamp, addDoc, getDocs, where, setDoc, writeBatch, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
@@ -751,314 +523,135 @@
   let currentUser = null, userData = null, unsubscribes = [], allUsers = [];
   let currentTab = 'workers', globalPointValue = 500;
 
-  // ========== UTILITIES ==========
-  function formatDate(d) {
-    if (!d) return '-';
-    const date = d.toDate ? d.toDate() : new Date(d);
-    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
-  }
-
+  function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
-
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
 
   function showToast(msg, type = 'success') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${msg}`;
-    container.appendChild(toast);
-    setTimeout(() => {
-      toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)';
-      toast.style.transition = 'all 0.3s ease';
-      setTimeout(() => toast.remove(), 300);
-    }, 3500);
+    const c = document.getElementById('toastContainer'); if (!c) return;
+    const t = document.createElement('div'); t.className = `toast ${type}`;
+    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
+    c.appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(100%)'; t.style.transition='all 0.3s ease'; setTimeout(()=>t.remove(),300); }, 3500);
   }
 
   async function logAudit(action, note) {
-    try {
-      await addDoc(collection(db, 'audit_logs'), {
-        actionType: action, performedBy: currentUser?.uid || 'unknown',
-        performedByName: userData?.fullName || 'Admin', performedAt: serverTimestamp(), note: note || ''
-      });
-    } catch (e) {}
+    try { await addDoc(collection(db, 'audit_logs'), { actionType: action, performedBy: currentUser?.uid||'unknown', performedByName: userData?.fullName||'Admin', performedAt: serverTimestamp(), note: note||'' }); } catch(e){}
   }
 
   function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
   window.hideModal = hideModal;
-
   function showModal(title, content) {
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalContent').innerHTML = content;
     document.getElementById('modalOverlay').classList.add('active');
   }
+  function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
 
-  function cleanup() { unsubscribes.forEach(u => u()); unsubscribes = []; }
-
-  // ========== SIDEBAR TOGGLE ==========
   window.toggleSidebar = function() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    if (sidebar.classList.contains('mobile-open')) {
-      sidebar.classList.remove('mobile-open'); overlay.classList.remove('active');
-      document.body.style.overflow = '';
-    } else {
-      sidebar.classList.add('mobile-open'); overlay.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
+    const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay');
+    if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}
+    else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';}
   };
-
   window.closeSidebar = function() {
     document.getElementById('sidebar').classList.remove('mobile-open');
     document.getElementById('sidebarOverlay').classList.remove('active');
-    document.body.style.overflow = '';
+    document.body.style.overflow='';
   };
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
 
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
-
-  // ========== POINT VALUE ==========
   async function loadPointValue() {
     try {
       const snap = await getDoc(doc(db, 'system_settings', 'points'));
       globalPointValue = snap.exists() ? (snap.data().value || 500) : 500;
       if (!snap.exists()) await setDoc(doc(db, 'system_settings', 'points'), { value: 500, updatedAt: serverTimestamp() });
-      const input = document.getElementById('pointValueInput');
-      if (input) input.value = globalPointValue;
-    } catch (e) { globalPointValue = 500; }
+      document.getElementById('pointValueInput').value = globalPointValue;
+    } catch(e) { globalPointValue = 500; }
   }
 
   window.updatePointValue = async function() {
     const val = parseInt(document.getElementById('pointValueInput')?.value) || 500;
     if (val < 100) { showToast('Minimum ₦100', 'error'); return; }
     try {
-      await setDoc(doc(db, 'system_settings', 'points'), {
-        value: val, updatedBy: currentUser?.uid, updatedByName: userData?.fullName || 'Admin', updatedAt: serverTimestamp()
-      });
-      const staffSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['staff', 'attendant', 'attendant_chief'])));
-      const batch = writeBatch(db);
-      staffSnap.forEach(d => batch.update(d.ref, { pointValueNaira: val }));
+      await setDoc(doc(db, 'system_settings', 'points'), { value: val, updatedBy: currentUser?.uid, updatedByName: userData?.fullName||'Admin', updatedAt: serverTimestamp() });
+      const staffSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['staff','attendant','attendant_chief'])));
+      const batch = writeBatch(db); staffSnap.forEach(d => batch.update(d.ref, { pointValueNaira: val }));
       await batch.commit();
       globalPointValue = val;
-      await logAudit('update_point_value', `Set to ₦${val} per 5 points`);
+      await logAudit('update_point_value', `Set to ₦${val}/5pts`);
       renderAllTables();
-      showToast(`Point value: ₦${val}/5pts. Payroll updated.`, 'success');
-    } catch (e) { showToast('Update failed', 'error'); }
+      showToast(`Point value: ₦${val}/5pts`, 'success');
+    } catch(e) { showToast('Update failed', 'error'); }
   };
 
-  // ========== CALCULATIONS ==========
-  function getPointBonus(staff) {
-    const points = staff.totalPoints || 0;
-    const pv = staff.pointValueNaira || globalPointValue || 500;
-    return points * (pv / 5); // +5 points = +₦pv, -5 points = -₦pv
-  }
+  function getPointBonus(staff) { const points = staff.totalPoints || 0; const pv = staff.pointValueNaira || globalPointValue || 500; return points * (pv / 5); }
+  function getRemainingSalary(staff) { return (staff.baseSalary || 0) + getPointBonus(staff); }
+  function formatPoints(points) { if (!points || points === 0) return '<span class="points-zero">0</span>'; return points > 0 ? `<span class="points-positive">+${points}</span>` : `<span class="points-negative">${points}</span>`; }
+  function formatPointBonus(bonus) { if (!bonus || bonus === 0) return '<span class="points-zero">₦0</span>'; return bonus > 0 ? `<span class="points-positive">+₦${bonus.toLocaleString()}</span>` : `<span class="points-negative">-₦${Math.abs(bonus).toLocaleString()}</span>`; }
 
-  function getRemainingSalary(staff) {
-    return (staff.baseSalary || 0) + getPointBonus(staff);
-  }
-
-  function formatPoints(points) {
-    if (!points || points === 0) return '<span class="points-zero">0</span>';
-    return points > 0
-      ? `<span class="points-positive">+${points}</span>`
-      : `<span class="points-negative">${points}</span>`;
-  }
-
-  function formatPointBonus(bonus) {
-    if (!bonus || bonus === 0) return '<span class="points-zero">₦0</span>';
-    return bonus > 0
-      ? `<span class="points-positive">+₦${bonus.toLocaleString()}</span>`
-      : `<span class="points-negative">-₦${Math.abs(bonus).toLocaleString()}</span>`;
-  }
-
-  // ========== RENDER ALL TABLES ==========
   function renderAllTables() {
-    // Workers = staff, attendant, attendant_chief
-    const workers = allUsers.filter(u => ['staff', 'attendant', 'attendant_chief'].includes(u.role));
+    const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role));
     const activeWorkers = workers.filter(u => u.status === 'active');
     const pendingStaff = workers.filter(u => u.status === 'pending_approval');
     const suspendedStaff = workers.filter(u => u.status === 'suspended');
     const terminatedStaff = workers.filter(u => u.status === 'terminated');
-
-    // Admins
-    const admins = allUsers.filter(u => ['admin', 'super_admin'].includes(u.role));
+    const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role));
     const activeAdmins = admins.filter(u => u.status === 'active');
-
-    // Payroll: workers only
     const workersPayroll = activeWorkers.reduce((sum, u) => sum + getRemainingSalary(u), 0);
     const adminsPayroll = activeAdmins.reduce((sum, u) => sum + (u.baseSalary || 0), 0);
-    const totalPayroll = workersPayroll + adminsPayroll;
 
-    // Update stats
     document.getElementById('totalStaff').textContent = workers.length + admins.length;
     document.getElementById('activeWorkers').textContent = activeWorkers.length;
     document.getElementById('adminCount').textContent = activeAdmins.length;
     document.getElementById('pendingStaff').textContent = pendingStaff.length;
-    document.getElementById('totalPayroll').textContent = formatCurrency(totalPayroll);
-
+    document.getElementById('totalPayroll').textContent = formatCurrency(workersPayroll + adminsPayroll);
     document.getElementById('workersCount').textContent = activeWorkers.length;
     document.getElementById('adminsCount').textContent = activeAdmins.length;
     document.getElementById('pendingCount').textContent = pendingStaff.length;
     document.getElementById('suspendedCount').textContent = suspendedStaff.length;
     document.getElementById('terminatedCount').textContent = terminatedStaff.length;
 
-    // Filters
     const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
     const roleFilter = document.getElementById('roleFilter')?.value || 'all';
-
     function applyFilters(list) {
-      let filtered = [...list];
-      if (search) filtered = filtered.filter(u =>
-        (u.fullName || '').toLowerCase().includes(search) ||
-        (u.email || '').toLowerCase().includes(search) ||
-        (u.phone || '').includes(search)
-      );
-      if (roleFilter !== 'all') filtered = filtered.filter(u => u.role === roleFilter);
-      return filtered;
+      let f = [...list];
+      if (search) f = f.filter(u => (u.fullName||'').toLowerCase().includes(search) || (u.email||'').toLowerCase().includes(search) || (u.phone||'').includes(search));
+      if (roleFilter !== 'all') f = f.filter(u => u.role === roleFilter);
+      return f;
     }
 
-    // ===== WORKERS TABLE =====
-    const workersFiltered = applyFilters(activeWorkers).sort((a, b) => (b.baseSalary || 0) - (a.baseSalary || 0));
     const wTbody = document.getElementById('workersTable');
-    if (wTbody) {
-      if (workersFiltered.length === 0) {
-        wTbody.innerHTML = '<tr><td colspan="12"><div class="empty-state"><i class="fas fa-hard-hat"></i><p>No workers found</p></div></td></tr>';
-      } else {
-        wTbody.innerHTML = workersFiltered.map(u => {
-          const bonus = getPointBonus(u);
-          const remaining = getRemainingSalary(u);
-          const pv = u.pointValueNaira || globalPointValue || 500;
-          return `
-            <tr>
-              <td><strong>${u.fullName || '-'}</strong></td>
-              <td>${u.email || '-'}</td>
-              <td>${u.phone || '-'}</td>
-              <td><span class="badge badge-${u.role === 'attendant_chief' ? 'info' : 'success'}">${u.role || 'staff'}</span></td>
-              <td>${formatCurrency(u.baseSalary)}</td>
-              <td>${formatPoints(u.totalPoints || 0)}</td>
-              <td>₦${pv}</td>
-              <td>${formatPointBonus(bonus)}</td>
-              <td><strong>${formatCurrency(remaining)}</strong></td>
-              <td>${u.tasksCompleted || 0}</td>
-              <td>${u.leaveDaysRemaining ?? 2}</td>
-              <td>
-                <div class="action-btns">
-                  <button class="btn btn-sm btn-outline" onclick="openEditStaff('${u.uid}')" title="Edit"><i class="fas fa-edit"></i></button>
-                  <button class="btn btn-sm btn-warning" onclick="suspendStaff('${u.uid}')" title="Suspend"><i class="fas fa-pause"></i></button>
-                  <button class="btn btn-sm btn-danger" onclick="terminateStaff('${u.uid}')" title="Terminate"><i class="fas fa-ban"></i></button>
-                </div>
-              </td>
-            </tr>
-          `;
-        }).join('');
-      }
-    }
+    const wf = applyFilters(activeWorkers).sort((a,b) => (b.baseSalary||0) - (a.baseSalary||0));
+    wTbody.innerHTML = wf.length === 0 ? '<tr><td colspan="12"><div class="empty-state"><i class="fas fa-hard-hat"></i><p>No workers found</p></div></td></tr>' : wf.map(u => {
+      const bonus = getPointBonus(u), remaining = getRemainingSalary(u), pv = u.pointValueNaira || globalPointValue || 500;
+      return `<tr><td><strong>${u.fullName||'-'}</strong></td><td>${u.email||'-'}</td><td>${u.phone||'-'}</td><td><span class="badge badge-${u.role==='attendant_chief'?'info':'success'}">${u.role||'staff'}</span></td><td>${formatCurrency(u.baseSalary)}</td><td>${formatPoints(u.totalPoints||0)}</td><td>₦${pv}</td><td>${formatPointBonus(bonus)}</td><td><strong>${formatCurrency(remaining)}</strong></td><td>${u.tasksCompleted||0}</td><td>${u.leaveDaysRemaining??2}</td><td><div class="action-btns"><button class="btn btn-sm btn-outline" onclick="openEditStaff('${u.uid}')"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-warning" onclick="suspendStaff('${u.uid}')"><i class="fas fa-pause"></i></button><button class="btn btn-sm btn-danger" onclick="terminateStaff('${u.uid}')"><i class="fas fa-ban"></i></button></div></td></tr>`;
+    }).join('');
 
-    // ===== ADMINS TABLE =====
-    const adminsFiltered = applyFilters(admins).sort((a, b) => (b.baseSalary || 0) - (a.baseSalary || 0));
     const aTbody = document.getElementById('adminsTable');
-    if (aTbody) {
-      if (adminsFiltered.length === 0) {
-        aTbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-user-shield"></i><p>No admins found</p></div></td></tr>';
-      } else {
-        aTbody.innerHTML = adminsFiltered.map(u => `
-          <tr>
-            <td><strong>${u.fullName || '-'}</strong></td>
-            <td>${u.email || '-'}</td>
-            <td>${u.phone || '-'}</td>
-            <td><span class="badge badge-purple">${u.role === 'super_admin' ? 'Super Admin' : 'Admin'}</span></td>
-            <td>${formatCurrency(u.baseSalary)}</td>
-            <td><span class="badge badge-success">Active</span></td>
-          </tr>
-        `).join('');
-      }
-    }
+    const af = applyFilters(admins).sort((a,b) => (b.baseSalary||0) - (a.baseSalary||0));
+    aTbody.innerHTML = af.length === 0 ? '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-user-shield"></i><p>No admins found</p></div></td></tr>' : af.map(u => `<tr><td><strong>${u.fullName||'-'}</strong></td><td>${u.email||'-'}</td><td>${u.phone||'-'}</td><td><span class="badge badge-purple">${u.role==='super_admin'?'Super Admin':'Admin'}</span></td><td>${formatCurrency(u.baseSalary)}</td><td><span class="badge badge-success">Active</span></td></tr>`).join('');
 
-    // ===== PENDING TABLE =====
-    const pendingFiltered = applyFilters(pendingStaff);
     const pTbody = document.getElementById('pendingTable');
-    if (pTbody) {
-      if (pendingFiltered.length === 0) {
-        pTbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-check-circle"></i><p>No pending approvals</p></div></td></tr>';
-      } else {
-        pTbody.innerHTML = pendingFiltered.map(u => `
-          <tr>
-            <td><strong>${u.fullName || '-'}</strong></td>
-            <td>${u.email || '-'}</td>
-            <td>${u.phone || '-'}</td>
-            <td>${formatDate(u.createdAt)}</td>
-            <td>
-              <select id="role-${u.uid}" class="form-control" style="padding:6px;font-size:0.8rem;">
-                <option value="staff">Staff</option>
-                <option value="attendant">Attendant</option>
-                <option value="attendant_chief">Chief Attendant</option>
-              </select>
-            </td>
-            <td><input type="number" id="salary-${u.uid}" style="width:90px;padding:6px;border-radius:8px;border:1px solid rgba(0,0,0,0.1);" value="50000"></td>
-            <td>
-              <div class="action-btns">
-                <button class="btn btn-sm btn-success" onclick="approveUser('${u.uid}')"><i class="fas fa-check"></i> Approve</button>
-                <button class="btn btn-sm btn-danger" onclick="rejectUser('${u.uid}')"><i class="fas fa-times"></i> Reject</button>
-              </div>
-            </td>
-          </tr>
-        `).join('');
-      }
-    }
+    const pf = applyFilters(pendingStaff);
+    pTbody.innerHTML = pf.length === 0 ? '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-check-circle"></i><p>No pending approvals</p></div></td></tr>' : pf.map(u => `<tr><td><strong>${u.fullName||'-'}</strong></td><td>${u.email||'-'}</td><td>${u.phone||'-'}</td><td><span class="badge badge-warning">${u.status?.replace(/_/g,' ')||'pending'}</span></td><td><select id="role-${u.uid}" class="form-control" style="padding:6px;font-size:0.8rem;"><option value="staff">Staff</option><option value="attendant">Attendant</option><option value="attendant_chief">Chief Attendant</option></select></td><td><input type="number" id="salary-${u.uid}" style="width:90px;padding:6px;border-radius:8px;border:1px solid rgba(0,0,0,0.1);" value="50000"></td><td><div class="action-btns"><button class="btn btn-sm btn-success" onclick="approveUser('${u.uid}')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-sm btn-danger" onclick="rejectUser('${u.uid}')"><i class="fas fa-times"></i> Reject</button></div></td></tr>`).join('');
 
-    // ===== SUSPENDED TABLE =====
-    const suspendedFiltered = applyFilters(suspendedStaff);
     const sTbody = document.getElementById('suspendedTable');
-    if (sTbody) {
-      if (suspendedFiltered.length === 0) {
-        sTbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-pause-circle"></i><p>No suspended staff</p></div></td></tr>';
-      } else {
-        sTbody.innerHTML = suspendedFiltered.map(u => `
-          <tr>
-            <td><strong>${u.fullName || '-'}</strong></td>
-            <td>${u.role || 'staff'}</td>
-            <td>${formatDate(u.suspendedAt)}</td>
-            <td>${u.suspensionReason || '-'}</td>
-            <td><button class="btn btn-sm btn-success" onclick="reinstateStaff('${u.uid}')"><i class="fas fa-undo"></i> Reinstate</button></td>
-          </tr>
-        `).join('');
-      }
-    }
+    const sf = applyFilters(suspendedStaff);
+    sTbody.innerHTML = sf.length === 0 ? '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-pause-circle"></i><p>No suspended staff</p></div></td></tr>' : sf.map(u => `<tr><td><strong>${u.fullName||'-'}</strong></td><td>${u.role||'staff'}</td><td>${formatDate(u.suspendedAt)}</td><td>${u.suspensionReason||'-'}</td><td><button class="btn btn-sm btn-success" onclick="reinstateStaff('${u.uid}')"><i class="fas fa-undo"></i> Reinstate</button></td></tr>`).join('');
 
-    // ===== TERMINATED TABLE =====
-    const terminatedFiltered = applyFilters(terminatedStaff);
     const tTbody = document.getElementById('terminatedTable');
-    if (tTbody) {
-      if (terminatedFiltered.length === 0) {
-        tTbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-ban"></i><p>No terminated staff</p></div></td></tr>';
-      } else {
-        tTbody.innerHTML = terminatedFiltered.map(u => `
-          <tr>
-            <td><strong>${u.fullName || '-'}</strong></td>
-            <td>${u.role || 'staff'}</td>
-            <td>${formatDate(u.terminatedAt)}</td>
-            <td>${u.terminationReason || '-'}</td>
-            <td>${u.terminatedByName || 'Admin'}</td>
-            <td><button class="btn btn-sm btn-success" onclick="reinstateTerminated('${u.uid}')"><i class="fas fa-undo"></i> Reinstate</button></td>
-          </tr>
-        `).join('');
-      }
-    }
+    const tf = applyFilters(terminatedStaff);
+    tTbody.innerHTML = tf.length === 0 ? '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-ban"></i><p>No terminated staff</p></div></td></tr>' : tf.map(u => `<tr><td><strong>${u.fullName||'-'}</strong></td><td>${u.role||'staff'}</td><td>${formatDate(u.terminatedAt)}</td><td>${u.terminationReason||'-'}</td><td>${u.terminatedByName||'Admin'}</td><td><button class="btn btn-sm btn-success" onclick="reinstateTerminated('${u.uid}')"><i class="fas fa-undo"></i> Reinstate</button></td></tr>`).join('');
   }
 
-  // ========== DATA LOADING ==========
   function loadUsers() {
     cleanup();
-    unsubscribes.push(onSnapshot(
-      query(collection(db, 'users'), orderBy('createdAt', 'desc')),
-      async (snap) => {
-        allUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
-        await loadPointValue();
-        renderAllTables();
-      },
-      (error) => { console.error('Users listener error:', error); showToast('Error loading data', 'error'); }
-    ));
+    unsubscribes.push(onSnapshot(query(collection(db, 'users'), orderBy('createdAt','desc')), async snap => {
+      allUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+      await loadPointValue();
+      renderAllTables();
+    }, error => { console.error('Users listener error:', error); showToast('Error loading data', 'error'); }));
   }
 
   // ========== STAFF ACTIONS ==========
@@ -1066,107 +659,58 @@
     const role = document.getElementById(`role-${uid}`)?.value || 'staff';
     const salary = parseFloat(document.getElementById(`salary-${uid}`)?.value) || 50000;
     try {
-      await updateDoc(doc(db, 'users', uid), {
-        role, baseSalary: salary, status: 'active',
-        approvedBy: currentUser?.uid, approvedByName: userData?.fullName || 'Admin',
-        approvedAt: serverTimestamp(), pointValueNaira: globalPointValue
-      });
-      try { await addDoc(collection(db, 'notifications'), { userId: uid, type: 'approved', title: 'Account Approved', message: `Approved as ${role}. Base salary: ${formatCurrency(salary)}.`, isRead: false, createdAt: serverTimestamp() }); } catch (e) {}
+      await updateDoc(doc(db, 'users', uid), { role, baseSalary: salary, status: 'active', approvedBy: currentUser?.uid, approvedByName: userData?.fullName||'Admin', approvedAt: serverTimestamp(), pointValueNaira: globalPointValue });
+      try { await addDoc(collection(db, 'notifications'), { userId: uid, type: 'approved', title: 'Account Approved', message: `Approved as ${role}. Base salary: ${formatCurrency(salary)}.`, isRead: false, createdAt: serverTimestamp() }); } catch(e){}
       await logAudit('approve_user', `Approved ${uid} as ${role} ₦${salary}`);
       showToast('Staff approved', 'success');
-    } catch (e) { showToast('Approval failed', 'error'); }
+    } catch(e) { showToast('Approval failed', 'error'); }
   };
 
   window.rejectUser = async function(uid) {
     const reason = prompt('Rejection reason:') || 'No reason';
-    try {
-      await updateDoc(doc(db, 'users', uid), { status: 'rejected', rejectedBy: currentUser?.uid, rejectedByName: userData?.fullName || 'Admin', rejectedAt: serverTimestamp(), rejectionReason: reason });
-      await logAudit('reject_user', `Rejected ${uid}. Reason: ${reason}`);
-      showToast('User rejected', 'info');
-    } catch (e) { showToast('Rejection failed', 'error'); }
+    try { await updateDoc(doc(db, 'users', uid), { status: 'rejected', rejectedBy: currentUser?.uid, rejectedByName: userData?.fullName||'Admin', rejectedAt: serverTimestamp(), rejectionReason: reason }); await logAudit('reject_user', `Rejected ${uid}. Reason: ${reason}`); showToast('User rejected', 'info'); }
+    catch(e) { showToast('Rejection failed', 'error'); }
   };
 
   window.suspendStaff = async function(uid) {
     const staff = allUsers.find(u => u.uid === uid);
-    const reason = prompt(`Suspension reason for ${staff?.fullName || 'staff'}:`) || 'No reason';
+    const reason = prompt(`Suspension reason for ${staff?.fullName||'staff'}:`) || 'No reason';
     if (!reason) return;
-    try {
-      await updateDoc(doc(db, 'users', uid), { status: 'suspended', suspendedBy: currentUser?.uid, suspendedByName: userData?.fullName || 'Admin', suspendedAt: serverTimestamp(), suspensionReason: reason });
-      await logAudit('suspend_staff', `Suspended ${staff?.fullName || uid}. Reason: ${reason}`);
-      showToast('Staff suspended', 'warning');
-    } catch (e) { showToast('Suspension failed', 'error'); }
+    try { await updateDoc(doc(db, 'users', uid), { status: 'suspended', suspendedBy: currentUser?.uid, suspendedByName: userData?.fullName||'Admin', suspendedAt: serverTimestamp(), suspensionReason: reason }); await logAudit('suspend_staff', `Suspended ${staff?.fullName||uid}. Reason: ${reason}`); showToast('Staff suspended', 'warning'); }
+    catch(e) { showToast('Suspension failed', 'error'); }
   };
 
   window.reinstateStaff = async function(uid) {
-    try {
-      await updateDoc(doc(db, 'users', uid), { status: 'active', reinstatedBy: currentUser?.uid, reinstatedByName: userData?.fullName || 'Admin', reinstatedAt: serverTimestamp(), suspensionReason: null, suspendedAt: null, suspendedBy: null, suspendedByName: null });
-      await logAudit('reinstate_staff', `Reinstated ${uid}`);
-      showToast('Staff reinstated', 'success');
-    } catch (e) { showToast('Reinstatement failed', 'error'); }
+    try { await updateDoc(doc(db, 'users', uid), { status: 'active', reinstatedBy: currentUser?.uid, reinstatedByName: userData?.fullName||'Admin', reinstatedAt: serverTimestamp(), suspensionReason: null, suspendedAt: null, suspendedBy: null, suspendedByName: null }); await logAudit('reinstate_staff', `Reinstated ${uid}`); showToast('Staff reinstated', 'success'); }
+    catch(e) { showToast('Reinstatement failed', 'error'); }
   };
 
   window.terminateStaff = async function(uid) {
-    const staff = allUsers.find(u => u.uid === uid);
-    if (!staff) return;
-    const reason = prompt(`Termination reason for ${staff.fullName || 'staff'}:`) || 'No reason';
+    const staff = allUsers.find(u => u.uid === uid); if (!staff) return;
+    const reason = prompt(`Termination reason for ${staff.fullName||'staff'}:`) || 'No reason';
     if (!reason) return;
-    if (!confirm(`TERMINATE ${staff.fullName || 'this staff'}?\n\nReason: ${reason}\n\nThis is reversible via the Terminated tab.`)) return;
-    try {
-      await updateDoc(doc(db, 'users', uid), { status: 'terminated', terminatedBy: currentUser?.uid, terminatedByName: userData?.fullName || 'Admin', terminatedAt: serverTimestamp(), terminationReason: reason });
-      await logAudit('terminate_staff', `Terminated ${staff.fullName || uid}. Reason: ${reason}`);
-      showToast(`${staff.fullName || 'Staff'} terminated`, 'info');
-    } catch (e) { showToast('Termination failed', 'error'); }
+    if (!confirm(`TERMINATE ${staff.fullName||'this staff'}?\n\nReason: ${reason}\n\nThis is reversible.`)) return;
+    try { await updateDoc(doc(db, 'users', uid), { status: 'terminated', terminatedBy: currentUser?.uid, terminatedByName: userData?.fullName||'Admin', terminatedAt: serverTimestamp(), terminationReason: reason }); await logAudit('terminate_staff', `Terminated ${staff.fullName||uid}. Reason: ${reason}`); showToast(`${staff.fullName||'Staff'} terminated`, 'info'); }
+    catch(e) { showToast('Termination failed', 'error'); }
   };
 
-  // ===== REINSTATE TERMINATED =====
   window.reinstateTerminated = async function(uid) {
-    const staff = allUsers.find(u => u.uid === uid);
-    if (!staff) return;
-    if (!confirm(`Reinstate ${staff.fullName || 'this staff'}?\nThey will return to Active status.`)) return;
-    try {
-      await updateDoc(doc(db, 'users', uid), {
-        status: 'active',
-        reinstatedBy: currentUser?.uid,
-        reinstatedByName: userData?.fullName || 'Admin',
-        reinstatedAt: serverTimestamp(),
-        terminatedAt: null, terminationReason: null,
-        terminatedBy: null, terminatedByName: null
-      });
-      await logAudit('reinstate_terminated', `Reinstated ${staff.fullName || uid} from termination`);
-      showToast(`${staff.fullName || 'Staff'} reinstated`, 'success');
-    } catch (e) { showToast('Reinstatement failed', 'error'); }
+    const staff = allUsers.find(u => u.uid === uid); if (!staff) return;
+    if (!confirm(`Reinstate ${staff.fullName||'this staff'}?`)) return;
+    try { await updateDoc(doc(db, 'users', uid), { status: 'active', reinstatedBy: currentUser?.uid, reinstatedByName: userData?.fullName||'Admin', reinstatedAt: serverTimestamp(), terminatedAt: null, terminationReason: null, terminatedBy: null, terminatedByName: null }); await logAudit('reinstate_terminated', `Reinstated ${staff.fullName||uid}`); showToast(`${staff.fullName||'Staff'} reinstated`, 'success'); }
+    catch(e) { showToast('Reinstatement failed', 'error'); }
   };
 
-  // ===== EDIT STAFF =====
   window.openEditStaff = function(uid) {
-    const u = allUsers.find(x => x.uid === uid);
-    if (!u) { showToast('Staff not found', 'error'); return; }
+    const u = allUsers.find(x => x.uid === uid); if (!u) { showToast('Staff not found', 'error'); return; }
     const pv = u.pointValueNaira || globalPointValue || 500;
     showModal('Edit Staff', `
-      <div class="form-row">
-        <div class="form-group"><label>Full Name</label><input class="form-control" id="editName" value="${u.fullName || ''}"></div>
-        <div class="form-group"><label>Email</label><input class="form-control" id="editEmail" value="${u.email || ''}"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Phone</label><input class="form-control" id="editPhone" value="${u.phone || ''}"></div>
-        <div class="form-group"><label>Role</label><select class="form-control" id="editRole"><option value="staff" ${u.role==='staff'?'selected':''}>Staff</option><option value="attendant" ${u.role==='attendant'?'selected':''}>Attendant</option><option value="attendant_chief" ${u.role==='attendant_chief'?'selected':''}>Chief Attendant</option></select></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="editSalary" value="${u.baseSalary || 0}"></div>
-        <div class="form-group"><label>Point Value (₦/5pts)</label><input type="number" class="form-control" id="editPointValue" value="${pv}"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Total Points</label><input type="number" class="form-control" id="editPoints" value="${u.totalPoints || 0}"><small style="color:var(--gray);">+5 for early, -5 for late</small></div>
-        <div class="form-group"><label>Tasks Completed</label><input type="number" class="form-control" id="editTasks" value="${u.tasksCompleted || 0}"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Leave Days Remaining</label><input type="number" class="form-control" id="editLeave" value="${u.leaveDaysRemaining ?? 2}"></div>
-        ${u.role?.includes('attendant') ? `<div class="form-group"><label>Reset PIN</label><button class="btn btn-warning btn-sm" onclick="resetAttendantPin('${uid}')"><i class="fas fa-key"></i> Reset PIN</button></div>` : '<div class="form-group"></div>'}
-      </div>
-      <div style="display:flex;gap:10px;margin-top:10px;">
-        <button class="btn btn-primary" onclick="saveEdit('${uid}')"><i class="fas fa-save"></i> Save</button>
-        <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
-      </div>
+      <div class="form-row"><div class="form-group"><label>Full Name</label><input class="form-control" id="editName" value="${u.fullName||''}"></div><div class="form-group"><label>Email</label><input class="form-control" id="editEmail" value="${u.email||''}"></div></div>
+      <div class="form-row"><div class="form-group"><label>Phone</label><input class="form-control" id="editPhone" value="${u.phone||''}"></div><div class="form-group"><label>Role</label><select class="form-control" id="editRole"><option value="staff" ${u.role==='staff'?'selected':''}>Staff</option><option value="attendant" ${u.role==='attendant'?'selected':''}>Attendant</option><option value="attendant_chief" ${u.role==='attendant_chief'?'selected':''}>Chief Attendant</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="editSalary" value="${u.baseSalary||0}"></div><div class="form-group"><label>Point Value (₦/5pts)</label><input type="number" class="form-control" id="editPointValue" value="${pv}"></div></div>
+      <div class="form-row"><div class="form-group"><label>Total Points</label><input type="number" class="form-control" id="editPoints" value="${u.totalPoints||0}"><small style="color:var(--gray);">+5 for early, -5 for late</small></div><div class="form-group"><label>Tasks Completed</label><input type="number" class="form-control" id="editTasks" value="${u.tasksCompleted||0}"></div></div>
+      <div class="form-row"><div class="form-group"><label>Leave Days Remaining</label><input type="number" class="form-control" id="editLeave" value="${u.leaveDaysRemaining??2}"></div>${u.role?.includes('attendant')?`<div class="form-group"><label>Reset PIN</label><button class="btn btn-warning btn-sm" onclick="resetAttendantPin('${uid}')"><i class="fas fa-key"></i> Reset PIN</button></div>`:'<div class="form-group"></div>'}</div>
+      <div style="display:flex;gap:10px;margin-top:10px;"><button class="btn btn-primary" onclick="saveEdit('${uid}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
     `);
   };
 
@@ -1174,48 +718,32 @@
     const name = document.getElementById('editName')?.value?.trim();
     if (!name) { showToast('Name required', 'error'); return; }
     try {
-      await updateDoc(doc(db, 'users', uid), {
-        fullName: name, email: document.getElementById('editEmail')?.value?.trim() || '',
-        phone: document.getElementById('editPhone')?.value?.trim() || '',
-        role: document.getElementById('editRole')?.value || 'staff',
-        baseSalary: parseFloat(document.getElementById('editSalary')?.value) || 0,
-        pointValueNaira: parseFloat(document.getElementById('editPointValue')?.value) || globalPointValue,
-        totalPoints: parseInt(document.getElementById('editPoints')?.value) || 0,
-        tasksCompleted: parseInt(document.getElementById('editTasks')?.value) || 0,
-        leaveDaysRemaining: parseInt(document.getElementById('editLeave')?.value) ?? 2
-      });
+      await updateDoc(doc(db, 'users', uid), { fullName: name, email: document.getElementById('editEmail')?.value?.trim()||'', phone: document.getElementById('editPhone')?.value?.trim()||'', role: document.getElementById('editRole')?.value||'staff', baseSalary: parseFloat(document.getElementById('editSalary')?.value)||0, pointValueNaira: parseFloat(document.getElementById('editPointValue')?.value)||globalPointValue, totalPoints: parseInt(document.getElementById('editPoints')?.value)||0, tasksCompleted: parseInt(document.getElementById('editTasks')?.value)||0, leaveDaysRemaining: parseInt(document.getElementById('editLeave')?.value)??2 });
       await logAudit('edit_staff', `Updated ${name}`);
-      showToast('Staff updated', 'success');
-      hideModal();
-    } catch (e) { showToast('Update failed', 'error'); }
+      showToast('Staff updated', 'success'); hideModal();
+    } catch(e) { showToast('Update failed', 'error'); }
   };
 
   window.resetAttendantPin = async function(uid) {
-    try {
-      await updateDoc(doc(db, 'users', uid), { attendantPin: null, pinResetRequired: true });
-      showToast('PIN reset. User sets new PIN on next login.', 'success');
-    } catch (e) { showToast('PIN reset failed', 'error'); }
+    try { await updateDoc(doc(db, 'users', uid), { attendantPin: null, pinResetRequired: true }); showToast('PIN reset. User sets new PIN on next login.', 'success'); }
+    catch(e) { showToast('PIN reset failed', 'error'); }
   };
 
-  // ===== ADD STAFF =====
+  // ========== ADD STAFF (FIXED - email-based, staff signs up later) ==========
   window.openAddStaffModal = function() {
     showModal('Add New Staff', `
-      <div class="form-row">
-        <div class="form-group"><label>Full Name *</label><input class="form-control" id="newName" placeholder="John Doe"></div>
-        <div class="form-group"><label>Email *</label><input type="email" class="form-control" id="newEmail" placeholder="john@example.com"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Phone *</label><input class="form-control" id="newPhone" placeholder="08012345678"></div>
-        <div class="form-group"><label>Role *</label><select class="form-control" id="newRole"><option value="staff">Staff</option><option value="attendant">Attendant</option><option value="attendant_chief">Chief Attendant</option></select></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="newSalary" value="50000"></div>
-        <div class="form-group"><label>Leave Days</label><input type="number" class="form-control" id="newLeave" value="2"></div>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:10px;">
-        <button class="btn btn-primary" onclick="addStaff()"><i class="fas fa-plus"></i> Add Staff</button>
-        <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
-      </div>
+      <div class="form-row"><div class="form-group"><label>Full Name *</label><input class="form-control" id="newName" placeholder="John Doe"></div><div class="form-group"><label>Email *</label><input type="email" class="form-control" id="newEmail" placeholder="staff@example.com"></div></div>
+      <div class="form-row"><div class="form-group"><label>Phone *</label><input class="form-control" id="newPhone" placeholder="08012345678"></div><div class="form-group"><label>Role *</label><select class="form-control" id="newRole"><option value="staff">Staff</option><option value="attendant">Attendant</option><option value="attendant_chief">Chief Attendant</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="newSalary" value="50000"></div><div class="form-group"><label>Leave Days</label><input type="number" class="form-control" id="newLeave" value="2"></div></div>
+      <div class="form-row"><div class="form-group"><label>Initial PIN (4 digits)</label><input type="text" class="form-control" id="newPin" value="1234" maxlength="4" placeholder="1234"></div><div class="form-group"></div></div>
+      <p style="font-size:0.75rem;color:var(--gray);margin-bottom:15px;background:var(--primary-soft);padding:12px;border-radius:10px;">
+        <i class="fas fa-info-circle"></i> <strong>How it works:</strong><br>
+        1. You add the staff member with their email.<br>
+        2. The staff goes to the login page and <strong>signs up</strong> using the <strong>same email</strong>.<br>
+        3. The system links their account automatically.<br>
+        4. You approve them from the <strong>Pending</strong> tab.
+      </p>
+      <div style="display:flex;gap:10px;margin-top:10px;"><button class="btn btn-primary" onclick="addStaff()"><i class="fas fa-user-plus"></i> Add Staff & Send Invite</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
     `);
   };
 
@@ -1223,72 +751,89 @@
     const name = document.getElementById('newName')?.value?.trim();
     const email = document.getElementById('newEmail')?.value?.trim();
     const phone = document.getElementById('newPhone')?.value?.trim();
+    const role = document.getElementById('newRole')?.value || 'staff';
+    const salary = parseFloat(document.getElementById('newSalary')?.value) || 50000;
+    const leaveDays = parseInt(document.getElementById('newLeave')?.value) || 2;
+    const pin = document.getElementById('newPin')?.value?.trim() || '1234';
+
     if (!name || !email || !phone) { showToast('Name, email & phone required', 'error'); return; }
+
+    // Check if email already exists in Firestore
+    const existingSnap = await getDocs(query(collection(db, 'users'), where('email', '==', email)));
+    if (!existingSnap.empty) {
+      const existing = existingSnap.docs[0].data();
+      if (existing.status === 'active') {
+        showToast('A staff member with this email already exists and is active.', 'error');
+      } else {
+        showToast('This email is already registered but pending approval.', 'info');
+      }
+      return;
+    }
+
     try {
-      const ref = doc(collection(db, 'users'));
-      await setDoc(ref, {
-        uid: ref.id, fullName: name, email, phone,
-        role: document.getElementById('newRole')?.value || 'staff',
-        baseSalary: parseFloat(document.getElementById('newSalary')?.value) || 50000,
-        leaveDaysRemaining: parseInt(document.getElementById('newLeave')?.value) || 2,
-        pointValueNaira: globalPointValue, status: 'active',
+      // Use email-based document ID so we can easily find it when staff signs up
+      const emailKey = email.replace(/\./g, '_').replace(/@/g, '_at_');
+      await setDoc(doc(db, 'users', emailKey), {
+        uid: emailKey, // Temporary - will be updated when staff signs up
+        fullName: name, email, phone, role,
+        baseSalary: salary,
+        leaveDaysRemaining: leaveDays,
+        pointValueNaira: globalPointValue,
+        status: 'pending_approval',
         totalPoints: 0, tasksCompleted: 0,
-        createdAt: serverTimestamp(), addedBy: currentUser?.uid, addedByName: userData?.fullName || 'Admin'
+        attendantPin: pin,
+        createdBy: currentUser?.uid,
+        createdByName: userData?.fullName || 'Admin',
+        addedBy: currentUser?.uid,
+        addedByName: userData?.fullName || 'Admin',
+        createdAt: serverTimestamp()
       });
-      await logAudit('add_staff', `Added ${name} (${email})`);
-      showToast('Staff added', 'success');
+
+      await logAudit('add_staff', `Added staff: ${name} (${email}) - awaiting signup`);
+      showToast(
+        `Staff added! ${name} should now sign up at the login page using:\n\nEmail: ${email}\n\nAfter signup, approve them from the Pending tab.`,
+        'success'
+      );
       hideModal();
-    } catch (e) { showToast('Failed to add staff', 'error'); }
+    } catch (e) {
+      console.error('Add staff error:', e);
+      showToast('Failed to add staff: ' + e.message, 'error');
+    }
   };
 
-  // ========== EXPORT ==========
   window.exportData = function(format) {
-    const workers = allUsers.filter(u => ['staff', 'attendant', 'attendant_chief'].includes(u.role));
-    const admins = allUsers.filter(u => ['admin', 'super_admin'].includes(u.role));
+    const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role));
+    const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role));
     const all = [...workers, ...admins];
     const headers = ['Name','Email','Phone','Role','Status','Base Salary','Points','Point Value','Remaining Salary','Tasks','Leave'];
     const rows = all.map(u => {
-      const remaining = u.role === 'admin' || u.role === 'super_admin' ? (u.baseSalary || 0) : getRemainingSalary(u);
+      const remaining = u.role==='admin'||u.role==='super_admin' ? (u.baseSalary||0) : getRemainingSalary(u);
       return [u.fullName||'', u.email||'', u.phone||'', u.role, u.status, u.baseSalary||0, u.totalPoints||0, u.pointValueNaira||globalPointValue, remaining, u.tasksCompleted||0, u.leaveDaysRemaining??2];
     });
     const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
-    const blob = new Blob([csv], { type: format === 'csv' ? 'text/csv' : 'application/vnd.ms-excel' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `staff_export_${new Date().toISOString().split('T')[0]}.${format}`;
-    a.click();
+    const blob = new Blob([csv], { type: format==='csv'?'text/csv':'application/vnd.ms-excel' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `staff_export_${new Date().toISOString().split('T')[0]}.${format}`; a.click();
     document.getElementById('exportMenu').classList.remove('show');
     showToast(`Exported ${all.length} records`, 'success');
   };
 
-  window.refreshData = function() { loadUsers(); showToast('Refreshed', 'success'); };
+  window.refreshData = () => { loadUsers(); showToast('Refreshed', 'success'); };
 
-  // ========== EVENT LISTENERS ==========
   document.getElementById('searchInput').addEventListener('input', renderAllTables);
   document.getElementById('roleFilter').addEventListener('change', renderAllTables);
-
-  document.getElementById('exportDropdownBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    document.getElementById('exportMenu').classList.toggle('show');
-  });
+  document.getElementById('exportDropdownBtn').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('exportMenu').classList.toggle('show'); });
   document.addEventListener('click', (e) => {
-    const menu = document.getElementById('exportMenu');
-    const btn = document.getElementById('exportDropdownBtn');
+    const menu = document.getElementById('exportMenu'), btn = document.getElementById('exportDropdownBtn');
     if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) menu.classList.remove('show');
   });
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active')); this.classList.add('active');
+    currentTab = this.dataset.tab;
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    document.getElementById(currentTab + 'Panel').classList.add('active');
+    renderAllTables();
+  }));
 
-  document.querySelectorAll('.tab').forEach(t => {
-    t.addEventListener('click', function() {
-      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-      this.classList.add('active');
-      currentTab = this.dataset.tab;
-      document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
-      document.getElementById(currentTab + 'Panel').classList.add('active');
-      renderAllTables();
-    });
-  });
-
-  // ========== AUTH ==========
   onAuthStateChanged(auth, async (u) => {
     if (!u) { window.location.href = 'auth.html'; return; }
     currentUser = u;
@@ -1308,7 +853,7 @@
   });
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
-    try { await logAudit('logout', 'Logged out'); } catch (e) {}
+    try { await logAudit('logout', 'Logged out'); } catch(e){}
     await signOut(auth); window.location.href = 'auth.html';
   });
 
