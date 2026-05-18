@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#ff4da6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Our Services · OmoCreations</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    :root {
+      --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
+      --primary-soft:#fff0f6; --dark:#1a1a2e; --gray:#6b7280;
+      --gray-light:#f3f4f6; --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --info:#3b82f6;
+    }
+
+    html { font-size:16px; -webkit-text-size-adjust:100%; scroll-behavior:smooth; }
+
+    body {
+      font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      background:#fafafa; min-height:100vh; -webkit-font-smoothing:antialiased;
+    }
+
+    @keyframes fadeInUp { from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1} }
+    @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
+    @keyframes float { 0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)} }
+    @keyframes shimmer { 0%{background-position:-200% 0}100%{background-position:200% 0} }
+
+    /* ===== TOP NAV ===== */
+    .top-nav {
+      background:white; padding:14px 24px; display:flex; align-items:center;
+      justify-content:space-between; border-bottom:1px solid #eee;
+      position:sticky; top:0; z-index:50; gap:15px; flex-wrap:wrap;
+    }
+    .nav-brand {
+      font-size:1.5rem; font-weight:800; color:var(--dark);
+      display:flex; align-items:center; gap:10px;
+      font-family:'Playfair Display',serif; text-decoration:none;
+    }
+    .nav-brand span { color:var(--primary); }
+    .nav-brand .brand-icon {
+      width:40px; height:40px; background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+      border-radius:10px; display:flex; align-items:center; justify-content:center;
+      font-size:1rem; color:white;
+    }
+    .nav-links { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+    .nav-link {
+      color:var(--gray); text-decoration:none; font-weight:500; font-size:0.9rem;
+      transition:color 0.2s; display:flex; align-items:center; gap:6px;
+    }
+    .nav-link:hover, .nav-link.active { color:var(--primary); }
+    .nav-cta {
+      padding:10px 22px; background:var(--primary); color:white; border-radius:30px;
+      font-weight:600; font-size:0.85rem; text-decoration:none; transition:all 0.2s;
+      display:flex; align-items:center; gap:6px;
+    }
+    .nav-cta:hover { background:var(--primary-dark); transform:translateY(-2px); }
+    .mobile-menu-btn { display:none; background:none; border:none; font-size:1.3rem; color:var(--dark); cursor:pointer; }
+
+    /* ===== HERO ===== */
+    .hero {
+      background:linear-gradient(135deg,var(--dark) 0%,#2d1a2e 50%,var(--primary-dark) 100%);
+      color:white; padding:80px 24px; text-align:center; position:relative; overflow:hidden;
+    }
+    .hero::before {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(circle at 30% 50%,rgba(255,77,166,0.3) 0%,transparent 50%),
+                 radial-gradient(circle at 70% 30%,rgba(255,77,166,0.2) 0%,transparent 50%);
+    }
+    .hero-content { position:relative; z-index:1; max-width:800px; margin:0 auto; }
+    .hero-badge {
+      display:inline-block; background:rgba(255,255,255,0.15); padding:8px 20px;
+      border-radius:30px; font-size:0.8rem; margin-bottom:20px; animation:fadeInUp 0.6s ease;
+    }
+    .hero h1 { font-size:2.8rem; font-weight:800; font-family:'Playfair Display',serif; margin-bottom:15px; animation:fadeInUp 0.6s ease 0.1s both; }
+    .hero h1 span { color:var(--primary); }
+    .hero p { font-size:1.1rem; opacity:0.9; max-width:600px; margin:0 auto 30px; line-height:1.7; animation:fadeInUp 0.6s ease 0.2s both; }
+    .hero-stats { display:flex; justify-content:center; gap:40px; flex-wrap:wrap; animation:fadeInUp 0.6s ease 0.3s both; }
+    .hero-stat { text-align:center; }
+    .hero-stat-value { font-size:2rem; font-weight:800; font-family:'Playfair Display',serif; }
+    .hero-stat-label { font-size:0.75rem; opacity:0.7; text-transform:uppercase; letter-spacing:1px; }
+
+    /* ===== SECTION ===== */
+    .section { padding:70px 24px; }
+    .section-header { text-align:center; max-width:700px; margin:0 auto 50px; }
+    .section-header h2 { font-size:2rem; font-weight:800; font-family:'Playfair Display',serif; color:var(--dark); margin-bottom:12px; }
+    .section-header h2 span { color:var(--primary); }
+    .section-header p { color:var(--gray); line-height:1.7; }
+
+    .container { max-width:1200px; margin:0 auto; }
+
+    /* ===== SERVICE CARDS ===== */
+    .services-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:24px; }
+    .service-card {
+      background:white; border-radius:20px; padding:30px; transition:all 0.3s;
+      border:1px solid rgba(0,0,0,0.05); box-shadow:0 4px 15px rgba(0,0,0,0.03);
+      cursor:pointer; position:relative; overflow:hidden;
+      animation:fadeInUp 0.5s ease forwards; opacity:0;
+    }
+    .service-card:nth-child(1){animation-delay:0.05s}.service-card:nth-child(2){animation-delay:0.1s}
+    .service-card:nth-child(3){animation-delay:0.15s}.service-card:nth-child(4){animation-delay:0.2s}
+    .service-card:nth-child(5){animation-delay:0.25s}.service-card:nth-child(6){animation-delay:0.3s}
+    .service-card:nth-child(7){animation-delay:0.35s}.service-card:nth-child(8){animation-delay:0.4s}
+    .service-card:hover { transform:translateY(-8px); box-shadow:0 20px 40px rgba(255,77,166,0.12); border-color:var(--primary); }
+    .service-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:4px;
+      background:linear-gradient(90deg,var(--primary),var(--primary-dark));
+      transform:scaleX(0); transition:transform 0.3s; transform-origin:left;
+    }
+    .service-card:hover::before { transform:scaleX(1); }
+    .service-icon {
+      width:60px; height:60px; border-radius:16px; display:flex; align-items:center;
+      justify-content:center; font-size:1.6rem; margin-bottom:20px;
+      background:var(--primary-soft); color:var(--primary);
+    }
+    .service-card h3 { font-size:1.15rem; font-weight:700; color:var(--dark); margin-bottom:8px; }
+    .service-card p { font-size:0.85rem; color:var(--gray); line-height:1.6; margin-bottom:15px; }
+    .service-tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:15px; }
+    .service-tag { padding:4px 10px; border-radius:20px; font-size:0.65rem; font-weight:600; background:var(--primary-soft); color:var(--primary); }
+    .service-footer { display:flex; justify-content:space-between; align-items:center; }
+    .service-price { font-weight:700; color:var(--primary); font-size:1.1rem; }
+    .order-service-btn {
+      padding:10px 20px; border-radius:30px; font-weight:600; font-size:0.8rem;
+      border:none; cursor:pointer; background:var(--primary); color:white;
+      transition:all 0.2s; font-family:'Poppins',sans-serif;
+      display:flex; align-items:center; gap:6px;
+    }
+    .order-service-btn:hover { background:var(--primary-dark); transform:scale(1.03); }
+
+    /* ===== HOW IT WORKS ===== */
+    .steps-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; }
+    .step-card { text-align:center; padding:30px 20px; }
+    .step-number {
+      width:60px; height:60px; border-radius:50%; display:flex; align-items:center;
+      justify-content:center; font-size:1.5rem; font-weight:800; margin:0 auto 20px;
+      background:var(--primary-soft); color:var(--primary);
+      font-family:'Playfair Display',serif;
+    }
+    .step-card h4 { font-weight:700; margin-bottom:8px; color:var(--dark); }
+    .step-card p { font-size:0.85rem; color:var(--gray); line-height:1.6; }
+
+    /* ===== WHY US ===== */
+    .why-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+    .why-card {
+      background:white; border-radius:16px; padding:25px; text-align:center;
+      border:1px solid rgba(0,0,0,0.05); transition:all 0.3s;
+    }
+    .why-card:hover { transform:translateY(-5px); box-shadow:0 10px 30px rgba(0,0,0,0.08); }
+    .why-icon { font-size:2rem; color:var(--primary); margin-bottom:15px; }
+    .why-card h4 { font-weight:700; margin-bottom:8px; color:var(--dark); }
+    .why-card p { font-size:0.85rem; color:var(--gray); line-height:1.6; }
+
+    /* ===== TESTIMONIALS ===== */
+    .testimonials-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+    .testimonial-card {
+      background:white; border-radius:16px; padding:25px; border:1px solid rgba(0,0,0,0.05);
+    }
+    .testimonial-stars { color:var(--warning); margin-bottom:12px; }
+    .testimonial-text { font-style:italic; color:var(--gray); line-height:1.7; margin-bottom:15px; font-size:0.9rem; }
+    .testimonial-author { display:flex; align-items:center; gap:10px; }
+    .testimonial-avatar {
+      width:40px; height:40px; border-radius:50%; background:var(--primary-soft);
+      display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--primary);
+    }
+    .testimonial-name { font-weight:600; font-size:0.85rem; }
+    .testimonial-role { font-size:0.7rem; color:var(--gray); }
+
+    /* ===== CTA ===== */
+    .cta-section {
+      background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+      color:white; padding:60px 24px; text-align:center;
+    }
+    .cta-section h2 { font-size:2rem; font-weight:800; font-family:'Playfair Display',serif; margin-bottom:12px; }
+    .cta-section p { font-size:1rem; opacity:0.9; margin-bottom:25px; max-width:500px; margin-left:auto; margin-right:auto; }
+    .cta-btn {
+      display:inline-flex; align-items:center; gap:10px; padding:16px 36px;
+      background:white; color:var(--primary); border-radius:40px; font-weight:700;
+      font-size:1rem; text-decoration:none; transition:all 0.3s;
+    }
+    .cta-btn:hover { transform:translateY(-3px); box-shadow:0 15px 35px rgba(0,0,0,0.2); }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      background:var(--dark); color:rgba(255,255,255,0.7); padding:40px 24px; text-align:center;
+    }
+    .footer a { color:var(--primary); text-decoration:none; }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);
+      display:none; align-items:center; justify-content:center; z-index:200; padding:16px;
+    }
+    .modal-overlay.show { display:flex; }
+    .modal {
+      background:white; border-radius:20px; padding:32px; max-width:600px;
+      width:100%; max-height:85vh; overflow-y:auto; animation:fadeInUp 0.3s ease;
+    }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+    .modal-header h3 { font-size:1.3rem; font-weight:700; display:flex; align-items:center; gap:10px; }
+    .modal-header h3 i { color:var(--primary); }
+    .modal-close { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--gray); }
+    .form-group { margin-bottom:18px; }
+    .form-group label { display:block; font-size:0.8rem; font-weight:600; color:var(--dark); margin-bottom:6px; }
+    .form-group .required::after { content:' *'; color:var(--danger); }
+    .form-control {
+      width:100%; padding:12px 16px; border:1.5px solid #e5e7eb; border-radius:12px;
+      font-size:0.9rem; outline:none; font-family:'Poppins',sans-serif; transition:border 0.2s;
+    }
+    .form-control:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(255,77,166,0.1); }
+    textarea.form-control { min-height:100px; resize:vertical; }
+    .image-upload-area {
+      border:2px dashed #ddd; border-radius:14px; padding:20px; text-align:center;
+      cursor:pointer; transition:all 0.2s;
+    }
+    .image-upload-area:hover { border-color:var(--primary); background:var(--primary-soft); }
+    .image-upload-area i { font-size:1.5rem; color:var(--primary); margin-bottom:8px; }
+    .uploaded-images { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .uploaded-image {
+      width:80px; height:80px; border-radius:10px; object-fit:cover; border:2px solid var(--primary-soft);
+    }
+    .submit-service-btn {
+      width:100%; padding:14px; border-radius:30px; font-weight:600; font-size:1rem;
+      border:none; cursor:pointer; background:var(--primary); color:white;
+      font-family:'Poppins',sans-serif; display:flex; align-items:center; justify-content:center; gap:8px;
+    }
+    .submit-service-btn:hover { background:var(--primary-dark); }
+
+    .toast-container { position:fixed; bottom:24px; right:24px; z-index:3000; display:flex; flex-direction:column; gap:10px; }
+    .toast {
+      background:white; color:var(--dark); padding:14px 20px; border-radius:50px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px;
+      font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease;
+      border-left:4px solid var(--primary); transition:all 0.3s ease;
+    }
+    .toast.success { border-left-color:var(--success); }
+    .toast.error { border-left-color:var(--danger); }
+    .toast i { font-size:1.1rem; }
+
+    @media (max-width:992px) {
+      .steps-grid { grid-template-columns:repeat(2,1fr); }
+      .why-grid { grid-template-columns:repeat(2,1fr); }
+      .testimonials-grid { grid-template-columns:1fr; }
+    }
+    @media (max-width:768px) {
+      .hero h1 { font-size:2rem; }
+      .nav-links { display:none; }
+      .mobile-menu-btn { display:block; }
+      .nav-links.mobile-open {
+        display:flex; flex-direction:column; position:absolute; top:100%; left:0; right:0;
+        background:white; padding:20px; border-bottom:1px solid #eee; gap:12px; z-index:49;
+      }
+      .services-grid { grid-template-columns:1fr; }
+      .steps-grid { grid-template-columns:1fr; }
+      .why-grid { grid-template-columns:1fr; }
+      .section { padding:40px 16px; }
+      .hero-stats { gap:20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="top-nav">
+  <a href="shop.html" class="nav-brand">
+    <div class="brand-icon">✨</div>
+    Omo<span>Creations</span>
+  </a>
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></button>
+  <div class="nav-links" id="mobileNav">
+    <a href="shop.html" class="nav-link"><i class="fas fa-store"></i> Shop</a>
+    <a href="service.html" class="nav-link active"><i class="fas fa-tools"></i> Services</a>
+    <a href="shop.html#cart" class="nav-cta"><i class="fas fa-shopping-cart"></i> Cart</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">✨ Premium Craftsmanship Since 2019</div>
+    <h1>Expert <span>Rhinestone</span> & Design Services</h1>
+    <p>From bridal rhinestone designs to pattern making, machine sales, and complete stone designs — we bring your creative vision to life with precision and excellence.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-value">500+</div><div class="hero-stat-label">Projects Done</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">4.9</div><div class="hero-stat-label">Rating</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">24/7</div><div class="hero-stat-label">Support</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Our <span>Services</span></h2>
+      <p>Choose from our range of professional rhinestone and design services. Each service is handled by experienced craftsmen with attention to detail.</p>
+    </div>
+    <div class="services-grid" id="servicesGrid"></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="section" style="background:white;">
+  <div class="container">
+    <div class="section-header">
+      <h2>How It <span>Works</span></h2>
+      <p>Simple steps to get your dream design done</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Choose a Service</h4>
+        <p>Browse our services and select what you need — design, pattern making, or machine purchase.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Describe & Upload</h4>
+        <p>Tell us your preferred colors, design style, and upload sample images for reference.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>We Confirm</h4>
+        <p>Our team contacts you via WhatsApp to confirm details, pricing, and delivery timeline.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <h4>We Deliver</h4>
+        <p>Your design is crafted with care and delivered to you — nationwide.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WHY CHOOSE US -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Why Choose <span>OmoCreations</span></h2>
+      <p>We stand out for our quality, speed, and customer satisfaction</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon"><i class="fas fa-medal"></i></div>
+        <h4>Expert Craftsmanship</h4>
+        <p>Over 5 years of experience in rhinestone design and pattern making.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><i class="fas fa-truck-fast"></i></div>
+        <h4>Fast Delivery</h4>
+        <p>Nationwide delivery with reliable logistics partners.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><i class="fas fa-gem"></i></div>
+        <h4>Premium Materials</h4>
+        <p>We use only high-quality rhinestones and durable materials.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><i class="fas fa-headset"></i></div>
+        <h4>24/7 Support</h4>
+        <p>Always available to answer your questions and guide you.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><i class="fas fa-wallet"></i></div>
+        <h4>Affordable Pricing</h4>
+        <p>Competitive prices without compromising on quality.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><i class="fas fa-repeat"></i></div>
+        <h4>Revisions Included</h4>
+        <p>Not satisfied? We revise until you're happy with the result.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2>Ready to Start Your Project?</h2>
+  <p>Contact us now on WhatsApp for a free consultation and quote</p>
+  <a href="https://wa.me/2348107595812?text=Hello%20OmoCreations,%20I%20want%20to%20inquire%20about%20your%20services" target="_blank" class="cta-btn">
+    <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+  </a>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p>&copy; 2024 <a href="shop.html">OmoCreations</a> · All rights reserved.</p>
+  <p style="margin-top:5px;">Luxury Fashion Stones & Design Services</p>
+</div>
+
+<!-- SERVICE ORDER MODAL -->
+<div class="modal-overlay" id="serviceModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-clipboard-list"></i> <span id="modalServiceName">Order Service</span></h3>
+      <button class="modal-close" onclick="hideServiceModal()">&times;</button>
+    </div>
+    <form id="serviceOrderForm" onsubmit="submitServiceOrder(event)">
+      <input type="hidden" id="selectedService" value="">
+      <div class="form-group">
+        <label class="required">Your Full Name</label>
+        <input type="text" class="form-control" id="custName" placeholder="Enter your full name" required>
+      </div>
+      <div class="form-group">
+        <label class="required">Phone Number (WhatsApp)</label>
+        <input type="tel" class="form-control" id="custPhone" placeholder="08012345678" required>
+      </div>
+      <div class="form-group">
+        <label class="required">Describe Your Design / Requirements</label>
+        <textarea class="form-control" id="custDescription" placeholder="Tell us about the design you want, colors, style, size, quantity, etc..." required></textarea>
+      </div>
+      <div class="form-group">
+        <label>Upload Sample Images (Optional)</label>
+        <div class="image-upload-area" onclick="document.getElementById('imageUpload').click()">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <p>Click to upload reference images</p>
+          <p style="font-size:0.7rem;color:var(--gray);">JPG, PNG, WEBP — Max 5MB each</p>
+        </div>
+        <input type="file" id="imageUpload" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(event)">
+        <div class="uploaded-images" id="uploadedImages"></div>
+      </div>
+      <div class="form-group">
+        <label>How will you bring the item to us?</label>
+        <select class="form-control" id="deliveryMethod">
+          <option value="bring_to_office">I'll bring it to the office</option>
+          <option value="waybill">Send via Waybill</option>
+          <option value="pickup">Request Pickup (Lagos only)</option>
+        </select>
+      </div>
+      <div class="form-group" id="addressGroup" style="display:none;">
+        <label>Delivery / Pickup Address</label>
+        <textarea class="form-control" id="custAddress" placeholder="Enter your full address"></textarea>
+      </div>
+      <button type="submit" class="submit-service-btn">
+        <i class="fab fa-whatsapp"></i> Submit & Continue on WhatsApp
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
+    authDomain: "fashion-46e5d.firebaseapp.com",
+    projectId: "fashion-46e5d",
+    storageBucket: "fashion-46e5d.firebasestorage.app",
+    messagingSenderId: "408062284317",
+    appId: "1:408062284317:web:eb905bce68926c10a0ecf4"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const WHATSAPP_NUMBER = '2348107595812';
+  const CLOUDINARY_CLOUD_NAME = 'dw80fw9un';
+  const CLOUDINARY_UPLOAD_PRESET = 'kiosk_attendance';
+  const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+
+  let uploadedImageUrls = [];
+
+  const services = [
+    { id:'bridal_rhinestone', name:'Bridal Rhinestone Design', icon:'fa-ring', desc:'Full bridal gown rhinestone embellishment — custom patterns, premium stones, delicate handwork for your special day.', tags:['Bridal','Stones','Custom Design'], price:'From ₦50,000' },
+    { id:'board_making', name:'Board Making', icon:'fa-border-all', desc:'Professional design boards for fashion presentations, mood boards, and client showcases with rhinestone samples.', tags:['Board','Presentation','Samples'], price:'From ₦15,000' },
+    { id:'pattern_making', name:'Pattern Making', icon:'fa-draw-polygon', desc:'Custom pattern creation for rhinestone placement on any fabric — precise templates for consistent designs.', tags:['Pattern','Template','Precision'], price:'From ₦20,000' },
+    { id:'cloth_stone_design', name:'Cloth Stone Design', icon:'fa-tshirt', desc:'Direct rhinestone application on clothing — dresses, tops, trousers, and more with professional finishing.', tags:['Clothing','Stones','Fashion'], price:'From ₦25,000' },
+    { id:'suit_design', name:'Suit Rhinestone Design', icon:'fa-user-tie', desc:'Elegant rhinestone patterns on suits and blazers for that standout look at events and parties.', tags:['Suit','Blazer','Elegant'], price:'From ₦30,000' },
+    { id:'pattern_rhinestone', name:'Rhinestone Pattern Design', icon:'fa-vector-square', desc:'Custom rhinestone pattern design service — we create unique patterns tailored to your style and fabric.', tags:['Custom','Pattern','Unique'], price:'From ₦15,000' },
+    { id:'owambe_design', name:'Owambe Full Stone Design', icon:'fa-star', desc:'Complete owambe outfit stone decoration — aso ebi, gele, and full ensemble rhinestone coverage.', tags:['Owambe','Aso Ebi','Full Design'], price:'From ₦35,000' },
+    { id:'stone_machine', name:'Stone Machine Sales', icon:'fa-cogs', desc:'Purchase professional rhinestone setting machines — hotfix, ultrasonic, and manual applicators available.', tags:['Machine','Equipment','Sales'], price:'From ₦80,000' },
+    { id:'pattern_machine', name:'Pattern Machine Sales', icon:'fa-print', desc:'Pattern cutting and design machines for professional fashion designers and tailors.', tags:['Pattern','Machine','Professional'], price:'From ₦100,000' },
+    { id:'consultation', name:'Design Consultation', icon:'fa-comments', desc:'One-on-one consultation with our design experts to plan your rhinestone project from concept to completion.', tags:['Consult','Planning','Expert'], price:'Free' },
+    { id:'training', name:'Rhinestone Training', icon:'fa-graduation-cap', desc:'Learn the art of rhinestone design — hands-on training for individuals and groups.', tags:['Training','Learn','Skills'], price:'From ₦25,000' },
+    { id:'custom', name:'Custom Request', icon:'fa-paint-brush', desc:'Have something else in mind? Describe your custom project and we\'ll make it happen.', tags:['Custom','Bespoke','Flexible'], price:'Get Quote' }
+  ];
+
+  function renderServices() {
+    document.getElementById('servicesGrid').innerHTML = services.map(s => `
+      <div class="service-card" onclick="openServiceOrder('${s.id}','${s.name.replace(/'/g,"\\'")}')">
+        <div class="service-icon"><i class="fas ${s.icon}"></i></div>
+        <h3>${s.name}</h3>
+        <p>${s.desc}</p>
+        <div class="service-tags">${s.tags.map(t=>`<span class="service-tag">${t}</span>`).join('')}</div>
+        <div class="service-footer">
+          <span class="service-price">${s.price}</span>
+          <button class="order-service-btn" onclick="event.stopPropagation();openServiceOrder('${s.id}','${s.name.replace(/'/g,"\\'")}')">
+            <i class="fas fa-paper-plane"></i> Order Now
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.openServiceOrder = (serviceId, serviceName) => {
+    document.getElementById('selectedService').value = serviceId;
+    document.getElementById('modalServiceName').textContent = serviceName;
+    document.getElementById('serviceModal').classList.add('show');
+    uploadedImageUrls = [];
+    document.getElementById('uploadedImages').innerHTML = '';
+    document.getElementById('serviceOrderForm').reset();
+    document.getElementById('addressGroup').style.display = 'none';
+  };
+
+  window.hideServiceModal = () => {
+    document.getElementById('serviceModal').classList.remove('show');
+  };
+
+  document.getElementById('deliveryMethod').addEventListener('change', function() {
+    document.getElementById('addressGroup').style.display = 
+      (this.value === 'waybill' || this.value === 'pickup') ? 'block' : 'none';
+  });
+
+  window.handleImageUpload = async (event) => {
+    const files = event.target.files;
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      formData.append('folder', 'service_requests');
+      try {
+        const resp = await fetch(CLOUDINARY_UPLOAD_URL, { method:'POST', body:formData });
+        const data = await resp.json();
+        if (data.secure_url) {
+          uploadedImageUrls.push(data.secure_url);
+          document.getElementById('uploadedImages').innerHTML += 
+            `<img src="${data.secure_url}" class="uploaded-image" alt="Uploaded">`;
+        }
+      } catch(e) { console.error('Upload error:', e); }
+    }
+  };
+
+  window.submitServiceOrder = async (event) => {
+    event.preventDefault();
+    
+    const serviceId = document.getElementById('selectedService').value;
+    const service = services.find(s => s.id === serviceId);
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    const description = document.getElementById('custDescription').value.trim();
+    const deliveryMethod = document.getElementById('deliveryMethod').value;
+    const address = document.getElementById('custAddress').value.trim();
+
+    if (!name || !phone || !description) {
+      showToast('Please fill all required fields', 'error');
+      return false;
+    }
+
+    try {
+      await addDoc(collection(db, 'service_orders'), {
+        serviceId, serviceName: service?.name || 'Custom', customerName: name,
+        customerPhone: phone, description, deliveryMethod, address,
+        sampleImages: uploadedImageUrls, status: 'pending',
+        createdAt: serverTimestamp()
+      });
+
+      const message = `Hello OmoCreations,%0A%0AI want to order:%0A*Service:* ${service?.name}%0A*Name:* ${name}%0A*Phone:* ${phone}%0A*Description:* ${description}%0A*Delivery:* ${deliveryMethod}%0A${address ? '*Address:* '+address+'%0A' : ''}${uploadedImageUrls.length > 0 ? '*Images:* '+uploadedImageUrls.length+' uploaded%0A' : ''}%0APlease confirm my order.`;
+      
+      hideServiceModal();
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank');
+      showToast('Order submitted! Redirecting to WhatsApp...', 'success');
+    } catch(e) {
+      showToast('Error submitting order: ' + e.message, 'error');
+    }
+    return false;
+  };
+
+  function showToast(msg, type='success') {
+    const c = document.getElementById('toastContainer'); if(!c) return;
+    const t = document.createElement('div'); t.className = `toast ${type}`;
+    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
+    c.appendChild(t);
+    setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500);
+  }
+
+  window.toggleMobileMenu = () => {
+    document.getElementById('mobileNav').classList.toggle('mobile-open');
+  };
+
+  renderServices();
+  console.log('🛠️ OmoCreations Service Page Ready');
+</script>
+</body>
+</html>
