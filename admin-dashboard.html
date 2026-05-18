@@ -414,12 +414,13 @@
       <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart" aria-hidden="true"></i><span class="nav-text">Purchases</span><span class="nav-badge" id="navPurchasesBadge">0</span></button>
       <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users" aria-hidden="true"></i><span class="nav-text">Customers</span></button>
       <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register" aria-hidden="true"></i><span class="nav-text">Sales</span></button>
-      <button class="nav-item" onclick="navigateTo('orders-admin.html')"><i class="fas fa-clipboard-list" aria-hidden="true"></i><span class="nav-text">Orders Admin</span></button>
+      <button class="nav-item" onclick="navigateTo('orders-admin.html')"><i class="fas fa-clipboard-list" aria-hidden="true"></i><span class="nav-text">Orders</span></button>
     </div>
     <div class="nav-section"><div class="nav-section-title">SHOP &amp; KIOSK</div>
       <button class="nav-item" onclick="window.open('kiosk.html','_blank')"><i class="fas fa-desktop" aria-hidden="true"></i><span class="nav-text">Launch Kiosk</span></button>
       <button class="nav-item" onclick="navigateTo('kiosk-settings.html')"><i class="fas fa-cog" aria-hidden="true"></i><span class="nav-text">Kiosk Settings</span></button>
       <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store" aria-hidden="true"></i><span class="nav-text">Shop</span></button>
+      <button class="nav-item" onclick="navigateTo('service.html')"><i class="fas fa-tools" aria-hidden="true"></i><span class="nav-text">Services</span></button>
       <button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open" aria-hidden="true"></i><span class="nav-text">Catalog</span></button>
     </div>
     <button class="nav-item logout" id="logoutBtn" aria-label="Logout"><i class="fas fa-sign-out-alt" aria-hidden="true"></i><span class="nav-text">Logout</span></button>
@@ -565,7 +566,6 @@
   window.addEventListener('resize',()=>{clearTimeout(resizeDebounce);resizeDebounce=setTimeout(()=>{const s=document.getElementById('sidebar'),o=document.getElementById('sidebarOverlay');if(window.innerWidth>768){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';restoreSidebarState();}else{document.body.classList.remove('sidebar-collapsed');}},200);});
   restoreSidebarState();
 
-  // ==================== BADGE MANAGEMENT ====================
   function updateAllBadges() {
     const totalPending = pendingCounts.users + pendingCounts.stock + pendingCounts.purchases + pendingCounts.customers + pendingCounts.leave;
     updateSingleBadge('notificationBadge', totalPending, 'show');
@@ -585,7 +585,6 @@
     if(count > 0) el.classList.add(className||'show'); else el.classList.remove(className||'show');
   }
 
-  // ==================== ATTENDANCE CHECK ====================
   function checkStaffAttendance(staffList, attendanceRecords) {
     const now = new Date(); const alerts = [];
     staffList.forEach(staff => {
@@ -615,7 +614,6 @@
     document.getElementById('moneyIn').textContent = formatCurrency(netRevenue);
   }
 
-  // ==================== DASHBOARD DATA LOADING ====================
   function loadDashboard() {
     cleanup();
 
@@ -661,7 +659,6 @@
     const thisMonth = now.getMonth();
     const thisYear = now.getFullYear();
 
-    // ---- SALES ----
     unsubscribes.push(onSnapshot(collection(db, 'sales'), (snap) => {
       monthlySalesRevenue = 0;
       const sales = snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -678,7 +675,6 @@
       }
     }));
 
-    // ---- RETURNS (subtract from money in) ----
     unsubscribes.push(onSnapshot(collection(db, 'returns'), (snap) => {
       monthlyRefunds = 0;
       const returns = snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -691,7 +687,6 @@
       updateMoneyInDisplay();
     }));
 
-    // ---- PURCHASES ----
     unsubscribes.push(onSnapshot(collection(db, 'purchase_requests'), (snap) => {
       let exp = 0;
       const purchases = snap.docs.map(d=>({id:d.id,...d.data()}));
