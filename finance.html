@@ -47,7 +47,6 @@
       to { transform: translateX(0); opacity: 1; }
     }
 
-    /* ===== SIDEBAR ===== */
     .sidebar {
       width: var(--sidebar-width); min-width: var(--sidebar-width);
       background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
@@ -124,7 +123,6 @@
     }
     .sidebar-overlay.active { display: block; }
 
-    /* ===== MAIN CONTENT ===== */
     .main-content {
       flex: 1; margin-left: var(--sidebar-width);
       transition: margin-left 0.3s ease; min-height: 100vh;
@@ -150,7 +148,6 @@
 
     .content-wrapper { padding: 28px; max-width: 1600px; }
 
-    /* ===== STATS ===== */
     .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
     .stat-card {
       background: white; padding: 18px 16px; border-radius: 20px;
@@ -178,7 +175,6 @@
     .stat-change.positive { color: var(--success); }
     .stat-change.negative { color: var(--danger); }
 
-    /* ===== WARNING BANNER ===== */
     .financial-warning {
       padding: 16px 20px; border-radius: 14px; margin-bottom: 24px;
       display: flex; align-items: center; gap: 15px;
@@ -188,7 +184,6 @@
     .financial-warning.healthy { background: rgba(16,185,129,0.1); border-left-color: var(--success); }
     .financial-warning.healthy i { color: var(--success); }
 
-    /* ===== TOGGLE SWITCH ===== */
     .toggle-wrapper {
       display: flex; align-items: center; gap: 12px;
       background: white; padding: 8px 16px; border-radius: 40px;
@@ -199,8 +194,7 @@
     .toggle-switch {
       position: relative; width: 48px; height: 26px;
       background: var(--gray-light); border-radius: 26px;
-      cursor: pointer; transition: background 0.3s;
-      flex-shrink: 0;
+      cursor: pointer; transition: background 0.3s; flex-shrink: 0;
     }
     .toggle-switch.active { background: var(--primary); }
     .toggle-switch::after {
@@ -211,7 +205,6 @@
     }
     .toggle-switch.active::after { transform: translateX(22px); }
 
-    /* ===== SETTINGS CARD ===== */
     .settings-card {
       background: linear-gradient(135deg, var(--primary-soft), white);
       border-radius: 20px; padding: 24px; margin-bottom: 24px;
@@ -228,36 +221,26 @@
     .point-value-input input:focus { border-color: var(--primary); }
     .point-info { font-size: 0.75rem; color: var(--gray); width: 100%; margin-top: 4px; }
 
-    /* ===== CHARTS ===== */
     .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
 
-    /* ===== PANELS ===== */
     .panel {
       background: white; border-radius: 24px; padding: 24px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(255,77,166,0.08);
       transition: all 0.3s; margin-bottom: 24px;
     }
     .panel:hover { box-shadow: 0 8px 25px rgba(255,77,166,0.08); }
-    .panel-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
-    }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
     .panel-header h3 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--dark); }
     .panel-header h3 i { color: var(--primary); }
     .chart-container { position: relative; height: 280px; }
 
-    /* ===== REVENUE BREAKDOWN ===== */
     .revenue-breakdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 15px; }
-    .breakdown-item {
-      text-align: center; padding: 15px; background: var(--gray-light);
-      border-radius: 14px; transition: all 0.3s;
-    }
+    .breakdown-item { text-align: center; padding: 15px; background: var(--gray-light); border-radius: 14px; transition: all 0.3s; }
     .breakdown-item:hover { transform: translateY(-3px); background: var(--primary-soft); }
     .breakdown-item i { font-size: 1.5rem; color: var(--primary); margin-bottom: 8px; }
     .breakdown-item h4 { font-size: 0.8rem; color: var(--gray); margin-bottom: 5px; }
     .breakdown-item p { font-size: 1.2rem; font-weight: 700; color: var(--dark); }
 
-    /* ===== TABLES ===== */
     .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 16px; }
     .data-table { width: 100%; border-collapse: collapse; min-width: 900px; }
     .data-table th {
@@ -269,11 +252,7 @@
     .data-table tbody tr { transition: background 0.2s; }
     .data-table tbody tr:hover { background: var(--primary-soft); }
 
-    /* ===== BADGES ===== */
-    .badge {
-      padding: 5px 12px; border-radius: 40px; font-size: 0.7rem;
-      font-weight: 600; display: inline-block; white-space: nowrap;
-    }
+    .badge { padding: 5px 12px; border-radius: 40px; font-size: 0.7rem; font-weight: 600; display: inline-block; white-space: nowrap; }
     .badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
     .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
     .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
@@ -283,7 +262,6 @@
     .text-positive { color: var(--success); font-weight: 700; }
     .text-negative { color: var(--danger); font-weight: 700; }
 
-    /* ===== BUTTONS ===== */
     .btn {
       padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem;
       cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
@@ -298,93 +276,42 @@
     .btn-success { background: var(--success); color: white; border: none; }
     .btn-danger { background: var(--danger); color: white; border: none; }
 
-    /* ===== TABS ===== */
-    .tabs-container {
-      background: white; border-radius: 20px; padding: 6px; margin-bottom: 24px;
-      display: flex; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap;
-    }
-    .tab {
-      padding: 12px 20px; border-radius: 16px; font-weight: 600; font-size: 0.85rem;
-      cursor: pointer; border: none; background: none; color: var(--gray);
-      display: flex; align-items: center; gap: 8px; transition: all 0.2s;
-      font-family: 'Poppins', sans-serif;
-    }
+    .tabs-container { background: white; border-radius: 20px; padding: 6px; margin-bottom: 24px; display: flex; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap; }
+    .tab { padding: 12px 20px; border-radius: 16px; font-weight: 600; font-size: 0.85rem; cursor: pointer; border: none; background: none; color: var(--gray); display: flex; align-items: center; gap: 8px; transition: all 0.2s; font-family: 'Poppins', sans-serif; }
     .tab:hover { background: var(--primary-soft); color: var(--primary); }
     .tab.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
-    .tab .count {
-      background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 30px;
-      font-size: 0.7rem; font-weight: 700; min-width: 24px; text-align: center;
-    }
+    .tab .count { background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 30px; font-size: 0.7rem; font-weight: 700; min-width: 24px; text-align: center; }
 
-    /* ===== PAGE VIEWS ===== */
     .page-view { display: none; }
     .page-view.active { display: block; }
 
-    /* ===== MODAL ===== */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-      display: none; align-items: center; justify-content: center;
-      z-index: 2000; padding: 16px;
-    }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
     .modal-overlay.active { display: flex; }
-    .modal {
-      background: white; border-radius: 28px; padding: 28px;
-      max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto;
-      animation: fadeInUp 0.3s ease;
-    }
-    .modal-header {
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
-    }
+    .modal { background: white; border-radius: 28px; padding: 28px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; animation: fadeInUp 0.3s ease; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
-    .modal-close {
-      background: none; border: none; font-size: 1.5rem; cursor: pointer;
-      color: var(--gray); padding: 5px; transition: all 0.2s;
-    }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray); padding: 5px; transition: all 0.2s; }
     .modal-close:hover { color: var(--danger); transform: rotate(90deg); }
     .form-group { margin-bottom: 18px; }
     .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
-    .form-control {
-      width: 100%; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08);
-      border-radius: 14px; font-size: 0.9rem; outline: none; background: white;
-      font-family: 'Poppins', sans-serif; transition: border 0.2s;
-    }
+    .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 14px; font-size: 0.9rem; outline: none; background: white; font-family: 'Poppins', sans-serif; transition: border 0.2s; }
     .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,77,166,0.1); }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-    /* ===== EXPORT ===== */
     .export-dropdown { position: relative; display: inline-block; }
-    .export-menu {
-      position: absolute; top: 100%; right: 0; background: white;
-      border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      min-width: 150px; display: none; z-index: 50; overflow: hidden;
-    }
+    .export-menu { position: absolute; top: 100%; right: 0; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-width: 150px; display: none; z-index: 50; overflow: hidden; }
     .export-menu.show { display: block; }
-    .export-item {
-      padding: 12px 16px; cursor: pointer; font-size: 0.85rem;
-      transition: background 0.2s; display: flex; align-items: center; gap: 10px;
-    }
+    .export-item { padding: 12px 16px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s; display: flex; align-items: center; gap: 10px; }
     .export-item:hover { background: var(--primary-soft); }
 
-    /* ===== TOAST ===== */
-    .toast-container {
-      position: fixed; bottom: 24px; right: 24px; z-index: 3000;
-      display: flex; flex-direction: column; gap: 10px;
-    }
-    .toast {
-      background: white; color: var(--dark); padding: 14px 20px;
-      border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      display: flex; align-items: center; gap: 10px; font-weight: 500;
-      font-size: 0.85rem; animation: slideIn 0.3s ease;
-      border-left: 4px solid var(--primary); transition: all 0.3s ease;
-    }
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; }
+    .toast { background: white; color: var(--dark); padding: 14px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 0.85rem; animation: slideIn 0.3s ease; border-left: 4px solid var(--primary); transition: all 0.3s ease; }
     .toast.success { border-left-color: var(--success); }
     .toast.error { border-left-color: var(--danger); }
     .toast i { font-size: 1.1rem; }
     .toast.success i { color: var(--success); }
     .toast.error i { color: var(--danger); }
 
-    /* ===== RESPONSIVE ===== */
     @media (max-width: 1400px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } .revenue-breakdown { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .charts-row { grid-template-columns: 1fr; } }
     @media (max-width: 768px) {
@@ -410,53 +337,39 @@
       .form-row { grid-template-columns: 1fr; }
       .revenue-breakdown { grid-template-columns: 1fr 1fr; }
     }
-    @media (max-width: 480px) {
-      .stats-grid { grid-template-columns: 1fr; }
-      .stat-value { font-size: 1.5rem; }
-      .content-wrapper { padding: 12px 8px; }
-      .revenue-breakdown { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } .stat-value { font-size: 1.5rem; } .content-wrapper { padding: 12px 8px; } .revenue-breakdown { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
 
-<!-- Sidebar Overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="logo-icon">✨</div>
     <div class="logo-text"><span>Omo</span>creations</div>
-    <button class="close-sidebar" onclick="closeSidebar()" aria-label="Close menu">
-      <i class="fas fa-times"></i>
-    </button>
+    <button class="close-sidebar" onclick="closeSidebar()" aria-label="Close menu"><i class="fas fa-times"></i></button>
   </div>
-
   <nav class="sidebar-nav">
-    <div class="nav-section">
-      <div class="nav-section-title">OVERVIEW</div>
+    <div class="nav-section"><div class="nav-section-title">OVERVIEW</div>
       <button class="nav-item" onclick="navigateTo('admin-dashboard.html')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
       <button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>
       <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
     </div>
-    <div class="nav-section">
-      <div class="nav-section-title">MANAGEMENT</div>
+    <div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
       <button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff Management</span></button>
       <button class="nav-item" onclick="navigateTo('make-admin.html')"><i class="fas fa-user-shield"></i><span>Make Admin</span></button>
       <button class="nav-item active"><i class="fas fa-chart-line"></i><span>Finance</span></button>
       <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit Logs</span></button>
     </div>
-    <div class="nav-section">
-      <div class="nav-section-title">MONITORING</div>
+    <div class="nav-section"><div class="nav-section-title">MONITORING</div>
       <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
       <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
       <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
       <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
       <button class="nav-item" onclick="navigateTo('orders-admin.html')"><i class="fas fa-clipboard-list"></i><span>Orders Admin</span></button>
     </div>
-    <div class="nav-section">
-      <div class="nav-section-title">SHOP &amp; KIOSK</div>
+    <div class="nav-section"><div class="nav-section-title">SHOP &amp; KIOSK</div>
       <button class="nav-item" onclick="window.open('kiosk.html','_blank')"><i class="fas fa-desktop"></i><span>Launch Kiosk</span></button>
       <button class="nav-item" onclick="navigateTo('kiosk-settings.html')"><i class="fas fa-cog"></i><span>Kiosk Settings</span></button>
       <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
@@ -464,57 +377,27 @@
     </div>
     <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
   </nav>
-
-  <div class="sidebar-footer">
-    <div class="user-profile">
-      <div class="user-avatar" id="userAvatar">A</div>
-      <div class="user-details"><h4 id="userName">Admin</h4><p id="userRole">Admin</p></div>
-    </div>
-  </div>
+  <div class="sidebar-footer"><div class="user-profile"><div class="user-avatar" id="userAvatar">A</div><div class="user-details"><h4 id="userName">Admin</h4><p id="userRole">Admin</p></div></div></div>
 </aside>
 
-<!-- Main Content -->
 <main class="main-content">
-
   <header class="top-bar">
-    <div class="top-bar-left">
-      <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">
-        <i class="fas fa-bars"></i>
-      </button>
-      <h1 class="page-title">Finance & Accounting</h1>
-    </div>
+    <div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">Finance & Accounting</h1></div>
     <div style="display:flex;align-items:center;gap:16px;">
-      <div class="toggle-wrapper" id="adminSalaryToggle">
-        <span id="toggleLabelOff">Workers Only</span>
-        <div class="toggle-switch" id="toggleSwitch" onclick="toggleAdminSalary()"></div>
-        <span id="toggleLabelOn" class="active-label">+ Admins</span>
-      </div>
+      <div class="toggle-wrapper" id="adminSalaryToggle"><span id="toggleLabelOff">Workers Only</span><div class="toggle-switch" id="toggleSwitch" onclick="toggleAdminSalary()"></div><span id="toggleLabelOn" class="active-label">+ Admins</span></div>
       <span class="current-date" id="currentDate"></span>
     </div>
   </header>
 
   <div class="content-wrapper">
 
-    <!-- Financial Health Warning -->
-    <div class="financial-warning" id="financialWarning">
-      <i class="fas fa-exclamation-triangle"></i>
-      <div><strong>Financial Status</strong><p id="warningMessage">Loading...</p></div>
-    </div>
+    <div class="financial-warning" id="financialWarning"><i class="fas fa-exclamation-triangle"></i><div><strong>Financial Status</strong><p id="warningMessage">Loading...</p></div></div>
 
-    <!-- Point Value Configuration -->
     <div class="settings-card">
-      <div>
-        <h3><i class="fas fa-coins" style="color:var(--primary);"></i> Point Value Configuration</h3>
-        <p class="point-info">Staff earn <strong style="color:var(--success);">+5 points</strong> for early, <strong style="color:var(--danger);">-5 points</strong> for late. ₦ value per 5 points.</p>
-      </div>
-      <div class="point-value-input">
-        <label style="font-weight:600;white-space:nowrap;">₦ per 5 points:</label>
-        <input type="number" id="pointValueInput" min="100" step="100" value="500">
-        <button class="btn btn-primary" onclick="updatePointValue()"><i class="fas fa-save"></i> Save & Update</button>
-      </div>
+      <div><h3><i class="fas fa-coins" style="color:var(--primary);"></i> Point Value Configuration</h3><p class="point-info">Staff earn <strong style="color:var(--success);">+5 points</strong> for early, <strong style="color:var(--danger);">-5 points</strong> for late. ₦ value per 5 points.</p></div>
+      <div class="point-value-input"><label style="font-weight:600;white-space:nowrap;">₦ per 5 points:</label><input type="number" id="pointValueInput" min="100" step="100" value="500"><button class="btn btn-primary" onclick="updatePointValue()"><i class="fas fa-save"></i> Save & Update</button></div>
     </div>
 
-    <!-- Stats -->
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-header"><span>Revenue (MTD)</span><div class="stat-icon"><i class="fas fa-arrow-up"></i></div></div><div class="stat-value" id="revenueMTD">₦0</div><div class="stat-change" id="revenueChange">vs last month</div></div>
       <div class="stat-card"><div class="stat-header"><span>Expenses (MTD)</span><div class="stat-icon"><i class="fas fa-arrow-down"></i></div></div><div class="stat-value" id="expensesMTD">₦0</div><div class="stat-change" id="expensesChange">vs last month</div></div>
@@ -523,117 +406,31 @@
       <div class="stat-card"><div class="stat-header"><span>Pending Expenses</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-value" id="pendingExpenses">₦0</div><div class="stat-change">Awaiting approval</div></div>
     </div>
 
-    <!-- Charts -->
     <div class="charts-row">
-      <div class="panel">
-        <div class="panel-header"><h3><i class="fas fa-chart-bar"></i> Monthly Revenue vs Expenses</h3></div>
-        <div class="chart-container"><canvas id="barChart"></canvas></div>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><h3><i class="fas fa-chart-pie"></i> Expense Breakdown</h3></div>
-        <div class="chart-container"><canvas id="pieChart"></canvas></div>
-      </div>
+      <div class="panel"><div class="panel-header"><h3><i class="fas fa-chart-bar"></i> Monthly Revenue vs Expenses</h3></div><div class="chart-container"><canvas id="barChart"></canvas></div></div>
+      <div class="panel"><div class="panel-header"><h3><i class="fas fa-chart-pie"></i> Expense Breakdown</h3></div><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
     </div>
 
-    <!-- Revenue Sources -->
-    <div class="panel">
-      <div class="panel-header"><h3><i class="fas fa-money-bill-wave"></i> How Money Comes In</h3></div>
-      <div class="revenue-breakdown">
-        <div class="breakdown-item"><i class="fas fa-cash-register"></i><h4>Cash Sales</h4><p id="cashSales">₦0</p></div>
-        <div class="breakdown-item"><i class="fas fa-credit-card"></i><h4>POS / Transfer</h4><p id="posSales">₦0</p></div>
-        <div class="breakdown-item"><i class="fas fa-box"></i><h4>Walk-in Sales</h4><p id="walkinSales">₦0</p></div>
-        <div class="breakdown-item"><i class="fas fa-shopping-bag"></i><h4>Online Orders</h4><p id="onlineSales">₦0</p></div>
-      </div>
-    </div>
+    <div class="panel"><div class="panel-header"><h3><i class="fas fa-money-bill-wave"></i> How Money Comes In</h3></div><div class="revenue-breakdown"><div class="breakdown-item"><i class="fas fa-cash-register"></i><h4>Cash Sales</h4><p id="cashSales">₦0</p></div><div class="breakdown-item"><i class="fas fa-credit-card"></i><h4>POS / Transfer</h4><p id="posSales">₦0</p></div><div class="breakdown-item"><i class="fas fa-box"></i><h4>Walk-in Sales</h4><p id="walkinSales">₦0</p></div><div class="breakdown-item"><i class="fas fa-shopping-bag"></i><h4>Online Orders</h4><p id="onlineSales">₦0</p></div></div></div>
 
-    <!-- Tabs for Expense Types -->
     <div class="tabs-container">
       <button class="tab active" data-tab="salary"><i class="fas fa-users"></i> Salary <span class="count" id="salaryCount">0</span></button>
       <button class="tab" data-tab="purchases"><i class="fas fa-shopping-cart"></i> Purchases <span class="count" id="purchasesCount">0</span></button>
       <button class="tab" data-tab="misc"><i class="fas fa-receipt"></i> Misc Expenses <span class="count" id="miscCount">0</span></button>
     </div>
 
-    <!-- Salary Table -->
-    <div id="salaryPanel" class="page-view active">
-      <div class="panel">
-        <div class="panel-header">
-          <h3><i class="fas fa-users"></i> <span id="salaryTableTitle">Workers Salary Breakdown</span></h3>
-          <div style="display:flex;gap:10px;">
-            <div class="toggle-wrapper" style="padding:6px 12px;">
-              <span style="font-size:0.7rem;">Workers</span>
-              <div class="toggle-switch" id="salaryTableToggle" onclick="toggleAdminSalary()"></div>
-              <span style="font-size:0.7rem;">+ Admins</span>
-            </div>
-            <div class="export-dropdown">
-              <button class="btn btn-outline btn-sm" id="exportSalaryBtn"><i class="fas fa-download"></i> Export</button>
-              <div class="export-menu" id="exportSalaryMenu">
-                <div class="export-item" onclick="exportSalaries('csv')"><i class="fas fa-file-csv"></i> CSV</div>
-                <div class="export-item" onclick="exportSalaries('excel')"><i class="fas fa-file-excel"></i> Excel</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead><tr><th>Name</th><th>Role</th><th>Base Salary</th><th>Points</th><th>Point Value</th><th>Points Bonus</th><th>Final Salary</th></tr></thead>
-            <tbody id="salaryTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <div id="salaryPanel" class="page-view active"><div class="panel"><div class="panel-header"><h3><i class="fas fa-users"></i> <span id="salaryTableTitle">Workers Salary Breakdown</span></h3><div style="display:flex;gap:10px;"><div class="toggle-wrapper" style="padding:6px 12px;"><span style="font-size:0.7rem;">Workers</span><div class="toggle-switch" id="salaryTableToggle" onclick="toggleAdminSalary()"></div><span style="font-size:0.7rem;">+ Admins</span></div><div class="export-dropdown"><button class="btn btn-outline btn-sm" id="exportSalaryBtn"><i class="fas fa-download"></i> Export</button><div class="export-menu" id="exportSalaryMenu"><div class="export-item" onclick="exportSalaries('csv')"><i class="fas fa-file-csv"></i> CSV</div><div class="export-item" onclick="exportSalaries('excel')"><i class="fas fa-file-excel"></i> Excel</div></div></div></div></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Name</th><th>Role</th><th>Base Salary</th><th>Points</th><th>Point Value</th><th>Points Bonus</th><th>Final Salary</th></tr></thead><tbody id="salaryTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div></div>
 
-    <!-- Purchases Table -->
-    <div id="purchasesPanel" class="page-view">
-      <div class="panel">
-        <div class="panel-header"><h3><i class="fas fa-shopping-cart"></i> Stock Purchases</h3></div>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead><tr><th>Date</th><th>Items</th><th>Supplier</th><th>Total</th><th>Status</th></tr></thead>
-            <tbody id="purchasesTable"><tr><td colspan="5"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <div id="purchasesPanel" class="page-view"><div class="panel"><div class="panel-header"><h3><i class="fas fa-shopping-cart"></i> Stock Purchases</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Items</th><th>Supplier</th><th>Total</th><th>Status</th></tr></thead><tbody id="purchasesTable"><tr><td colspan="5"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div></div>
 
-    <!-- Misc Expenses Table -->
-    <div id="miscPanel" class="page-view">
-      <div class="panel">
-        <div class="panel-header">
-          <h3><i class="fas fa-receipt"></i> Miscellaneous Expenses</h3>
-          <button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()"><i class="fas fa-plus"></i> Add Expense</button>
-        </div>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead><tr><th>Date</th><th>Expense Name</th><th>Category</th><th>Amount</th><th>Issued By</th><th>Bought By</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="miscTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <div id="miscPanel" class="page-view"><div class="panel"><div class="panel-header"><h3><i class="fas fa-receipt"></i> Miscellaneous Expenses</h3><button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()"><i class="fas fa-plus"></i> Add Expense</button></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Expense Name</th><th>Category</th><th>Amount</th><th>Issued By</th><th>Bought By</th><th>Status</th><th>Actions</th></tr></thead><tbody id="miscTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div></div>
 
-    <!-- Monthly Comparison -->
-    <div class="panel">
-      <div class="panel-header"><h3><i class="fas fa-calendar-alt"></i> Monthly Comparison</h3></div>
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead><tr><th>Month</th><th>Revenue</th><th>Purchases</th><th>Salaries</th><th>Misc</th><th>Total Expenses</th><th>Profit</th><th>vs Prev</th></tr></thead>
-          <tbody id="monthlyTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody>
-        </table>
-      </div>
-    </div>
+    <div class="panel"><div class="panel-header"><h3><i class="fas fa-calendar-alt"></i> Monthly Comparison</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Month</th><th>Revenue</th><th>Purchases</th><th>Salaries</th><th>Misc</th><th>Total Expenses</th><th>Profit</th><th>vs Prev</th></tr></thead><tbody id="monthlyTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div>
 
   </div>
 </main>
 
-<!-- Modal -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="hideModal()">&times;</button></div>
-    <div id="modalContent"></div>
-  </div>
-</div>
-
-<!-- Toast -->
+<div class="modal-overlay" id="modalOverlay"><div class="modal"><div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="hideModal()">&times;</button></div><div id="modalContent"></div></div></div>
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
@@ -657,229 +454,129 @@
   let currentUser = null, userData = null, unsubscribes = [];
   let globalPointValue = 500, currentTab = 'salary';
   let barChart = null, pieChart = null;
-  let allUsers = [], allSales = [], allPurchases = [], allMiscExpenses = [];
+  let allUsers = [], allSales = [], allPurchases = [], allMiscExpenses = [], allReturns = [];
   let includeAdminSalary = false;
 
-  // ========== UTILITIES ==========
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
-  function formatDate(d) {
-    if (!d) return '-';
-    const date = d.toDate ? d.toDate() : new Date(d);
-    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
-  }
+  function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
 
   function showToast(msg, type = 'success') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${msg}`;
-    container.appendChild(toast);
-    setTimeout(() => {
-      toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)';
-      toast.style.transition = 'all 0.3s ease';
-      setTimeout(() => toast.remove(), 300);
-    }, 3500);
+    const c = document.getElementById('toastContainer'); if (!c) return;
+    const t = document.createElement('div'); t.className = `toast ${type}`;
+    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
+    c.appendChild(t); setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(100%)'; t.style.transition='all 0.3s ease'; setTimeout(()=>t.remove(),300); }, 3500);
   }
 
   async function logAudit(action, note) {
-    try { await addDoc(collection(db, 'audit_logs'), { actionType: action, performedBy: currentUser?.uid || 'unknown', performedByName: userData?.fullName || 'Admin', performedAt: serverTimestamp(), note: note || '' }); } catch (e) {}
+    try { await addDoc(collection(db, 'audit_logs'), { actionType: action, performedBy: currentUser?.uid||'unknown', performedByName: userData?.fullName||'Admin', performedAt: serverTimestamp(), note: note||'' }); } catch(e){}
   }
 
   function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
   window.hideModal = hideModal;
-  function showModal(title, content) {
-    document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalContent').innerHTML = content;
-    document.getElementById('modalOverlay').classList.add('active');
-  }
-  function cleanup() { unsubscribes.forEach(u => u()); unsubscribes = []; }
+  function showModal(title, content) { document.getElementById('modalTitle').textContent = title; document.getElementById('modalContent').innerHTML = content; document.getElementById('modalOverlay').classList.add('active'); }
+  function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
 
-  // ========== SIDEBAR ==========
   window.toggleSidebar = function() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    if (sidebar.classList.contains('mobile-open')) {
-      sidebar.classList.remove('mobile-open'); overlay.classList.remove('active');
-      document.body.style.overflow = '';
-    } else {
-      sidebar.classList.add('mobile-open'); overlay.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
+    const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay');
+    if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}
+    else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';}
   };
-  window.closeSidebar = function() {
-    document.getElementById('sidebar').classList.remove('mobile-open');
-    document.getElementById('sidebarOverlay').classList.remove('active');
-    document.body.style.overflow = '';
-  };
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+  window.closeSidebar = function() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow=''; };
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
 
-  // ========== ADMIN SALARY TOGGLE ==========
-  window.toggleAdminSalary = function() {
-    includeAdminSalary = !includeAdminSalary;
-    updateToggleUI();
-    renderAll();
-  };
+  window.toggleAdminSalary = function() { includeAdminSalary = !includeAdminSalary; updateToggleUI(); renderAll(); };
 
   function updateToggleUI() {
-    const switch1 = document.getElementById('toggleSwitch');
-    const switch2 = document.getElementById('salaryTableToggle');
-    const labelOff = document.getElementById('toggleLabelOff');
-    const labelOn = document.getElementById('toggleLabelOn');
-    const payrollLabel = document.getElementById('payrollLabel');
-    const tableTitle = document.getElementById('salaryTableTitle');
-
-    [switch1, switch2].forEach(el => {
-      if (el) {
-        if (includeAdminSalary) el.classList.add('active');
-        else el.classList.remove('active');
-      }
-    });
-
-    if (labelOff) {
-      labelOff.classList.toggle('active-label', !includeAdminSalary);
-      labelOff.style.color = includeAdminSalary ? 'var(--gray)' : 'var(--primary)';
-    }
-    if (labelOn) {
-      labelOn.classList.toggle('active-label', includeAdminSalary);
-      labelOn.style.color = includeAdminSalary ? 'var(--primary)' : 'var(--gray)';
-    }
-    if (payrollLabel) payrollLabel.textContent = includeAdminSalary ? 'Total Payroll' : 'Workers Payroll';
-    if (tableTitle) tableTitle.textContent = includeAdminSalary ? 'All Staff Salary Breakdown (Workers + Admins)' : 'Workers Salary Breakdown';
+    [document.getElementById('toggleSwitch'), document.getElementById('salaryTableToggle')].forEach(el => { if(el){ if(includeAdminSalary) el.classList.add('active'); else el.classList.remove('active'); } });
+    const lo=document.getElementById('toggleLabelOff'), lon=document.getElementById('toggleLabelOn');
+    if(lo){lo.classList.toggle('active-label',!includeAdminSalary);lo.style.color=includeAdminSalary?'var(--gray)':'var(--primary)';}
+    if(lon){lon.classList.toggle('active-label',includeAdminSalary);lon.style.color=includeAdminSalary?'var(--primary)':'var(--gray)';}
+    const pl=document.getElementById('payrollLabel'); if(pl)pl.textContent=includeAdminSalary?'Total Payroll':'Workers Payroll';
+    const tt=document.getElementById('salaryTableTitle'); if(tt)tt.textContent=includeAdminSalary?'All Staff Salary Breakdown (Workers + Admins)':'Workers Salary Breakdown';
   }
 
-  // ========== POINT VALUE ==========
   async function loadPointValue() {
-    try {
-      const snap = await getDoc(doc(db, 'system_settings', 'points'));
-      globalPointValue = snap.exists() ? (snap.data().value || 500) : 500;
-      if (!snap.exists()) await setDoc(doc(db, 'system_settings', 'points'), { value: 500, updatedAt: serverTimestamp() });
-      const input = document.getElementById('pointValueInput');
-      if (input) input.value = globalPointValue;
-    } catch (e) { globalPointValue = 500; }
+    try { const snap = await getDoc(doc(db, 'system_settings', 'points')); globalPointValue = snap.exists() ? (snap.data().value || 500) : 500; if(!snap.exists()) await setDoc(doc(db, 'system_settings', 'points'), { value: 500, updatedAt: serverTimestamp() }); document.getElementById('pointValueInput').value = globalPointValue; } catch(e) { globalPointValue = 500; }
   }
 
   window.updatePointValue = async function() {
     const val = parseInt(document.getElementById('pointValueInput')?.value) || 500;
-    if (val < 100) { showToast('Minimum ₦100', 'error'); return; }
+    if(val < 100) { showToast('Minimum ₦100', 'error'); return; }
     try {
-      await setDoc(doc(db, 'system_settings', 'points'), { value: val, updatedBy: currentUser?.uid, updatedByName: userData?.fullName || 'Admin', updatedAt: serverTimestamp() });
-      const staffSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['staff', 'attendant', 'attendant_chief'])));
-      const batch = writeBatch(db);
-      staffSnap.forEach(d => batch.update(d.ref, { pointValueNaira: val }));
-      await batch.commit();
-      globalPointValue = val;
-      await logAudit('update_point_value', `Set to ₦${val}/5pts`);
-      renderAll();
-      showToast(`Point value: ₦${val}/5pts`, 'success');
-    } catch (e) { showToast('Update failed', 'error'); }
+      await setDoc(doc(db, 'system_settings', 'points'), { value: val, updatedBy: currentUser?.uid, updatedByName: userData?.fullName||'Admin', updatedAt: serverTimestamp() });
+      const staffSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['staff','attendant','attendant_chief'])));
+      const batch = writeBatch(db); staffSnap.forEach(d => batch.update(d.ref, { pointValueNaira: val })); await batch.commit();
+      globalPointValue = val; await logAudit('update_point_value', `Set to ₦${val}/5pts`); renderAll(); showToast(`Point value: ₦${val}/5pts`, 'success');
+    } catch(e) { showToast('Update failed', 'error'); }
   };
 
-  // ========== CALCULATIONS ==========
-  function getPointBonus(staff) {
-    const points = staff.totalPoints || 0;
-    const pv = staff.pointValueNaira || globalPointValue || 500;
-    return points * (pv / 5);
-  }
-
-  function getFinalSalary(staff) {
-    return (staff.baseSalary || 0) + getPointBonus(staff);
-  }
+  function getPointBonus(staff) { const points = staff.totalPoints || 0; const pv = staff.pointValueNaira || globalPointValue || 500; return points * (pv / 5); }
+  function getFinalSalary(staff) { return (staff.baseSalary || 0) + getPointBonus(staff); }
 
   function getTotalPayroll() {
     const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active');
     let total = workers.reduce((s, u) => s + getFinalSalary(u), 0);
-    if (includeAdminSalary) {
-      const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role) && u.status === 'active');
-      total += admins.reduce((s, u) => s + (u.baseSalary || 0), 0);
-    }
+    if(includeAdminSalary) { const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role) && u.status === 'active'); total += admins.reduce((s, u) => s + (u.baseSalary || 0), 0); }
     return total;
   }
 
   function getSalaryRows() {
     const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active');
-    const rows = workers.map(u => ({
-      name: u.fullName || '-',
-      role: u.role || 'staff',
-      baseSalary: u.baseSalary || 0,
-      points: u.totalPoints || 0,
-      pointValue: u.pointValueNaira || globalPointValue || 500,
-      pointBonus: getPointBonus(u),
-      finalSalary: getFinalSalary(u),
-      isAdmin: false
-    }));
-
-    if (includeAdminSalary) {
-      const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role) && u.status === 'active');
-      admins.forEach(u => {
-        rows.push({
-          name: u.fullName || '-',
-          role: u.role || 'admin',
-          baseSalary: u.baseSalary || 0,
-          points: 0,
-          pointValue: 0,
-          pointBonus: 0,
-          finalSalary: u.baseSalary || 0,
-          isAdmin: true
-        });
-      });
-    }
-
+    const rows = workers.map(u => ({ name: u.fullName||'-', role: u.role||'staff', baseSalary: u.baseSalary||0, points: u.totalPoints||0, pointValue: u.pointValueNaira||globalPointValue||500, pointBonus: getPointBonus(u), finalSalary: getFinalSalary(u), isAdmin: false }));
+    if(includeAdminSalary) { const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role) && u.status === 'active'); admins.forEach(u => rows.push({ name: u.fullName||'-', role: u.role||'admin', baseSalary: u.baseSalary||0, points: 0, pointValue: 0, pointBonus: 0, finalSalary: u.baseSalary||0, isAdmin: true })); }
     return rows.sort((a, b) => b.finalSalary - a.finalSalary);
   }
 
-  // ========== DATA LOADING ==========
   function loadAllData() {
     cleanup();
-    unsubscribes.push(onSnapshot(collection(db, 'users'), (snap) => { allUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() })); renderAll(); }));
-    unsubscribes.push(onSnapshot(collection(db, 'sales'), (snap) => { allSales = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
-    unsubscribes.push(onSnapshot(collection(db, 'purchase_requests'), (snap) => { allPurchases = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
-    unsubscribes.push(onSnapshot(query(collection(db, 'misc_expenses'), orderBy('createdAt', 'desc')), (snap) => { allMiscExpenses = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'users'), (snap) => { allUsers = snap.docs.map(d=>({uid:d.id,...d.data()})); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'sales'), (snap) => { allSales = snap.docs.map(d=>({id:d.id,...d.data()})); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'purchase_requests'), (snap) => { allPurchases = snap.docs.map(d=>({id:d.id,...d.data()})); renderAll(); }));
+    unsubscribes.push(onSnapshot(query(collection(db, 'misc_expenses'), orderBy('createdAt','desc')), (snap) => { allMiscExpenses = snap.docs.map(d=>({id:d.id,...d.data()})); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'returns'), (snap) => { allReturns = snap.docs.map(d=>({id:d.id,...d.data()})); renderAll(); }));
   }
 
   function renderAll() {
-    loadPointValue().then(() => {
-      updateToggleUI();
-      renderStats();
-      renderCharts();
-      renderSalaryTable();
-      renderPurchasesTable();
-      renderMiscTable();
-      renderMonthlyComparison();
-    });
+    loadPointValue().then(() => { updateToggleUI(); renderStats(); renderCharts(); renderSalaryTable(); renderPurchasesTable(); renderMiscTable(); renderMonthlyComparison(); });
   }
 
   function getMonthlyData() {
-    const now = new Date();
-    const thisMonth = now.getMonth(), thisYear = now.getFullYear();
+    const now = new Date(); const thisMonth = now.getMonth(), thisYear = now.getFullYear();
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const monthlyData = {};
 
     allSales.forEach(s => {
-      const date = s.createdAt?.toDate();
-      if (!date) return;
+      if(s.status === 'returned') return;
+      const date = s.createdAt?.toDate(); if(!date) return;
       const key = `${date.getFullYear()}-${date.getMonth()}`;
-      if (!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0, misc: 0 };
+      if(!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0, misc: 0, refunds: 0 };
       monthlyData[key].revenue += s.totalAmount || 0;
     });
 
-    allPurchases.forEach(p => {
-      if (p.status !== 'purchased') return;
-      const date = p.purchasedAt?.toDate();
-      if (!date) return;
+    allReturns.forEach(r => {
+      if(r.returnAction !== 'refund') return;
+      const date = r.createdAt?.toDate(); if(!date) return;
       const key = `${date.getFullYear()}-${date.getMonth()}`;
-      if (!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0, misc: 0 };
-      monthlyData[key].purchases += p.receivedItems?.reduce((s, i) => s + ((i.received || i.suggested) * (i.price || i.unitPrice)), 0) || 0;
+      if(!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0, misc: 0, refunds: 0 };
+      monthlyData[key].revenue -= r.totalRefund || 0;
+      monthlyData[key].refunds += r.totalRefund || 0;
+    });
+
+    allPurchases.forEach(p => {
+      if(p.status !== 'purchased') return;
+      const date = p.purchasedAt?.toDate(); if(!date) return;
+      const key = `${date.getFullYear()}-${date.getMonth()}`;
+      if(!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0, misc: 0, refunds: 0 };
+      monthlyData[key].purchases += p.receivedItems?.reduce((s,i)=>s+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0;
     });
 
     allMiscExpenses.forEach(e => {
-      if (e.status !== 'approved') return;
-      const date = e.approvedAt?.toDate() || e.createdAt?.toDate();
-      if (!date) return;
+      if(e.status !== 'approved') return;
+      const date = e.approvedAt?.toDate() || e.createdAt?.toDate(); if(!date) return;
       const key = `${date.getFullYear()}-${date.getMonth()}`;
-      if (!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0, misc: 0 };
+      if(!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0, misc: 0, refunds: 0 };
       monthlyData[key].misc += e.amount || 0;
     });
 
@@ -893,8 +590,8 @@
     const { monthlyData, totalPayroll, thisMonth, thisYear } = getMonthlyData();
     const thisKey = `${thisYear}-${thisMonth}`;
     const lastKey = thisMonth === 0 ? `${thisYear-1}-11` : `${thisYear}-${thisMonth-1}`;
-    const current = monthlyData[thisKey] || { revenue: 0, purchases: 0, salaries: totalPayroll, misc: 0 };
-    const last = monthlyData[lastKey] || { revenue: 0, purchases: 0, salaries: totalPayroll, misc: 0 };
+    const current = monthlyData[thisKey] || { revenue: 0, purchases: 0, salaries: totalPayroll, misc: 0, refunds: 0 };
+    const last = monthlyData[lastKey] || { revenue: 0, purchases: 0, salaries: totalPayroll, misc: 0, refunds: 0 };
 
     const revenueMTD = current.revenue;
     const expensesMTD = current.purchases + current.salaries + current.misc;
@@ -903,7 +600,7 @@
     const lastExpenses = last.purchases + last.salaries + last.misc;
     const lastProfit = lastRevenue - lastExpenses;
 
-    const pendingMisc = allMiscExpenses.filter(e => e.status === 'pending_approval').reduce((s, e) => s + (e.amount || 0), 0);
+    const pendingMisc = allMiscExpenses.filter(e => e.status === 'pending_approval').reduce((s,e)=>s+(e.amount||0),0);
 
     document.getElementById('revenueMTD').textContent = formatCurrency(revenueMTD);
     document.getElementById('expensesMTD').textContent = formatCurrency(expensesMTD);
@@ -911,15 +608,13 @@
     document.getElementById('totalPayroll').textContent = formatCurrency(totalPayroll);
     document.getElementById('pendingExpenses').textContent = formatCurrency(pendingMisc);
 
-    let cashSales = 0, posSales = 0, walkinSales = 0, onlineSales = 0;
+    let cashSales=0, posSales=0, walkinSales=0, onlineSales=0;
     allSales.forEach(s => {
-      const date = s.createdAt?.toDate();
-      if (!date || date.getMonth() !== thisMonth || date.getFullYear() !== thisYear) return;
-      const amt = s.totalAmount || 0;
-      if (s.source === 'online') onlineSales += amt;
-      else if (s.paymentMethod === 'cash') cashSales += amt;
-      else posSales += amt;
-      if (!s.customerId && s.source !== 'online') walkinSales += amt;
+      if(s.status==='returned') return;
+      const date = s.createdAt?.toDate(); if(!date || date.getMonth()!==thisMonth || date.getFullYear()!==thisYear) return;
+      const amt = s.totalAmount||0;
+      if(s.source==='online') onlineSales+=amt; else if(s.paymentMethod==='cash') cashSales+=amt; else posSales+=amt;
+      if(!s.customerId && s.source!=='online') walkinSales+=amt;
     });
     document.getElementById('cashSales').textContent = formatCurrency(cashSales);
     document.getElementById('posSales').textContent = formatCurrency(posSales);
@@ -936,7 +631,7 @@
 
     const warningDiv = document.getElementById('financialWarning');
     const warningMsg = document.getElementById('warningMessage');
-    if (expensesMTD > revenueMTD) {
+    if(expensesMTD > revenueMTD) {
       warningDiv.className = 'financial-warning';
       warningMsg.textContent = `⚠️ Expenses (${formatCurrency(expensesMTD)}) exceed Revenue (${formatCurrency(revenueMTD)}) by ${formatCurrency(expensesMTD - revenueMTD)}. Review spending immediately.`;
     } else {
@@ -948,11 +643,11 @@
 
   function renderCharts() {
     const { monthlyData, months } = getMonthlyData();
-    const sorted = Object.entries(monthlyData).sort((a, b) => a[0].localeCompare(b[0])).slice(-6);
+    const sorted = Object.entries(monthlyData).sort((a,b) => a[0].localeCompare(b[0])).slice(-6);
 
-    if (barChart) barChart.destroy();
+    if(barChart) barChart.destroy();
     const barCtx = document.getElementById('barChart')?.getContext('2d');
-    if (barCtx) {
+    if(barCtx) {
       barChart = new Chart(barCtx, {
         type: 'bar',
         data: {
@@ -970,9 +665,9 @@
     const thisKey = `${now.getFullYear()}-${now.getMonth()}`;
     const current = monthlyData[thisKey] || { purchases: 0, salaries: 0, misc: 0 };
 
-    if (pieChart) pieChart.destroy();
+    if(pieChart) pieChart.destroy();
     const pieCtx = document.getElementById('pieChart')?.getContext('2d');
-    if (pieCtx) {
+    if(pieCtx) {
       pieChart = new Chart(pieCtx, {
         type: 'doughnut',
         data: {
@@ -987,182 +682,103 @@
   function renderSalaryTable() {
     const rows = getSalaryRows();
     document.getElementById('salaryCount').textContent = rows.length;
-    const tbody = document.getElementById('salaryTable');
-    if (!tbody) return;
-    if (rows.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No staff found</p></div></td></tr>';
-      return;
-    }
+    const tbody = document.getElementById('salaryTable'); if(!tbody) return;
+    if(rows.length===0){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No staff found</p></div></td></tr>';return;}
     tbody.innerHTML = rows.map(r => {
-      const roleBadge = r.isAdmin
-        ? '<span class="badge badge-purple">' + (r.role === 'super_admin' ? 'Super Admin' : 'Admin') + '</span>'
-        : '<span class="badge badge-info">' + r.role + '</span>';
+      const roleBadge = r.isAdmin ? '<span class="badge badge-purple">'+(r.role==='super_admin'?'Super Admin':'Admin')+'</span>' : '<span class="badge badge-info">'+r.role+'</span>';
       const pointsCol = r.isAdmin ? '<span style="color:var(--gray);">-</span>' : r.points;
-      const pvCol = r.isAdmin ? '<span style="color:var(--gray);">-</span>' : '₦' + r.pointValue + '/5pts';
-      const bonusCol = r.isAdmin
-        ? '<span style="color:var(--gray);">-</span>'
-        : `<span class="${r.pointBonus >= 0 ? 'text-positive' : 'text-negative'}">${r.pointBonus >= 0 ? '+' : ''}${formatCurrency(r.pointBonus)}</span>`;
-      return `
-        <tr>
-          <td><strong>${r.name}</strong>${r.isAdmin ? ' <i class="fas fa-crown" style="color:#f59e0b;font-size:0.7rem;"></i>' : ''}</td>
-          <td>${roleBadge}</td>
-          <td>${formatCurrency(r.baseSalary)}</td>
-          <td>${pointsCol}</td>
-          <td>${pvCol}</td>
-          <td>${bonusCol}</td>
-          <td><strong>${formatCurrency(r.finalSalary)}</strong></td>
-        </tr>
-      `;
+      const pvCol = r.isAdmin ? '<span style="color:var(--gray);">-</span>' : '₦'+r.pointValue+'/5pts';
+      const bonusCol = r.isAdmin ? '<span style="color:var(--gray);">-</span>' : `<span class="${r.pointBonus>=0?'text-positive':'text-negative'}">${r.pointBonus>=0?'+':''}${formatCurrency(r.pointBonus)}</span>`;
+      return `<tr><td><strong>${r.name}</strong>${r.isAdmin?' <i class="fas fa-crown" style="color:#f59e0b;font-size:0.7rem;"></i>':''}</td><td>${roleBadge}</td><td>${formatCurrency(r.baseSalary)}</td><td>${pointsCol}</td><td>${pvCol}</td><td>${bonusCol}</td><td><strong>${formatCurrency(r.finalSalary)}</strong></td></tr>`;
     }).join('');
   }
 
   function renderPurchasesTable() {
     const completed = allPurchases.filter(p => p.status === 'purchased');
     document.getElementById('purchasesCount').textContent = completed.length;
-    const tbody = document.getElementById('purchasesTable');
-    if (!tbody) return;
-    if (completed.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-shopping-cart"></i><p>No completed purchases</p></div></td></tr>';
-      return;
-    }
-    completed.sort((a, b) => (b.purchasedAt?.seconds || 0) - (a.purchasedAt?.seconds || 0));
-    tbody.innerHTML = completed.slice(0, 20).map(p => {
-      const total = p.receivedItems?.reduce((s, i) => s + ((i.received || i.suggested) * (i.price || i.unitPrice)), 0) || 0;
-      return `<tr><td>${formatDate(p.purchasedAt)}</td><td>${p.items?.length || 0} items</td><td>${p.supplier || '-'}</td><td>${formatCurrency(total)}</td><td><span class="badge badge-success">Completed</span></td></tr>`;
-    }).join('');
+    const tbody = document.getElementById('purchasesTable'); if(!tbody) return;
+    if(completed.length===0){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><i class="fas fa-shopping-cart"></i><p>No completed purchases</p></div></td></tr>';return;}
+    completed.sort((a,b)=>(b.purchasedAt?.seconds||0)-(a.purchasedAt?.seconds||0));
+    tbody.innerHTML = completed.slice(0,20).map(p => { const total = p.receivedItems?.reduce((s,i)=>s+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0; return `<tr><td>${formatDate(p.purchasedAt)}</td><td>${p.items?.length||0} items</td><td>${p.supplier||'-'}</td><td>${formatCurrency(total)}</td><td><span class="badge badge-success">Completed</span></td></tr>`; }).join('');
   }
 
   function renderMiscTable() {
     document.getElementById('miscCount').textContent = allMiscExpenses.length;
-    const tbody = document.getElementById('miscTable');
-    if (!tbody) return;
-    if (allMiscExpenses.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-receipt"></i><p>No expenses yet. Click "Add Expense" to record one.</p></div></td></tr>';
-      return;
-    }
+    const tbody = document.getElementById('miscTable'); if(!tbody) return;
+    if(allMiscExpenses.length===0){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state"><i class="fas fa-receipt"></i><p>No expenses yet. Click "Add Expense" to record one.</p></div></td></tr>';return;}
     tbody.innerHTML = allMiscExpenses.map(e => {
-      const statusBadge = e.status === 'approved' ? '<span class="badge badge-success">Approved</span>' : e.status === 'rejected' ? '<span class="badge badge-danger">Rejected</span>' : '<span class="badge badge-warning">Pending</span>';
-      const actions = e.status === 'pending_approval'
-        ? `<div style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="approveExpense('${e.id}')"><i class="fas fa-check"></i></button><button class="btn btn-sm btn-danger" onclick="rejectExpense('${e.id}')"><i class="fas fa-times"></i></button></div>`
-        : '-';
-      return `<tr><td>${formatDate(e.createdAt)}</td><td><strong>${e.name || '-'}</strong></td><td><span class="badge badge-purple">${e.category || 'General'}</span></td><td>${formatCurrency(e.amount)}</td><td>${e.issuedByName || '-'}</td><td>${e.boughtByName || '-'}</td><td>${statusBadge}</td><td>${actions}</td></tr>`;
+      const statusBadge = e.status==='approved'?'<span class="badge badge-success">Approved</span>':e.status==='rejected'?'<span class="badge badge-danger">Rejected</span>':'<span class="badge badge-warning">Pending</span>';
+      const actions = e.status==='pending_approval'?`<div style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="approveExpense('${e.id}')"><i class="fas fa-check"></i></button><button class="btn btn-sm btn-danger" onclick="rejectExpense('${e.id}')"><i class="fas fa-times"></i></button></div>`:'-';
+      return `<tr><td>${formatDate(e.createdAt)}</td><td><strong>${e.name||'-'}</strong></td><td><span class="badge badge-purple">${e.category||'General'}</span></td><td>${formatCurrency(e.amount)}</td><td>${e.issuedByName||'-'}</td><td>${e.boughtByName||'-'}</td><td>${statusBadge}</td><td>${actions}</td></tr>`;
     }).join('');
   }
 
   function renderMonthlyComparison() {
     const { monthlyData, months } = getMonthlyData();
-    const tbody = document.getElementById('monthlyTable');
-    if (!tbody) return;
-    const sorted = Object.entries(monthlyData).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
-    if (sorted.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-calendar-alt"></i><p>No data yet</p></div></td></tr>';
-      return;
-    }
+    const tbody = document.getElementById('monthlyTable'); if(!tbody) return;
+    const sorted = Object.entries(monthlyData).sort((a,b) => b[0].localeCompare(a[0])).slice(0,12);
+    if(sorted.length===0){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state"><i class="fas fa-calendar-alt"></i><p>No data yet</p></div></td></tr>';return;}
     let prevProfit = 0;
     tbody.innerHTML = sorted.map(([key, data], i) => {
-      const [y, m] = key.split('-');
-      const totalExp = data.purchases + data.salaries + data.misc;
+      const [y, m] = key.split('-'); const totalExp = data.purchases + data.salaries + data.misc;
       const profit = data.revenue - totalExp;
-      const change = i > 0 ? ((profit - prevProfit) / (Math.abs(prevProfit) || 1) * 100).toFixed(1) : '-';
-      const cls = change > 0 ? 'badge-success' : change < 0 ? 'badge-danger' : 'badge-warning';
-      prevProfit = profit;
-      return `<tr><td><strong>${months[parseInt(m)]} ${y}</strong></td><td>${formatCurrency(data.revenue)}</td><td>${formatCurrency(data.purchases)}</td><td>${formatCurrency(data.salaries)}</td><td>${formatCurrency(data.misc)}</td><td>${formatCurrency(totalExp)}</td><td><strong>${formatCurrency(profit)}</strong></td><td><span class="badge ${cls}">${change > 0 ? '+' : ''}${change}%</span></td></tr>`;
+      const change = i>0 ? ((profit - prevProfit) / (Math.abs(prevProfit)||1) * 100).toFixed(1) : '-';
+      const cls = change>0?'badge-success':change<0?'badge-danger':'badge-warning'; prevProfit = profit;
+      return `<tr><td><strong>${months[parseInt(m)]} ${y}</strong></td><td>${formatCurrency(data.revenue)}</td><td>${formatCurrency(data.purchases)}</td><td>${formatCurrency(data.salaries)}</td><td>${formatCurrency(data.misc)}</td><td>${formatCurrency(totalExp)}</td><td><strong>${formatCurrency(profit)}</strong></td><td><span class="badge ${cls}">${change>0?'+':''}${change}%</span></td></tr>`;
     }).join('');
   }
 
-  // ========== MISC EXPENSES ==========
   window.openAddExpenseModal = function() {
-    showModal('Add Miscellaneous Expense', `
-      <div class="form-row"><div class="form-group"><label>Expense Name *</label><input class="form-control" id="expName" placeholder="e.g., Generator Fuel"></div><div class="form-group"><label>Category</label><select class="form-control" id="expCategory"><option value="Fuel">Fuel</option><option value="Transport">Transport</option><option value="Maintenance">Maintenance</option><option value="Utilities">Utilities</option><option value="Supplies">Office Supplies</option><option value="Miscellaneous">Miscellaneous</option></select></div></div>
-      <div class="form-row"><div class="form-group"><label>Amount (₦) *</label><input type="number" class="form-control" id="expAmount" placeholder="0" min="1"></div><div class="form-group"><label>Date</label><input type="date" class="form-control" id="expDate"></div></div>
-      <div class="form-row"><div class="form-group"><label>Money Issued By *</label><input class="form-control" id="expIssuedBy" placeholder="e.g., Admin Name"></div><div class="form-group"><label>Item Bought By *</label><input class="form-control" id="expBoughtBy" placeholder="e.g., Staff Name"></div></div>
-      <div class="form-group"><label>Notes</label><textarea class="form-control" id="expNotes" rows="2" placeholder="Optional details..."></textarea></div>
-      <div style="display:flex;gap:10px;margin-top:10px;"><button class="btn btn-primary" onclick="submitExpense()"><i class="fas fa-paper-plane"></i> Submit for Approval</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
-    `);
+    showModal('Add Miscellaneous Expense', `<div class="form-row"><div class="form-group"><label>Expense Name *</label><input class="form-control" id="expName" placeholder="e.g., Generator Fuel"></div><div class="form-group"><label>Category</label><select class="form-control" id="expCategory"><option value="Fuel">Fuel</option><option value="Transport">Transport</option><option value="Maintenance">Maintenance</option><option value="Utilities">Utilities</option><option value="Supplies">Office Supplies</option><option value="Miscellaneous">Miscellaneous</option></select></div></div><div class="form-row"><div class="form-group"><label>Amount (₦) *</label><input type="number" class="form-control" id="expAmount" placeholder="0" min="1"></div><div class="form-group"><label>Date</label><input type="date" class="form-control" id="expDate"></div></div><div class="form-row"><div class="form-group"><label>Money Issued By *</label><input class="form-control" id="expIssuedBy" placeholder="e.g., Admin Name"></div><div class="form-group"><label>Item Bought By *</label><input class="form-control" id="expBoughtBy" placeholder="e.g., Staff Name"></div></div><div class="form-group"><label>Notes</label><textarea class="form-control" id="expNotes" rows="2" placeholder="Optional details..."></textarea></div><div style="display:flex;gap:10px;margin-top:10px;"><button class="btn btn-primary" onclick="submitExpense()"><i class="fas fa-paper-plane"></i> Submit for Approval</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
     document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
   };
 
   window.submitExpense = async function() {
-    const name = document.getElementById('expName')?.value?.trim();
-    const amount = parseFloat(document.getElementById('expAmount')?.value);
-    const issuedBy = document.getElementById('expIssuedBy')?.value?.trim();
-    const boughtBy = document.getElementById('expBoughtBy')?.value?.trim();
-    const category = document.getElementById('expCategory')?.value;
-    const notes = document.getElementById('expNotes')?.value?.trim();
-    const dateStr = document.getElementById('expDate')?.value;
-    if (!name || !amount || !issuedBy || !boughtBy) { showToast('Name, amount, issued by & bought by required', 'error'); return; }
+    const name = document.getElementById('expName')?.value?.trim(); const amount = parseFloat(document.getElementById('expAmount')?.value);
+    const issuedBy = document.getElementById('expIssuedBy')?.value?.trim(); const boughtBy = document.getElementById('expBoughtBy')?.value?.trim();
+    const category = document.getElementById('expCategory')?.value; const notes = document.getElementById('expNotes')?.value?.trim(); const dateStr = document.getElementById('expDate')?.value;
+    if(!name||!amount||!issuedBy||!boughtBy){showToast('Name, amount, issued by & bought by required','error');return;}
     try {
-      await addDoc(collection(db, 'misc_expenses'), { name, amount, category, notes: notes || '', issuedByName: issuedBy, boughtByName: boughtBy, expenseDate: dateStr || new Date().toISOString().split('T')[0], status: 'pending_approval', createdBy: currentUser?.uid, createdByName: userData?.fullName || 'Admin', createdAt: serverTimestamp() });
-      await logAudit('add_misc_expense', `Added: ${name} - ${formatCurrency(amount)}`);
-      showToast('Expense submitted for approval', 'success');
-      hideModal();
-    } catch (e) { showToast('Failed to submit', 'error'); }
+      await addDoc(collection(db, 'misc_expenses'), { name, amount, category, notes: notes||'', issuedByName: issuedBy, boughtByName: boughtBy, expenseDate: dateStr||new Date().toISOString().split('T')[0], status: 'pending_approval', createdBy: currentUser?.uid, createdByName: userData?.fullName||'Admin', createdAt: serverTimestamp() });
+      await logAudit('add_misc_expense', `Added: ${name} - ${formatCurrency(amount)}`); showToast('Expense submitted for approval','success'); hideModal();
+    } catch(e) { showToast('Failed to submit','error'); }
   };
 
   window.approveExpense = async function(id) {
-    try {
-      await updateDoc(doc(db, 'misc_expenses', id), { status: 'approved', approvedBy: currentUser?.uid, approvedByName: userData?.fullName || 'Admin', approvedAt: serverTimestamp() });
-      await logAudit('approve_misc_expense', `Approved expense ${id}`);
-      showToast('Expense approved', 'success');
-    } catch (e) { showToast('Approval failed', 'error'); }
+    try { await updateDoc(doc(db, 'misc_expenses', id), { status: 'approved', approvedBy: currentUser?.uid, approvedByName: userData?.fullName||'Admin', approvedAt: serverTimestamp() }); await logAudit('approve_misc_expense', `Approved expense ${id}`); showToast('Expense approved','success'); } catch(e) { showToast('Approval failed','error'); }
   };
 
   window.rejectExpense = async function(id) {
-    const reason = prompt('Rejection reason:') || 'Not specified';
-    try {
-      await updateDoc(doc(db, 'misc_expenses', id), { status: 'rejected', rejectedBy: currentUser?.uid, rejectedByName: userData?.fullName || 'Admin', rejectedAt: serverTimestamp(), rejectionReason: reason });
-      await logAudit('reject_misc_expense', `Rejected ${id}. Reason: ${reason}`);
-      showToast('Expense rejected', 'info');
-    } catch (e) { showToast('Rejection failed', 'error'); }
+    const reason = prompt('Rejection reason:')||'Not specified';
+    try { await updateDoc(doc(db, 'misc_expenses', id), { status: 'rejected', rejectedBy: currentUser?.uid, rejectedByName: userData?.fullName||'Admin', rejectedAt: serverTimestamp(), rejectionReason: reason }); await logAudit('reject_misc_expense', `Rejected ${id}. Reason: ${reason}`); showToast('Expense rejected','info'); } catch(e) { showToast('Rejection failed','error'); }
   };
 
-  // ========== EXPORT ==========
   window.exportSalaries = function(format) {
-    const rows = getSalaryRows();
-    const headers = 'Name,Role,Base Salary,Points,Point Value,Points Bonus,Final Salary';
+    const rows = getSalaryRows(); const headers = 'Name,Role,Base Salary,Points,Point Value,Points Bonus,Final Salary';
     const csv = [headers, ...rows.map(r => `"${r.name}","${r.role}","${r.baseSalary}","${r.points}","₦${r.pointValue}/5pts","${r.pointBonus>=0?'+':''}${r.pointBonus}","${r.finalSalary}"`)].join('\n');
-    const blob = new Blob([csv], { type: format === 'csv' ? 'text/csv' : 'application/vnd.ms-excel' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `salaries_${new Date().toISOString().split('T')[0]}.${format}`;
-    a.click();
-    document.getElementById('exportSalaryMenu')?.classList.remove('show');
-    showToast('Exported', 'success');
+    const blob = new Blob([csv], { type: format==='csv'?'text/csv':'application/vnd.ms-excel' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `salaries_${new Date().toISOString().split('T')[0]}.${format}`; a.click();
+    document.getElementById('exportSalaryMenu')?.classList.remove('show'); showToast('Exported','success');
   };
 
-  // ========== EVENT LISTENERS ==========
-  document.getElementById('exportSalaryBtn')?.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('exportSalaryMenu')?.classList.toggle('show'); });
-  document.addEventListener('click', () => document.getElementById('exportSalaryMenu')?.classList.remove('show'));
-  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function() {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    this.classList.add('active');
-    currentTab = this.dataset.tab;
-    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
-    document.getElementById(currentTab + 'Panel').classList.add('active');
-  }));
+  document.getElementById('exportSalaryBtn')?.addEventListener('click',(e)=>{e.stopPropagation();document.getElementById('exportSalaryMenu')?.classList.toggle('show');});
+  document.addEventListener('click',()=>document.getElementById('exportSalaryMenu')?.classList.remove('show'));
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function() { document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); this.classList.add('active'); currentTab=this.dataset.tab; document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active')); document.getElementById(currentTab+'Panel').classList.add('active'); }));
 
-  // ========== AUTH ==========
   onAuthStateChanged(auth, async (u) => {
-    if (!u) { window.location.href = 'auth.html'; return; }
-    currentUser = u;
+    if(!u){window.location.href='auth.html';return;} currentUser=u;
     try {
       const snap = await getDoc(doc(db, 'users', u.uid));
-      if (!snap.exists() || (snap.data().role !== 'admin' && snap.data().role !== 'super_admin')) { await signOut(auth); window.location.href = 'auth.html'; return; }
+      if(!snap.exists()||(snap.data().role!=='admin'&&snap.data().role!=='super_admin')){await signOut(auth);window.location.href='auth.html';return;}
       userData = snap.data();
-      document.getElementById('userName').textContent = userData.fullName?.split(' ')[0] || 'Admin';
-      document.getElementById('userRole').textContent = userData.role === 'super_admin' ? 'Super Admin' : 'Admin';
-      document.getElementById('userAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
-      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
-      await loadPointValue();
-      loadAllData();
-      await logAudit('view_finance', 'Viewed finance page');
-    } catch (e) { showToast('Error loading data', 'error'); }
+      document.getElementById('userName').textContent = userData.fullName?.split(' ')[0]||'Admin';
+      document.getElementById('userRole').textContent = userData.role==='super_admin'?'Super Admin':'Admin';
+      document.getElementById('userAvatar').textContent = (userData.fullName||'A').charAt(0).toUpperCase();
+      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+      await loadPointValue(); loadAllData(); await logAudit('view_finance','Viewed finance page');
+    } catch(e) { showToast('Error loading data','error'); }
   });
 
-  document.getElementById('logoutBtn').addEventListener('click', async () => {
-    try { await logAudit('logout', 'Logged out'); } catch (e) {}
-    await signOut(auth); window.location.href = 'auth.html';
-  });
+  document.getElementById('logoutBtn').addEventListener('click', async () => { try { await logAudit('logout','Logged out'); } catch(e){} await signOut(auth); window.location.href='auth.html'; });
   window.addEventListener('beforeunload', cleanup);
 </script>
 </body>
