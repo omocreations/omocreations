@@ -4,127 +4,337 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#ff4da6">
-  <title>Catalog Management · omocreations</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Catalog Management · OmoCreations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    :root { --primary: #ff4da6; --primary-dark: #e6398c; --primary-soft: #fff0f6; --dark: #0f0f1a; --gray: #6b7280; --gray-light: #f3f4f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --header-height: 64px; --sidebar-width: 280px; }
-    body { font-family: 'Inter', sans-serif; background: #f9fafb; display: flex; min-height: 100vh; }
-    .sidebar { width: var(--sidebar-width); background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%); color: white; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; }
-    .sidebar-header { padding: 24px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; }
-    .logo-text { font-size: 1.25rem; font-weight: 700; } .logo-text span { color: var(--primary); }
-    .sidebar-nav { padding: 20px 12px; }
-    .nav-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; color: rgba(255,255,255,0.65); cursor: pointer; border: none; background: none; width: 100%; font-size: 0.9rem; font-weight: 500; margin-bottom: 3px; }
-    .nav-item i { width: 22px; } .nav-item:hover { background: rgba(255,77,166,0.12); color: white; }
-    .nav-item.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
-    .nav-item.logout { color: rgba(239,68,68,0.7); margin-top: 20px; }
-    .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,255,255,0.06); position: absolute; bottom: 0; width: 100%; background: inherit; }
+    :root {
+      --primary: #ff4da6;
+      --primary-dark: #e6398c;
+      --primary-light: #ffb3d9;
+      --primary-soft: #fff0f6;
+      --dark: #1a1a2e;
+      --gray: #6b7280;
+      --gray-light: #f3f4f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #3b82f6;
+      --sidebar-width: 280px;
+      --sidebar-collapsed: 80px;
+      --header-height: 70px;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f9fafb 0%, #fff0f6 100%);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    @keyframes flameRing {
+      0% { box-shadow: 0 0 0 0 rgba(255, 77, 166, 0.4); }
+      50% { box-shadow: 0 0 0 5px rgba(255, 77, 166, 0.2); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 77, 166, 0); }
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+      color: white;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+      transition: width 0.25s ease, transform 0.3s ease;
+      z-index: 1000;
+      border-right: 1px solid rgba(255, 77, 166, 0.2);
+    }
+
+    @media (min-width: 769px) {
+      .sidebar.collapsed { width: var(--sidebar-collapsed); }
+      .sidebar.collapsed:hover { width: var(--sidebar-width); }
+      .sidebar.collapsed:hover .logo-text,
+      .sidebar.collapsed:hover .nav-text,
+      .sidebar.collapsed:hover .user-details,
+      .sidebar.collapsed:hover .nav-section-title { display: block; }
+      .sidebar.collapsed .logo-text,
+      .sidebar.collapsed .nav-text,
+      .sidebar.collapsed .user-details,
+      .sidebar.collapsed .nav-section-title { display: none; }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); width: 280px; }
+      .sidebar.mobile-open { transform: translateX(0); }
+    }
+
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+    .sidebar-header {
+      padding: 24px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,77,166,0.2);
+    }
+
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 700;
+      animation: flameRing 2s ease-in-out infinite;
+    }
+    .logo-text { font-size: 1.25rem; font-weight: 800; font-family: 'Playfair Display', serif; white-space: nowrap; }
+    .logo-text span { color: var(--primary); }
+
+    .close-sidebar {
+      background: rgba(255,255,255,0.1);
+      border: none; color: white;
+      width: 32px; height: 32px; border-radius: 50%;
+      cursor: pointer; display: none;
+      align-items: center; justify-content: center;
+      font-size: 1.2rem; transition: all 0.2s;
+    }
+    .close-sidebar:hover { background: var(--primary); transform: rotate(90deg); }
+    @media (max-width: 768px) { .close-sidebar { display: flex; } }
+
+    .sidebar-nav { padding: 20px 12px; display: flex; flex-direction: column; height: calc(100vh - 100px); overflow-y: auto; }
+    .nav-section { margin-bottom: 24px; }
+    .nav-section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.4); margin-bottom: 10px; padding-left: 14px; font-weight: 600; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 14px; border-radius: 12px;
+      color: rgba(255,255,255,0.7); cursor: pointer;
+      border: none; background: none; width: 100%;
+      font-size: 0.9rem; font-weight: 500; text-align: left;
+      margin-bottom: 3px; transition: all 0.2s;
+      font-family: 'Poppins', sans-serif;
+    }
+    .nav-item i { width: 22px; font-size: 1.1rem; }
+    .nav-item:hover { background: rgba(255,77,166,0.15); color: white; transform: translateX(5px); }
+    .nav-item.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 5px 15px rgba(255,77,166,0.3); }
+    .nav-item.logout { color: rgba(239,68,68,0.7); margin-top: auto; }
+    .nav-item.logout:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+    .sidebar-footer { padding: 20px 16px; border-top: 1px solid rgba(255,77,166,0.2); margin-top: auto; }
+    .sidebar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
+    .sidebar-overlay.active { display: block; }
     .user-profile { display: flex; align-items: center; gap: 12px; }
-    .user-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; font-weight: 700; }
-    .user-details h4 { font-size: 0.85rem; } .user-details p { font-size: 0.7rem; opacity: 0.6; }
-    .main-content { flex: 1; margin-left: var(--sidebar-width); }
-    .top-bar { height: var(--header-height); background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); padding: 0 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.04); position: sticky; top: 0; z-index: 40; }
-    .page-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); }
-    .content-wrapper { padding: 28px; max-width: 1400px; }
-    
+    .user-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 1.1rem; }
+    .user-details h4 { font-size: 0.85rem; font-weight: 600; }
+    .user-details p { font-size: 0.7rem; opacity: 0.6; }
+
+    /* Main content */
+    .main-content { flex: 1; margin-left: var(--sidebar-width); transition: margin-left 0.25s ease; min-height: 100vh; width: calc(100% - var(--sidebar-width)); }
+    @media (max-width: 768px) { .main-content { margin-left: 0 !important; width: 100% !important; } }
+    @media (min-width: 769px) {
+      .sidebar.collapsed + .main-content { margin-left: var(--sidebar-collapsed); width: calc(100% - var(--sidebar-collapsed)); }
+    }
+
+    .top-bar {
+      height: var(--header-height);
+      background: rgba(255,255,255,0.98); backdrop-filter: blur(12px);
+      padding: 0 28px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(255,77,166,0.15);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .top-bar-left { display: flex; align-items: center; gap: 18px; }
+    .menu-toggle { background: none; border: none; font-size: 1.2rem; color: var(--gray); cursor: pointer; padding: 10px; border-radius: 10px; transition: all 0.2s; }
+    .menu-toggle:hover { background: var(--primary-soft); color: var(--primary); }
+    .page-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
+
+    .content-wrapper { padding: 28px; max-width: 1600px; }
+
+    /* Filter Bar */
     .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
-    .filter-select { padding: 10px 16px; border-radius: 40px; border: 1px solid #ddd; font-size: 0.85rem; background: white; }
-    
+    .filter-select { padding: 12px 20px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px; font-size: 0.85rem; background: white; font-family: 'Poppins', sans-serif; cursor: pointer; transition: all 0.2s; }
+    .filter-select:focus { outline: none; border-color: var(--primary); }
+
+    /* Buttons */
+    .btn { padding: 10px 20px; border-radius: 40px; font-weight: 600; font-size: 0.8rem; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; font-family: 'Poppins', sans-serif; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+    .btn-outline { border: 1.5px solid rgba(255,77,166,0.3); color: var(--primary); background: transparent; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-sm { padding: 6px 14px; font-size: 0.7rem; }
+
+    /* Section */
+    .section { margin-bottom: 30px; }
+    .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .section-header h2 { font-size: 1.2rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
+    .section-header i { color: var(--primary); font-size: 1.1rem; }
+    .section-header .badge-count { background: var(--primary-soft); color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+
     .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-    .product-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.04); transition: transform 0.15s; }
+    .product-card {
+      background: white; border-radius: 20px; overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.04);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
     .product-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,77,166,0.1); }
     .product-image { width: 100%; aspect-ratio: 1; background: var(--gray-light); display: flex; align-items: center; justify-content: center; position: relative; }
     .product-image img { width: 100%; height: 100%; object-fit: cover; }
     .product-image .no-image { font-size: 3rem; color: var(--gray); }
+    .product-discount-badge { position: absolute; top: 10px; left: 10px; background: var(--danger); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
     .product-info { padding: 16px; }
-    .product-name { font-weight: 700; margin-bottom: 4px; color: var(--dark); }
+    .product-name { font-weight: 700; margin-bottom: 4px; color: var(--dark); font-size: 0.9rem; }
     .product-category { font-size: 0.7rem; color: var(--gray); margin-bottom: 4px; }
-    .product-price { color: var(--primary); font-weight: 700; font-size: 1.1rem; margin-bottom: 4px; }
+    .product-price-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .product-price { color: var(--primary); font-weight: 700; font-size: 1.1rem; }
+    .product-old-price { font-size: 0.75rem; color: var(--gray); text-decoration: line-through; }
     .product-stock { font-size: 0.75rem; color: var(--gray); margin-bottom: 10px; }
     .product-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    
-    .btn { padding: 8px 14px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background: white; border: 1px solid rgba(0,0,0,0.08); }
-    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; }
-    .btn-outline { border: 1.5px solid rgba(255,77,166,0.3); color: var(--primary); background: transparent; }
-    .btn-sm { padding: 5px 10px; font-size: 0.65rem; }
-    .btn-success { background: var(--success); color: white; }
-    .btn-warning { background: var(--warning); color: white; }
-    
-    .badge { padding: 4px 10px; border-radius: 40px; font-size: 0.65rem; font-weight: 600; display: inline-block; }
+
+    .badge { padding: 5px 12px; border-radius: 40px; font-size: 0.7rem; font-weight: 600; display: inline-block; }
     .badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
     .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
-    
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
+
+    /* Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
     .modal { background: white; border-radius: 28px; padding: 28px; max-width: 550px; width: 100%; max-height: 85vh; overflow-y: auto; }
     .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-    .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
+    .modal-header h3 { font-size: 1.2rem; font-weight: 700; font-family: 'Playfair Display', serif; }
     .modal-close { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--gray); }
     .form-group { margin-bottom: 18px; }
     .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
-    .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 14px; font-size: 0.9rem; outline: none; }
+    .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 14px; font-size: 0.9rem; outline: none; font-family: 'Poppins', sans-serif; }
     .form-control:focus { border-color: var(--primary); }
     textarea.form-control { min-height: 80px; resize: vertical; }
-    
+
     .image-upload-area { border: 2px dashed rgba(0,0,0,0.1); border-radius: 16px; padding: 30px; text-align: center; cursor: pointer; margin-bottom: 15px; transition: all 0.2s; }
     .image-upload-area:hover { border-color: var(--primary); background: var(--primary-soft); }
     .image-upload-area i { font-size: 2.5rem; color: var(--primary); margin-bottom: 10px; }
     .image-preview { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 10px; }
     .upload-progress { width: 100%; height: 6px; background: var(--gray-light); border-radius: 10px; margin: 10px 0; overflow: hidden; display: none; }
     .upload-progress-bar { height: 100%; background: var(--primary); border-radius: 10px; transition: width 0.3s; }
-    
+
+    /* Toast */
     .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; }
     .toast { background: white; padding: 14px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 12px; transform: translateX(400px); transition: transform 0.25s; border-left: 4px solid var(--primary); margin-top: 10px; }
     .toast.show { transform: translateX(0); }
-    
     .empty-state { text-align: center; padding: 40px; color: var(--gray); }
-    
-    @media (max-width: 768px) { .sidebar { display: none; } .main-content { margin-left: 0; } .content-wrapper { padding: 16px; } .product-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 480px) { .product-grid { grid-template-columns: 1fr; } }
+
+    @media (max-width: 992px) {
+      .sidebar { width: var(--sidebar-collapsed); }
+      .sidebar .logo-text, .sidebar .nav-text, .sidebar .user-details, .sidebar .nav-section-title { display: none; }
+      .main-content { margin-left: var(--sidebar-collapsed); }
+    }
+    @media (max-width: 768px) {
+      .content-wrapper { padding: 16px; }
+      .top-bar { padding: 0 16px; }
+      .page-title { font-size: 1.2rem; }
+      .product-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .product-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
 
-<aside class="sidebar">
-  <div class="sidebar-header"><div class="logo-icon">💎</div><div class="logo-text"><span>Omo</span>Creations</div></div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar collapsed" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-area">
+      <div class="logo-icon">💎</div>
+      <div class="logo-text"><span>Omo</span>Creations</div>
+    </div>
+    <button class="close-sidebar" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
+  </div>
   <nav class="sidebar-nav">
-    <button class="nav-item" onclick="window.location.href='attendant-dashboard.html'"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
-    <button class="nav-item" onclick="window.location.href='inventory.html'"><i class="fas fa-box"></i><span>Inventory</span></button>
-    <button class="nav-item" onclick="window.location.href='purchases.html'"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
-    <button class="nav-item" onclick="window.location.href='customers.html'"><i class="fas fa-users"></i><span>Customers</span></button>
-    <button class="nav-item" onclick="window.location.href='sales.html'"><i class="fas fa-cash-register"></i><span>Sales</span></button>
-    <button class="nav-item" onclick="window.location.href='tasks.html'"><i class="fas fa-clipboard-list"></i><span>Tasks</span></button>
-    <button class="nav-item active"><i class="fas fa-tags"></i><span>Catalog</span></button>
-    <button class="nav-item" onclick="window.location.href='orders-admin.html'"><i class="fas fa-truck"></i><span>Orders</span></button>
-    <button class="nav-item" onclick="window.location.href='attendant-profile.html'"><i class="fas fa-user"></i><span>Profile</span></button>
-    <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
+    <div class="nav-section">
+      <div class="nav-section-title">MANAGEMENT</div>
+      <button class="nav-item" onclick="window.location.href='inventory.html'"><i class="fas fa-box"></i><span class="nav-text">Inventory</span></button>
+      <button class="nav-item" onclick="window.location.href='purchases.html'"><i class="fas fa-shopping-cart"></i><span class="nav-text">Purchases</span></button>
+      <button class="nav-item" onclick="window.location.href='customers.html'"><i class="fas fa-users"></i><span class="nav-text">Customers</span></button>
+      <button class="nav-item" onclick="window.location.href='sales.html'"><i class="fas fa-cash-register"></i><span class="nav-text">Sales</span></button>
+      <button class="nav-item" onclick="window.location.href='tasks.html'"><i class="fas fa-clipboard-list"></i><span class="nav-text">Tasks</span></button>
+      <button class="nav-item active"><i class="fas fa-tags"></i><span class="nav-text">Catalog</span></button>
+      <button class="nav-item" onclick="window.location.href='orders-admin.html'"><i class="fas fa-truck"></i><span class="nav-text">Orders</span></button>
+    </div>
+    <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span class="nav-text">Logout</span></button>
   </nav>
-  <div class="sidebar-footer"><div class="user-profile"><div class="user-avatar" id="userAvatar">A</div><div class="user-details"><h4 id="userName">Attendant</h4><p id="userRole">Attendant</p></div></div></div>
+  <div class="sidebar-footer">
+    <div class="user-profile">
+      <div class="user-avatar" id="userAvatar">A</div>
+      <div class="user-details">
+        <h4 id="userName">Attendant</h4>
+        <p id="userRole">Staff</p>
+      </div>
+    </div>
+  </div>
 </aside>
 
 <main class="main-content">
-  <header class="top-bar"><h1 class="page-title">Catalog Management</h1><div style="color:var(--gray);"><span id="currentDate"></span></div></header>
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+      <h1 class="page-title">Catalog Management</h1>
+    </div>
+    <div style="color:var(--gray);font-size:0.85rem;"><span id="currentDate"></span></div>
+  </header>
+
   <div class="content-wrapper">
-    
     <div class="filter-bar">
-      <select class="filter-select" id="categoryFilter">
-        <option value="all">All Categories</option>
-        <option value="rhinestones">Rhinestones</option><option value="beads">Beads</option>
-        <option value="bridal">Bridal</option><option value="paperstones">Paperstones</option><option value="other">Other</option>
-      </select>
+      <select class="filter-select" id="categoryFilter"><option value="all">All Categories</option></select>
       <button class="btn btn-outline btn-sm" onclick="refreshCatalog()"><i class="fas fa-sync-alt"></i> Refresh</button>
       <button class="btn btn-primary btn-sm" onclick="syncFromInventory()"><i class="fas fa-sync"></i> Sync from Inventory</button>
       <span style="margin-left:auto;font-size:0.8rem;color:var(--gray);" id="productCount">0 products</span>
     </div>
-    
-    <div class="product-grid" id="productGrid">
-      <div class="empty-state"><i class="fas fa-box-open"></i><p>No products in catalog. Click "Sync from Inventory" to add products.</p></div>
+
+    <!-- PUBLISHED SECTION -->
+    <div class="section" id="publishedSection">
+      <div class="section-header">
+        <i class="fas fa-check-circle"></i>
+        <h2>Published</h2>
+        <span class="badge-count" id="publishedCount">0</span>
+      </div>
+      <div class="product-grid" id="publishedGrid">
+        <div class="empty-state"><i class="fas fa-box-open"></i><p>No published products</p></div>
+      </div>
     </div>
-    
+
+    <!-- YET TO PUBLISH SECTION -->
+    <div class="section" id="draftSection">
+      <div class="section-header">
+        <i class="fas fa-clock"></i>
+        <h2>Yet to Publish</h2>
+        <span class="badge-count" id="draftCount">0</span>
+      </div>
+      <div class="product-grid" id="draftGrid">
+        <div class="empty-state"><i class="fas fa-box-open"></i><p>No draft products</p></div>
+      </div>
+    </div>
+
+    <!-- NEW LOADED STOCK SECTION -->
+    <div class="section" id="newStockSection">
+      <div class="section-header">
+        <i class="fas fa-boxes"></i>
+        <h2>New Loaded Stock</h2>
+        <span class="badge-count" id="newStockCount">0</span>
+      </div>
+      <div class="product-grid" id="newStockGrid">
+        <div class="empty-state"><i class="fas fa-box-open"></i><p>No new stock items</p></div>
+      </div>
+    </div>
   </div>
 </main>
 
+<!-- EDIT/DISCOUNT MODAL -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-header"><h3 id="modalTitle">Edit Product</h3><button class="modal-close" onclick="hideModal()">&times;</button></div>
@@ -134,93 +344,225 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
-<script src="https://upload-widget.cloudinary.com/latest/global/all.js" type="text/javascript"></script>
+<script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
-  const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
-  let currentUser = null, userData = null, unsubscribes = [], allProducts = [], currentCategory = 'all';
-  let currentEditId = null;
+  const firebaseConfig = {
+    apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
+    authDomain: "fashion-46e5d.firebaseapp.com",
+    projectId: "fashion-46e5d",
+    storageBucket: "fashion-46e5d.firebasestorage.app",
+    messagingSenderId: "408062284317",
+    appId: "1:408062284317:web:eb905bce68926c10a0ecf4"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  // Cloudinary Config
   const CLOUDINARY_CLOUD_NAME = 'dw80fw9un';
   const CLOUDINARY_UPLOAD_PRESET = 'kiosk_attendance';
 
+  let currentUser = null, userData = null, unsubscribes = [];
+  let allProducts = [], inventoryItems = [], categories = [];
+  let currentCategory = 'all';
+  let currentEditId = null;
+
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
-  function showToast(msg, type='success') { const c = document.getElementById('toastContainer'); const t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = `<span>${msg}</span>`; c.appendChild(t); setTimeout(() => t.classList.add('show'), 10); setTimeout(() => t.remove(), 4000); }
+  
+  function showToast(msg, type = 'success') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i><span>${msg}</span>`;
+    c.appendChild(t);
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => t.remove(), 4000);
+  }
+
   window.hideModal = () => document.getElementById('modalOverlay').style.display = 'none';
-  function showModal(title, content) { document.getElementById('modalTitle').textContent = title; document.getElementById('modalContent').innerHTML = content; document.getElementById('modalOverlay').style.display = 'flex'; }
+  
+  function showModal(title, content) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalContent').innerHTML = content;
+    document.getElementById('modalOverlay').style.display = 'flex';
+  }
+
+  // Sidebar
+  window.toggleSidebar = function() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (window.innerWidth <= 768) {
+      sidebar.classList.add('mobile-open');
+      overlay.classList.add('active');
+    } else {
+      sidebar.classList.toggle('collapsed');
+    }
+  };
+
+  window.closeSidebar = function() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+    if (window.innerWidth > 768) {
+      document.getElementById('sidebar').classList.add('collapsed');
+    }
+  };
+
+  // Load categories from inventory
+  function loadCategories() {
+    onSnapshot(collection(db, 'categories'), (snap) => {
+      categories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const filter = document.getElementById('categoryFilter');
+      filter.innerHTML = '<option value="all">All Categories</option>';
+      categories.forEach(cat => {
+        filter.innerHTML += `<option value="${cat.id}">${cat.name || cat.id}</option>`;
+      });
+    });
+  }
 
   function renderProducts() {
     let filtered = [...allProducts];
-    if (currentCategory !== 'all') filtered = filtered.filter(p => p.category === currentCategory);
+    if (currentCategory !== 'all') {
+      filtered = filtered.filter(p => p.category === currentCategory);
+    }
+
     document.getElementById('productCount').textContent = `${filtered.length} products`;
-    const grid = document.getElementById('productGrid');
-    grid.innerHTML = '';
-    if (filtered.length === 0) { grid.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>No products in this category.</p></div>'; return; }
-    filtered.forEach(p => {
-      const imageHtml = p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}">` : '<i class="fas fa-image no-image"></i>';
-      grid.innerHTML += `
+
+    // Split into sections
+    const published = filtered.filter(p => p.published === true);
+    const drafts = filtered.filter(p => p.published === false);
+    const newStock = filtered.filter(p => p.isNewStock === true);
+
+    document.getElementById('publishedCount').textContent = published.length;
+    document.getElementById('draftCount').textContent = drafts.length;
+    document.getElementById('newStockCount').textContent = newStock.length;
+
+    renderGrid('publishedGrid', published, 'published');
+    renderGrid('draftGrid', drafts, 'draft');
+    renderGrid('newStockGrid', newStock, 'new');
+  }
+
+  function renderGrid(gridId, products, type) {
+    const grid = document.getElementById(gridId);
+    if (products.length === 0) {
+      grid.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>No products in this section</p></div>';
+      return;
+    }
+
+    grid.innerHTML = products.map(p => {
+      const imageHtml = p.imageUrl
+        ? `<img src="${p.imageUrl}" alt="${p.name}" loading="lazy">`
+        : '<i class="fas fa-image no-image"></i>';
+      const discountBadge = p.discountPercent && p.discountPercent > 0
+        ? `<div class="product-discount-badge">-${p.discountPercent}%</div>`
+        : '';
+      const discountedPrice = p.discountPercent && p.discountPercent > 0
+        ? p.price - (p.price * p.discountPercent / 100)
+        : null;
+
+      return `
         <div class="product-card">
-          <div class="product-image">${imageHtml}</div>
+          <div class="product-image">${imageHtml}${discountBadge}</div>
           <div class="product-info">
             <div class="product-name">${p.name || 'Unnamed'}</div>
             <div class="product-category">${p.category || 'Uncategorized'}</div>
-            <div class="product-price">${formatCurrency(p.price)}</div>
+            <div class="product-price-row">
+              <span class="product-price">${formatCurrency(discountedPrice || p.price)}</span>
+              ${discountedPrice ? `<span class="product-old-price">${formatCurrency(p.price)}</span>` : ''}
+            </div>
             <div class="product-stock">📦 ${p.inStock || 0} in stock</div>
             <div style="margin-bottom:8px;">
               <span class="badge badge-${p.published ? 'success' : 'warning'}">${p.published ? 'Published' : 'Draft'}</span>
+              ${p.isNewStock ? '<span class="badge badge-info" style="margin-left:4px;">New Stock</span>' : ''}
             </div>
             <div class="product-actions">
               <button class="btn btn-sm btn-outline" onclick="openEditModal('${p.id}')"><i class="fas fa-edit"></i> Edit</button>
-              <button class="btn btn-sm ${p.published ? 'btn-warning' : 'btn-success'}" onclick="togglePublish('${p.id}')"><i class="fas fa-${p.published ? 'eye-slash' : 'eye'}"></i> ${p.published ? 'Unpublish' : 'Publish'}</button>
+              <button class="btn btn-sm btn-outline" onclick="openDiscountModal('${p.id}')"><i class="fas fa-tag"></i> Discount</button>
+              <button class="btn btn-sm ${p.published ? 'btn-warning' : 'btn-success'}" onclick="togglePublish('${p.id}')">
+                <i class="fas fa-${p.published ? 'eye-slash' : 'eye'}"></i> ${p.published ? 'Unpublish' : 'Publish'}
+              </button>
             </div>
           </div>
         </div>
       `;
-    });
+    }).join('');
   }
 
   function loadProducts() {
-    if (unsubscribes.length) unsubscribes.forEach(u => u()); unsubscribes = [];
-    unsubscribes.push(onSnapshot(collection(db, 'catalog'), (snap) => { allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderProducts(); }));
+    if (unsubscribes.length) {
+      unsubscribes.forEach(u => u());
+      unsubscribes = [];
+    }
+    unsubscribes.push(onSnapshot(collection(db, 'catalog'), (snap) => {
+      allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderProducts();
+    }));
   }
 
+  // EDIT MODAL
   window.openEditModal = (id) => {
     const p = allProducts.find(x => x.id === id);
     if (!p) return;
     currentEditId = id;
-    
+
+    const catOptions = categories.map(c => 
+      `<option value="${c.id}" ${p.category === c.id ? 'selected' : ''}>${c.name || c.id}</option>`
+    ).join('');
+
     showModal('Edit Product', `
       <div class="form-group"><label>Product Name</label><input class="form-control" id="editName" value="${p.name || ''}"></div>
-      <div class="form-group"><label>Category</label><select class="form-control" id="editCategory">
-        <option value="rhinestones" ${p.category==='rhinestones'?'selected':''}>Rhinestones</option>
-        <option value="beads" ${p.category==='beads'?'selected':''}>Beads</option>
-        <option value="bridal" ${p.category==='bridal'?'selected':''}>Bridal</option>
-        <option value="paperstones" ${p.category==='paperstones'?'selected':''}>Paperstones</option>
-        <option value="other" ${p.category==='other'?'selected':''}>Other</option>
-      </select></div>
-      <div class="form-group"><label>Description</label><textarea class="form-control" id="editDesc" placeholder="Describe the product...">${p.description || ''}</textarea></div>
+      <div class="form-group"><label>Category</label><select class="form-control" id="editCategory">${catOptions}</select></div>
+      <div class="form-group"><label>Description</label><textarea class="form-control" id="editDesc">${p.description || ''}</textarea></div>
       <div class="form-group"><label>Price (₦)</label><input type="number" class="form-control" id="editPrice" value="${p.price || 0}" step="0.01"></div>
+      <div class="form-group"><label>Stock Quantity</label><input type="number" class="form-control" id="editStock" value="${p.inStock || 0}"></div>
       
       <div class="form-group"><label>Product Image</label>
         <div class="image-upload-area" onclick="openCloudinaryWidget()">
           <i class="fas fa-cloud-upload-alt"></i>
-          <p>Click to upload image from device</p>
-          <p style="font-size:0.7rem;color:var(--gray);">Supported: JPG, PNG, WEBP</p>
+          <p>Click to upload image</p>
+          <p style="font-size:0.7rem;color:var(--gray);">JPG, PNG, WEBP (max 5MB)</p>
         </div>
         <div class="upload-progress" id="uploadProgress"><div class="upload-progress-bar" id="uploadProgressBar" style="width:0%;"></div></div>
         <div id="imagePreviewContainer">${p.imageUrl ? `<img src="${p.imageUrl}" class="image-preview" id="imagePreview">` : ''}</div>
         <input type="hidden" id="editImageUrl" value="${p.imageUrl || ''}">
       </div>
       
-      <button class="btn btn-primary" onclick="saveProduct('${id}')"><i class="fas fa-save"></i> Save Changes</button>
+      <button class="btn btn-primary" onclick="saveProduct('${id}')" style="width:100%;"><i class="fas fa-save"></i> Save Changes</button>
     `);
   };
 
+  // DISCOUNT MODAL
+  window.openDiscountModal = (id) => {
+    const p = allProducts.find(x => x.id === id);
+    if (!p) return;
+    currentEditId = id;
+
+    showModal('Add Discount', `
+      <div style="text-align:center;margin-bottom:20px;">
+        <h3 style="margin-bottom:5px;">${p.name}</h3>
+        <p style="color:var(--gray);">Current Price: ${formatCurrency(p.price)}</p>
+        ${p.discountPercent ? `<p style="color:var(--danger);">Current Discount: ${p.discountPercent}%</p>` : ''}
+      </div>
+      <div class="form-group"><label>Discount Percentage (%)</label>
+        <input type="number" class="form-control" id="discountPercent" value="${p.discountPercent || 0}" min="0" max="99" step="1">
+      </div>
+      <p style="font-size:0.8rem;color:var(--gray);margin-bottom:10px;">
+        Discounted Price: <strong id="calcDiscountedPrice">${formatCurrency(p.price - (p.price * (p.discountPercent || 0) / 100))}</strong>
+      </p>
+      <button class="btn btn-primary" onclick="saveDiscount('${id}')" style="width:100%;"><i class="fas fa-tag"></i> Apply Discount</button>
+      ${p.discountPercent ? `<button class="btn btn-danger" onclick="removeDiscount('${id}')" style="width:100%;margin-top:8px;"><i class="fas fa-times"></i> Remove Discount</button>` : ''}
+    `);
+
+    document.getElementById('discountPercent').addEventListener('input', function() {
+      const percent = parseFloat(this.value) || 0;
+      const discounted = p.price - (p.price * percent / 100);
+      document.getElementById('calcDiscountedPrice').textContent = formatCurrency(discounted);
+    });
+  };
+
+  // CLOUDINARY UPLOAD
   window.openCloudinaryWidget = () => {
     const widget = cloudinary.createUploadWidget({
       cloudName: CLOUDINARY_CLOUD_NAME,
@@ -230,27 +572,43 @@
       resourceType: 'image',
       clientAllowedFormats: ['jpg', 'jpeg', 'png', 'webp'],
       maxFileSize: 5000000,
-      styles: { palette: { window: "#FFFFFF", windowBorder: "#ff4da6", tabIcon: "#ff4da6", menuIcons: "#6b7280", textDark: "#0f0f1a", textLight: "#FFFFFF", link: "#ff4da6", action: "#ff4da6", inProgress: "#ff4da6", complete: "#10b981", error: "#ef4444", sourceBg: "#f3f4f6" } }
+      styles: {
+        palette: {
+          window: "#FFFFFF",
+          windowBorder: "#ff4da6",
+          tabIcon: "#ff4da6",
+          menuIcons: "#6b7280",
+          textDark: "#0f0f1a",
+          textLight: "#FFFFFF",
+          link: "#ff4da6",
+          action: "#ff4da6",
+          inProgress: "#ff4da6",
+          complete: "#10b981",
+          error: "#ef4444",
+          sourceBg: "#f3f4f6"
+        }
+      }
     }, (error, result) => {
       if (!error && result && result.event === "success") {
-        console.log('Uploaded:', result.info.secure_url);
         document.getElementById('editImageUrl').value = result.info.secure_url;
-        const preview = document.getElementById('imagePreviewContainer');
-        preview.innerHTML = `<img src="${result.info.secure_url}" class="image-preview" id="imagePreview">`;
-        showToast('Image uploaded!', 'success');
+        document.getElementById('imagePreviewContainer').innerHTML = 
+          `<img src="${result.info.secure_url}" class="image-preview" id="imagePreview">`;
+        showToast('Image uploaded successfully!', 'success');
       }
-      if (error) { showToast('Upload failed', 'error'); }
+      if (error) showToast('Upload failed', 'error');
     });
     widget.open();
   };
 
+  // SAVE FUNCTIONS
   window.saveProduct = async (id) => {
     try {
       await updateDoc(doc(db, 'catalog', id), {
-        name: document.getElementById('editName').value,
+        name: document.getElementById('editName').value.trim(),
         category: document.getElementById('editCategory').value,
-        description: document.getElementById('editDesc').value,
+        description: document.getElementById('editDesc').value.trim(),
         price: parseFloat(document.getElementById('editPrice').value) || 0,
+        inStock: parseInt(document.getElementById('editStock').value) || 0,
         imageUrl: document.getElementById('editImageUrl').value,
         updatedAt: serverTimestamp()
       });
@@ -259,52 +617,117 @@
     } catch (e) { showToast('Error: ' + e.message, 'error'); }
   };
 
-  window.togglePublish = async (id) => {
-    const p = allProducts.find(x => x.id === id);
-    await updateDoc(doc(db, 'catalog', id), { published: !p.published });
-    showToast(p.published ? 'Unpublished' : 'Published!', 'success');
-  };
-
-  window.syncFromInventory = async () => {
+  window.saveDiscount = async (id) => {
     try {
-      const stockSnap = await getDocs(query(collection(db, 'stock_items'), where('status', 'in', ['available', 'low'])));
-      let count = 0;
-      for (const d of stockSnap.docs) {
-        const item = d.data();
-        const existing = allProducts.find(p => p.stockId === d.id);
-        if (!existing) {
-          await addDoc(collection(db, 'catalog'), {
-            stockId: d.id, name: item.name, category: item.category || 'other', description: '',
-            price: item.unitPrice || 0, inStock: item.quantityAvailable || 0, imageUrl: '',
-            published: false, createdAt: serverTimestamp(), updatedAt: serverTimestamp()
-          });
-          count++;
-        } else {
-          await updateDoc(doc(db, 'catalog', existing.id), { inStock: item.quantityAvailable || 0, price: item.unitPrice || 0, updatedAt: serverTimestamp() });
-        }
-      }
-      showToast(`Synced ${count} new products!`, 'success');
+      const percent = parseFloat(document.getElementById('discountPercent').value) || 0;
+      await updateDoc(doc(db, 'catalog', id), {
+        discountPercent: percent,
+        updatedAt: serverTimestamp()
+      });
+      showToast(percent > 0 ? `Discount of ${percent}% applied!` : 'Discount removed!', 'success');
+      hideModal();
     } catch (e) { showToast('Error: ' + e.message, 'error'); }
   };
 
-  window.refreshCatalog = () => { loadProducts(); showToast('Refreshed', 'success'); };
-  document.getElementById('categoryFilter').addEventListener('change', e => { currentCategory = e.target.value; renderProducts(); });
+  window.removeDiscount = async (id) => {
+    try {
+      await updateDoc(doc(db, 'catalog', id), {
+        discountPercent: 0,
+        updatedAt: serverTimestamp()
+      });
+      showToast('Discount removed!', 'success');
+      hideModal();
+    } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  };
 
+  window.togglePublish = async (id) => {
+    const p = allProducts.find(x => x.id === id);
+    if (!p) return;
+    try {
+      await updateDoc(doc(db, 'catalog', id), {
+        published: !p.published,
+        isNewStock: false,
+        updatedAt: serverTimestamp()
+      });
+      showToast(p.published ? 'Product unpublished' : 'Product published!', 'success');
+    } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  };
+
+  // SYNC FROM INVENTORY
+  window.syncFromInventory = async () => {
+    try {
+      const stockSnap = await getDocs(collection(db, 'stock_items'));
+      let count = 0;
+
+      for (const d of stockSnap.docs) {
+        const item = d.data();
+        const existing = allProducts.find(p => p.stockId === d.id);
+
+        if (!existing) {
+          await addDoc(collection(db, 'catalog'), {
+            stockId: d.id,
+            name: item.name || 'Unnamed Item',
+            category: item.category || 'other',
+            description: item.description || '',
+            price: item.unitPrice || item.price || 0,
+            inStock: item.quantityAvailable || item.quantity || 0,
+            imageUrl: item.imageUrl || '',
+            discountPercent: 0,
+            published: false,
+            isNewStock: true,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+          count++;
+        } else {
+          await updateDoc(doc(db, 'catalog', existing.id), {
+            inStock: item.quantityAvailable || item.quantity || 0,
+            price: item.unitPrice || item.price || 0,
+            name: item.name || existing.name,
+            updatedAt: serverTimestamp()
+          });
+        }
+      }
+
+      showToast(`Synced ${count} new products from inventory!`, 'success');
+    } catch (e) {
+      showToast('Sync error: ' + e.message, 'error');
+    }
+  };
+
+  window.refreshCatalog = () => { loadProducts(); showToast('Catalog refreshed', 'success'); };
+
+  // FILTERS
+  document.getElementById('categoryFilter').addEventListener('change', (e) => {
+    currentCategory = e.target.value;
+    renderProducts();
+  });
+
+  // AUTH
   onAuthStateChanged(auth, async (user) => {
     if (!user) { window.location.href = 'auth.html'; return; }
     currentUser = user;
     const snap = await getDoc(doc(db, 'users', user.uid));
-    if (!snap.exists()) { await signOut(auth); window.location.href = 'auth.html'; return; }
+    if (!snap.exists() || !['attendant', 'attendant_chief', 'admin', 'super_admin'].includes(snap.data().role)) {
+      await signOut(auth);
+      window.location.href = 'auth.html';
+      return;
+    }
     userData = snap.data();
-    if (!['attendant','attendant_chief','admin','super_admin'].includes(userData.role)) { window.location.href = 'staff-dashboard.html'; return; }
     document.getElementById('userName').textContent = userData.fullName?.split(' ')[0] || 'User';
     document.getElementById('userRole').textContent = userData.role || 'Staff';
-    document.getElementById('userAvatar').textContent = (userData.fullName||'U').charAt(0);
-    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('userAvatar').textContent = (userData.fullName || 'U').charAt(0);
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    
+    loadCategories();
     loadProducts();
   });
 
-  document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'auth.html'; });
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await signOut(auth);
+    window.location.href = 'auth.html';
+  });
+
   window.addEventListener('beforeunload', () => unsubscribes.forEach(u => u()));
 </script>
 </body>
