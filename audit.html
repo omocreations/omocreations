@@ -4,852 +4,515 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#ff4da6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Audit Logs · OmoCreations</title>
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
-    :root { 
-      --primary: #ff4da6; 
-      --primary-dark: #e6398c; 
-      --primary-light: #ffb3d9;
-      --primary-soft: #fff0f6; 
-      --dark: #1a1a2e; 
-      --gray: #6b7280; 
-      --gray-light: #f3f4f6; 
-      --success: #10b981; 
-      --warning: #f59e0b; 
-      --danger: #ef4444; 
-      --info: #3b82f6; 
-      --sidebar-width: 280px; 
-      --sidebar-collapsed: 80px; 
-      --header-height: 70px; 
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    :root {
+      --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
+      --primary-soft:#fff0f6; --dark:#1a1a2e; --gray:#6b7280;
+      --gray-light:#f3f4f6; --success:#10b981; --warning:#f59e0b;
+      --danger:#ef4444; --info:#3b82f6;
+      --sidebar-width:280px; --header-height:70px;
     }
-    
-    body { 
-      font-family: 'Poppins', sans-serif; 
-      background: linear-gradient(135deg, #f9fafb 0%, #fff0f6 100%);
-      display: flex; 
-      min-height: 100vh; 
+
+    html { font-size:16px; -webkit-text-size-adjust:100%; }
+
+    body {
+      font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      background:linear-gradient(135deg,#f9fafb 0%,#fff0f6 100%);
+      display:flex; min-height:100vh; overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;
     }
-    
-    /* Flame Ring Animation */
-    @keyframes flameRing {
-      0% { box-shadow: 0 0 0 0 rgba(255, 77, 166, 0.4); }
-      50% { box-shadow: 0 0 0 5px rgba(255, 77, 166, 0.2); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 77, 166, 0); }
+
+    @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
+    @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
+    @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
+
+    .sidebar {
+      width:var(--sidebar-width); min-width:var(--sidebar-width);
+      background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%);
+      color:white; position:fixed; top:0; left:0; height:100vh;
+      overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000;
+      border-right:1px solid rgba(255,77,166,0.2);
     }
-    
-    /* Sidebar with Gradient Background */
-    .sidebar { 
-      width: var(--sidebar-width); 
-      background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%); 
-      color: white; 
-      position: fixed; 
-      height: 100vh; 
-      overflow-y: auto; 
-      transition: width 0.25s ease, transform 0.3s ease; 
-      z-index: 1000; 
-      border-right: 1px solid rgba(255, 77, 166, 0.2);
+    .sidebar::-webkit-scrollbar { width:4px; }
+    .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); }
+    .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
+
+    .sidebar-header {
+      padding:24px 18px; display:flex; align-items:center; gap:12px;
+      border-bottom:1px solid rgba(255,77,166,0.2); position:sticky; top:0; z-index:10;
+      background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%);
     }
-    
-    /* Desktop collapsed sidebar - expands on hover */
-    @media (min-width: 769px) {
-      .sidebar.collapsed { 
-        width: var(--sidebar-collapsed); 
-      }
-      .sidebar.collapsed:hover {
-        width: var(--sidebar-width);
-      }
-      .sidebar.collapsed:hover .logo-text,
-      .sidebar.collapsed:hover .nav-text,
-      .sidebar.collapsed:hover .user-details,
-      .sidebar.collapsed:hover .nav-section-title {
-        display: block;
-      }
-      .sidebar.collapsed .logo-text,
-      .sidebar.collapsed .nav-text,
-      .sidebar.collapsed .user-details,
-      .sidebar.collapsed .nav-section-title {
-        display: none;
-      }
+    .sidebar-header .close-sidebar {
+      display:none; background:rgba(255,255,255,0.1); border:none; color:white;
+      width:32px; height:32px; border-radius:50%; cursor:pointer;
+      font-size:1.2rem; margin-left:auto; align-items:center; justify-content:center;
     }
-    
-    /* Mobile sidebar - slides in */
-    @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-        width: 280px;
-      }
-      .sidebar.mobile-open {
-        transform: translateX(0);
-      }
-      .sidebar.collapsed {
-        transform: translateX(-100%);
-      }
+    .logo-icon {
+      width:42px; height:42px; background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+      border-radius:12px; display:flex; align-items:center; justify-content:center;
+      font-size:1.3rem; font-weight:700; flex-shrink:0;
+      animation:flameRing 2s ease-in-out infinite;
     }
-    
-    .sidebar::-webkit-scrollbar { width: 4px; }
-    .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-    .sidebar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
-    
-    .sidebar-header { 
-      padding: 24px 18px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(255,77,166,0.2);
+    .logo-text { font-size:1.25rem; font-weight:800; font-family:'Playfair Display',serif; white-space:nowrap; }
+    .logo-text span { color:var(--primary); }
+
+    .sidebar-nav { padding:20px 12px; display:flex; flex-direction:column; }
+    .nav-section { margin-bottom:20px; }
+    .nav-section-title {
+      font-size:0.65rem; text-transform:uppercase; letter-spacing:2px;
+      color:rgba(255,255,255,0.4); padding:8px 14px 6px; font-weight:600; white-space:nowrap;
     }
-    
-    .logo-area {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .nav-item {
+      display:flex; align-items:center; gap:14px; padding:12px 14px; border-radius:12px;
+      color:rgba(255,255,255,0.7); cursor:pointer; border:none; background:none;
+      width:100%; font-size:0.9rem; font-weight:500; text-align:left; margin-bottom:3px;
+      transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; text-decoration:none;
     }
-    
-    .logo-icon { 
-      width: 42px; 
-      height: 42px; 
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
-      border-radius: 12px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      font-size: 1.3rem; 
-      font-weight: 700;
-      animation: flameRing 2s ease-in-out infinite;
+    .nav-item i { width:22px; font-size:1.1rem; text-align:center; flex-shrink:0; }
+    .nav-item:hover { background:rgba(255,77,166,0.15); color:white; transform:translateX(5px); }
+    .nav-item.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; box-shadow:0 5px 15px rgba(255,77,166,0.3); }
+    .nav-item.logout { color:rgba(239,68,68,0.7); margin-top:auto; }
+    .nav-item.logout:hover { background:rgba(239,68,68,0.15); color:#ef4444; }
+
+    .sidebar-footer {
+      padding:20px; border-top:1px solid rgba(255,77,166,0.2);
+      position:sticky; bottom:0; background:linear-gradient(0deg,#0f0f1a 0%,transparent 100%);
     }
-    
-    .logo-text { 
-      font-size: 1.25rem; 
-      font-weight: 800; 
-      font-family: 'Playfair Display', serif;
-      white-space: nowrap;
-    } 
-    
-    .logo-text span { color: var(--primary); }
-    
-    .close-sidebar {
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: white;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      transition: all 0.2s;
+    .user-profile { display:flex; align-items:center; gap:12px; }
+    .user-avatar {
+      width:44px; height:44px; border-radius:12px;
+      background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; color:white; flex-shrink:0; font-size:1.1rem;
     }
-    
-    .close-sidebar:hover {
-      background: var(--primary);
-      transform: rotate(90deg);
-    }
-    
-    @media (max-width: 768px) {
-      .close-sidebar {
-        display: flex;
-      }
-    }
-    
-    .sidebar-nav { 
-      padding: 20px 12px; 
-      display: flex; 
-      flex-direction: column; 
-      height: calc(100vh - 100px); 
-      overflow-y: auto; 
-    }
-    
-    .nav-section { margin-bottom: 24px; }
-    
-    .nav-section-title { 
-      font-size: 0.7rem; 
-      text-transform: uppercase; 
-      letter-spacing: 2px; 
-      color: rgba(255,255,255,0.4); 
-      margin-bottom: 10px; 
-      padding-left: 14px; 
-      font-weight: 600; 
-    }
-    
-    .nav-item { 
-      display: flex; 
-      align-items: center; 
-      gap: 14px; 
-      padding: 12px 14px; 
-      border-radius: 12px; 
-      color: rgba(255,255,255,0.7); 
-      cursor: pointer; 
-      border: none; 
-      background: none; 
-      width: 100%; 
-      font-size: 0.9rem; 
-      font-weight: 500; 
-      text-align: left; 
-      margin-bottom: 3px; 
-      transition: all 0.2s; 
-      font-family: 'Poppins', sans-serif;
-    }
-    
-    .nav-item i { width: 22px; font-size: 1.1rem; }
-    
-    .nav-item:hover { 
-      background: rgba(255,77,166,0.15); 
-      color: white; 
-      transform: translateX(5px);
-    }
-    
-    .nav-item.active { 
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
-      color: white; 
-      box-shadow: 0 5px 15px rgba(255,77,166,0.3);
-    }
-    
-    .nav-item.logout { 
-      color: rgba(239,68,68,0.7); 
-      margin-top: auto; 
-    }
-    
-    .nav-item.logout:hover {
-      background: rgba(239,68,68,0.15);
-      color: #ef4444;
-    }
-    
-    .sidebar-footer { 
-      padding: 20px 16px; 
-      border-top: 1px solid rgba(255,77,166,0.2); 
-      margin-top: auto;
-    }
-    
-    /* Sidebar Overlay for Mobile */
+    .user-details { white-space:nowrap; }
+    .user-details h4 { font-size:0.85rem; font-weight:600; }
+    .user-details p { font-size:0.7rem; opacity:0.6; }
+
     .sidebar-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 999;
-      display: none;
+      position:fixed; inset:0; background:rgba(0,0,0,0.5);
+      backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:999; display:none;
     }
-    
-    .sidebar-overlay.active {
-      display: block;
+    .sidebar-overlay.active { display:block; }
+
+    .main-content {
+      flex:1; margin-left:var(--sidebar-width); transition:margin-left 0.3s ease;
+      min-height:100vh; width:calc(100% - var(--sidebar-width));
     }
-    
-    .user-profile { 
-      display: flex; 
-      align-items: center; 
-      gap: 12px; 
+
+    .top-bar {
+      height:var(--header-height); background:rgba(255,255,255,0.98);
+      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      padding:0 28px; display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid rgba(255,77,166,0.15); position:sticky; top:0; z-index:50;
     }
-    
-    .user-avatar { 
-      width: 44px; 
-      height: 44px; 
-      border-radius: 12px; 
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      font-weight: 700; 
-      color: white; 
-      font-size: 1.1rem;
+    .top-bar-left { display:flex; align-items:center; gap:14px; }
+    .menu-toggle {
+      background:none; border:none; font-size:1.3rem; color:var(--gray);
+      cursor:pointer; padding:10px; border-radius:10px; transition:all 0.2s;
+      display:none; align-items:center; justify-content:center;
     }
-    
-    .user-details h4 { font-size: 0.85rem; font-weight: 600; } 
-    .user-details p { font-size: 0.7rem; opacity: 0.6; }
-    
-    /* Main content */
-    .main-content { 
-      flex: 1; 
-      margin-left: var(--sidebar-width); 
-      transition: margin-left 0.25s ease; 
-      min-height: 100vh; 
-      width: calc(100% - var(--sidebar-width)); 
+    .menu-toggle:hover { background:var(--primary-soft); color:var(--primary); }
+    .page-title { font-size:1.5rem; font-weight:700; color:var(--dark); font-family:'Playfair Display',serif; }
+    .current-date { color:var(--gray); font-size:0.85rem; white-space:nowrap; }
+    .content-wrapper { padding:28px; max-width:1600px; }
+
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .stat-card {
+      background:white; padding:18px 16px; border-radius:20px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(255,77,166,0.1);
+      transition:all 0.3s; animation:fadeInUp 0.5s ease forwards; opacity:0;
     }
-    
-    @media (max-width: 768px) {
-      .main-content { 
-        margin-left: 0 !important; 
-        width: 100% !important; 
-      }
+    .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.1s}
+    .stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.2s}
+    .stat-card:hover { transform:translateY(-5px); box-shadow:0 12px 24px rgba(255,77,166,0.15); }
+    .stat-header { display:flex; justify-content:space-between; margin-bottom:12px; }
+    .stat-header span { font-size:0.65rem; color:var(--gray); text-transform:uppercase; font-weight:600; letter-spacing:1px; }
+    .stat-icon { width:36px; height:36px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; color:var(--primary); }
+    .stat-value { font-size:1.8rem; font-weight:800; color:var(--dark); font-family:'Playfair Display',serif; line-height:1; }
+
+    .filter-bar { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
+    .search-wrapper { flex:1; min-width:200px; position:relative; }
+    .search-wrapper i { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--gray); }
+    .search-input {
+      width:100%; padding:12px 16px 12px 42px; border:1.5px solid rgba(0,0,0,0.08);
+      border-radius:40px; font-size:0.85rem; outline:none; font-family:'Poppins',sans-serif;
     }
-    
-    @media (min-width: 769px) {
-      .sidebar.collapsed + .main-content { 
-        margin-left: var(--sidebar-collapsed); 
-        width: calc(100% - var(--sidebar-collapsed)); 
-      }
+    .search-input:focus { border-color:var(--primary); }
+    .filter-select {
+      padding:12px 20px; border:1.5px solid rgba(0,0,0,0.08); border-radius:40px;
+      font-size:0.85rem; background:white; cursor:pointer; outline:none; font-family:'Poppins',sans-serif;
     }
-    
-    /* Top Bar */
-    .top-bar { 
-      height: var(--header-height); 
-      background: rgba(255,255,255,0.98); 
-      backdrop-filter: blur(12px); 
-      padding: 0 28px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between; 
-      border-bottom: 1px solid rgba(255,77,166,0.15);
-      position: sticky; 
-      top: 0; 
-      z-index: 50; 
+
+    .panel {
+      background:white; border-radius:24px; padding:24px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(255,77,166,0.08); margin-bottom:24px;
     }
-    
-    .top-bar-left { 
-      display: flex; 
-      align-items: center; 
-      gap: 18px; 
+    .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
+    .panel-header h3 { font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:10px; color:var(--dark); }
+    .panel-header h3 i { color:var(--primary); }
+
+    .table-wrapper { overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:16px; }
+    .data-table { width:100%; border-collapse:collapse; min-width:1000px; }
+    .data-table th {
+      text-align:left; padding:14px 10px; font-size:0.7rem; font-weight:600;
+      color:var(--gray); text-transform:uppercase; letter-spacing:1px;
+      border-bottom:2px solid var(--primary-soft); white-space:nowrap; background:white;
     }
-    
-    .menu-toggle { 
-      background: none; 
-      border: none; 
-      font-size: 1.2rem; 
-      color: var(--gray); 
-      cursor: pointer; 
-      padding: 10px; 
-      border-radius: 10px; 
-      transition: all 0.2s;
+    .data-table td { padding:14px 10px; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
+    .data-table tbody tr { transition:background 0.2s; }
+    .data-table tbody tr:hover { background:var(--primary-soft); }
+
+    .badge { padding:5px 12px; border-radius:40px; font-size:0.7rem; font-weight:600; display:inline-block; white-space:nowrap; }
+    .badge-success { background:rgba(16,185,129,0.1); color:var(--success); }
+    .badge-warning { background:rgba(245,158,11,0.1); color:var(--warning); }
+    .badge-danger { background:rgba(239,68,68,0.1); color:var(--danger); }
+    .badge-info { background:rgba(59,130,246,0.1); color:var(--info); }
+    .badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; }
+
+    .btn {
+      padding:8px 16px; border-radius:40px; font-weight:600; font-size:0.75rem;
+      cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+      background:white; border:1px solid rgba(0,0,0,0.08); transition:all 0.2s;
+      font-family:'Poppins',sans-serif; white-space:nowrap;
     }
-    
-    .menu-toggle:hover { 
-      background: var(--primary-soft); 
-      color: var(--primary); 
-      transform: scale(1.05);
+    .btn:hover { transform:translateY(-2px); }
+    .btn-outline { border:1.5px solid rgba(255,77,166,0.3); color:var(--primary); background:transparent; }
+    .btn-danger { background:var(--danger); color:white; border:none; }
+    .btn-sm { padding:6px 12px; font-size:0.7rem; }
+
+    .empty-state { text-align:center; padding:40px 20px; color:var(--gray); }
+    .empty-state i { font-size:2.5rem; color:var(--primary-light); margin-bottom:10px; display:block; }
+
+    .toast-container { position:fixed; bottom:24px; right:24px; z-index:3000; display:flex; flex-direction:column; gap:10px; }
+    .toast {
+      background:white; color:var(--dark); padding:14px 20px; border-radius:50px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px;
+      font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease;
+      border-left:4px solid var(--primary); transition:all 0.3s ease;
     }
-    
-    .page-title { 
-      font-size: 1.5rem; 
-      font-weight: 700; 
-      color: var(--dark); 
-      font-family: 'Playfair Display', serif;
-    }
-    
-    .content-wrapper { 
-      padding: 28px; 
-      max-width: 1600px; 
-    }
-    
-    /* Filter Bar */
-    .filter-bar { 
-      display: flex; 
-      gap: 12px; 
-      margin-bottom: 20px; 
-      flex-wrap: wrap; 
-      align-items: center;
-    }
-    
-    .filter-select { 
-      padding: 12px 20px; 
-      border: 1.5px solid rgba(0,0,0,0.08); 
-      border-radius: 40px; 
-      font-size: 0.85rem; 
-      background: white;
-      font-family: 'Poppins', sans-serif;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .filter-select:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-    
-    .search-wrapper { 
-      flex: 1; 
-      min-width: 200px; 
-      position: relative; 
-    }
-    
-    .search-wrapper i { 
-      position: absolute; 
-      left: 14px; 
-      top: 50%; 
-      transform: translateY(-50%); 
-      color: var(--gray); 
-    }
-    
-    .search-input { 
-      width: 100%; 
-      padding: 12px 16px 12px 42px; 
-      border: 1.5px solid rgba(0,0,0,0.08); 
-      border-radius: 40px; 
-      font-size: 0.85rem; 
-      outline: none;
-      font-family: 'Poppins', sans-serif;
-      transition: all 0.2s;
-    }
-    
-    .search-input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(255,77,166,0.1);
-    }
-    
-    /* Panel */
-    .panel { 
-      background: white; 
-      border-radius: 24px; 
-      padding: 24px; 
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02); 
-      border: 1px solid rgba(255,77,166,0.08);
-      transition: all 0.3s;
-    }
-    
-    .panel:hover {
-      box-shadow: 0 8px 25px rgba(255,77,166,0.08);
-    }
-    
-    .panel-header { 
-      display: flex; 
-      justify-content: space-between; 
-      margin-bottom: 20px; 
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    
-    .panel-header h3 { 
-      font-size: 1.1rem; 
-      font-weight: 700; 
-      display: flex; 
-      align-items: center; 
-      gap: 10px; 
-      color: var(--dark);
-    }
-    
-    .panel-header h3 i { color: var(--primary); }
-    
-    /* Tables */
-    .table-wrapper { 
-      overflow-x: auto; 
-      border-radius: 16px; 
-    }
-    
-    .data-table { 
-      width: 100%; 
-      border-collapse: collapse; 
-      min-width: 900px; 
-    }
-    
-    .data-table th { 
-      text-align: left; 
-      padding: 14px 12px; 
-      font-size: 0.7rem; 
-      font-weight: 600; 
-      color: var(--gray); 
-      text-transform: uppercase; 
-      letter-spacing: 1px;
-      border-bottom: 2px solid var(--primary-soft); 
-    }
-    
-    .data-table td { 
-      padding: 14px 12px; 
-      border-bottom: 1px solid rgba(0,0,0,0.04); 
-      font-size: 0.85rem; 
-    }
-    
-    /* Badges */
-    .badge { 
-      padding: 5px 12px; 
-      border-radius: 40px; 
-      font-size: 0.7rem; 
-      font-weight: 600; 
-      display: inline-block; 
-    }
-    .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
-    
-    /* Buttons */
-    .btn { 
-      padding: 10px 20px; 
-      border-radius: 40px; 
-      font-weight: 600; 
-      font-size: 0.8rem; 
-      border: none; 
-      cursor: pointer; 
-      display: inline-flex; 
-      align-items: center; 
-      gap: 8px; 
-      background: white; 
-      border: 1px solid rgba(0,0,0,0.08); 
-      transition: all 0.2s;
-      font-family: 'Poppins', sans-serif;
-    }
-    
-    .btn:hover { transform: translateY(-2px); }
-    
-    .btn-outline { 
-      border: 1.5px solid rgba(255,77,166,0.3); 
-      color: var(--primary); 
-      background: transparent; 
-    }
-    
-    .btn-danger { 
-      background: linear-gradient(135deg, var(--danger), #dc2626); 
-      color: white; 
-      border: none;
-    }
-    
-    .btn-sm { padding: 6px 14px; font-size: 0.7rem; }
-    
-    /* Empty State */
-    .empty-state { 
-      text-align: center; 
-      padding: 40px; 
-      color: var(--gray); 
-    }
-    .empty-state i { font-size: 2.5rem; color: var(--primary-light); margin-bottom: 10px; }
-    
-    /* Toast */
-    .toast-container { 
-      position: fixed; 
-      bottom: 24px; 
-      right: 24px; 
-      z-index: 9999; 
-    }
-    
-    .toast { 
-      background: white; 
-      padding: 14px 20px; 
-      border-radius: 50px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.12); 
-      display: flex; 
-      align-items: center; 
-      gap: 12px; 
-      transform: translateX(400px); 
-      transition: transform 0.25s; 
-      border-left: 4px solid var(--primary); 
-      margin-top: 10px;
-    }
-    
-    .toast.show { transform: translateX(0); }
-    
-    /* Responsive */
-    @media (max-width: 992px) { 
-      .sidebar { width: var(--sidebar-collapsed); } 
-      .sidebar .logo-text, .sidebar .nav-text, .sidebar .user-details, .sidebar .nav-section-title { display: none; } 
-      .main-content { margin-left: var(--sidebar-collapsed); } 
-    }
-    @media (max-width: 768px) { 
-      .content-wrapper { padding: 16px; } 
-      .top-bar { padding: 0 16px; }
-      .page-title { font-size: 1.2rem; }
-      .filter-bar { flex-direction: column; }
-      .search-wrapper { width: 100%; }
-      .filter-select { width: 100%; }
+    .toast.success { border-left-color:var(--success); }
+    .toast.error { border-left-color:var(--danger); }
+    .toast i { font-size:1.1rem; }
+    .toast.success i { color:var(--success); }
+    .toast.error i { color:var(--danger); }
+
+    @media (max-width:768px) {
+      .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; }
+      .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); }
+      .sidebar-header .close-sidebar { display:flex !important; }
+      .menu-toggle { display:flex !important; }
+      .main-content { margin-left:0 !important; width:100% !important; }
+      .content-wrapper { padding:16px 12px; }
+      .top-bar { padding:0 16px; }
+      .page-title { font-size:1.1rem; }
+      .current-date { display:none; }
+      .stats-grid { grid-template-columns:1fr 1fr; gap:10px; }
+      .stat-card { padding:14px 12px; }
+      .stat-value { font-size:1.4rem; }
+      .panel { padding:16px 12px; border-radius:18px; }
+      .data-table { min-width:800px; }
+      .data-table th, .data-table td { padding:10px 6px; font-size:0.75rem; }
     }
   </style>
 </head>
 <body>
 
-<!-- Sidebar Overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<!-- Sidebar -->
-<aside class="sidebar collapsed" id="sidebar">
+<aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
-    <div class="logo-area">
-      <div class="logo-icon">✨</div>
-      <div class="logo-text"><span>Omo</span>creations</div>
-    </div>
-    <button class="close-sidebar" onclick="closeSidebar()">
-      <i class="fas fa-times"></i>
-    </button>
+    <div class="logo-icon">✨</div>
+    <div class="logo-text"><span>Omo</span>creations</div>
+    <button class="close-sidebar" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
   </div>
-  
   <nav class="sidebar-nav">
-    <div class="nav-section">
-      <div class="nav-section-title">OVERVIEW</div>
-      <button class="nav-item" onclick="window.location.href='admin-dashboard.html'">
-        <i class="fas fa-chart-pie"></i><span class="nav-text">Dashboard</span>
-      </button>
-      <button class="nav-item" onclick="window.location.href='approvals.html'">
-        <i class="fas fa-check-circle"></i><span class="nav-text">Approvals</span>
-      </button>
-      <button class="nav-item" onclick="window.location.href='announcements.html'">
-        <i class="fas fa-bullhorn"></i><span class="nav-text">Announcements</span>
-      </button>
+    <div class="nav-section"><div class="nav-section-title">OVERVIEW</div>
+      <button class="nav-item" onclick="navigateTo('admin-dashboard.html')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+      <button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>
+      <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
     </div>
-    
-    <div class="nav-section">
-      <div class="nav-section-title">MANAGEMENT</div>
-      <button class="nav-item" onclick="window.location.href='staff-management.html'">
-        <i class="fas fa-users-cog"></i><span class="nav-text">Staff Management</span>
-      </button>
-      <button class="nav-item" onclick="window.location.href='finance.html'">
-        <i class="fas fa-chart-line"></i><span class="nav-text">Finance</span>
-      </button>
-      <button class="nav-item active" onclick="window.location.href='audit.html'">
-        <i class="fas fa-history"></i><span class="nav-text">Audit Logs</span>
-      </button>
+    <div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
+      <button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff Management</span></button>
+      <button class="nav-item" onclick="navigateTo('make-admin.html')"><i class="fas fa-user-shield"></i><span>Make Admin</span></button>
+      <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
+      <button class="nav-item active"><i class="fas fa-history"></i><span>Audit Logs</span></button>
     </div>
-    
-    <div class="nav-section">
-      <div class="nav-section-title">MONITORING</div>
-      <button class="nav-item" onclick="window.location.href='inventory.html'">
-        <i class="fas fa-box"></i><span class="nav-text">Inventory</span>
-      </button>
-      <button class="nav-item" onclick="window.location.href='purchases.html'">
-        <i class="fas fa-shopping-cart"></i><span class="nav-text">Purchases</span>
-      </button>
-      <button class="nav-item" onclick="window.location.href='customers.html'">
-        <i class="fas fa-users"></i><span class="nav-text">Customers</span>
-      </button>
-      <button class="nav-item" onclick="window.location.href='sales.html'">
-        <i class="fas fa-cash-register"></i><span class="nav-text">Sales</span>
-      </button>
+    <div class="nav-section"><div class="nav-section-title">MONITORING</div>
+      <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
+      <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
+      <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
+      <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
+      <button class="nav-item" onclick="navigateTo('orders-admin.html')"><i class="fas fa-clipboard-list"></i><span>Orders Admin</span></button>
     </div>
-    
-    <button class="nav-item logout" id="logoutBtn">
-      <i class="fas fa-sign-out-alt"></i><span class="nav-text">Logout</span>
-    </button>
+    <div class="nav-section"><div class="nav-section-title">SHOP &amp; KIOSK</div>
+      <button class="nav-item" onclick="window.open('kiosk.html','_blank')"><i class="fas fa-desktop"></i><span>Launch Kiosk</span></button>
+      <button class="nav-item" onclick="navigateTo('kiosk-settings.html')"><i class="fas fa-cog"></i><span>Kiosk Settings</span></button>
+      <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
+      <button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><span>Catalog</span></button>
+    </div>
+    <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
   </nav>
-  
-  <div class="sidebar-footer">
-    <div class="user-profile">
-      <div class="user-avatar" id="userAvatar">A</div>
-      <div class="user-details">
-        <h4 id="userName">Admin</h4>
-        <p id="userRole">Administrator</p>
-      </div>
-    </div>
-  </div>
+  <div class="sidebar-footer"><div class="user-profile"><div class="user-avatar" id="userAvatar">A</div><div class="user-details"><h4 id="userName">Admin</h4><p id="userRole">Admin</p></div></div></div>
 </aside>
 
-<!-- Main Content -->
 <main class="main-content">
   <header class="top-bar">
-    <div class="top-bar-left">
-      <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-      </button>
-      <h1 class="page-title">Audit Logs</h1>
-    </div>
-    <div style="color:var(--gray); font-size:0.85rem;">
-      <span id="currentDate"></span>
-    </div>
+    <div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">Audit Logs</h1></div>
+    <span class="current-date" id="currentDate"></span>
   </header>
-  
+
   <div class="content-wrapper">
-    
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-header"><span>Total Actions</span><div class="stat-icon"><i class="fas fa-list"></i></div></div><div class="stat-value" id="totalActions">0</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Today</span><div class="stat-icon"><i class="fas fa-calendar-day"></i></div></div><div class="stat-value" id="todayActions">0</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Unique Users</span><div class="stat-icon"><i class="fas fa-users"></i></div></div><div class="stat-value" id="uniqueUsers">0</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Action Types</span><div class="stat-icon"><i class="fas fa-tags"></i></div></div><div class="stat-value" id="actionTypes">0</div></div>
+    </div>
+
     <div class="filter-bar">
-      <div class="search-wrapper">
-        <i class="fas fa-search"></i>
-        <input type="text" class="search-input" id="searchInput" placeholder="Search by user or details...">
-      </div>
+      <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search by user, action, or details..."></div>
       <select class="filter-select" id="actionFilter">
         <option value="all">All Actions</option>
-        <option value="approve_user">Approve User</option>
-        <option value="reject_user">Reject User</option>
-        <option value="task_assigned">Task Assigned</option>
-        <option value="task_submit">Task Submitted</option>
-        <option value="sale">Sale</option>
-        <option value="add_item">Add Item</option>
-        <option value="restock">Restock</option>
-        <option value="purchase_completed">Purchase Completed</option>
-        <option value="attendance_kiosk">Attendance</option>
         <option value="login">Login</option>
         <option value="logout">Logout</option>
+        <option value="add_item">Add Item</option>
+        <option value="edit_item">Edit Item</option>
+        <option value="delete_item">Delete Item</option>
+        <option value="sale">Sale</option>
+        <option value="return_goods">Return Goods</option>
+        <option value="purchase_completed">Purchase Completed</option>
+        <option value="approve_user">Approve User</option>
+        <option value="reject_user">Reject User</option>
+        <option value="add_staff">Add Staff</option>
+        <option value="edit_staff">Edit Staff</option>
+        <option value="terminate_staff">Terminate Staff</option>
+        <option value="suspend_staff">Suspend Staff</option>
+        <option value="reinstate_staff">Reinstate Staff</option>
+        <option value="add_category">Add Category</option>
+        <option value="update_point_value">Update Point Value</option>
+        <option value="dashboard_view">Dashboard View</option>
       </select>
-      <button class="btn btn-outline" id="exportBtn"><i class="fas fa-download"></i> Export</button>
-      <button class="btn btn-outline" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-outline btn-sm" onclick="exportAudit()"><i class="fas fa-download"></i> Export CSV</button>
+      <button class="btn btn-outline btn-sm" onclick="refreshAudit()"><i class="fas fa-sync-alt"></i> Refresh</button>
     </div>
-    
+
     <div class="panel">
       <div class="panel-header">
         <h3><i class="fas fa-history"></i> System Activity Log</h3>
-        <button class="btn btn-danger btn-sm" id="requestDeleteBtn"><i class="fas fa-trash-alt"></i> Request Deletion</button>
+        <button class="btn btn-danger btn-sm" onclick="requestDeleteAudit()"><i class="fas fa-trash-alt"></i> Request Deletion</button>
       </div>
       <div class="table-wrapper">
         <table class="data-table">
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Action</th>
-              <th>User</th>
-              <th>Collection</th>
-              <th>Document ID</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody id="auditTable"></tbody>
+          <thead><tr><th>Date & Time</th><th>Action</th><th>User</th><th>Details</th></tr></thead>
+          <tbody id="auditTable"><tr><td colspan="4"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading audit logs...</p></div></td></tr></tbody>
         </table>
       </div>
     </div>
-    
+
   </div>
 </main>
 
-<!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, where, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
-  const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+  const firebaseConfig = {
+    apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
+    authDomain: "fashion-46e5d.firebaseapp.com",
+    projectId: "fashion-46e5d",
+    storageBucket: "fashion-46e5d.firebasestorage.app",
+    messagingSenderId: "408062284317",
+    appId: "1:408062284317:web:eb905bce68926c10a0ecf4"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
   let currentUser = null, userData = null, unsubscribes = [], allLogs = [], currentFilter = 'all';
 
-  // Sidebar functions
-  window.toggleSidebar = function() { 
-    const sidebar = document.getElementById('sidebar'); 
-    const overlay = document.getElementById('sidebarOverlay'); 
-    if (window.innerWidth <= 768) { 
-      sidebar.classList.add('mobile-open'); 
-      overlay.classList.add('active'); 
-    } else { 
-      sidebar.classList.toggle('collapsed'); 
-    } 
-  };
-  
-  window.closeSidebar = function() { 
-    const sidebar = document.getElementById('sidebar'); 
-    const overlay = document.getElementById('sidebarOverlay'); 
-    sidebar.classList.remove('mobile-open'); 
-    overlay.classList.remove('active'); 
-    if (window.innerWidth > 768) {
-      sidebar.classList.add('collapsed');
-    }
-  };
+  function formatDateTime(d) {
+    if (!d) return '-';
+    const date = d.toDate ? d.toDate() : new Date(d);
+    return date.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}) + ' ' + date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
 
-  function formatDateTime(d) { 
-    if (!d) return '-'; 
-    const date = d.toDate ? d.toDate() : new Date(d); 
-    return date.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); 
+  function navigateTo(url) { window.location.href = url; }
+  window.navigateTo = navigateTo;
+
+  function showToast(msg, type='success') {
+    const c = document.getElementById('toastContainer'); if (!c) return;
+    const t = document.createElement('div'); t.className = `toast ${type}`;
+    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
+    c.appendChild(t);
+    setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500);
   }
-  
-  function showToast(msg, type='success') { 
-    const c = document.getElementById('toastContainer'); 
-    const t = document.createElement('div'); 
-    t.className = `toast ${type}`; 
-    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i><span>${msg}</span>`; 
-    c.appendChild(t); 
-    setTimeout(() => t.classList.add('show'), 10); 
-    setTimeout(() => t.remove(), 4000); 
+
+  function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
+
+  window.toggleSidebar = function() {
+    const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay');
+    if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}
+    else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';}
+  };
+  window.closeSidebar = function() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow='';
+  };
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
+
+  function getActionBadge(actionType) {
+    const map = {
+      login:'info', logout:'info', add_item:'success', edit_item:'warning', delete_item:'danger',
+      sale:'success', return_goods:'danger', purchase_completed:'success',
+      approve_user:'success', reject_user:'danger', add_staff:'info', edit_staff:'warning',
+      terminate_staff:'danger', suspend_staff:'warning', reinstate_staff:'success',
+      add_category:'purple', update_point_value:'info', dashboard_view:'info',
+      stock_action_request:'warning', approve_stock_request:'success', reject_stock_request:'danger',
+      view_inventory:'info', view_sales:'info', view_finance:'info', view_purchases:'info',
+      view_staff_management:'info', view_approvals:'info', view_history:'info',
+      draft_request:'info', submit_request:'warning', approve_purchase:'success',
+      add_misc_expense:'warning', approve_misc_expense:'success', reject_misc_expense:'danger',
+      grant_value_view:'success', reveal_total_value:'warning'
+    };
+    return map[actionType] || 'info';
   }
-  
-  async function logAudit(action, note) { 
-    try { 
-      await addDoc(collection(db, 'audit_logs'), { 
-        actionType: action, 
-        performedBy: currentUser?.uid, 
-        performedByName: userData?.fullName, 
-        performedAt: serverTimestamp(), 
-        note 
-      }); 
-    } catch(e) {} 
+
+  function getActionIcon(actionType) {
+    const map = {
+      login:'sign-in-alt', logout:'sign-out-alt', add_item:'plus-circle', edit_item:'edit',
+      delete_item:'trash', sale:'cash-register', return_goods:'undo', purchase_completed:'truck',
+      approve_user:'user-check', reject_user:'user-times', add_staff:'user-plus', edit_staff:'user-edit',
+      terminate_staff:'ban', suspend_staff:'pause', reinstate_staff:'undo',
+      add_category:'folder-plus', update_point_value:'coins', dashboard_view:'chart-pie',
+      stock_action_request:'clipboard-list', view_inventory:'box', view_sales:'shopping-bag',
+      view_finance:'chart-line', view_purchases:'shopping-cart', view_staff_management:'users-cog',
+      add_misc_expense:'receipt', grant_value_view:'eye'
+    };
+    return map[actionType] || 'circle';
   }
 
   function renderAudit() {
-    let filtered = [...allLogs]; 
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    if (search) filtered = filtered.filter(l => (l.performedByName||'').toLowerCase().includes(search) || (l.note||'').toLowerCase().includes(search));
+    let filtered = [...allLogs];
+    const search = (document.getElementById('searchInput')?.value||'').toLowerCase();
+    if (search) filtered = filtered.filter(l => (l.performedByName||'').toLowerCase().includes(search) || (l.note||'').toLowerCase().includes(search) || (l.actionType||'').toLowerCase().includes(search));
     if (currentFilter !== 'all') filtered = filtered.filter(l => l.actionType === currentFilter);
-    
-    const tbody = document.getElementById('auditTable'); 
-    tbody.innerHTML = '';
-    if (filtered.length === 0) { 
-      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-history"></i><p>No audit logs found</p></div>NonNull<td></tr>'; 
-      return; 
-    }
-    filtered.slice(0, 100).forEach(l => { 
-      tbody.innerHTML += `<tr>
-        <td>${formatDateTime(l.performedAt)}</td>
-        <td><span class="badge badge-info">${l.actionType}</span></td>
-        <td>${l.performedByName||l.performedBy?.slice(0,8)||'System'}</td>
-        <td>${l.collectionName||'-'}</td>
-        <td>${l.documentId?.slice(0,12)||'-'}</td>
-        <td>${l.note||'-'}</td>
-      </tr>`; 
+
+    // Stats
+    const today = new Date().toISOString().split('T')[0];
+    const todayLogs = allLogs.filter(l => {
+      const d = l.performedAt?.toDate ? l.performedAt.toDate() : new Date(l.performedAt||0);
+      return d.toISOString().split('T')[0] === today;
     });
+    const uniqueUsers = new Set(allLogs.map(l => l.performedByName || l.performedBy).filter(Boolean));
+    const uniqueActions = new Set(allLogs.map(l => l.actionType).filter(Boolean));
+
+    document.getElementById('totalActions').textContent = allLogs.length;
+    document.getElementById('todayActions').textContent = todayLogs.length;
+    document.getElementById('uniqueUsers').textContent = uniqueUsers.size;
+    document.getElementById('actionTypes').textContent = uniqueActions.size;
+
+    const tbody = document.getElementById('auditTable');
+    if (!tbody) return;
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-history"></i><p>No audit logs found</p></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = filtered.slice(0, 200).map(l => {
+      const badge = getActionBadge(l.actionType);
+      const icon = getActionIcon(l.actionType);
+      return `<tr>
+        <td>${formatDateTime(l.performedAt)}</td>
+        <td><span class="badge badge-${badge}"><i class="fas fa-${icon}"></i> ${(l.actionType||'action').replace(/_/g,' ')}</span></td>
+        <td><strong>${l.performedByName || (l.performedBy?.slice(0,8)) || 'System'}</strong></td>
+        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${l.note||''}">${l.note||'-'}</td>
+      </tr>`;
+    }).join('');
   }
 
-  function loadAuditLogs() { 
-    unsubscribes.forEach(u => u()); 
-    unsubscribes = []; 
-    unsubscribes.push(onSnapshot(query(collection(db, 'audit_logs'), orderBy('performedAt', 'desc')), snap => { 
-      allLogs = snap.docs.map(d => ({id:d.id, ...d.data()})); 
-      renderAudit(); 
-    })); 
+  function loadAuditLogs() {
+    cleanup();
+    const q = query(collection(db, 'audit_logs'), orderBy('performedAt','desc'), limit(500));
+    unsubscribes.push(onSnapshot(q, snap => {
+      allLogs = snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderAudit();
+    }, error => {
+      console.error('Audit load error:', error);
+      const tbody = document.getElementById('auditTable');
+      if (tbody) tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><i class="fas fa-exclamation-circle" style="color:var(--danger);"></i><p>Error: ${error.message||'Failed to load'}</p></div></td></tr>`;
+    }));
   }
 
-  window.requestDeleteAudit = async () => { 
-    const days = prompt('Delete logs older than how many days? (e.g., 30)'); 
-    if (!days) return; 
-    const reqRef = await addDoc(collection(db, 'deletion_requests'), { 
-      type: 'audit_logs', 
-      days: parseInt(days), 
-      requestedBy: currentUser.uid, 
-      requestedByName: userData.fullName, 
-      status: 'pending_approval', 
-      createdAt: serverTimestamp(), 
-      approvedBy: [] 
-    }); 
-    const admins = await getDocs(query(collection(db, 'users'), where('role', 'in', ['admin','super_admin']))); 
-    admins.forEach(async d => { 
-      if (d.id !== currentUser.uid) await addDoc(collection(db, 'notifications'), { 
-        userId: d.id, 
-        type: 'deletion_approval', 
-        title: 'Audit Deletion Request', 
-        message: `${userData.fullName} requested deletion of logs older than ${days} days.`, 
-        isRead: false, 
-        requestId: reqRef.id, 
-        createdAt: serverTimestamp() 
-      }); 
-    }); 
-    await logAudit('deletion_request', `Requested deletion of logs > ${days} days`); 
-    showToast('Deletion request sent for approval', 'info'); 
+  window.requestDeleteAudit = async () => {
+    const days = prompt('Delete logs older than how many days? (e.g., 30)');
+    if (!days || isNaN(parseInt(days))) return;
+    try {
+      const reqRef = await addDoc(collection(db, 'deletion_requests'), {
+        type:'audit_logs', days:parseInt(days),
+        requestedBy:currentUser?.uid, requestedByName:userData?.fullName||'Admin',
+        status:'pending_approval', createdAt:serverTimestamp()
+      });
+      const adminsSnap = await getDocs(query(collection(db,'users'),where('role','in',['admin','super_admin'])));
+      adminsSnap.forEach(async d => {
+        if(d.id !== currentUser?.uid) {
+          try { await addDoc(collection(db,'notifications'),{userId:d.id,type:'deletion_approval',title:'Audit Deletion Request',message:`${userData?.fullName||'Admin'} requested deletion of logs older than ${days} days.`,isRead:false,requestId:reqRef.id,createdAt:serverTimestamp()}); } catch(e){}
+        }
+      });
+      showToast('Deletion request sent for approval','info');
+    } catch(e) { showToast('Failed: '+e.message,'error'); }
   };
 
-  window.refreshData = () => loadAuditLogs();
+  window.exportAudit = () => {
+    let filtered = allLogs;
+    const search = (document.getElementById('searchInput')?.value||'').toLowerCase();
+    if (search) filtered = filtered.filter(l => (l.performedByName||'').toLowerCase().includes(search) || (l.note||'').toLowerCase().includes(search));
+    if (currentFilter !== 'all') filtered = filtered.filter(l => l.actionType === currentFilter);
+    const headers = 'Date & Time,Action,User,Details';
+    const rows = filtered.map(l => `"${formatDateTime(l.performedAt)}","${l.actionType||'action'}","${l.performedByName||l.performedBy||'System'}","${(l.note||'').replace(/"/g,'""')}"`);
+    const csv = [headers, ...rows].join('\n');
+    const blob = new Blob([csv],{type:'text/csv'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    showToast('Exported','success');
+  };
 
-  document.getElementById('exportBtn').addEventListener('click', () => { 
-    let filtered = allLogs; 
-    const search = document.getElementById('searchInput').value.toLowerCase(); 
-    if (search) filtered = filtered.filter(l => (l.performedByName||'').toLowerCase().includes(search) || (l.note||'').toLowerCase().includes(search)); 
-    if (currentFilter !== 'all') filtered = filtered.filter(l => l.actionType === currentFilter); 
-    const csv = ['Timestamp,Action,User,Collection,Document ID,Details'].concat(filtered.map(l => `"${formatDateTime(l.performedAt)}","${l.actionType}","${l.performedByName||l.performedBy}","${l.collectionName||''}","${l.documentId||''}","${l.note||''}"`)).join('\n'); 
-    const b = new Blob([csv], {type:'text/csv'}); 
-    const a = document.createElement('a'); 
-    a.href = URL.createObjectURL(b); 
-    a.download = `audit_${new Date().toISOString().split('T')[0]}.csv`; 
-    a.click(); 
-    showToast('Exported', 'success'); 
-  });
-  
+  window.refreshAudit = () => { loadAuditLogs(); showToast('Refreshed','success'); };
+
   document.getElementById('searchInput').addEventListener('input', renderAudit);
   document.getElementById('actionFilter').addEventListener('change', e => { currentFilter = e.target.value; renderAudit(); });
-  document.getElementById('requestDeleteBtn').addEventListener('click', requestDeleteAudit);
 
-  onAuthStateChanged(auth, async (u) => { 
-    if (!u) { window.location.href = 'auth.html'; return; } 
-    currentUser = u; 
-    const snap = await getDoc(doc(db, 'users', u.uid)); 
-    if (!snap.exists() || (snap.data().role !== 'admin' && snap.data().role !== 'super_admin')) { 
-      await signOut(auth);
-      window.location.href = 'auth.html'; 
-      return; 
-    }
-    userData = snap.data(); 
-    document.getElementById('userName').textContent = userData.fullName?.split(' ')[0] || 'Admin'; 
-    document.getElementById('userRole').textContent = userData.role === 'super_admin' ? 'Super Admin' : 'Admin'; 
-    document.getElementById('userAvatar').textContent = (userData.fullName||'A').charAt(0); 
-    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}); 
-    loadAuditLogs(); 
+  onAuthStateChanged(auth, async (u) => {
+    if(!u){window.location.href='auth.html';return;} currentUser=u;
+    try {
+      const snap = await getDoc(doc(db,'users',u.uid));
+      if(!snap.exists()||(snap.data().role!=='admin'&&snap.data().role!=='super_admin')){await signOut(auth);window.location.href='auth.html';return;}
+      userData = snap.data();
+      document.getElementById('userName').textContent = userData.fullName?.split(' ')[0]||'Admin';
+      document.getElementById('userRole').textContent = userData.role==='super_admin'?'Super Admin':'Admin';
+      document.getElementById('userAvatar').textContent = (userData.fullName||'A').charAt(0).toUpperCase();
+      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+      loadAuditLogs();
+    } catch(e) { showToast('Error loading','error'); }
   });
-  
-  document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'auth.html'; });
-  window.addEventListener('beforeunload', () => unsubscribes.forEach(u => u()));
+
+  document.getElementById('logoutBtn').addEventListener('click',async()=>{await signOut(auth);window.location.href='auth.html';});
+  window.addEventListener('beforeunload',cleanup);
 </script>
 </body>
 </html>
