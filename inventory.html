@@ -39,7 +39,7 @@
     }
     @keyframes fadeInUp {
       from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1); }
+      to { transform: translateY(0); opacity: 1; }
     }
     @keyframes slideIn {
       from { transform: translateX(100%); opacity: 0; }
@@ -255,6 +255,12 @@
     .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
     .badge-purple { background: rgba(139,92,246,0.1); color: #8b5cf6; }
 
+    .price-type-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 20px;
+      font-size: 0.6rem; font-weight: 600; background: var(--primary-soft); color: var(--primary);
+      margin-left: 4px;
+    }
+
     .btn {
       padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem;
       cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
@@ -313,12 +319,6 @@
       font-family: 'Poppins', sans-serif;
     }
     .pin-input:focus { border-color: var(--primary); }
-
-    .price-type-badge {
-      display: inline-block; padding: 2px 8px; border-radius: 20px;
-      font-size: 0.6rem; font-weight: 600; background: var(--primary-soft); color: var(--primary);
-      margin-left: 4px;
-    }
 
     .empty-state { text-align: center; padding: 40px 20px; color: var(--gray); }
     .empty-state i { font-size: 2.5rem; color: var(--primary-light); margin-bottom: 10px; display: block; }
@@ -656,11 +656,9 @@
     if (categories.includes(name)) { showToast('Already exists', 'error'); return; }
     try {
       await setDoc(doc(db, 'categories', name), { name, createdAt: serverTimestamp() });
-      categories.push(name);
-      updateCategoryDropdowns();
+      categories.push(name); updateCategoryDropdowns();
       await logAudit('add_category', `Added category: ${name}`);
-      showToast(`Category "${name}" added`, 'success');
-      hideModal();
+      showToast(`Category "${name}" added`, 'success'); hideModal();
     } catch (e) { showToast('Failed', 'error'); }
   };
 
@@ -693,7 +691,6 @@
     document.getElementById('outOfStock').textContent = allItems.filter(i => getItemStatus(i)==='out_of_stock').length;
     document.getElementById('allCount').textContent = available.length;
     document.getElementById('lowCount').textContent = lowAndOut.length;
-
     updateTotalValueDisplay();
 
     const banner = document.getElementById('lowStockBanner'), msg = document.getElementById('lowStockMsg');
@@ -701,51 +698,39 @@
     if (lowCount > 0) { banner.style.display = 'flex'; msg.textContent = `${lowCount} item(s) need restocking.`; }
     else { banner.style.display = 'none'; }
 
-    // All Items Table - now with 3 price columns
     const tbody = document.getElementById('inventoryTable');
     if (tbody) {
-      if (available.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><i class="fas fa-box"></i><p>No items found. Click "Add Item" to get started.</p></div></td></tr>';
-      } else {
-        tbody.innerHTML = available.map(item => {
-          const st = getItemStatus(item), sb = st==='available'?'success':st==='low'?'warning':'danger';
-          const isAdmin = userData?.role==='admin'||userData?.role==='super_admin';
-          const totalValue = (item.quantityAvailable||0) * (item.unitPrice||0);
-          return `<tr>
-            <td><strong>${item.name||'-'}</strong></td>
-            <td><span class="badge badge-purple">${item.category||'-'}</span></td>
-            <td>${item.initialStock||0}</td>
-            <td style="color:${st!=='available'?'var(--danger)':'inherit'};font-weight:${st!=='available'?'600':'400'};">${item.quantityAvailable||0}</td>
-            <td>${item.quantitySold||0}</td>
-            <td>${formatCurrency(item.unitPrice)}<span class="price-type-badge">1 pc</span></td>
-            <td>${item.halfPrice ? formatCurrency(item.halfPrice)+'<span class="price-type-badge">½</span>' : '<span style="color:var(--gray);">-</span>'}</td>
-            <td>${item.quarterPrice ? formatCurrency(item.quarterPrice)+'<span class="price-type-badge">¼</span>' : '<span style="color:var(--gray);">-</span>'}</td>
-            <td>${formatCurrency(totalValue)}</td>
-            <td><span class="badge badge-${sb}">${st.replace(/_/g,' ')}</span></td>
-            <td><div style="display:flex;gap:4px;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')" title="Edit"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline" onclick="viewHistory('${item.id}')" title="History"><i class="fas fa-history"></i></button>${isAdmin?`<button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')" title="Delete"><i class="fas fa-trash"></i></button>`:''}</div></td>
-          </tr>`;
-        }).join('');
-      }
+      if (available.length === 0) tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><i class="fas fa-box"></i><p>No items found. Click "Add Item" to get started.</p></div></td></tr>';
+      else tbody.innerHTML = available.map(item => {
+        const st = getItemStatus(item), sb = st==='available'?'success':st==='low'?'warning':'danger';
+        const isAdmin = userData?.role==='admin'||userData?.role==='super_admin';
+        const totalValue = (item.quantityAvailable||0) * (item.unitPrice||0);
+        return `<tr>
+          <td><strong>${item.name||'-'}</strong></td>
+          <td><span class="badge badge-purple">${item.category||'-'}</span></td>
+          <td>${item.initialStock||0}</td>
+          <td style="color:${st!=='available'?'var(--danger)':'inherit'};font-weight:${st!=='available'?'600':'400'};">${item.quantityAvailable||0}</td>
+          <td>${item.quantitySold||0}</td>
+          <td>${formatCurrency(item.unitPrice)}<span class="price-type-badge">1 pc</span></td>
+          <td>${item.halfPrice ? formatCurrency(item.halfPrice)+'<span class="price-type-badge">½</span>' : '<span style="color:var(--gray);">-</span>'}</td>
+          <td>${item.quarterPrice ? formatCurrency(item.quarterPrice)+'<span class="price-type-badge">¼</span>' : '<span style="color:var(--gray);">-</span>'}</td>
+          <td>${formatCurrency(totalValue)}</td>
+          <td><span class="badge badge-${sb}">${st.replace(/_/g,' ')}</span></td>
+          <td><div style="display:flex;gap:4px;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')" title="Edit"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline" onclick="viewHistory('${item.id}')" title="History"><i class="fas fa-history"></i></button>${isAdmin?`<button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')" title="Delete"><i class="fas fa-trash"></i></button>`:''}</div></td></tr>`;
+      }).join('');
     }
 
-    // Low Stock Table - with 3 price columns
     const lTbody = document.getElementById('lowTable');
     if (lTbody) {
-      if (lowAndOut.length === 0) {
-        lTbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items well stocked</p></div></td></tr>';
-      } else {
-        lTbody.innerHTML = lowAndOut.map(item => `<tr>
-          <td><strong>${item.name||'-'}</strong></td>
-          <td>${item.category||'-'}</td>
-          <td style="color:var(--danger);font-weight:600;">${item.quantityAvailable||0}</td>
-          <td>${item.threshold||10}</td>
-          <td>${formatCurrency(item.unitPrice)}</td>
-          <td>${item.halfPrice ? formatCurrency(item.halfPrice) : '-'}</td>
-          <td>${item.quarterPrice ? formatCurrency(item.quarterPrice) : '-'}</td>
-          <td><span class="badge badge-${getItemStatus(item)==='out_of_stock'?'danger':'warning'}">${getItemStatus(item).replace(/_/g,' ')}</span></td>
-          <td><button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')"><i class="fas fa-edit"></i> Edit</button></td>
-        </tr>`).join('');
-      }
+      if (lowAndOut.length === 0) lTbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items well stocked</p></div></td></tr>';
+      else lTbody.innerHTML = lowAndOut.map(item => `<tr>
+        <td><strong>${item.name||'-'}</strong></td><td>${item.category||'-'}</td>
+        <td style="color:var(--danger);font-weight:600;">${item.quantityAvailable||0}</td><td>${item.threshold||10}</td>
+        <td>${formatCurrency(item.unitPrice)}</td>
+        <td>${item.halfPrice ? formatCurrency(item.halfPrice) : '-'}</td>
+        <td>${item.quarterPrice ? formatCurrency(item.quarterPrice) : '-'}</td>
+        <td><span class="badge badge-${getItemStatus(item)==='out_of_stock'?'danger':'warning'}">${getItemStatus(item).replace(/_/g,' ')}</span></td>
+        <td><button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')"><i class="fas fa-edit"></i> Edit</button></td></tr>`).join('');
     }
   }
 
@@ -757,13 +742,9 @@
         const data = d.data();
         return {
           id: d.id, ...data,
-          quantityAvailable: data.quantityAvailable||0,
-          quantitySold: data.quantitySold||0,
-          unitPrice: data.unitPrice||0,
-          halfPrice: data.halfPrice||0,
-          quarterPrice: data.quarterPrice||0,
-          threshold: data.threshold||10,
-          initialStock: data.initialStock||data.quantityAvailable||0
+          quantityAvailable: data.quantityAvailable||0, quantitySold: data.quantitySold||0,
+          unitPrice: data.unitPrice||0, halfPrice: data.halfPrice||0, quarterPrice: data.quarterPrice||0,
+          threshold: data.threshold||10, initialStock: data.initialStock||data.quantityAvailable||0
         };
       });
       allItems.sort((a, b) => (a.name||'').localeCompare(b.name||''));
@@ -775,18 +756,9 @@
     }));
   }
 
-  // ========== ADD ITEM - WITH HALF & QUARTER PRICES ==========
   window.openAddItemModal = function() {
     showModal('Add New Item', `
-      <div class="form-row">
-        <div class="form-group"><label>Item Name *</label><input class="form-control" id="itemName" placeholder="e.g., Rhinestone"></div>
-        <div class="form-group"><label>Category *</label>
-          <div style="display:flex;gap:8px;">
-            <select class="form-control" id="itemCategory" style="flex:1;">${categories.map(c => `<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select>
-            <button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button>
-          </div>
-        </div>
-      </div>
+      <div class="form-row"><div class="form-group"><label>Item Name *</label><input class="form-control" id="itemName" placeholder="e.g., Rhinestone"></div><div class="form-group"><label>Category *</label><div style="display:flex;gap:8px;"><select class="form-control" id="itemCategory" style="flex:1;">${categories.map(c => `<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div>
       <div class="form-group"><label>Initial Quantity *</label><input type="number" class="form-control" id="itemQty" value="0" min="0"></div>
       <p style="font-size:0.75rem;color:var(--gray);margin-bottom:15px;"><i class="fas fa-info-circle"></i> Set prices for different quantities. Half = ½ unit, Quarter = ¼ unit.</p>
       <div class="form-row-3">
@@ -812,33 +784,17 @@
     if (price <= 0) { showToast('Unit price must be > 0', 'error'); return; }
     const isAdmin = userData?.role==='admin'||userData?.role==='super_admin';
     const status = isAdmin ? (qty===0?'out_of_stock':qty<=threshold?'low':'available') : 'pending_approval';
-    addDoc(collection(db, 'stock_items'), {
-      name, category, initialStock: qty, quantityAvailable: qty, quantitySold: 0,
-      unitPrice: price, halfPrice, quarterPrice, threshold, status,
-      createdBy: currentUser?.uid, createdByName: userData?.fullName||'Staff',
-      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
-    })
+    addDoc(collection(db, 'stock_items'), { name, category, initialStock: qty, quantityAvailable: qty, quantitySold: 0, unitPrice: price, halfPrice, quarterPrice, threshold, status, createdBy: currentUser?.uid, createdByName: userData?.fullName||'Staff', createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
       .then(async () => { await logAudit('add_item', `Added: ${name} | Qty: ${qty} | Price: ₦${price} | Half: ₦${halfPrice} | Quarter: ₦${quarterPrice}`); showToast(isAdmin?'Item added':'Submitted for approval', 'success'); hideModal(); })
       .catch(e => showToast('Failed: ' + e.message, 'error'));
   };
 
-  // ========== EDIT ITEM - WITH HALF & QUARTER PRICES ==========
   window.openEditItem = function(id) {
     const item = allItems.find(i => i.id === id); if (!item) return;
     showModal(`Edit Item: ${item.name}`, `
       <div class="form-group"><label>Item Name</label><input class="form-control" value="${item.name||''}" readonly></div>
-      <div class="form-row">
-        <div class="form-group"><label>Available Quantity</label><input type="number" class="form-control" value="${item.quantityAvailable||0}" readonly></div>
-        <div class="form-group"><label>Sold Quantity</label><input type="number" class="form-control" value="${item.quantitySold||0}" readonly></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Category</label>
-          <div style="display:flex;gap:8px;">
-            <select class="form-control" id="editCategory" style="flex:1;">${categories.map(c => `<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select>
-            <button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button>
-          </div>
-        </div>
-      </div>
+      <div class="form-row"><div class="form-group"><label>Available Quantity</label><input type="number" class="form-control" value="${item.quantityAvailable||0}" readonly></div><div class="form-group"><label>Sold Quantity</label><input type="number" class="form-control" value="${item.quantitySold||0}" readonly></div></div>
+      <div class="form-row"><div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="editCategory" style="flex:1;">${categories.map(c => `<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div>
       <p style="font-size:0.75rem;color:var(--gray);margin:5px 0;"><i class="fas fa-info-circle"></i> Set prices for different quantities. Half = ½ unit, Quarter = ¼ unit.</p>
       <div class="form-row-3">
         <div class="form-group"><label>Unit Price (1) ₦ *</label><input type="number" class="form-control" id="editPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div>
@@ -862,10 +818,7 @@
     const qty = item?.quantityAvailable || 0;
     const status = qty === 0 ? 'out_of_stock' : qty <= threshold ? 'low' : 'available';
     try {
-      await updateDoc(doc(db, 'stock_items', id), {
-        category, unitPrice: price, halfPrice, quarterPrice,
-        threshold, status, updatedAt: serverTimestamp()
-      });
+      await updateDoc(doc(db, 'stock_items', id), { category, unitPrice: price, halfPrice, quarterPrice, threshold, status, updatedAt: serverTimestamp() });
       await logAudit('edit_item', `Updated ${item?.name}: Price ₦${price}, Half ₦${halfPrice}, Quarter ₦${quarterPrice}`);
       showToast('Item updated', 'success'); hideModal();
     } catch (e) { showToast('Failed', 'error'); }
@@ -878,11 +831,7 @@
       let html = `<div style="margin-bottom:16px;"><h4>${item.name}</h4><p style="color:var(--gray);">Available: ${item.quantityAvailable||0} | Sold: ${item.quantitySold||0}</p></div>`;
       const logs = snap.docs.map(d => d.data()).filter(l => l.note && l.note.includes(item.name));
       if (logs.length === 0) html += '<div class="empty-state"><i class="fas fa-history"></i><p>No history for this item</p></div>';
-      else {
-        html += '<div style="max-height:300px;overflow-y:auto;"><table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Action</th><th>By</th><th>Details</th></tr>';
-        logs.forEach(l => { html += `<tr><td>${formatDate(l.performedAt)}</td><td><span class="badge badge-info">${l.actionType||'-'}</span></td><td>${l.performedByName||'-'}</td><td>${l.note||'-'}</td></tr>`; });
-        html += '</table></div>';
-      }
+      else { html += '<div style="max-height:300px;overflow-y:auto;"><table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Action</th><th>By</th><th>Details</th></tr>'; logs.forEach(l => { html += `<tr><td>${formatDate(l.performedAt)}</td><td><span class="badge badge-info">${l.actionType||'-'}</span></td><td>${l.performedByName||'-'}</td><td>${l.note||'-'}</td></tr>`; }); html += '</table></div>'; }
       html += '<button class="btn btn-primary" onclick="hideModal()" style="margin-top:16px;width:100%;">Close</button>';
       showModal('Item History', html);
     } catch (e) { showToast('Error loading history', 'error'); }
