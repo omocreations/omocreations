@@ -33,18 +33,9 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    @keyframes flameRing {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(255,77,166,0.4); }
-      50% { box-shadow: 0 0 0 10px rgba(255,77,166,0); }
-    }
-    @keyframes fadeInUp {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
+    @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
+    @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
+    @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
 
     .sidebar {
       width: var(--sidebar-width); min-width: var(--sidebar-width);
@@ -80,10 +71,7 @@
 
     .sidebar-nav { padding: 20px 12px; display: flex; flex-direction: column; }
     .nav-section { margin-bottom: 20px; }
-    .nav-section-title {
-      font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px;
-      color: rgba(255,255,255,0.4); padding: 8px 14px 6px; font-weight: 600; white-space: nowrap;
-    }
+    .nav-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.4); padding: 8px 14px 6px; font-weight: 600; white-space: nowrap; }
     .nav-item {
       display: flex; align-items: center; gap: 14px; padding: 12px 14px;
       border-radius: 12px; color: rgba(255,255,255,0.7); cursor: pointer;
@@ -93,10 +81,7 @@
     }
     .nav-item i { width: 22px; font-size: 1.1rem; text-align: center; flex-shrink: 0; }
     .nav-item:hover { background: rgba(255,77,166,0.15); color: white; transform: translateX(5px); }
-    .nav-item.active {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white; box-shadow: 0 5px 15px rgba(255,77,166,0.3);
-    }
+    .nav-item.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 5px 15px rgba(255,77,166,0.3); }
     .nav-item.logout { color: rgba(239,68,68,0.7); margin-top: auto; }
     .nav-item.logout:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
 
@@ -154,10 +139,8 @@
       transition: all 0.3s; position: relative; overflow: hidden;
       animation: fadeInUp 0.5s ease forwards; opacity: 0;
     }
-    .stat-card:nth-child(1) { animation-delay: 0.05s; }
-    .stat-card:nth-child(2) { animation-delay: 0.10s; }
-    .stat-card:nth-child(3) { animation-delay: 0.15s; }
-    .stat-card:nth-child(4) { animation-delay: 0.20s; }
+    .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}
+    .stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}
     .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(255,77,166,0.15); }
     .stat-header { display: flex; justify-content: space-between; margin-bottom: 12px; }
     .stat-header span { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
@@ -172,9 +155,7 @@
       position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
       font-size: 1.5rem; color: var(--gray); filter: none;
     }
-    .stat-card .value-hint {
-      font-size: 0.6rem; color: var(--primary); text-align: center; cursor: pointer; margin-top: 2px; display: none;
-    }
+    .stat-card .value-hint { font-size: 0.6rem; color: var(--primary); text-align: center; cursor: pointer; margin-top: 2px; display: none; }
     .stat-card.value-locked .value-hint { display: block; }
 
     .lowstock-banner {
@@ -210,20 +191,14 @@
     }
     .tab:hover { background: var(--primary-soft); color: var(--primary); }
     .tab.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
-    .tab .count {
-      background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 30px;
-      font-size: 0.7rem; font-weight: 700; min-width: 24px; text-align: center;
-    }
+    .tab .count { background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 30px; font-size: 0.7rem; font-weight: 700; min-width: 24px; text-align: center; }
 
     .panel {
       background: white; border-radius: 24px; padding: 24px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(255,77,166,0.08);
       margin-bottom: 24px;
     }
-    .panel-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
-    }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
     .panel-header h3 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--dark); }
     .panel-header h3 i { color: var(--primary); }
 
@@ -238,10 +213,7 @@
     .data-table tbody tr { transition: background 0.2s; }
     .data-table tbody tr:hover { background: var(--primary-soft); }
 
-    .badge {
-      padding: 5px 12px; border-radius: 40px; font-size: 0.7rem;
-      font-weight: 600; display: inline-block; white-space: nowrap;
-    }
+    .badge { padding: 5px 12px; border-radius: 40px; font-size: 0.7rem; font-weight: 600; display: inline-block; white-space: nowrap; }
     .badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
     .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
     .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
@@ -293,9 +265,7 @@
       max-width: 650px; width: 100%; max-height: 85vh; overflow-y: auto;
       animation: fadeInUp 0.3s ease;
     }
-    .modal-header {
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
-    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
     .modal-close {
       background: none; border: none; font-size: 1.5rem; cursor: pointer;
@@ -338,10 +308,7 @@
     }
     .export-item:hover { background: var(--primary-soft); }
 
-    .toast-container {
-      position: fixed; bottom: 24px; right: 24px; z-index: 3000;
-      display: flex; flex-direction: column; gap: 10px;
-    }
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; }
     .toast {
       background: white; color: var(--dark); padding: 14px 20px;
       border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
@@ -374,10 +341,7 @@
       .form-row, .form-row-3 { grid-template-columns: 1fr; }
       .restock-options { grid-template-columns: 1fr; }
     }
-    @media (max-width: 480px) {
-      .stats-grid { grid-template-columns: 1fr; }
-      .content-wrapper { padding: 12px 8px; }
-    }
+    @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } .content-wrapper { padding: 12px 8px; } }
   </style>
 </head>
 <body>
@@ -505,7 +469,7 @@
   const db = getFirestore(app);
 
   let currentUser = null, userData = null, unsubscribes = [];
-  let allItems = [], storeItems = [], categories = [];
+  let allItems = [], categories = [], allSales = [];
   let currentTab = 'all', revenueRevealed = false;
 
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
@@ -607,16 +571,52 @@
     showPinModal('Unlock Revenue', 'view total revenue', () => { revenueRevealed = true; updateRevenueDisplay(); logAudit('reveal_revenue', 'Revenue revealed'); showToast('Revenue unlocked', 'success'); });
   };
 
+  // Calculate revenue per item by summing sales that contain that item
+  function calculateRevenueFromSales() {
+    const revenueMap = {};
+    const soldQtyMap = {};
+    
+    allSales.forEach(sale => {
+      if (sale.status === 'returned') return;
+      if (!sale.items || !Array.isArray(sale.items)) return;
+      
+      sale.items.forEach(item => {
+        const itemId = item.id;
+        if (!itemId) return;
+        
+        const qty = item.quantity || 0;
+        const price = item.unitPrice || 0;
+        const itemRevenue = qty * price;
+        
+        revenueMap[itemId] = (revenueMap[itemId] || 0) + itemRevenue;
+        soldQtyMap[itemId] = (soldQtyMap[itemId] || 0) + qty;
+      });
+    });
+    
+    return { revenueMap, soldQtyMap };
+  }
+
   function updateRevenueDisplay() {
     const card = document.getElementById('totalRevenueCard');
     const valEl = document.getElementById('totalRevenue');
-    if (revenueRevealed) {
+    if (revenueRevealed || isAdmin()) {
       card.classList.remove('value-locked');
-      const totalRev = allItems.reduce((s, i) => s + (i.totalSoldValue || 0), 0);
+      const { revenueMap } = calculateRevenueFromSales();
+      const totalRev = allItems.reduce((s, item) => s + (revenueMap[item.id] || item.totalSoldValue || 0), 0);
       valEl.textContent = formatCurrency(totalRev);
       valEl.style.filter = 'none';
       valEl.style.cursor = 'default';
     }
+  }
+
+  function getItemRevenue(item) {
+    const { revenueMap } = calculateRevenueFromSales();
+    return revenueMap[item.id] || item.totalSoldValue || 0;
+  }
+
+  function getItemSoldQty(item) {
+    const { soldQtyMap } = calculateRevenueFromSales();
+    return soldQtyMap[item.id] || item.totalSoldQty || item.quantitySold || 0;
   }
 
   async function loadCategories() {
@@ -683,8 +683,11 @@
           const st = getItemStatus(item), sb = st==='available'?'success':st==='low'?'warning':'danger';
           const adminUser = isAdmin();
           const initialQty = (item.initialStock || 0);
-          const soldQty = (item.totalSoldQty || item.quantitySold || 0);
+          const soldQty = getItemSoldQty(item);
           const remainingQty = (item.quantityAvailable || 0);
+          const itemRevenue = getItemRevenue(item);
+          const showRevenue = revenueRevealed || adminUser;
+          
           return `<tr>
             <td><strong>${item.name||'-'}</strong></td>
             <td><span class="badge badge-purple">${item.category||'-'}</span></td>
@@ -694,7 +697,7 @@
             <td>${formatCurrency(item.unitPrice)}<span class="price-type-badge">1</span></td>
             <td>${item.halfPrice?formatCurrency(item.halfPrice)+'<span class="price-type-badge">½</span>':'-'}</td>
             <td>${item.quarterPrice?formatCurrency(item.quarterPrice)+'<span class="price-type-badge">¼</span>':'-'}</td>
-            <td style="font-weight:600;">${revenueRevealed||adminUser?formatCurrency(item.totalSoldValue||0):'₦••••'}</td>
+            <td style="font-weight:600;">${showRevenue?formatCurrency(itemRevenue):'₦••••'}</td>
             <td><span class="badge badge-${sb}">${st.replace(/_/g,' ')}</span></td>
             <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
               ${['low','out_of_stock'].includes(st)?`<button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')" title="Restock"><i class="fas fa-box-open"></i></button>`:''}
@@ -711,7 +714,7 @@
       if (lowAndOut.length === 0) lTbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items well stocked</p></div></td></tr>';
       else lTbody.innerHTML = lowAndOut.map(item => `<tr>
         <td><strong>${item.name||'-'}</strong></td><td>${item.category||'-'}</td>
-        <td>${item.initialStock||0}</td><td>${item.totalSoldQty||0}</td>
+        <td>${item.initialStock||0}</td><td>${getItemSoldQty(item)}</td>
         <td style="color:var(--danger);font-weight:600;">${item.quantityAvailable||0}</td><td>${item.threshold||10}</td>
         <td>${formatCurrency(item.unitPrice)}</td>
         <td><span class="badge badge-${getItemStatus(item)==='out_of_stock'?'danger':'warning'}">${getItemStatus(item).replace(/_/g,' ')}</span></td>
@@ -721,6 +724,7 @@
 
   function loadInventory() {
     cleanup();
+    // Load stock_items
     unsubscribes.push(onSnapshot(collection(db, 'stock_items'), snap => {
       allItems = snap.docs.map(d => {
         const data = d.data();
@@ -741,7 +745,19 @@
       allItems.sort((a,b) => (a.name||'').localeCompare(b.name||''));
       renderInventory();
     }));
-    unsubscribes.push(onSnapshot(collection(db, 'store_items'), snap => { storeItems = snap.docs.map(d => ({ id: d.id, ...d.data() })); }));
+
+    // Load sales to calculate revenue
+    unsubscribes.push(onSnapshot(query(collection(db, 'sales'), orderBy('createdAt', 'desc')), snap => {
+      allSales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderInventory();
+    }));
+
+    // Also load wholesale sales
+    unsubscribes.push(onSnapshot(collection(db, 'wholesale_sales'), snap => {
+      const ws = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      allSales = [...allSales.filter(s => !ws.find(w => w.id === s.id)), ...ws];
+      renderInventory();
+    }));
   }
 
   // ========== ADD ITEM ==========
@@ -749,7 +765,7 @@
     showModal('Add New Item', `
       <div class="form-row"><div class="form-group"><label>Item Name *</label><input class="form-control" id="itemName" placeholder="e.g., Rhinestone"></div><div class="form-group"><label>Category *</label><div style="display:flex;gap:8px;"><select class="form-control" id="itemCategory">${categories.map(c => `<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div>
       <div class="form-group"><label>Initial Quantity *</label><input type="number" class="form-control" id="itemQty" value="0" min="0"></div>
-      <p style="font-size:0.75rem;color:var(--gray);margin-bottom:15px;">Set prices. Revenue starts at ₦0.</p>
+      <p style="font-size:0.75rem;color:var(--gray);margin-bottom:15px;">Set prices. Revenue starts at ₦0 and updates automatically when sales are made.</p>
       <div class="form-row-3">
         <div class="form-group"><label>Unit Price (1) ₦ *</label><input type="number" class="form-control" id="itemPrice" value="0" step="0.01" min="0"></div>
         <div class="form-group"><label>Half Price (½) ₦</label><input type="number" class="form-control" id="itemHalfPrice" value="0" step="0.01" min="0"></div>
@@ -814,23 +830,18 @@
       <button class="btn btn-outline" onclick="hideModal()" style="width:100%;margin-top:12px;">Cancel</button>`);
   };
 
-  window.restockFromStore = function(itemId) {
-    hideModal();
-    navigateTo('store.html');
-  };
-
-  window.restockFromThirdParty = function(itemId) {
-    hideModal();
-    navigateTo('purchases.html');
-  };
+  window.restockFromStore = function(itemId) { hideModal(); navigateTo('store.html'); };
+  window.restockFromThirdParty = function(itemId) { hideModal(); navigateTo('purchases.html'); };
 
   // ========== EDIT ITEM ==========
   window.openEditItem = function(id) {
     const item = allItems.find(i => i.id === id); if (!item) return;
+    const soldQty = getItemSoldQty(item);
+    const itemRevenue = getItemRevenue(item);
     showModal(`Edit: ${item.name}`, `
       <div class="form-group"><label>Item Name</label><input class="form-control" value="${item.name||''}" readonly></div>
       <div class="form-row"><div class="form-group"><label>Initial Qty</label><input type="number" class="form-control" value="${item.initialStock||0}" readonly></div><div class="form-group"><label>Available Qty</label><input type="number" class="form-control" value="${item.quantityAvailable||0}" readonly></div></div>
-      <div class="form-row"><div class="form-group"><label>Total Sold</label><input type="number" class="form-control" value="${item.totalSoldQty||item.quantitySold||0}" readonly></div><div class="form-group"><label>Revenue</label><input class="form-control" value="${formatCurrency(item.totalSoldValue||0)}" readonly></div></div>
+      <div class="form-row"><div class="form-group"><label>Total Sold (from sales)</label><input type="number" class="form-control" value="${soldQty}" readonly></div><div class="form-group"><label>Revenue (from sales)</label><input class="form-control" value="${formatCurrency(itemRevenue)}" readonly></div></div>
       <div class="form-row"><div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="editCategory">${categories.map(c => `<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div>
       <div class="form-row-3">
         <div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="editPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div>
@@ -857,9 +868,11 @@
   // ========== HISTORY & DELETE ==========
   window.viewHistory = async function(id) {
     const item = allItems.find(i => i.id === id); if (!item) return;
+    const soldQty = getItemSoldQty(item);
+    const itemRevenue = getItemRevenue(item);
     try {
       const snap = await getDocs(query(collection(db, 'audit_logs'), orderBy('performedAt','desc')));
-      let html = `<div style="margin-bottom:16px;"><h4>${item.name}</h4><p>Initial: ${item.initialStock||0} | Available: ${item.quantityAvailable||0} | Sold: ${item.totalSoldQty||0} | Revenue: ${formatCurrency(item.totalSoldValue||0)}</p></div>`;
+      let html = `<div style="margin-bottom:16px;"><h4>${item.name}</h4><p>Initial: ${item.initialStock||0} | Available: ${item.quantityAvailable||0} | Sold: ${soldQty} | Revenue: ${formatCurrency(itemRevenue)}</p></div>`;
       const logs = snap.docs.map(d => d.data()).filter(l => l.note && l.note.includes(item.name));
       if (logs.length === 0) html += '<div class="empty-state"><i class="fas fa-history"></i><p>No history</p></div>';
       else { html += '<div style="max-height:300px;overflow-y:auto;"><table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Action</th><th>By</th><th>Details</th></tr>'; logs.forEach(l => { html += `<tr><td>${formatDate(l.performedAt)}</td><td><span class="badge badge-info">${l.actionType||'-'}</span></td><td>${l.performedByName||'-'}</td><td>${l.note||'-'}</td></tr>`; }); html += '</table></div>'; }
@@ -876,7 +889,7 @@
   // ========== EXPORT & REFRESH ==========
   window.exportData = function(format) {
     const headers = ['Name','Category','Initial Qty','Sold','Remaining','Unit Price','Half Price','Quarter Price','Revenue','Status'];
-    const rows = allItems.map(i => [i.name||'',i.category||'',i.initialStock||0,i.totalSoldQty||0,i.quantityAvailable||0,i.unitPrice||0,i.halfPrice||0,i.quarterPrice||0,i.totalSoldValue||0,getItemStatus(i)]);
+    const rows = allItems.map(i => [i.name||'',i.category||'',i.initialStock||0,getItemSoldQty(i),i.quantityAvailable||0,i.unitPrice||0,i.halfPrice||0,i.quarterPrice||0,getItemRevenue(i),getItemStatus(i)]);
     const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: format==='csv'?'text/csv':'application/vnd.ms-excel' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `inventory_${new Date().toISOString().split('T')[0]}.${format}`; a.click();
