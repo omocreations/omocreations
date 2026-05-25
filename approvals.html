@@ -26,6 +26,7 @@
       --warning: #f59e0b; 
       --danger: #ef4444; 
       --info: #3b82f6; 
+      --purple: #8b5cf6;
       --header-height: 70px; 
     }
     
@@ -43,7 +44,6 @@
     
     @keyframes spin { to { transform: rotate(360deg); } }
     
-    /* Top Bar */
     .top-bar { 
       height: var(--header-height); 
       background: rgba(255,255,255,0.98); 
@@ -58,11 +58,7 @@
       z-index: 50; 
     }
     
-    .top-bar-left { 
-      display: flex; 
-      align-items: center; 
-      gap: 18px; 
-    }
+    .top-bar-left { display: flex; align-items: center; gap: 18px; }
     
     .back-btn {
       background: var(--primary-soft);
@@ -81,154 +77,75 @@
       text-decoration: none;
     }
     
-    .back-btn:hover { 
-      background: var(--primary); 
-      color: white;
-      transform: translateX(-3px);
-    }
+    .back-btn:hover { background: var(--primary); color: white; transform: translateX(-3px); }
     
-    .page-title { 
-      font-size: 1.5rem; 
-      font-weight: 700; 
-      color: var(--dark); 
-      font-family: 'Playfair Display', serif;
-    }
+    .page-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
     
-    .content-wrapper { 
-      padding: 28px; 
-      max-width: 1600px; 
-      margin: 0 auto;
-    }
+    .content-wrapper { padding: 28px; max-width: 1600px; margin: 0 auto; }
     
-    /* Tabs Container */
     .tabs-container { 
-      background: white; 
-      border-radius: 20px; 
-      padding: 6px; 
-      margin-bottom: 24px; 
-      display: flex; 
-      gap: 6px; 
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02); 
-      flex-wrap: wrap; 
+      background: white; border-radius: 20px; padding: 6px; margin-bottom: 24px; 
+      display: flex; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap; 
     }
     
     .tab { 
-      padding: 14px 24px; 
-      border-radius: 16px; 
-      font-weight: 600; 
-      font-size: 0.9rem; 
-      cursor: pointer; 
-      border: none; 
-      background: none; 
-      color: var(--gray); 
-      flex: 1; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      gap: 8px;
-      transition: all 0.2s;
-      font-family: 'Poppins', sans-serif;
+      padding: 14px 20px; border-radius: 16px; font-weight: 600; font-size: 0.85rem; 
+      cursor: pointer; border: none; background: none; color: var(--gray); 
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s; font-family: 'Poppins', sans-serif; white-space: nowrap;
     }
     
     .tab:hover { background: var(--primary-soft); }
-    .tab.active { 
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
-      color: white; 
-    }
+    .tab.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
     
     .tab .count { 
-      background: rgba(255,255,255,0.2); 
-      padding: 2px 8px; 
-      border-radius: 30px; 
-      font-weight: 700;
-      transition: all 0.2s ease;
+      background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 30px; 
+      font-weight: 700; transition: all 0.2s ease; 
     }
     
     .tab .count.glowing {
-      background: #ff4da6;
-      color: white;
+      background: #ff4da6; color: white;
       box-shadow: 0 0 10px #ff4da6, 0 0 20px #ff4da6;
       animation: pulseGlow 1.5s infinite;
     }
     
-    .tab.active .count {
-      background: rgba(255,255,255,0.3);
-      color: white;
-    }
+    .tab.active .count { background: rgba(255,255,255,0.3); color: white; }
     
-    /* Panels */
     .panel { 
-      background: white; 
-      border-radius: 24px; 
-      padding: 24px; 
-      margin-bottom: 24px; 
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02); 
-      border: 1px solid rgba(255,77,166,0.08);
+      background: white; border-radius: 24px; padding: 24px; margin-bottom: 24px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(255,77,166,0.08);
       transition: all 0.3s;
     }
     
-    .panel:hover {
-      box-shadow: 0 8px 25px rgba(255,77,166,0.08);
-    }
+    .panel:hover { box-shadow: 0 8px 25px rgba(255,77,166,0.08); }
     
     .panel-header { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      margin-bottom: 20px; 
-      flex-wrap: wrap;
-      gap: 12px;
+      display: flex; justify-content: space-between; align-items: center; 
+      margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
     }
     
-    .panel-header h3 { 
-      font-size: 1.1rem; 
-      font-weight: 700; 
-      display: flex; 
-      align-items: center; 
-      gap: 10px; 
-      color: var(--dark);
-    }
-    
+    .panel-header h3 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--dark); }
     .panel-header h3 i { color: var(--primary); }
     
-    /* Tables */
     .table-wrapper { overflow-x: auto; border-radius: 16px; }
     .data-table { width: 100%; border-collapse: collapse; min-width: 700px; }
     .data-table th { 
-      text-align: left; 
-      padding: 14px 12px; 
-      font-size: 0.7rem; 
-      font-weight: 600; 
-      color: var(--gray); 
-      text-transform: uppercase; 
-      letter-spacing: 1px;
+      text-align: left; padding: 14px 12px; font-size: 0.7rem; font-weight: 600; 
+      color: var(--gray); text-transform: uppercase; letter-spacing: 1px;
       border-bottom: 2px solid var(--primary-soft); 
     }
-    .data-table td { 
-      padding: 14px 12px; 
-      border-bottom: 1px solid rgba(0,0,0,0.04); 
-      font-size: 0.85rem; 
-    }
+    .data-table td { padding: 14px 12px; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 0.85rem; }
     
-    /* Badges */
-    .badge { padding: 5px 12px; border-radius: 40px; font-size: 0.7rem; font-weight: 600; display: inline-block; }
+    .badge { padding: 5px 12px; border-radius: 40px; font-size: 0.7rem; font-weight: 600; display: inline-block; white-space: nowrap; }
     .badge-pending { background: rgba(107,114,128,0.1); color: var(--gray); }
     .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
+    .badge-purple { background: rgba(139,92,246,0.1); color: var(--purple); }
+    .badge-store { background: rgba(139,92,246,0.1); color: var(--purple); }
     
-    /* Buttons */
     .btn { 
-      padding: 8px 16px; 
-      border-radius: 40px; 
-      font-weight: 600; 
-      font-size: 0.75rem; 
-      border: none; 
-      cursor: pointer; 
-      display: inline-flex; 
-      align-items: center; 
-      gap: 6px; 
-      background: white; 
-      border: 1px solid rgba(0,0,0,0.08); 
-      transition: all 0.2s;
+      padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; 
+      border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; 
+      background: white; border: 1px solid rgba(0,0,0,0.08); transition: all 0.2s;
       font-family: 'Poppins', sans-serif;
     }
     
@@ -238,36 +155,24 @@
     .btn-outline { border: 1.5px solid rgba(255,77,166,0.3); color: var(--primary); background: transparent; }
     .btn-sm { padding: 6px 12px; font-size: 0.7rem; }
     
-    /* Empty State */
     .empty-state { text-align: center; padding: 40px; color: var(--gray); }
     .empty-state i { font-size: 2rem; color: var(--primary-light); margin-bottom: 10px; }
     
-    /* Loading State */
     .loading-state { display: flex; justify-content: center; padding: 40px; }
     .spinner { width: 32px; height: 32px; border: 3px solid var(--primary-soft); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
     
-    /* Toast */
     .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; }
     .toast { 
-      background: white; 
-      padding: 14px 20px; 
-      border-radius: 50px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.12); 
-      display: flex; 
-      align-items: center; 
-      gap: 12px; 
-      transform: translateX(400px); 
-      transition: transform 0.25s; 
-      border-left: 4px solid var(--primary); 
-      margin-top: 10px;
+      background: white; padding: 14px 20px; border-radius: 50px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 12px; 
+      transform: translateX(400px); transition: transform 0.25s; 
+      border-left: 4px solid var(--primary); margin-top: 10px;
     }
     .toast.show { transform: translateX(0); }
     
-    /* Page View */
     .page-view { display: none; } 
     .page-view.active { display: block; }
     
-    /* Responsive */
     @media (max-width: 768px) { 
       .content-wrapper { padding: 16px; } 
       .top-bar { padding: 0 16px; }
@@ -278,7 +183,6 @@
 </head>
 <body>
 
-<!-- Main Content -->
 <main>
   <header class="top-bar">
     <div class="top-bar-left">
@@ -296,6 +200,7 @@
     
     <div class="tabs-container">
       <button class="tab active" data-tab="items"><i class="fas fa-box"></i> Stock Items <span class="count" id="itemCount">0</span></button>
+      <button class="tab" data-tab="storeToInventory"><i class="fas fa-store-alt"></i> Store→Inventory <span class="count" id="storeToInventoryCount">0</span></button>
       <button class="tab" data-tab="purchases"><i class="fas fa-shopping-cart"></i> Purchases <span class="count" id="purchaseCount">0</span></button>
       <button class="tab" data-tab="customers"><i class="fas fa-users"></i> Customers <span class="count" id="customerCount">0</span></button>
       <button class="tab" data-tab="leave"><i class="fas fa-calendar"></i> Leave <span class="count" id="leaveCount">0</span></button>
@@ -306,6 +211,14 @@
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-box"></i> Pending Stock Items</h3><button class="btn btn-outline btn-sm" onclick="refreshAll()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
         <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Unit Price</th><th>Added By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="itemsTable"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody></table></div>
+      </div>
+    </div>
+    
+    <!-- STORE TO INVENTORY TAB -->
+    <div id="storeToInventoryPanel" class="page-view">
+      <div class="panel">
+        <div class="panel-header"><h3><i class="fas fa-store-alt"></i> Pending Store → Inventory Requests</h3><button class="btn btn-outline btn-sm" onclick="refreshAll()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Store Item</th><th>Bulk→Units</th><th>Retail Prices</th><th>Requested By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="storeToInventoryTable"><tr><td colspan="6"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody></table></div>
       </div>
     </div>
     
@@ -336,7 +249,6 @@
   </div>
 </main>
 
-<!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
@@ -356,9 +268,7 @@
     return date.toLocaleDateString('en-GB', {day:'2-digit',month:'short'}); 
   }
   
-  function formatCurrency(n) { 
-    return '₦' + (n || 0).toLocaleString(); 
-  }
+  function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   
   function showToast(msg, type='success') { 
     const c = document.getElementById('toastContainer'); 
@@ -373,19 +283,13 @@
   async function logAudit(action, note) { 
     try { 
       await addDoc(collection(db, 'audit_logs'), { 
-        actionType: action, 
-        performedBy: currentUser?.uid, 
-        performedByName: userData?.fullName, 
-        performedAt: serverTimestamp(), 
-        note 
+        actionType: action, performedBy: currentUser?.uid, 
+        performedByName: userData?.fullName, performedAt: serverTimestamp(), note 
       }); 
     } catch(e) {} 
   }
 
-  function cleanup() { 
-    unsubscribes.forEach(u => u()); 
-    unsubscribes = []; 
-  }
+  function cleanup() { unsubscribes.forEach(u => u()); unsubscribes = []; }
 
   function updateCountBadge(elementId, count) {
     const el = document.getElementById(elementId);
@@ -403,11 +307,9 @@
       const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       updateCountBadge('itemCount', items.length);
-      const tbody = document.getElementById('itemsTable'); 
-      tbody.innerHTML = '';
+      const tbody = document.getElementById('itemsTable'); tbody.innerHTML = '';
       if (items.length === 0) { 
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-box"></i><p>No pending stock items</p></div></td></tr>'; 
-        return; 
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-box"></i><p>No pending stock items</p></div></td></tr>'; return; 
       }
       items.forEach(i => { 
         tbody.innerHTML += `<tr>
@@ -425,14 +327,108 @@
 
   window.approveItem = async (id) => { 
     await updateDoc(doc(db, 'stock_items', id), { status: 'available', approvedBy: currentUser.uid, approvedAt: serverTimestamp() }); 
-    await logAudit('approve_item', 'Approved stock item'); 
-    showToast('Item approved', 'success'); 
+    await logAudit('approve_item', 'Approved stock item'); showToast('Item approved', 'success'); 
   };
   
   window.rejectItem = async (id) => { 
     await updateDoc(doc(db, 'stock_items', id), { status: 'rejected' }); 
-    await logAudit('reject_item', 'Rejected stock item'); 
-    showToast('Item rejected', 'info'); 
+    await logAudit('reject_item', 'Rejected stock item'); showToast('Item rejected', 'info'); 
+  };
+
+  // ========== STORE TO INVENTORY ==========
+  function loadStoreToInventory() {
+    const q = query(collection(db, 'store_to_inventory_requests'), where('status', '==', 'pending_approval'));
+    unsubscribes.push(onSnapshot(q, (snap) => {
+      const requests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      requests.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      updateCountBadge('storeToInventoryCount', requests.length);
+      const tbody = document.getElementById('storeToInventoryTable'); tbody.innerHTML = '';
+      if (requests.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-store-alt"></i><p>No pending store to inventory requests</p></div></td></tr>'; return;
+      }
+      requests.forEach(r => {
+        tbody.innerHTML += `<tr>
+          <td><strong>${r.storeItemName||'-'}</strong> <span class="badge badge-store">Store</span></td>
+          <td>${r.bulkQty} bulk × ${r.unitsPerBulk} = <strong>${r.totalUnits} units</strong></td>
+          <td>1: ${formatCurrency(r.unitPrice)} | ½: ${formatCurrency(r.halfPrice)} | ¼: ${formatCurrency(r.quarterPrice)}</td>
+          <td>${r.requestedByName||'-'}</td>
+          <td>${formatDate(r.createdAt)}</td>
+          <td style="display:flex;gap:5px;">
+            <button class="btn btn-sm btn-success" onclick="window.approveStoreToInventory('${r.id}')"><i class="fas fa-check"></i> Approve</button>
+            <button class="btn btn-sm btn-danger" onclick="window.rejectStoreToInventory('${r.id}')"><i class="fas fa-times"></i> Reject</button>
+          </td>
+        </tr>`;
+      });
+    }));
+  }
+
+  window.approveStoreToInventory = async (id) => {
+    try {
+      const reqSnap = await getDoc(doc(db, 'store_to_inventory_requests', id));
+      if (!reqSnap.exists()) return;
+      const req = reqSnap.data();
+      
+      // Deduct bulk from store
+      const storeRef = doc(db, 'store_items', req.storeItemId);
+      const storeSnap = await getDoc(storeRef);
+      if (storeSnap.exists()) {
+        const storeData = storeSnap.data();
+        const newBulkQty = (storeData.bulkQty || 0) - req.bulkQty;
+        const threshold = storeData.threshold || 5;
+        await updateDoc(storeRef, {
+          bulkQty: Math.max(0, newBulkQty),
+          status: newBulkQty <= 0 ? 'out_of_stock' : newBulkQty <= threshold ? 'low' : 'available',
+          updatedAt: serverTimestamp()
+        });
+      }
+      
+      // Add to inventory as unit/half/quarter
+      const totalQty = req.totalUnits;
+      const threshold = 10;
+      await addDoc(collection(db, 'stock_items'), {
+        name: req.storeItemName,
+        category: req.storeItemCategory || 'other',
+        initialStock: totalQty,
+        quantityAvailable: totalQty,
+        quantitySold: 0,
+        totalSoldQty: 0,
+        totalSoldValue: 0,
+        unitPrice: req.unitPrice,
+        halfPrice: req.halfPrice,
+        quarterPrice: req.quarterPrice,
+        threshold,
+        status: totalQty <= threshold ? 'low' : 'available',
+        source: 'store',
+        sourceRequestId: id,
+        createdBy: currentUser.uid,
+        createdByName: userData.fullName,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      
+      // Update request status
+      await updateDoc(doc(db, 'store_to_inventory_requests', id), {
+        status: 'approved',
+        approvedBy: currentUser.uid,
+        approvedByName: userData.fullName,
+        approvedAt: serverTimestamp()
+      });
+      
+      await logAudit('approve_store_to_inventory', `Approved: ${req.storeItemName} → ${totalQty} units to inventory`);
+      showToast('Store→Inventory approved! Item added to inventory.', 'success');
+    } catch (e) {
+      showToast('Failed: ' + e.message, 'error');
+    }
+  };
+
+  window.rejectStoreToInventory = async (id) => {
+    await updateDoc(doc(db, 'store_to_inventory_requests', id), {
+      status: 'rejected',
+      rejectedBy: currentUser.uid,
+      rejectedAt: serverTimestamp()
+    });
+    await logAudit('reject_store_to_inventory', 'Rejected store to inventory request');
+    showToast('Request rejected', 'info');
   };
 
   // ========== PURCHASES ==========
@@ -442,11 +438,9 @@
       const purchases = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       purchases.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       updateCountBadge('purchaseCount', purchases.length);
-      const tbody = document.getElementById('purchasesTable'); 
-      tbody.innerHTML = '';
+      const tbody = document.getElementById('purchasesTable'); tbody.innerHTML = '';
       if (purchases.length === 0) { 
-        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-shopping-cart"></i><p>No pending purchase requests</p></div></td></tr>'; 
-        return; 
+        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-shopping-cart"></i><p>No pending purchase requests</p></div></td></tr>'; return; 
       }
       purchases.forEach(p => { 
         const total = p.items?.reduce((s,i)=>s+((i.suggested||0)*(i.price||0)),0)||0; 
@@ -464,15 +458,13 @@
 
   window.approvePurchase = async (id) => { 
     await updateDoc(doc(db, 'purchase_requests', id), { status: 'approved', approvedBy: currentUser.uid, approvedAt: serverTimestamp() }); 
-    await logAudit('approve_purchase', 'Approved purchase request'); 
-    showToast('Request approved', 'success'); 
+    await logAudit('approve_purchase', 'Approved purchase request'); showToast('Request approved', 'success'); 
   };
   
   window.rejectPurchase = async (id) => { 
     const reason = prompt('Rejection reason:') || 'No reason'; 
     await updateDoc(doc(db, 'purchase_requests', id), { status: 'rejected', rejectionReason: reason }); 
-    await logAudit('reject_purchase', `Rejected. Reason: ${reason}`); 
-    showToast('Request rejected', 'info'); 
+    await logAudit('reject_purchase', `Rejected. Reason: ${reason}`); showToast('Request rejected', 'info'); 
   };
 
   // ========== CUSTOMERS ==========
@@ -482,20 +474,14 @@
       const customers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       customers.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       updateCountBadge('customerCount', customers.length);
-      const tbody = document.getElementById('customersTable'); 
-      tbody.innerHTML = '';
+      const tbody = document.getElementById('customersTable'); tbody.innerHTML = '';
       if (customers.length === 0) { 
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No pending customers</p></div></td></tr>'; 
-        return; 
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No pending customers</p></div></td></tr>'; return; 
       }
       customers.forEach(c => { 
         tbody.innerHTML += `<tr>
-          <td><strong>${c.fullName||'-'}</strong></td>
-          <td>${c.phone||'-'}</td>
-          <td>${c.email||'-'}</td>
-          <td>${c.birthday||'-'}</td>
-          <td>${c.createdByName||'-'}</td>
-          <td>${formatDate(c.createdAt)}</td>
+          <td><strong>${c.fullName||'-'}</strong></td><td>${c.phone||'-'}</td><td>${c.email||'-'}</td>
+          <td>${c.birthday||'-'}</td><td>${c.createdByName||'-'}</td><td>${formatDate(c.createdAt)}</td>
           <td style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="window.approveCustomer('${c.id}')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-sm btn-danger" onclick="window.rejectCustomer('${c.id}')"><i class="fas fa-times"></i> Reject</button></td>
         </tr>`; 
       });
@@ -504,14 +490,12 @@
 
   window.approveCustomer = async (id) => { 
     await updateDoc(doc(db, 'customers', id), { status: 'approved', approvedBy: currentUser.uid, approvedAt: serverTimestamp() }); 
-    await logAudit('approve_customer', 'Approved customer'); 
-    showToast('Customer approved', 'success'); 
+    await logAudit('approve_customer', 'Approved customer'); showToast('Customer approved', 'success'); 
   };
   
   window.rejectCustomer = async (id) => { 
     await updateDoc(doc(db, 'customers', id), { status: 'rejected' }); 
-    await logAudit('reject_customer', 'Rejected customer'); 
-    showToast('Customer rejected', 'info'); 
+    await logAudit('reject_customer', 'Rejected customer'); showToast('Customer rejected', 'info'); 
   };
 
   // ========== LEAVE REQUESTS ==========
@@ -521,11 +505,9 @@
       const requests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       requests.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       updateCountBadge('leaveCount', requests.length);
-      const tbody = document.getElementById('leaveTable'); 
-      tbody.innerHTML = '';
+      const tbody = document.getElementById('leaveTable'); tbody.innerHTML = '';
       if (requests.length === 0) { 
-        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-calendar"></i><p>No pending leave requests</p></div></td></tr>'; 
-        return; 
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-calendar"></i><p>No pending leave requests</p></div></td></tr>'; return; 
       }
       for (const l of requests) { 
         const u = await getDoc(doc(db, 'users', l.userId)); 
@@ -559,13 +541,7 @@
     showToast('Leave rejected', 'info'); 
   };
 
-  window.refreshAll = () => { 
-    cleanup(); 
-    loadItems(); 
-    loadPurchases(); 
-    loadCustomers(); 
-    loadLeave(); 
-  };
+  window.refreshAll = () => { cleanup(); loadItems(); loadStoreToInventory(); loadPurchases(); loadCustomers(); loadLeave(); };
 
   // Tab switching
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function() { 
@@ -577,16 +553,12 @@
   }));
 
   onAuthStateChanged(auth, async (u) => { 
-    if (!u) { 
-      window.location.href = 'auth.html'; 
-      return; 
-    } 
+    if (!u) { window.location.href = 'auth.html'; return; } 
     currentUser = u; 
     const snap = await getDoc(doc(db, 'users', u.uid)); 
     if (!snap.exists() || (snap.data().role !== 'admin' && snap.data().role !== 'super_admin')) { 
       await signOut(auth);
-      window.location.href = 'auth.html'; 
-      return; 
+      window.location.href = 'auth.html'; return; 
     }
     userData = snap.data(); 
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}); 
