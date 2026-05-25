@@ -21,8 +21,8 @@
       --primary: #ff4da6; --primary-dark: #e6398c; --primary-light: #ffb3d9;
       --primary-soft: #fff0f6; --dark: #1a1a2e; --gray: #6b7280;
       --gray-light: #f3f4f6; --success: #10b981; --warning: #f59e0b;
-      --danger: #ef4444; --info: #3b82f6;
-      --sidebar-width: 280px; --sidebar-collapsed: 80px; --header-height: 70px;
+      --danger: #ef4444; --info: #3b82f6; --purple: #8b5cf6;
+      --sidebar-width: 280px; --header-height: 70px;
     }
 
     html { font-size: 16px; -webkit-text-size-adjust: 100%; }
@@ -34,258 +34,176 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    @keyframes flameRing {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(255,77,166,0.4); }
-      50% { box-shadow: 0 0 0 10px rgba(255,77,166,0); }
-    }
-    @keyframes fadeInUp {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
+    @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
+    @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
+    @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
+    @keyframes shimmer { 0%{background-position:-200% 0}100%{background-position:200% 0} }
 
     .sidebar {
       width: var(--sidebar-width); min-width: var(--sidebar-width);
       background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
       color: white; position: fixed; top: 0; left: 0; height: 100vh;
-      overflow-y: auto; overflow-x: hidden;
-      transition: transform 0.3s ease, width 0.3s ease, min-width 0.3s ease;
-      z-index: 1000; border-right: 1px solid rgba(255,77,166,0.2);
+      overflow-y: auto; overflow-x: hidden; transition: transform 0.3s ease; z-index: 1000;
+      border-right: 1px solid rgba(255,77,166,0.2);
     }
     .sidebar::-webkit-scrollbar { width: 4px; }
     .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
     .sidebar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
-    .sidebar-header {
-      padding: 24px 18px; display: flex; align-items: center; gap: 12px;
-      border-bottom: 1px solid rgba(255,77,166,0.2);
-      position: sticky; top: 0; z-index: 10;
-      background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
-    }
-    .sidebar-header .close-sidebar {
-      display: none; background: rgba(255,255,255,0.1); border: none; color: white;
-      width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
-      font-size: 1.2rem; margin-left: auto; align-items: center; justify-content: center;
-    }
-    .logo-icon {
-      width: 42px; height: 42px; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      border-radius: 12px; display: flex; align-items: center; justify-content: center;
-      font-size: 1.3rem; font-weight: 700; flex-shrink: 0;
-      animation: flameRing 2s ease-in-out infinite;
-    }
-    .logo-text { font-size: 1.25rem; font-weight: 800; font-family: 'Playfair Display', serif; white-space: nowrap; }
-    .logo-text span { color: var(--primary); }
+    .sidebar-header { padding: 24px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,77,166,0.2); position: sticky; top: 0; z-index: 10; background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%); }
+    .sidebar-header .close-sidebar { display: none; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; margin-left: auto; align-items: center; justify-content: center; }
+    .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; flex-shrink: 0; animation: flameRing 2s ease-in-out infinite; }
+    .logo-text { font-size: 1.25rem; font-weight: 800; font-family: 'Playfair Display', serif; white-space: nowrap; } .logo-text span { color: var(--primary); }
 
     .sidebar-nav { padding: 20px 12px; display: flex; flex-direction: column; }
     .nav-section { margin-bottom: 20px; }
-    .nav-section-title {
-      font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px;
-      color: rgba(255,255,255,0.4); padding: 8px 14px 6px; font-weight: 600; white-space: nowrap;
-    }
-    .nav-item {
-      display: flex; align-items: center; gap: 14px; padding: 12px 14px;
-      border-radius: 12px; color: rgba(255,255,255,0.7); cursor: pointer;
-      border: none; background: none; width: 100%; font-size: 0.9rem; font-weight: 500;
-      text-align: left; margin-bottom: 3px; transition: all 0.2s;
-      font-family: 'Poppins', sans-serif; white-space: nowrap; text-decoration: none;
-    }
+    .nav-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.4); padding: 8px 14px 6px; font-weight: 600; white-space: nowrap; }
+    .nav-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; color: rgba(255,255,255,0.7); cursor: pointer; border: none; background: none; width: 100%; font-size: 0.9rem; font-weight: 500; text-align: left; margin-bottom: 3px; transition: all 0.2s; font-family: 'Poppins', sans-serif; white-space: nowrap; text-decoration: none; }
     .nav-item i { width: 22px; font-size: 1.1rem; text-align: center; flex-shrink: 0; }
     .nav-item:hover { background: rgba(255,77,166,0.15); color: white; transform: translateX(5px); }
-    .nav-item.active {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white; box-shadow: 0 5px 15px rgba(255,77,166,0.3);
-    }
+    .nav-item.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 5px 15px rgba(255,77,166,0.3); }
     .nav-item.logout { color: rgba(239,68,68,0.7); margin-top: auto; }
     .nav-item.logout:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
 
-    .sidebar-footer {
-      padding: 20px; border-top: 1px solid rgba(255,77,166,0.2);
-      position: sticky; bottom: 0; background: linear-gradient(0deg, #0f0f1a 0%, transparent 100%);
-    }
+    .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,77,166,0.2); position: sticky; bottom: 0; background: linear-gradient(0deg, #0f0f1a 0%, transparent 100%); }
     .user-profile { display: flex; align-items: center; gap: 12px; }
-    .user-avatar {
-      width: 44px; height: 44px; border-radius: 12px;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; color: white; flex-shrink: 0; font-size: 1.1rem;
-    }
-    .user-details { white-space: nowrap; }
-    .user-details h4 { font-size: 0.85rem; font-weight: 600; }
-    .user-details p { font-size: 0.7rem; opacity: 0.6; }
+    .user-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; flex-shrink: 0; font-size: 1.1rem; }
+    .user-details { white-space: nowrap; } .user-details h4 { font-size: 0.85rem; font-weight: 600; } .user-details p { font-size: 0.7rem; opacity: 0.6; }
 
-    .sidebar-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-      z-index: 999; display: none;
-    }
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 999; display: none; }
     .sidebar-overlay.active { display: block; }
 
-    .main-content {
-      flex: 1; margin-left: var(--sidebar-width);
-      transition: margin-left 0.3s ease; min-height: 100vh;
-      width: calc(100% - var(--sidebar-width));
-    }
+    .main-content { flex: 1; margin-left: var(--sidebar-width); transition: margin-left 0.3s ease; min-height: 100vh; width: calc(100% - var(--sidebar-width)); }
 
-    .top-bar {
-      height: var(--header-height); background: rgba(255,255,255,0.98);
-      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-      padding: 0 28px; display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid rgba(255,77,166,0.15);
-      position: sticky; top: 0; z-index: 50;
-    }
+    .top-bar { height: var(--header-height); background: rgba(255,255,255,0.98); backdrop-filter: blur(12px); padding: 0 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,77,166,0.15); position: sticky; top: 0; z-index: 50; }
     .top-bar-left { display: flex; align-items: center; gap: 14px; }
-    .menu-toggle {
-      background: none; border: none; font-size: 1.3rem; color: var(--gray);
-      cursor: pointer; padding: 10px; border-radius: 10px; transition: all 0.2s;
-      display: none; align-items: center; justify-content: center;
-    }
+    .menu-toggle { background: none; border: none; font-size: 1.3rem; color: var(--gray); cursor: pointer; padding: 10px; border-radius: 10px; transition: all 0.2s; display: none; align-items: center; justify-content: center; }
     .menu-toggle:hover { background: var(--primary-soft); color: var(--primary); }
     .page-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
     .current-date { color: var(--gray); font-size: 0.85rem; white-space: nowrap; }
 
     .content-wrapper { padding: 28px; max-width: 1600px; }
 
+    /* Date Range Filter */
+    .date-filter-bar {
+      background: white; border-radius: 20px; padding: 12px 20px; margin-bottom: 24px;
+      display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap; align-items: center;
+      border: 1px solid rgba(255,77,166,0.08);
+    }
+    .date-filter-bar .filter-label { font-size: 0.75rem; font-weight: 600; color: var(--gray); margin-right: 8px; }
+    .date-filter-btn {
+      padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem;
+      cursor: pointer; border: 1.5px solid rgba(0,0,0,0.08); background: white;
+      color: var(--gray); transition: all 0.2s; font-family: 'Poppins', sans-serif;
+      white-space: nowrap;
+    }
+    .date-filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .date-filter-btn.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border-color: transparent; }
+    .date-filter-input { padding: 8px 12px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px; font-size: 0.8rem; outline: none; font-family: 'Poppins', sans-serif; }
+    .date-filter-input:focus { border-color: var(--primary); }
+
+    /* Stats Grid */
     .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
-    .stat-card {
-      background: white; padding: 18px 16px; border-radius: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(255,77,166,0.1);
-      transition: all 0.3s; position: relative; overflow: hidden;
-      animation: fadeInUp 0.5s ease forwards; opacity: 0;
-    }
-    .stat-card:nth-child(1) { animation-delay: 0.05s; }
-    .stat-card:nth-child(2) { animation-delay: 0.10s; }
-    .stat-card:nth-child(3) { animation-delay: 0.15s; }
-    .stat-card:nth-child(4) { animation-delay: 0.20s; }
-    .stat-card:nth-child(5) { animation-delay: 0.25s; }
-    .stat-card::before {
-      content: ''; position: absolute; inset: -2px;
-      background: linear-gradient(45deg, var(--primary), var(--primary-light), var(--primary));
-      background-size: 400%; border-radius: 20px; opacity: 0; transition: opacity 0.3s; z-index: -1;
-    }
+    .stat-card { background: white; padding: 18px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(255,77,166,0.1); transition: all 0.3s; position: relative; overflow: hidden; animation: fadeInUp 0.5s ease forwards; opacity: 0; }
+    .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}.stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}.stat-card:nth-child(5){animation-delay:0.25s}
     .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(255,77,166,0.15); }
-    .stat-card:hover::before { opacity: 0.3; animation: flameRing 2s linear infinite; }
     .stat-header { display: flex; justify-content: space-between; margin-bottom: 12px; }
     .stat-header span { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
     .stat-icon { width: 36px; height: 36px; border-radius: 12px; background: var(--primary-soft); display: flex; align-items: center; justify-content: center; color: var(--primary); }
     .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--dark); font-family: 'Playfair Display', serif; line-height: 1; }
     .stat-change { font-size: 0.65rem; margin-top: 4px; color: var(--gray); }
-    .stat-change.positive { color: var(--success); }
-    .stat-change.negative { color: var(--danger); }
+    .stat-change.positive { color: var(--success); } .stat-change.negative { color: var(--danger); }
 
-    .financial-warning {
-      padding: 16px 20px; border-radius: 14px; margin-bottom: 24px;
-      display: flex; align-items: center; gap: 15px;
-      background: rgba(239,68,68,0.1); border-left: 4px solid var(--danger);
-    }
+    /* Financial Warning */
+    .financial-warning { padding: 16px 20px; border-radius: 14px; margin-bottom: 24px; display: flex; align-items: center; gap: 15px; background: rgba(239,68,68,0.1); border-left: 4px solid var(--danger); }
     .financial-warning i { font-size: 2rem; color: var(--danger); }
     .financial-warning.healthy { background: rgba(16,185,129,0.1); border-left-color: var(--success); }
     .financial-warning.healthy i { color: var(--success); }
 
-    .toggle-wrapper {
-      display: flex; align-items: center; gap: 12px;
-      background: white; padding: 8px 16px; border-radius: 40px;
-      border: 1px solid rgba(0,0,0,0.08);
-    }
+    /* Financial Ratios */
+    .ratios-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .ratio-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(255,77,166,0.1); text-align: center; transition: all 0.3s; }
+    .ratio-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,77,166,0.1); }
+    .ratio-card .ratio-value { font-size: 2rem; font-weight: 800; color: var(--dark); font-family: 'Playfair Display', serif; }
+    .ratio-card .ratio-label { font-size: 0.75rem; color: var(--gray); margin-top: 4px; }
+    .ratio-card .ratio-icon { font-size: 1.5rem; color: var(--primary); margin-bottom: 8px; }
+
+    /* Toggle */
+    .toggle-wrapper { display: flex; align-items: center; gap: 12px; background: white; padding: 8px 16px; border-radius: 40px; border: 1px solid rgba(0,0,0,0.08); }
     .toggle-wrapper span { font-size: 0.75rem; font-weight: 600; color: var(--gray); white-space: nowrap; }
     .toggle-wrapper span.active-label { color: var(--primary); }
-    .toggle-switch {
-      position: relative; width: 48px; height: 26px;
-      background: var(--gray-light); border-radius: 26px;
-      cursor: pointer; transition: background 0.3s; flex-shrink: 0;
-    }
+    .toggle-switch { position: relative; width: 48px; height: 26px; background: var(--gray-light); border-radius: 26px; cursor: pointer; transition: background 0.3s; flex-shrink: 0; }
     .toggle-switch.active { background: var(--primary); }
-    .toggle-switch::after {
-      content: ''; position: absolute; top: 3px; left: 3px;
-      width: 20px; height: 20px; background: white;
-      border-radius: 50%; transition: transform 0.3s;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-    }
+    .toggle-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: transform 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
     .toggle-switch.active::after { transform: translateX(22px); }
 
-    .settings-card {
-      background: linear-gradient(135deg, var(--primary-soft), white);
-      border-radius: 20px; padding: 24px; margin-bottom: 24px;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 20px; border: 1px solid rgba(255,77,166,0.15);
-    }
+    /* Settings Card */
+    .settings-card { background: linear-gradient(135deg, var(--primary-soft), white); border-radius: 20px; padding: 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; border: 1px solid rgba(255,77,166,0.15); }
     .settings-card h3 { font-size: 1rem; display: flex; align-items: center; gap: 10px; }
     .point-value-input { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
-    .point-value-input input {
-      width: 150px; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08);
-      border-radius: 40px; font-size: 1rem; font-weight: 600; text-align: center;
-      outline: none; font-family: 'Poppins', sans-serif;
-    }
+    .point-value-input input { width: 150px; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px; font-size: 1rem; font-weight: 600; text-align: center; outline: none; font-family: 'Poppins', sans-serif; }
     .point-value-input input:focus { border-color: var(--primary); }
     .point-info { font-size: 0.75rem; color: var(--gray); width: 100%; margin-top: 4px; }
 
+    /* Charts */
     .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
-
-    .panel {
-      background: white; border-radius: 24px; padding: 24px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(255,77,166,0.08);
-      transition: all 0.3s; margin-bottom: 24px;
-    }
+    .panel { background: white; border-radius: 24px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(255,77,166,0.08); transition: all 0.3s; margin-bottom: 24px; }
     .panel:hover { box-shadow: 0 8px 25px rgba(255,77,166,0.08); }
     .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
     .panel-header h3 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--dark); }
     .panel-header h3 i { color: var(--primary); }
     .chart-container { position: relative; height: 280px; }
 
-    .revenue-breakdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 15px; }
+    /* P&L Statement */
+    .pl-statement { background: white; border-radius: 24px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(255,77,166,0.08); margin-bottom: 24px; }
+    .pl-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 0.9rem; }
+    .pl-row.indent { padding-left: 24px; }
+    .pl-row.total { font-weight: 700; font-size: 1rem; border-bottom: 2px solid rgba(0,0,0,0.08); }
+    .pl-row.grand-total { font-weight: 800; font-size: 1.2rem; border-bottom: none; color: var(--dark); }
+    .pl-section-title { font-weight: 700; color: var(--primary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; padding-top: 16px; }
+
+    /* Revenue Breakdown */
+    .revenue-breakdown { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-top: 15px; }
     .breakdown-item { text-align: center; padding: 15px; background: var(--gray-light); border-radius: 14px; transition: all 0.3s; }
     .breakdown-item:hover { transform: translateY(-3px); background: var(--primary-soft); }
     .breakdown-item i { font-size: 1.5rem; color: var(--primary); margin-bottom: 8px; }
     .breakdown-item h4 { font-size: 0.8rem; color: var(--gray); margin-bottom: 5px; }
     .breakdown-item p { font-size: 1.2rem; font-weight: 700; color: var(--dark); }
 
+    /* Tables */
     .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 16px; }
     .data-table { width: 100%; border-collapse: collapse; min-width: 900px; }
-    .data-table th {
-      text-align: left; padding: 14px 10px; font-size: 0.7rem; font-weight: 600;
-      color: var(--gray); text-transform: uppercase; letter-spacing: 1px;
-      border-bottom: 2px solid var(--primary-soft); white-space: nowrap; background: white;
-    }
+    .data-table th { text-align: left; padding: 14px 10px; font-size: 0.7rem; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--primary-soft); white-space: nowrap; background: white; }
     .data-table td { padding: 14px 10px; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 0.85rem; }
-    .data-table tbody tr { transition: background 0.2s; }
-    .data-table tbody tr:hover { background: var(--primary-soft); }
+    .data-table tbody tr { transition: background 0.2s; } .data-table tbody tr:hover { background: var(--primary-soft); }
 
     .badge { padding: 5px 12px; border-radius: 40px; font-size: 0.7rem; font-weight: 600; display: inline-block; white-space: nowrap; }
-    .badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
-    .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
-    .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
-    .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
-    .badge-purple { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+    .badge-success { background: rgba(16,185,129,0.1); color: var(--success); } .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
+    .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); } .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
+    .badge-purple { background: rgba(139,92,246,0.1); color: var(--purple); }
 
-    .text-positive { color: var(--success); font-weight: 700; }
-    .text-negative { color: var(--danger); font-weight: 700; }
+    .text-positive { color: var(--success); font-weight: 700; } .text-negative { color: var(--danger); font-weight: 700; }
 
-    .btn {
-      padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem;
-      cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
-      background: white; border: 1px solid rgba(0,0,0,0.08); transition: all 0.2s;
-      font-family: 'Poppins', sans-serif; white-space: nowrap;
-    }
+    /* Buttons */
+    .btn { padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background: white; border: 1px solid rgba(0,0,0,0.08); transition: all 0.2s; font-family: 'Poppins', sans-serif; white-space: nowrap; }
     .btn:hover { transform: translateY(-2px); }
-    .btn:active { transform: translateY(0); }
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; }
     .btn-outline { border: 1.5px solid rgba(255,77,166,0.3); color: var(--primary); background: transparent; }
     .btn-sm { padding: 6px 12px; font-size: 0.7rem; }
     .btn-success { background: var(--success); color: white; border: none; }
     .btn-danger { background: var(--danger); color: white; border: none; }
 
+    /* Tabs */
     .tabs-container { background: white; border-radius: 20px; padding: 6px; margin-bottom: 24px; display: flex; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap; }
     .tab { padding: 12px 20px; border-radius: 16px; font-weight: 600; font-size: 0.85rem; cursor: pointer; border: none; background: none; color: var(--gray); display: flex; align-items: center; gap: 8px; transition: all 0.2s; font-family: 'Poppins', sans-serif; }
     .tab:hover { background: var(--primary-soft); color: var(--primary); }
     .tab.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
     .tab .count { background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 30px; font-size: 0.7rem; font-weight: 700; min-width: 24px; text-align: center; }
 
-    .page-view { display: none; }
-    .page-view.active { display: block; }
+    .page-view { display: none; } .page-view.active { display: block; }
 
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
     .modal-overlay.active { display: flex; }
     .modal { background: white; border-radius: 28px; padding: 28px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; animation: fadeInUp 0.3s ease; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -298,22 +216,21 @@
     .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,77,166,0.1); }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
+    /* Export Dropdown */
     .export-dropdown { position: relative; display: inline-block; }
-    .export-menu { position: absolute; top: 100%; right: 0; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-width: 150px; display: none; z-index: 50; overflow: hidden; }
+    .export-menu { position: absolute; top: 100%; right: 0; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-width: 200px; display: none; z-index: 50; overflow: hidden; }
     .export-menu.show { display: block; }
     .export-item { padding: 12px 16px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s; display: flex; align-items: center; gap: 10px; }
     .export-item:hover { background: var(--primary-soft); }
 
+    /* Toast */
     .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; }
     .toast { background: white; color: var(--dark); padding: 14px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 0.85rem; animation: slideIn 0.3s ease; border-left: 4px solid var(--primary); transition: all 0.3s ease; }
-    .toast.success { border-left-color: var(--success); }
-    .toast.error { border-left-color: var(--danger); }
+    .toast.success { border-left-color: var(--success); } .toast.error { border-left-color: var(--danger); }
     .toast i { font-size: 1.1rem; }
-    .toast.success i { color: var(--success); }
-    .toast.error i { color: var(--danger); }
 
-    @media (max-width: 1400px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } .revenue-breakdown { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .charts-row { grid-template-columns: 1fr; } }
+    @media (max-width: 1400px) { .stats-grid, .ratios-grid { grid-template-columns: repeat(3, 1fr); } .revenue-breakdown { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 1100px) { .stats-grid, .ratios-grid { grid-template-columns: repeat(2, 1fr); } .charts-row { grid-template-columns: 1fr; } }
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); width: 280px !important; min-width: 280px !important; }
       .sidebar.mobile-open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.3); }
@@ -324,20 +241,19 @@
       .top-bar { padding: 0 16px; }
       .page-title { font-size: 1.1rem; }
       .current-date { display: none; }
-      .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-      .stat-card { padding: 14px 12px; }
-      .stat-value { font-size: 1.4rem; }
-      .settings-card { flex-direction: column; align-items: flex-start; }
-      .point-value-input { width: 100%; }
-      .point-value-input input { flex: 1; }
-      .panel { padding: 16px 12px; border-radius: 18px; }
+      .stats-grid, .ratios-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .stat-card, .ratio-card { padding: 14px 12px; }
+      .stat-value, .ratio-value { font-size: 1.4rem; }
+      .panel, .pl-statement { padding: 16px 12px; border-radius: 18px; }
       .data-table { min-width: 700px; }
       .data-table th, .data-table td { padding: 10px 6px; font-size: 0.75rem; }
       .modal { padding: 20px; border-radius: 20px; }
       .form-row { grid-template-columns: 1fr; }
       .revenue-breakdown { grid-template-columns: 1fr 1fr; }
+      .date-filter-bar { gap: 4px; padding: 10px; }
+      .date-filter-btn { padding: 6px 10px; font-size: 0.7rem; }
     }
-    @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } .stat-value { font-size: 1.5rem; } .content-wrapper { padding: 12px 8px; } .revenue-breakdown { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) { .stats-grid, .ratios-grid { grid-template-columns: 1fr; } .content-wrapper { padding: 12px 8px; } .revenue-breakdown { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -347,8 +263,8 @@
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="logo-icon">✨</div>
-    <div class="logo-text"><span>Omo</span>creations</div>
-    <button class="close-sidebar" onclick="closeSidebar()" aria-label="Close menu"><i class="fas fa-times"></i></button>
+    <div class="logo-text"><span>Omo</span>Creations</div>
+    <button class="close-sidebar" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
   </div>
   <nav class="sidebar-nav">
     <div class="nav-section"><div class="nav-section-title">OVERVIEW</div>
@@ -364,14 +280,13 @@
     </div>
     <div class="nav-section"><div class="nav-section-title">MONITORING</div>
       <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
+      <button class="nav-item" onclick="navigateTo('store.html')"><i class="fas fa-store"></i><span>Store</span></button>
       <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
       <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
       <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
       <button class="nav-item" onclick="navigateTo('orders-admin.html')"><i class="fas fa-clipboard-list"></i><span>Orders Admin</span></button>
     </div>
     <div class="nav-section"><div class="nav-section-title">SHOP &amp; KIOSK</div>
-      <button class="nav-item" onclick="window.open('kiosk.html','_blank')"><i class="fas fa-desktop"></i><span>Launch Kiosk</span></button>
-      <button class="nav-item" onclick="navigateTo('kiosk-settings.html')"><i class="fas fa-cog"></i><span>Kiosk Settings</span></button>
       <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
       <button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><span>Catalog</span></button>
     </div>
@@ -384,48 +299,123 @@
   <header class="top-bar">
     <div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">Finance & Accounting</h1></div>
     <div style="display:flex;align-items:center;gap:16px;">
-      <div class="toggle-wrapper" id="adminSalaryToggle"><span id="toggleLabelOff">Workers Only</span><div class="toggle-switch" id="toggleSwitch" onclick="toggleAdminSalary()"></div><span id="toggleLabelOn" class="active-label">+ Admins</span></div>
+      <div class="toggle-wrapper"><span id="toggleLabelOff">Workers Only</span><div class="toggle-switch" id="toggleSwitch" onclick="toggleAdminSalary()"></div><span id="toggleLabelOn" class="active-label">+ Admins</span></div>
       <span class="current-date" id="currentDate"></span>
     </div>
   </header>
 
   <div class="content-wrapper">
 
-    <div class="financial-warning" id="financialWarning"><i class="fas fa-exclamation-triangle"></i><div><strong>Financial Status</strong><p id="warningMessage">Loading...</p></div></div>
-
-    <div class="settings-card">
-      <div><h3><i class="fas fa-coins" style="color:var(--primary);"></i> Point Value Configuration</h3><p class="point-info">Staff earn <strong style="color:var(--success);">+5 points</strong> for early, <strong style="color:var(--danger);">-5 points</strong> for late. ₦ value per 5 points.</p></div>
-      <div class="point-value-input"><label style="font-weight:600;white-space:nowrap;">₦ per 5 points:</label><input type="number" id="pointValueInput" min="100" step="100" value="500"><button class="btn btn-primary" onclick="updatePointValue()"><i class="fas fa-save"></i> Save & Update</button></div>
+    <!-- Date Range Filter -->
+    <div class="date-filter-bar">
+      <span class="filter-label"><i class="fas fa-calendar-alt"></i> Period:</span>
+      <button class="date-filter-btn active" data-range="mtd">Month to Date</button>
+      <button class="date-filter-btn" data-range="lastMonth">Last Month</button>
+      <button class="date-filter-btn" data-range="qtd">Quarter to Date</button>
+      <button class="date-filter-btn" data-range="ytd">Year to Date</button>
+      <button class="date-filter-btn" data-range="custom">Custom</button>
+      <input type="date" class="date-filter-input" id="customStart" style="display:none;" onchange="applyCustomRange()">
+      <input type="date" class="date-filter-input" id="customEnd" style="display:none;" onchange="applyCustomRange()">
+      <div class="export-dropdown" style="margin-left:auto;">
+        <button class="btn btn-outline btn-sm" id="exportAllBtn"><i class="fas fa-download"></i> Export Reports</button>
+        <div class="export-menu" id="exportAllMenu">
+          <div class="export-item" onclick="exportFullReport('csv')"><i class="fas fa-file-csv"></i> Full Report (CSV)</div>
+          <div class="export-item" onclick="exportFullReport('excel')"><i class="fas fa-file-excel"></i> Full Report (Excel)</div>
+          <div class="export-item" onclick="exportPLStatement()"><i class="fas fa-file-invoice"></i> P&L Statement (CSV)</div>
+          <div class="export-item" onclick="exportExpenseReport()"><i class="fas fa-receipt"></i> Expense Report (CSV)</div>
+        </div>
+      </div>
     </div>
 
+    <!-- Financial Warning -->
+    <div class="financial-warning" id="financialWarning"><i class="fas fa-exclamation-triangle"></i><div><strong>Financial Status</strong><p id="warningMessage">Loading...</p></div></div>
+
+    <!-- Point Value Settings -->
+    <div class="settings-card">
+      <div><h3><i class="fas fa-coins" style="color:var(--primary);"></i> Point Value Configuration</h3><p class="point-info">Staff earn <strong style="color:var(--success);">+5 points</strong> for early, <strong style="color:var(--danger);">-5 points</strong> for late. ₦ value per 5 points.</p></div>
+      <div class="point-value-input"><label style="font-weight:600;">₦ per 5 points:</label><input type="number" id="pointValueInput" min="100" step="100" value="500"><button class="btn btn-primary" onclick="updatePointValue()"><i class="fas fa-save"></i> Save</button></div>
+    </div>
+
+    <!-- Stats Grid -->
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-header"><span>Revenue (MTD)</span><div class="stat-icon"><i class="fas fa-arrow-up"></i></div></div><div class="stat-value" id="revenueMTD">₦0</div><div class="stat-change" id="revenueChange">vs last month</div></div>
-      <div class="stat-card"><div class="stat-header"><span>Expenses (MTD)</span><div class="stat-icon"><i class="fas fa-arrow-down"></i></div></div><div class="stat-value" id="expensesMTD">₦0</div><div class="stat-change" id="expensesChange">vs last month</div></div>
-      <div class="stat-card"><div class="stat-header"><span>Net Profit</span><div class="stat-icon"><i class="fas fa-chart-line"></i></div></div><div class="stat-value" id="netProfit">₦0</div><div class="stat-change" id="profitChange">vs last month</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Revenue</span><div class="stat-icon"><i class="fas fa-arrow-up"></i></div></div><div class="stat-value" id="revenueMTD">₦0</div><div class="stat-change" id="revenueChange">vs previous</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Expenses</span><div class="stat-icon"><i class="fas fa-arrow-down"></i></div></div><div class="stat-value" id="expensesMTD">₦0</div><div class="stat-change" id="expensesChange">vs previous</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Net Profit</span><div class="stat-icon"><i class="fas fa-chart-line"></i></div></div><div class="stat-value" id="netProfit">₦0</div><div class="stat-change" id="profitChange">vs previous</div></div>
       <div class="stat-card"><div class="stat-header"><span id="payrollLabel">Workers Payroll</span><div class="stat-icon"><i class="fas fa-users"></i></div></div><div class="stat-value" id="totalPayroll">₦0</div><div class="stat-change">Base + Points</div></div>
       <div class="stat-card"><div class="stat-header"><span>Pending Expenses</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-value" id="pendingExpenses">₦0</div><div class="stat-change">Awaiting approval</div></div>
     </div>
 
+    <!-- Financial Ratios -->
+    <div class="ratios-grid">
+      <div class="ratio-card"><div class="ratio-icon"><i class="fas fa-percentage"></i></div><div class="ratio-value" id="profitMargin">0%</div><div class="ratio-label">Profit Margin</div></div>
+      <div class="ratio-card"><div class="ratio-icon"><i class="fas fa-chart-pie"></i></div><div class="ratio-value" id="expenseRatio">0%</div><div class="ratio-label">Expense Ratio</div></div>
+      <div class="ratio-card"><div class="ratio-icon"><i class="fas fa-user-tie"></i></div><div class="ratio-value" id="revPerEmployee">₦0</div><div class="ratio-label">Revenue per Employee</div></div>
+      <div class="ratio-card"><div class="ratio-icon"><i class="fas fa-boxes"></i></div><div class="ratio-value" id="inventoryTurnover">0x</div><div class="ratio-label">Inventory Turnover</div></div>
+    </div>
+
+    <!-- Cash Flow Summary -->
+    <div class="panel"><div class="panel-header"><h3><i class="fas fa-exchange-alt"></i> Cash Flow Summary</h3></div>
+      <div class="revenue-breakdown" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="breakdown-item" style="background: rgba(16,185,129,0.05);"><i class="fas fa-arrow-down" style="color:var(--success);"></i><h4>Cash In</h4><p id="cashIn" style="color:var(--success);">₦0</p></div>
+        <div class="breakdown-item" style="background: rgba(239,68,68,0.05);"><i class="fas fa-arrow-up" style="color:var(--danger);"></i><h4>Cash Out</h4><p id="cashOut" style="color:var(--danger);">₦0</p></div>
+        <div class="breakdown-item"><i class="fas fa-balance-scale"></i><h4>Net Cash Flow</h4><p id="netCash">₦0</p></div>
+      </div>
+    </div>
+
+    <!-- P&L Statement -->
+    <div class="pl-statement">
+      <div class="panel-header"><h3><i class="fas fa-file-invoice"></i> Profit & Loss Statement</h3></div>
+      <div class="pl-section-title">REVENUE</div>
+      <div class="pl-row indent"><span>Retail Sales</span><span id="plRetailSales">₦0</span></div>
+      <div class="pl-row indent"><span>Wholesale Sales</span><span id="plWholesaleSales">₦0</span></div>
+      <div class="pl-row total"><span>Total Revenue</span><span id="plTotalRevenue">₦0</span></div>
+      <div class="pl-section-title">COST OF GOODS SOLD</div>
+      <div class="pl-row indent"><span>Inventory Purchases</span><span id="plInvPurchases">₦0</span></div>
+      <div class="pl-row indent"><span>Store Purchases</span><span id="plStorePurchases">₦0</span></div>
+      <div class="pl-row total"><span>Total COGS</span><span id="plTotalCOGS">₦0</span></div>
+      <div class="pl-row total"><span>GROSS PROFIT</span><span id="plGrossProfit" style="font-size:1.1rem;">₦0</span></div>
+      <div class="pl-section-title">OPERATING EXPENSES</div>
+      <div class="pl-row indent"><span>Staff Salaries</span><span id="plSalaries">₦0</span></div>
+      <div class="pl-row indent"><span>Miscellaneous Expenses</span><span id="plMisc">₦0</span></div>
+      <div class="pl-row total"><span>Total Operating Expenses</span><span id="plTotalOpEx">₦0</span></div>
+      <div class="pl-row grand-total" style="padding-top:16px;"><span>NET PROFIT</span><span id="plNetProfit" style="font-size:1.3rem;">₦0</span></div>
+    </div>
+
+    <!-- Charts -->
     <div class="charts-row">
-      <div class="panel"><div class="panel-header"><h3><i class="fas fa-chart-bar"></i> Monthly Revenue vs Expenses</h3></div><div class="chart-container"><canvas id="barChart"></canvas></div></div>
+      <div class="panel"><div class="panel-header"><h3><i class="fas fa-chart-bar"></i> Revenue vs Expenses</h3></div><div class="chart-container"><canvas id="barChart"></canvas></div></div>
       <div class="panel"><div class="panel-header"><h3><i class="fas fa-chart-pie"></i> Expense Breakdown</h3></div><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
     </div>
 
-    <div class="panel"><div class="panel-header"><h3><i class="fas fa-money-bill-wave"></i> How Money Comes In</h3></div><div class="revenue-breakdown"><div class="breakdown-item"><i class="fas fa-cash-register"></i><h4>Cash Sales</h4><p id="cashSales">₦0</p></div><div class="breakdown-item"><i class="fas fa-credit-card"></i><h4>POS / Transfer</h4><p id="posSales">₦0</p></div><div class="breakdown-item"><i class="fas fa-box"></i><h4>Walk-in Sales</h4><p id="walkinSales">₦0</p></div><div class="breakdown-item"><i class="fas fa-shopping-bag"></i><h4>Online Orders</h4><p id="onlineSales">₦0</p></div></div></div>
+    <!-- Revenue Breakdown -->
+    <div class="panel"><div class="panel-header"><h3><i class="fas fa-money-bill-wave"></i> Revenue Sources</h3></div><div class="revenue-breakdown">
+      <div class="breakdown-item"><i class="fas fa-cash-register"></i><h4>Cash Sales</h4><p id="cashSales">₦0</p></div>
+      <div class="breakdown-item"><i class="fas fa-credit-card"></i><h4>POS / Transfer</h4><p id="posSales">₦0</p></div>
+      <div class="breakdown-item"><i class="fas fa-store-alt"></i><h4>Wholesale</h4><p id="wholesaleRev">₦0</p></div>
+      <div class="breakdown-item"><i class="fas fa-box"></i><h4>Walk-in Sales</h4><p id="walkinSales">₦0</p></div>
+      <div class="breakdown-item"><i class="fas fa-shopping-bag"></i><h4>Online Orders</h4><p id="onlineSales">₦0</p></div>
+    </div></div>
 
+    <!-- Top Performing Items -->
+    <div class="panel"><div class="panel-header"><h3><i class="fas fa-trophy"></i> Top Performing Items</h3></div>
+      <div class="table-wrapper"><table class="data-table"><thead><tr><th>Rank</th><th>Item</th><th>Qty Sold</th><th>Revenue</th><th>% of Total</th></tr></thead><tbody id="topItemsTable"><tr><td colspan="5"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
+    </div>
+
+    <!-- Tabs -->
     <div class="tabs-container">
       <button class="tab active" data-tab="salary"><i class="fas fa-users"></i> Salary <span class="count" id="salaryCount">0</span></button>
-      <button class="tab" data-tab="purchases"><i class="fas fa-shopping-cart"></i> Purchases <span class="count" id="purchasesCount">0</span></button>
+      <button class="tab" data-tab="purchases"><i class="fas fa-shopping-cart"></i> All Purchases <span class="count" id="purchasesCount">0</span></button>
       <button class="tab" data-tab="misc"><i class="fas fa-receipt"></i> Misc Expenses <span class="count" id="miscCount">0</span></button>
     </div>
 
     <div id="salaryPanel" class="page-view active"><div class="panel"><div class="panel-header"><h3><i class="fas fa-users"></i> <span id="salaryTableTitle">Workers Salary Breakdown</span></h3><div style="display:flex;gap:10px;"><div class="toggle-wrapper" style="padding:6px 12px;"><span style="font-size:0.7rem;">Workers</span><div class="toggle-switch" id="salaryTableToggle" onclick="toggleAdminSalary()"></div><span style="font-size:0.7rem;">+ Admins</span></div><div class="export-dropdown"><button class="btn btn-outline btn-sm" id="exportSalaryBtn"><i class="fas fa-download"></i> Export</button><div class="export-menu" id="exportSalaryMenu"><div class="export-item" onclick="exportSalaries('csv')"><i class="fas fa-file-csv"></i> CSV</div><div class="export-item" onclick="exportSalaries('excel')"><i class="fas fa-file-excel"></i> Excel</div></div></div></div></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Name</th><th>Role</th><th>Base Salary</th><th>Points</th><th>Point Value</th><th>Points Bonus</th><th>Final Salary</th></tr></thead><tbody id="salaryTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div></div>
 
-    <div id="purchasesPanel" class="page-view"><div class="panel"><div class="panel-header"><h3><i class="fas fa-shopping-cart"></i> Stock Purchases</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Items</th><th>Supplier</th><th>Total</th><th>Status</th></tr></thead><tbody id="purchasesTable"><tr><td colspan="5"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div></div>
+    <div id="purchasesPanel" class="page-view"><div class="panel"><div class="panel-header"><h3><i class="fas fa-shopping-cart"></i> All Purchases</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Type</th><th>Items</th><th>Supplier</th><th>Total</th><th>Status</th></tr></thead><tbody id="purchasesTable"><tr><td colspan="6"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div></div>
 
     <div id="miscPanel" class="page-view"><div class="panel"><div class="panel-header"><h3><i class="fas fa-receipt"></i> Miscellaneous Expenses</h3><button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()"><i class="fas fa-plus"></i> Add Expense</button></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Expense Name</th><th>Category</th><th>Amount</th><th>Issued By</th><th>Bought By</th><th>Status</th><th>Actions</th></tr></thead><tbody id="miscTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div></div>
 
-    <div class="panel"><div class="panel-header"><h3><i class="fas fa-calendar-alt"></i> Monthly Comparison</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Month</th><th>Revenue</th><th>Purchases</th><th>Salaries</th><th>Misc</th><th>Total Expenses</th><th>Profit</th><th>vs Prev</th></tr></thead><tbody id="monthlyTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div>
+    <!-- Monthly Comparison -->
+    <div class="panel"><div class="panel-header"><h3><i class="fas fa-calendar-alt"></i> Monthly Comparison</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Month</th><th>Revenue</th><th>Wholesale</th><th>Inv. Purch.</th><th>Store Purch.</th><th>Salaries</th><th>Misc</th><th>Total Exp.</th><th>Profit</th><th>vs Prev</th></tr></thead><tbody id="monthlyTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div>
 
   </div>
 </main>
@@ -438,24 +428,16 @@
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, updateDoc, serverTimestamp, addDoc, getDocs, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
-    authDomain: "fashion-46e5d.firebaseapp.com",
-    projectId: "fashion-46e5d",
-    storageBucket: "fashion-46e5d.firebasestorage.app",
-    messagingSenderId: "408062284317",
-    appId: "1:408062284317:web:eb905bce68926c10a0ecf4"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
+  const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
 
   let currentUser = null, userData = null, unsubscribes = [];
   let globalPointValue = 500, currentTab = 'salary';
   let barChart = null, pieChart = null;
-  let allUsers = [], allSales = [], allPurchases = [], allMiscExpenses = [], allReturns = [];
+  let allUsers = [], allSales = [], allPurchases = [], allStorePurchases = [], allWholesaleSales = [], allMiscExpenses = [], allReturns = [], allStockItems = [];
   let includeAdminSalary = false;
+  let selectedRange = 'mtd', customStartDate = null, customEndDate = null;
+  let filteredSales = [], filteredWholesale = [], filteredPurchases = [], filteredStorePurchases = [], filteredMisc = [], filteredReturns = [];
 
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
@@ -469,20 +451,13 @@
     c.appendChild(t); setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(100%)'; t.style.transition='all 0.3s ease'; setTimeout(()=>t.remove(),300); }, 3500);
   }
 
-  async function logAudit(action, note) {
-    try { await addDoc(collection(db, 'audit_logs'), { actionType: action, performedBy: currentUser?.uid||'unknown', performedByName: userData?.fullName||'Admin', performedAt: serverTimestamp(), note: note||'' }); } catch(e){}
-  }
-
+  async function logAudit(action, note) { try { await addDoc(collection(db, 'audit_logs'), { actionType: action, performedBy: currentUser?.uid||'unknown', performedByName: userData?.fullName||'Admin', performedAt: serverTimestamp(), note: note||'' }); } catch(e){} }
   function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
   window.hideModal = hideModal;
   function showModal(title, content) { document.getElementById('modalTitle').textContent = title; document.getElementById('modalContent').innerHTML = content; document.getElementById('modalOverlay').classList.add('active'); }
   function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
 
-  window.toggleSidebar = function() {
-    const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay');
-    if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}
-    else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';}
-  };
+  window.toggleSidebar = function() { const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay'); if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';} else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';} };
   window.closeSidebar = function() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow=''; };
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
 
@@ -493,293 +468,273 @@
     const lo=document.getElementById('toggleLabelOff'), lon=document.getElementById('toggleLabelOn');
     if(lo){lo.classList.toggle('active-label',!includeAdminSalary);lo.style.color=includeAdminSalary?'var(--gray)':'var(--primary)';}
     if(lon){lon.classList.toggle('active-label',includeAdminSalary);lon.style.color=includeAdminSalary?'var(--primary)':'var(--gray)';}
-    const pl=document.getElementById('payrollLabel'); if(pl)pl.textContent=includeAdminSalary?'Total Payroll':'Workers Payroll';
-    const tt=document.getElementById('salaryTableTitle'); if(tt)tt.textContent=includeAdminSalary?'All Staff Salary Breakdown (Workers + Admins)':'Workers Salary Breakdown';
+    document.getElementById('payrollLabel').textContent=includeAdminSalary?'Total Payroll':'Workers Payroll';
+    document.getElementById('salaryTableTitle').textContent=includeAdminSalary?'All Staff Salary Breakdown':'Workers Salary Breakdown';
   }
 
-  async function loadPointValue() {
-    try { const snap = await getDoc(doc(db, 'system_settings', 'points')); globalPointValue = snap.exists() ? (snap.data().value || 500) : 500; if(!snap.exists()) await setDoc(doc(db, 'system_settings', 'points'), { value: 500, updatedAt: serverTimestamp() }); document.getElementById('pointValueInput').value = globalPointValue; } catch(e) { globalPointValue = 500; }
-  }
+  async function loadPointValue() { try { const snap = await getDoc(doc(db, 'system_settings', 'points')); globalPointValue = snap.exists() ? (snap.data().value || 500) : 500; if(!snap.exists()) await setDoc(doc(db, 'system_settings', 'points'), { value: 500, updatedAt: serverTimestamp() }); document.getElementById('pointValueInput').value = globalPointValue; } catch(e) { globalPointValue = 500; } }
 
   window.updatePointValue = async function() {
     const val = parseInt(document.getElementById('pointValueInput')?.value) || 500;
     if(val < 100) { showToast('Minimum ₦100', 'error'); return; }
-    try {
-      await setDoc(doc(db, 'system_settings', 'points'), { value: val, updatedBy: currentUser?.uid, updatedByName: userData?.fullName||'Admin', updatedAt: serverTimestamp() });
-      const staffSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['staff','attendant','attendant_chief'])));
-      const batch = writeBatch(db); staffSnap.forEach(d => batch.update(d.ref, { pointValueNaira: val })); await batch.commit();
-      globalPointValue = val; await logAudit('update_point_value', `Set to ₦${val}/5pts`); renderAll(); showToast(`Point value: ₦${val}/5pts`, 'success');
-    } catch(e) { showToast('Update failed', 'error'); }
+    try { await setDoc(doc(db, 'system_settings', 'points'), { value: val, updatedBy: currentUser?.uid, updatedByName: userData?.fullName||'Admin', updatedAt: serverTimestamp() }); const staffSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['staff','attendant','attendant_chief']))); const batch = writeBatch(db); staffSnap.forEach(d => batch.update(d.ref, { pointValueNaira: val })); await batch.commit(); globalPointValue = val; renderAll(); showToast(`Point value: ₦${val}/5pts`, 'success'); } catch(e) { showToast('Update failed', 'error'); }
   };
 
-  function getPointBonus(staff) { const points = staff.totalPoints || 0; const pv = staff.pointValueNaira || globalPointValue || 500; return points * (pv / 5); }
+  function getPointBonus(staff) { return (staff.totalPoints || 0) * ((staff.pointValueNaira || globalPointValue || 500) / 5); }
   function getFinalSalary(staff) { return (staff.baseSalary || 0) + getPointBonus(staff); }
+  function getTotalPayroll() { const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active'); let total = workers.reduce((s, u) => s + getFinalSalary(u), 0); if(includeAdminSalary) { const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role) && u.status === 'active'); total += admins.reduce((s, u) => s + (u.baseSalary || 0), 0); } return total; }
+  function getSalaryRows() { const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active'); const rows = workers.map(u => ({ name: u.fullName||'-', role: u.role||'staff', baseSalary: u.baseSalary||0, points: u.totalPoints||0, pointValue: u.pointValueNaira||globalPointValue||500, pointBonus: getPointBonus(u), finalSalary: getFinalSalary(u), isAdmin: false })); if(includeAdminSalary) { const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role) && u.status === 'active'); admins.forEach(u => rows.push({ name: u.fullName||'-', role: u.role||'admin', baseSalary: u.baseSalary||0, points: 0, pointValue: 0, pointBonus: 0, finalSalary: u.baseSalary||0, isAdmin: true })); } return rows.sort((a, b) => b.finalSalary - a.finalSalary); }
 
-  function getTotalPayroll() {
-    const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active');
-    let total = workers.reduce((s, u) => s + getFinalSalary(u), 0);
-    if(includeAdminSalary) { const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role) && u.status === 'active'); total += admins.reduce((s, u) => s + (u.baseSalary || 0), 0); }
-    return total;
+  // ========== DATE RANGE LOGIC ==========
+  function getDateRange() {
+    const now = new Date();
+    let start, end;
+    switch(selectedRange) {
+      case 'mtd': start = new Date(now.getFullYear(), now.getMonth(), 1); end = now; break;
+      case 'lastMonth': start = new Date(now.getFullYear(), now.getMonth() - 1, 1); end = new Date(now.getFullYear(), now.getMonth(), 0); break;
+      case 'qtd': const qStart = Math.floor(now.getMonth() / 3) * 3; start = new Date(now.getFullYear(), qStart, 1); end = now; break;
+      case 'ytd': start = new Date(now.getFullYear(), 0, 1); end = now; break;
+      case 'custom': start = customStartDate || new Date(now.getFullYear(), now.getMonth(), 1); end = customEndDate || now; break;
+      default: start = new Date(now.getFullYear(), now.getMonth(), 1); end = now;
+    }
+    return { start, end, prevStart: new Date(start.getFullYear(), start.getMonth() - 1, start.getDate()), prevEnd: new Date(start.getFullYear(), start.getMonth(), start.getDate() - 1) };
   }
 
-  function getSalaryRows() {
-    const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active');
-    const rows = workers.map(u => ({ name: u.fullName||'-', role: u.role||'staff', baseSalary: u.baseSalary||0, points: u.totalPoints||0, pointValue: u.pointValueNaira||globalPointValue||500, pointBonus: getPointBonus(u), finalSalary: getFinalSalary(u), isAdmin: false }));
-    if(includeAdminSalary) { const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role) && u.status === 'active'); admins.forEach(u => rows.push({ name: u.fullName||'-', role: u.role||'admin', baseSalary: u.baseSalary||0, points: 0, pointValue: 0, pointBonus: 0, finalSalary: u.baseSalary||0, isAdmin: true })); }
-    return rows.sort((a, b) => b.finalSalary - a.finalSalary);
+  function applyDateFilter() {
+    const { start, end } = getDateRange();
+    filteredSales = allSales.filter(s => { const d = s.createdAt?.toDate(); return d && d >= start && d <= end; });
+    filteredWholesale = allWholesaleSales.filter(s => { const d = s.createdAt?.toDate(); return d && d >= start && d <= end; });
+    filteredPurchases = allPurchases.filter(p => { const d = p.purchasedAt?.toDate(); return d && d >= start && d <= end; });
+    filteredStorePurchases = allStorePurchases.filter(p => { const d = p.date?.toDate(); return d && d >= start && d <= end; });
+    filteredMisc = allMiscExpenses.filter(e => { const d = e.approvedAt?.toDate() || e.createdAt?.toDate(); return d && d >= start && d <= end; });
+    filteredReturns = allReturns.filter(r => { const d = r.createdAt?.toDate(); return d && d >= start && d <= end; });
   }
+
+  window.applyCustomRange = function() {
+    const startEl = document.getElementById('customStart'), endEl = document.getElementById('customEnd');
+    if (startEl.value && endEl.value) {
+      customStartDate = new Date(startEl.value); customEndDate = new Date(endEl.value);
+      selectedRange = 'custom';
+      document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-range="custom"]').classList.add('active');
+      applyDateFilter(); renderAll();
+    }
+  };
+
+  document.querySelectorAll('.date-filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      selectedRange = this.dataset.range;
+      const customStart = document.getElementById('customStart'), customEnd = document.getElementById('customEnd');
+      if (selectedRange === 'custom') { customStart.style.display = 'inline-block'; customEnd.style.display = 'inline-block'; }
+      else { customStart.style.display = 'none'; customEnd.style.display = 'none'; applyDateFilter(); renderAll(); }
+    });
+  });
 
   function loadAllData() {
     cleanup();
-    unsubscribes.push(onSnapshot(collection(db, 'users'), (snap) => { allUsers = snap.docs.map(d=>({uid:d.id,...d.data()})); renderAll(); }));
-    unsubscribes.push(onSnapshot(collection(db, 'sales'), (snap) => { allSales = snap.docs.map(d=>({id:d.id,...d.data()})); renderAll(); }));
-    unsubscribes.push(onSnapshot(collection(db, 'purchase_requests'), (snap) => { allPurchases = snap.docs.map(d=>({id:d.id,...d.data()})); renderAll(); }));
-    unsubscribes.push(onSnapshot(query(collection(db, 'misc_expenses'), orderBy('createdAt','desc')), (snap) => { allMiscExpenses = snap.docs.map(d=>({id:d.id,...d.data()})); renderAll(); }));
-    unsubscribes.push(onSnapshot(collection(db, 'returns'), (snap) => { allReturns = snap.docs.map(d=>({id:d.id,...d.data()})); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'users'), (snap) => { allUsers = snap.docs.map(d=>({uid:d.id,...d.data()})); applyDateFilter(); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'sales'), (snap) => { allSales = snap.docs.map(d=>({id:d.id,...d.data()})); applyDateFilter(); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'purchase_requests'), (snap) => { allPurchases = snap.docs.map(d=>({id:d.id,...d.data()})); applyDateFilter(); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'store_purchases'), (snap) => { allStorePurchases = snap.docs.map(d=>({id:d.id,...d.data()})); applyDateFilter(); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'wholesale_sales'), (snap) => { allWholesaleSales = snap.docs.map(d=>({id:d.id,...d.data()})); applyDateFilter(); renderAll(); }));
+    unsubscribes.push(onSnapshot(query(collection(db, 'misc_expenses'), orderBy('createdAt','desc')), (snap) => { allMiscExpenses = snap.docs.map(d=>({id:d.id,...d.data()})); applyDateFilter(); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'returns'), (snap) => { allReturns = snap.docs.map(d=>({id:d.id,...d.data()})); applyDateFilter(); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'stock_items'), (snap) => { allStockItems = snap.docs.map(d=>({id:d.id,...d.data()})); renderAll(); }));
   }
 
   function renderAll() {
-    loadPointValue().then(() => { updateToggleUI(); renderStats(); renderCharts(); renderSalaryTable(); renderPurchasesTable(); renderMiscTable(); renderMonthlyComparison(); });
+    loadPointValue().then(() => { updateToggleUI(); renderStats(); renderRatios(); renderCashFlow(); renderPLStatement(); renderCharts(); renderRevenueBreakdown(); renderTopItems(); renderSalaryTable(); renderPurchasesTable(); renderMiscTable(); renderMonthlyComparison(); });
   }
 
-  function getMonthlyData() {
-    const now = new Date(); const thisMonth = now.getMonth(), thisYear = now.getFullYear();
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const monthlyData = {};
-
-    allSales.forEach(s => {
-      if(s.status === 'returned') return;
-      const date = s.createdAt?.toDate(); if(!date) return;
-      const key = `${date.getFullYear()}-${date.getMonth()}`;
-      if(!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0, misc: 0, refunds: 0 };
-      monthlyData[key].revenue += s.totalAmount || 0;
-    });
-
-    allReturns.forEach(r => {
-      if(r.returnAction !== 'refund') return;
-      const date = r.createdAt?.toDate(); if(!date) return;
-      const key = `${date.getFullYear()}-${date.getMonth()}`;
-      if(!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0, misc: 0, refunds: 0 };
-      monthlyData[key].revenue -= r.totalRefund || 0;
-      monthlyData[key].refunds += r.totalRefund || 0;
-    });
-
-    allPurchases.forEach(p => {
-      if(p.status !== 'purchased') return;
-      const date = p.purchasedAt?.toDate(); if(!date) return;
-      const key = `${date.getFullYear()}-${date.getMonth()}`;
-      if(!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0, misc: 0, refunds: 0 };
-      monthlyData[key].purchases += p.receivedItems?.reduce((s,i)=>s+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0;
-    });
-
-    allMiscExpenses.forEach(e => {
-      if(e.status !== 'approved') return;
-      const date = e.approvedAt?.toDate() || e.createdAt?.toDate(); if(!date) return;
-      const key = `${date.getFullYear()}-${date.getMonth()}`;
-      if(!monthlyData[key]) monthlyData[key] = { revenue: 0, purchases: 0, salaries: 0, misc: 0, refunds: 0 };
-      monthlyData[key].misc += e.amount || 0;
-    });
-
+  function getFilteredData() {
     const totalPayroll = getTotalPayroll();
-    Object.keys(monthlyData).forEach(k => { monthlyData[k].salaries = totalPayroll; });
-
-    return { monthlyData, totalPayroll, thisMonth, thisYear, months };
+    let revenue = 0, wholesale = 0, purchases = 0, storePurchases = 0, misc = 0, refunds = 0, retailRevenue = 0;
+    filteredSales.forEach(s => { if(s.status !== 'returned') { const amt = s.totalAmount||0; revenue += amt; retailRevenue += amt; } });
+    filteredWholesale.forEach(s => { const amt = s.totalAmount||0; wholesale += amt; revenue += amt; });
+    filteredReturns.forEach(r => { if(r.returnAction === 'refund') { const amt = r.totalRefund||0; revenue -= amt; retailRevenue -= amt; } });
+    filteredPurchases.forEach(p => { if(p.status === 'purchased') purchases += p.receivedItems?.reduce((s,i)=>s+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0; });
+    filteredStorePurchases.forEach(p => { storePurchases += p.totalCost || 0; });
+    filteredMisc.forEach(e => { if(e.status === 'approved') misc += e.amount || 0; });
+    return { revenue, wholesale, purchases, storePurchases, misc, refunds, retailRevenue, totalPayroll };
   }
 
   function renderStats() {
-    const { monthlyData, totalPayroll, thisMonth, thisYear } = getMonthlyData();
-    const thisKey = `${thisYear}-${thisMonth}`;
-    const lastKey = thisMonth === 0 ? `${thisYear-1}-11` : `${thisYear}-${thisMonth-1}`;
-    const current = monthlyData[thisKey] || { revenue: 0, purchases: 0, salaries: totalPayroll, misc: 0, refunds: 0 };
-    const last = monthlyData[lastKey] || { revenue: 0, purchases: 0, salaries: totalPayroll, misc: 0, refunds: 0 };
+    const d = getFilteredData();
+    const expenses = d.purchases + d.storePurchases + d.totalPayroll + d.misc;
+    const profit = d.revenue - expenses;
 
-    const revenueMTD = current.revenue;
-    const expensesMTD = current.purchases + current.salaries + current.misc;
-    const netProfit = revenueMTD - expensesMTD;
-    const lastRevenue = last.revenue;
-    const lastExpenses = last.purchases + last.salaries + last.misc;
-    const lastProfit = lastRevenue - lastExpenses;
+    // Compare with previous period
+    const { prevStart, prevEnd } = getDateRange();
+    let prevRevenue = 0, prevExpenses = 0;
+    allSales.forEach(s => { if(s.status!=='returned'){const dt=s.createdAt?.toDate();if(dt&&dt>=prevStart&&dt<=prevEnd)prevRevenue+=s.totalAmount||0;} });
+    allWholesaleSales.forEach(s => { const dt=s.createdAt?.toDate();if(dt&&dt>=prevStart&&dt<=prevEnd)prevRevenue+=s.totalAmount||0; });
+    const prevPurchases = allPurchases.filter(p=>p.status==='purchased').reduce((s,p)=>{const dt=p.purchasedAt?.toDate();if(dt&&dt>=prevStart&&dt<=prevEnd)return s+(p.receivedItems?.reduce((si,i)=>si+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0);return s;},0);
+    const prevStore = allStorePurchases.filter(p=>{const dt=p.date?.toDate();return dt&&dt>=prevStart&&dt<=prevEnd;}).reduce((s,p)=>s+(p.totalCost||0),0);
+    const prevMisc = allMiscExpenses.filter(e=>e.status==='approved').filter(e=>{const dt=e.approvedAt?.toDate()||e.createdAt?.toDate();return dt&&dt>=prevStart&&dt<=prevEnd;}).reduce((s,e)=>s+(e.amount||0),0);
+    prevExpenses = prevPurchases + prevStore + d.totalPayroll + prevMisc;
+    const prevProfit = prevRevenue - prevExpenses;
 
-    const pendingMisc = allMiscExpenses.filter(e => e.status === 'pending_approval').reduce((s,e)=>s+(e.amount||0),0);
+    document.getElementById('revenueMTD').textContent = formatCurrency(d.revenue);
+    document.getElementById('expensesMTD').textContent = formatCurrency(expenses);
+    document.getElementById('netProfit').textContent = formatCurrency(profit);
+    document.getElementById('totalPayroll').textContent = formatCurrency(d.totalPayroll);
+    document.getElementById('pendingExpenses').textContent = formatCurrency(allMiscExpenses.filter(e=>e.status==='pending_approval').reduce((s,e)=>s+(e.amount||0),0));
 
-    document.getElementById('revenueMTD').textContent = formatCurrency(revenueMTD);
-    document.getElementById('expensesMTD').textContent = formatCurrency(expensesMTD);
-    document.getElementById('netProfit').textContent = formatCurrency(netProfit);
-    document.getElementById('totalPayroll').textContent = formatCurrency(totalPayroll);
-    document.getElementById('pendingExpenses').textContent = formatCurrency(pendingMisc);
+    const revPct = prevRevenue ? ((d.revenue - prevRevenue) / prevRevenue * 100).toFixed(1) : 0;
+    const expPct = prevExpenses ? ((expenses - prevExpenses) / prevExpenses * 100).toFixed(1) : 0;
+    const profPct = prevProfit ? ((profit - prevProfit) / Math.abs(prevProfit) * 100).toFixed(1) : 0;
+    document.getElementById('revenueChange').innerHTML = `<span class="${revPct>=0?'positive':'negative'}"><i class="fas fa-arrow-${revPct>=0?'up':'down'}"></i> ${Math.abs(revPct)}%</span> vs previous`;
+    document.getElementById('expensesChange').innerHTML = `<span class="${expPct<=0?'positive':'negative'}"><i class="fas fa-arrow-${expPct<=0?'down':'up'}"></i> ${Math.abs(expPct)}%</span> vs previous`;
+    document.getElementById('profitChange').innerHTML = `<span class="${profPct>=0?'positive':'negative'}"><i class="fas fa-arrow-${profPct>=0?'up':'down'}"></i> ${Math.abs(profPct)}%</span> vs previous`;
 
-    let cashSales=0, posSales=0, walkinSales=0, onlineSales=0;
-    allSales.forEach(s => {
-      if(s.status==='returned') return;
-      const date = s.createdAt?.toDate(); if(!date || date.getMonth()!==thisMonth || date.getFullYear()!==thisYear) return;
-      const amt = s.totalAmount||0;
-      if(s.source==='online') onlineSales+=amt; else if(s.paymentMethod==='cash') cashSales+=amt; else posSales+=amt;
-      if(!s.customerId && s.source!=='online') walkinSales+=amt;
-    });
-    document.getElementById('cashSales').textContent = formatCurrency(cashSales);
-    document.getElementById('posSales').textContent = formatCurrency(posSales);
-    document.getElementById('walkinSales').textContent = formatCurrency(walkinSales);
-    document.getElementById('onlineSales').textContent = formatCurrency(onlineSales);
+    const warningDiv = document.getElementById('financialWarning'), warningMsg = document.getElementById('warningMessage');
+    if(expenses > d.revenue) { warningDiv.className = 'financial-warning'; warningMsg.textContent = `⚠️ Expenses (${formatCurrency(expenses)}) exceed Revenue (${formatCurrency(d.revenue)}) by ${formatCurrency(expenses - d.revenue)}.`; }
+    else { warningDiv.className = 'financial-warning healthy'; const margin = d.revenue > 0 ? ((profit / d.revenue) * 100).toFixed(1) : 0; warningMsg.textContent = `✅ Finances are healthy! Profit margin: ${margin}%.`; }
+  }
 
-    const revPct = lastRevenue ? ((revenueMTD - lastRevenue) / lastRevenue * 100).toFixed(1) : 0;
-    const expPct = lastExpenses ? ((expensesMTD - lastExpenses) / lastExpenses * 100).toFixed(1) : 0;
-    const profPct = lastProfit ? ((netProfit - lastProfit) / Math.abs(lastProfit) * 100).toFixed(1) : 0;
+  function renderRatios() {
+    const d = getFilteredData();
+    const expenses = d.purchases + d.storePurchases + d.totalPayroll + d.misc;
+    const profit = d.revenue - expenses;
+    const profitMargin = d.revenue > 0 ? ((profit / d.revenue) * 100).toFixed(1) : 0;
+    const expenseRatio = d.revenue > 0 ? ((expenses / d.revenue) * 100).toFixed(1) : 0;
+    const activeStaff = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active').length;
+    const revPerEmployee = activeStaff > 0 ? Math.round(d.revenue / activeStaff) : 0;
+    const totalInventory = allStockItems.reduce((s,i) => s + (i.quantityAvailable||0) * (i.unitPrice||0), 0);
+    const cogs = d.purchases + d.storePurchases;
+    const invTurnover = totalInventory > 0 ? (cogs / totalInventory).toFixed(1) : 0;
 
-    document.getElementById('revenueChange').innerHTML = `<span class="${revPct>=0?'positive':'negative'}"><i class="fas fa-arrow-${revPct>=0?'up':'down'}"></i> ${Math.abs(revPct)}%</span> vs last month`;
-    document.getElementById('expensesChange').innerHTML = `<span class="${expPct<=0?'positive':'negative'}"><i class="fas fa-arrow-${expPct<=0?'down':'up'}"></i> ${Math.abs(expPct)}%</span> vs last month`;
-    document.getElementById('profitChange').innerHTML = `<span class="${profPct>=0?'positive':'negative'}"><i class="fas fa-arrow-${profPct>=0?'up':'down'}"></i> ${Math.abs(profPct)}%</span> vs last month`;
+    document.getElementById('profitMargin').textContent = profitMargin + '%';
+    document.getElementById('expenseRatio').textContent = expenseRatio + '%';
+    document.getElementById('revPerEmployee').textContent = formatCurrency(revPerEmployee);
+    document.getElementById('inventoryTurnover').textContent = invTurnover + 'x';
+  }
 
-    const warningDiv = document.getElementById('financialWarning');
-    const warningMsg = document.getElementById('warningMessage');
-    if(expensesMTD > revenueMTD) {
-      warningDiv.className = 'financial-warning';
-      warningMsg.textContent = `⚠️ Expenses (${formatCurrency(expensesMTD)}) exceed Revenue (${formatCurrency(revenueMTD)}) by ${formatCurrency(expensesMTD - revenueMTD)}. Review spending immediately.`;
-    } else {
-      warningDiv.className = 'financial-warning healthy';
-      const margin = revenueMTD > 0 ? ((netProfit / revenueMTD) * 100).toFixed(1) : 0;
-      warningMsg.textContent = `✅ Finances are healthy! Profit margin: ${margin}%. Revenue exceeds expenses by ${formatCurrency(netProfit)}.`;
-    }
+  function renderCashFlow() {
+    const d = getFilteredData();
+    const cashIn = d.revenue;
+    const cashOut = d.purchases + d.storePurchases + d.totalPayroll + d.misc;
+    const netCash = cashIn - cashOut;
+    document.getElementById('cashIn').textContent = formatCurrency(cashIn);
+    document.getElementById('cashOut').textContent = formatCurrency(cashOut);
+    document.getElementById('netCash').textContent = formatCurrency(netCash);
+    document.getElementById('netCash').style.color = netCash >= 0 ? 'var(--success)' : 'var(--danger)';
+  }
+
+  function renderPLStatement() {
+    const d = getFilteredData();
+    const totalCOGS = d.purchases + d.storePurchases;
+    const grossProfit = d.revenue - totalCOGS;
+    const totalOpEx = d.totalPayroll + d.misc;
+    const netProfit = grossProfit - totalOpEx;
+
+    document.getElementById('plRetailSales').textContent = formatCurrency(d.retailRevenue);
+    document.getElementById('plWholesaleSales').textContent = formatCurrency(d.wholesale);
+    document.getElementById('plTotalRevenue').textContent = formatCurrency(d.revenue);
+    document.getElementById('plInvPurchases').textContent = formatCurrency(d.purchases);
+    document.getElementById('plStorePurchases').textContent = formatCurrency(d.storePurchases);
+    document.getElementById('plTotalCOGS').textContent = formatCurrency(totalCOGS);
+    document.getElementById('plGrossProfit').textContent = formatCurrency(grossProfit);
+    document.getElementById('plSalaries').textContent = formatCurrency(d.totalPayroll);
+    document.getElementById('plMisc').textContent = formatCurrency(d.misc);
+    document.getElementById('plTotalOpEx').textContent = formatCurrency(totalOpEx);
+    document.getElementById('plNetProfit').textContent = formatCurrency(netProfit);
+    document.getElementById('plNetProfit').style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
   }
 
   function renderCharts() {
-    const { monthlyData, months } = getMonthlyData();
-    const sorted = Object.entries(monthlyData).sort((a,b) => a[0].localeCompare(b[0])).slice(-6);
-
+    const d = getFilteredData();
     if(barChart) barChart.destroy();
     const barCtx = document.getElementById('barChart')?.getContext('2d');
-    if(barCtx) {
-      barChart = new Chart(barCtx, {
-        type: 'bar',
-        data: {
-          labels: sorted.map(([k]) => months[parseInt(k.split('-')[1])] + ' ' + k.split('-')[0]),
-          datasets: [
-            { label: 'Revenue', data: sorted.map(([,d]) => d.revenue), backgroundColor: '#10b981', borderRadius: 8 },
-            { label: 'Expenses', data: sorted.map(([,d]) => d.purchases + d.salaries + d.misc), backgroundColor: '#ef4444', borderRadius: 8 }
-          ]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-      });
-    }
-
-    const now = new Date();
-    const thisKey = `${now.getFullYear()}-${now.getMonth()}`;
-    const current = monthlyData[thisKey] || { purchases: 0, salaries: 0, misc: 0 };
+    if(barCtx) { barChart = new Chart(barCtx, { type: 'bar', data: { labels: ['Current Period'], datasets: [{ label: 'Revenue', data: [d.revenue], backgroundColor: '#10b981', borderRadius: 8 },{ label: 'Expenses', data: [d.purchases + d.storePurchases + d.totalPayroll + d.misc], backgroundColor: '#ef4444', borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } }); }
 
     if(pieChart) pieChart.destroy();
     const pieCtx = document.getElementById('pieChart')?.getContext('2d');
-    if(pieCtx) {
-      pieChart = new Chart(pieCtx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Stock Purchases', 'Staff Salaries', 'Misc Expenses'],
-          datasets: [{ data: [current.purchases, current.salaries, current.misc], backgroundColor: ['#f59e0b', '#3b82f6', '#8b5cf6'] }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-      });
-    }
+    if(pieCtx) { pieChart = new Chart(pieCtx, { type: 'doughnut', data: { labels: ['Inv. Purchases', 'Store Purchases', 'Salaries', 'Misc'], datasets: [{ data: [d.purchases, d.storePurchases, d.totalPayroll, d.misc], backgroundColor: ['#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } }); }
+  }
+
+  function renderRevenueBreakdown() {
+    let cashSales=0, posSales=0, walkinSales=0, onlineSales=0;
+    filteredSales.forEach(s => { if(s.status==='returned')return; const amt=s.totalAmount||0; if(s.source==='online')onlineSales+=amt; else if(s.paymentMethod==='cash')cashSales+=amt; else posSales+=amt; if(!s.customerId&&s.source!=='online')walkinSales+=amt; });
+    document.getElementById('cashSales').textContent=formatCurrency(cashSales);
+    document.getElementById('posSales').textContent=formatCurrency(posSales);
+    document.getElementById('wholesaleRev').textContent=formatCurrency(filteredWholesale.reduce((s,w)=>s+(w.totalAmount||0),0));
+    document.getElementById('walkinSales').textContent=formatCurrency(walkinSales);
+    document.getElementById('onlineSales').textContent=formatCurrency(onlineSales);
+  }
+
+  function renderTopItems() {
+    const itemMap = {};
+    filteredSales.forEach(s => { if(s.status==='returned'||!s.items)return; s.items.forEach(i => { const key=i.id||i.name; if(!itemMap[key]) itemMap[key]={name:i.name,qty:0,revenue:0}; itemMap[key].qty+=i.quantity||0; itemMap[key].revenue+=(i.quantity||0)*(i.unitPrice||0); }); });
+    const sorted = Object.values(itemMap).sort((a,b)=>b.revenue-a.revenue).slice(0,10);
+    const totalRev = sorted.reduce((s,i)=>s+i.revenue,0);
+    const tbody = document.getElementById('topItemsTable');
+    if(!sorted.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><i class="fas fa-trophy"></i><p>No sales data for this period</p></div></td></tr>';return;}
+    tbody.innerHTML = sorted.map((item,i) => `<tr><td>#${i+1}</td><td><strong>${item.name}</strong></td><td>${item.qty}</td><td>${formatCurrency(item.revenue)}</td><td>${totalRev>0?((item.revenue/totalRev)*100).toFixed(1):0}%</td></tr>`).join('');
   }
 
   function renderSalaryTable() {
-    const rows = getSalaryRows();
-    document.getElementById('salaryCount').textContent = rows.length;
-    const tbody = document.getElementById('salaryTable'); if(!tbody) return;
-    if(rows.length===0){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No staff found</p></div></td></tr>';return;}
-    tbody.innerHTML = rows.map(r => {
-      const roleBadge = r.isAdmin ? '<span class="badge badge-purple">'+(r.role==='super_admin'?'Super Admin':'Admin')+'</span>' : '<span class="badge badge-info">'+r.role+'</span>';
-      const pointsCol = r.isAdmin ? '<span style="color:var(--gray);">-</span>' : r.points;
-      const pvCol = r.isAdmin ? '<span style="color:var(--gray);">-</span>' : '₦'+r.pointValue+'/5pts';
-      const bonusCol = r.isAdmin ? '<span style="color:var(--gray);">-</span>' : `<span class="${r.pointBonus>=0?'text-positive':'text-negative'}">${r.pointBonus>=0?'+':''}${formatCurrency(r.pointBonus)}</span>`;
-      return `<tr><td><strong>${r.name}</strong>${r.isAdmin?' <i class="fas fa-crown" style="color:#f59e0b;font-size:0.7rem;"></i>':''}</td><td>${roleBadge}</td><td>${formatCurrency(r.baseSalary)}</td><td>${pointsCol}</td><td>${pvCol}</td><td>${bonusCol}</td><td><strong>${formatCurrency(r.finalSalary)}</strong></td></tr>`;
-    }).join('');
+    const rows = getSalaryRows(); document.getElementById('salaryCount').textContent=rows.length;
+    const tbody=document.getElementById('salaryTable'); if(!tbody)return;
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No staff found</p></div></td></tr>';return;}
+    tbody.innerHTML=rows.map(r=>`<tr><td><strong>${r.name}</strong>${r.isAdmin?' <i class="fas fa-crown" style="color:#f59e0b;"></i>':''}</td><td>${r.isAdmin?'<span class="badge badge-purple">'+r.role+'</span>':'<span class="badge badge-info">'+r.role+'</span>'}</td><td>${formatCurrency(r.baseSalary)}</td><td>${r.isAdmin?'-':r.points}</td><td>${r.isAdmin?'-':'₦'+r.pointValue+'/5pts'}</td><td>${r.isAdmin?'-':`<span class="${r.pointBonus>=0?'text-positive':'text-negative'}">${r.pointBonus>=0?'+':''}${formatCurrency(r.pointBonus)}</span>`}</td><td><strong>${formatCurrency(r.finalSalary)}</strong></td></tr>`).join('');
   }
 
   function renderPurchasesTable() {
-    const completed = allPurchases.filter(p => p.status === 'purchased');
-    document.getElementById('purchasesCount').textContent = completed.length;
-    const tbody = document.getElementById('purchasesTable'); if(!tbody) return;
-    if(completed.length===0){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><i class="fas fa-shopping-cart"></i><p>No completed purchases</p></div></td></tr>';return;}
-    completed.sort((a,b)=>(b.purchasedAt?.seconds||0)-(a.purchasedAt?.seconds||0));
-    tbody.innerHTML = completed.slice(0,20).map(p => { const total = p.receivedItems?.reduce((s,i)=>s+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0; return `<tr><td>${formatDate(p.purchasedAt)}</td><td>${p.items?.length||0} items</td><td>${p.supplier||'-'}</td><td>${formatCurrency(total)}</td><td><span class="badge badge-success">Completed</span></td></tr>`; }).join('');
+    const invCompleted=filteredPurchases.filter(p=>p.status==='purchased');
+    const storeCompleted=filteredStorePurchases;
+    const allEntries=[...invCompleted.map(p=>({date:p.purchasedAt,type:'Inventory',items:p.items?.length||0,supplier:p.supplier||'-',total:p.receivedItems?.reduce((s,i)=>s+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0,status:'Purchased'})),...storeCompleted.map(p=>({date:p.date,type:'Store',items:p.items?.length||0,supplier:p.supplier||'-',total:p.totalCost||0,status:'Completed'}))];
+    allEntries.sort((a,b)=>(b.date?.seconds||0)-(a.date?.seconds||0));
+    document.getElementById('purchasesCount').textContent=allEntries.length;
+    const tbody=document.getElementById('purchasesTable'); if(!tbody)return;
+    if(!allEntries.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="fas fa-shopping-cart"></i><p>No purchases</p></div></td></tr>';return;}
+    tbody.innerHTML=allEntries.slice(0,30).map(p=>`<tr><td>${formatDate(p.date)}</td><td>${p.type==='Store'?'<span class="badge badge-purple">Store</span>':'<span class="badge badge-info">Inventory</span>'}</td><td>${p.items} items</td><td>${p.supplier}</td><td>${formatCurrency(p.total)}</td><td><span class="badge badge-success">${p.status}</span></td></tr>`).join('');
   }
 
   function renderMiscTable() {
-    document.getElementById('miscCount').textContent = allMiscExpenses.length;
-    const tbody = document.getElementById('miscTable'); if(!tbody) return;
-    if(allMiscExpenses.length===0){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state"><i class="fas fa-receipt"></i><p>No expenses yet. Click "Add Expense" to record one.</p></div></td></tr>';return;}
-    tbody.innerHTML = allMiscExpenses.map(e => {
-      const statusBadge = e.status==='approved'?'<span class="badge badge-success">Approved</span>':e.status==='rejected'?'<span class="badge badge-danger">Rejected</span>':'<span class="badge badge-warning">Pending</span>';
-      const actions = e.status==='pending_approval'?`<div style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="approveExpense('${e.id}')"><i class="fas fa-check"></i></button><button class="btn btn-sm btn-danger" onclick="rejectExpense('${e.id}')"><i class="fas fa-times"></i></button></div>`:'-';
-      return `<tr><td>${formatDate(e.createdAt)}</td><td><strong>${e.name||'-'}</strong></td><td><span class="badge badge-purple">${e.category||'General'}</span></td><td>${formatCurrency(e.amount)}</td><td>${e.issuedByName||'-'}</td><td>${e.boughtByName||'-'}</td><td>${statusBadge}</td><td>${actions}</td></tr>`;
-    }).join('');
+    document.getElementById('miscCount').textContent=filteredMisc.length;
+    const tbody=document.getElementById('miscTable'); if(!tbody)return;
+    if(!filteredMisc.length){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state"><i class="fas fa-receipt"></i><p>No expenses</p></div></td></tr>';return;}
+    tbody.innerHTML=filteredMisc.map(e=>`<tr><td>${formatDate(e.createdAt)}</td><td><strong>${e.name||'-'}</strong></td><td><span class="badge badge-purple">${e.category||'General'}</span></td><td>${formatCurrency(e.amount)}</td><td>${e.issuedByName||'-'}</td><td>${e.boughtByName||'-'}</td><td>${e.status==='approved'?'<span class="badge badge-success">Approved</span>':e.status==='rejected'?'<span class="badge badge-danger">Rejected</span>':'<span class="badge badge-warning">Pending</span>'}</td><td>${e.status==='pending_approval'?`<div style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="approveExpense('${e.id}')"><i class="fas fa-check"></i></button><button class="btn btn-sm btn-danger" onclick="rejectExpense('${e.id}')"><i class="fas fa-times"></i></button></div>`:'-'}</td></tr>`).join('');
   }
 
   function renderMonthlyComparison() {
-    const { monthlyData, months } = getMonthlyData();
-    const tbody = document.getElementById('monthlyTable'); if(!tbody) return;
-    const sorted = Object.entries(monthlyData).sort((a,b) => b[0].localeCompare(a[0])).slice(0,12);
-    if(sorted.length===0){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state"><i class="fas fa-calendar-alt"></i><p>No data yet</p></div></td></tr>';return;}
-    let prevProfit = 0;
-    tbody.innerHTML = sorted.map(([key, data], i) => {
-      const [y, m] = key.split('-'); const totalExp = data.purchases + data.salaries + data.misc;
-      const profit = data.revenue - totalExp;
-      const change = i>0 ? ((profit - prevProfit) / (Math.abs(prevProfit)||1) * 100).toFixed(1) : '-';
-      const cls = change>0?'badge-success':change<0?'badge-danger':'badge-warning'; prevProfit = profit;
-      return `<tr><td><strong>${months[parseInt(m)]} ${y}</strong></td><td>${formatCurrency(data.revenue)}</td><td>${formatCurrency(data.purchases)}</td><td>${formatCurrency(data.salaries)}</td><td>${formatCurrency(data.misc)}</td><td>${formatCurrency(totalExp)}</td><td><strong>${formatCurrency(profit)}</strong></td><td><span class="badge ${cls}">${change>0?'+':''}${change}%</span></td></tr>`;
-    }).join('');
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const monthlyData={};
+    allSales.forEach(s=>{if(s.status==='returned')return;const d=s.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].revenue+=s.totalAmount||0;});
+    allWholesaleSales.forEach(s=>{const d=s.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].wholesale+=s.totalAmount||0;monthlyData[k].revenue+=s.totalAmount||0;});
+    allPurchases.forEach(p=>{if(p.status!=='purchased')return;const d=p.purchasedAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].purchases+=p.receivedItems?.reduce((s,i)=>s+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0;});
+    allStorePurchases.forEach(p=>{const d=p.date?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].storePurchases+=p.totalCost||0;});
+    allMiscExpenses.forEach(e=>{if(e.status!=='approved')return;const d=e.approvedAt?.toDate()||e.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].misc+=e.amount||0;});
+    const tp=getTotalPayroll(); Object.keys(monthlyData).forEach(k=>{monthlyData[k].salaries=tp;});
+    const sorted=Object.entries(monthlyData).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,12);
+    const tbody=document.getElementById('monthlyTable'); if(!tbody)return;
+    if(!sorted.length){tbody.innerHTML='<tr><td colspan="10"><div class="empty-state"><i class="fas fa-calendar-alt"></i><p>No data yet</p></div></td></tr>';return;}
+    let prevProfit=0;
+    tbody.innerHTML=sorted.map(([key,data],i)=>{const[y,m]=key.split('-');const te=data.purchases+data.storePurchases+data.salaries+data.misc;const pr=data.revenue-te;const ch=i>0?((pr-prevProfit)/(Math.abs(prevProfit)||1)*100).toFixed(1):'-';const cls=ch>0?'badge-success':ch<0?'badge-danger':'badge-warning';prevProfit=pr;return`<tr><td><strong>${months[parseInt(m)]} ${y}</strong></td><td>${formatCurrency(data.revenue)}</td><td>${formatCurrency(data.wholesale||0)}</td><td>${formatCurrency(data.purchases)}</td><td>${formatCurrency(data.storePurchases||0)}</td><td>${formatCurrency(data.salaries)}</td><td>${formatCurrency(data.misc)}</td><td>${formatCurrency(te)}</td><td><strong>${formatCurrency(pr)}</strong></td><td><span class="badge ${cls}">${ch>0?'+':''}${ch}%</span></td></tr>`;}).join('');
   }
 
-  window.openAddExpenseModal = function() {
-    showModal('Add Miscellaneous Expense', `<div class="form-row"><div class="form-group"><label>Expense Name *</label><input class="form-control" id="expName" placeholder="e.g., Generator Fuel"></div><div class="form-group"><label>Category</label><select class="form-control" id="expCategory"><option value="Fuel">Fuel</option><option value="Transport">Transport</option><option value="Maintenance">Maintenance</option><option value="Utilities">Utilities</option><option value="Supplies">Office Supplies</option><option value="Miscellaneous">Miscellaneous</option></select></div></div><div class="form-row"><div class="form-group"><label>Amount (₦) *</label><input type="number" class="form-control" id="expAmount" placeholder="0" min="1"></div><div class="form-group"><label>Date</label><input type="date" class="form-control" id="expDate"></div></div><div class="form-row"><div class="form-group"><label>Money Issued By *</label><input class="form-control" id="expIssuedBy" placeholder="e.g., Admin Name"></div><div class="form-group"><label>Item Bought By *</label><input class="form-control" id="expBoughtBy" placeholder="e.g., Staff Name"></div></div><div class="form-group"><label>Notes</label><textarea class="form-control" id="expNotes" rows="2" placeholder="Optional details..."></textarea></div><div style="display:flex;gap:10px;margin-top:10px;"><button class="btn btn-primary" onclick="submitExpense()"><i class="fas fa-paper-plane"></i> Submit for Approval</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
-    document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
-  };
+  // ========== EXPORT FUNCTIONS ==========
+  window.exportFullReport = function(format) { const d=getFilteredData(); const rows=[['Revenue',d.revenue],['Expenses',d.purchases+d.storePurchases+d.totalPayroll+d.misc],['Profit',d.revenue-(d.purchases+d.storePurchases+d.totalPayroll+d.misc)],['Inventory Purchases',d.purchases],['Store Purchases',d.storePurchases],['Salaries',d.totalPayroll],['Misc Expenses',d.misc]]; const csv=rows.map(r=>r.join(',')).join('\n'); const b=new Blob([csv],{type:format==='csv'?'text/csv':'application/vnd.ms-excel'}); const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`finance_report_${new Date().toISOString().split('T')[0]}.${format}`;a.click(); showToast('Exported','success'); };
+  window.exportPLStatement = function() { const d=getFilteredData(); const rows=[['Section','Amount'],['Retail Sales',d.retailRevenue],['Wholesale Sales',d.wholesale],['Total Revenue',d.revenue],['Inventory Purchases',d.purchases],['Store Purchases',d.storePurchases],['Total COGS',d.purchases+d.storePurchases],['Gross Profit',d.revenue-(d.purchases+d.storePurchases)],['Salaries',d.totalPayroll],['Misc Expenses',d.misc],['Total OpEx',d.totalPayroll+d.misc],['Net Profit',d.revenue-(d.purchases+d.storePurchases+d.totalPayroll+d.misc)]]; const csv=rows.map(r=>r.join(',')).join('\n'); const b=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`pl_statement_${new Date().toISOString().split('T')[0]}.csv`;a.click(); showToast('Exported','success'); };
+  window.exportExpenseReport = function() { const rows=[['Date','Name','Category','Amount','Status']]; filteredMisc.forEach(e=>rows.push([formatDate(e.createdAt),e.name||'',e.category||'',e.amount||0,e.status||''])); const csv=rows.map(r=>r.join(',')).join('\n'); const b=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`expense_report_${new Date().toISOString().split('T')[0]}.csv`;a.click(); showToast('Exported','success'); };
+  window.exportSalaries = function(format) { const rows=getSalaryRows(); const h='Name,Role,Base Salary,Points,Point Value,Points Bonus,Final Salary'; const csv=[h,...rows.map(r=>`"${r.name}","${r.role}","${r.baseSalary}","${r.points}","₦${r.pointValue}/5pts","${r.pointBonus>=0?'+':''}${r.pointBonus}","${r.finalSalary}"`)].join('\n'); const b=new Blob([csv],{type:format==='csv'?'text/csv':'application/vnd.ms-excel'}); const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`salaries_${new Date().toISOString().split('T')[0]}.${format}`;a.click(); showToast('Exported','success'); };
 
-  window.submitExpense = async function() {
-    const name = document.getElementById('expName')?.value?.trim(); const amount = parseFloat(document.getElementById('expAmount')?.value);
-    const issuedBy = document.getElementById('expIssuedBy')?.value?.trim(); const boughtBy = document.getElementById('expBoughtBy')?.value?.trim();
-    const category = document.getElementById('expCategory')?.value; const notes = document.getElementById('expNotes')?.value?.trim(); const dateStr = document.getElementById('expDate')?.value;
-    if(!name||!amount||!issuedBy||!boughtBy){showToast('Name, amount, issued by & bought by required','error');return;}
-    try {
-      await addDoc(collection(db, 'misc_expenses'), { name, amount, category, notes: notes||'', issuedByName: issuedBy, boughtByName: boughtBy, expenseDate: dateStr||new Date().toISOString().split('T')[0], status: 'pending_approval', createdBy: currentUser?.uid, createdByName: userData?.fullName||'Admin', createdAt: serverTimestamp() });
-      await logAudit('add_misc_expense', `Added: ${name} - ${formatCurrency(amount)}`); showToast('Expense submitted for approval','success'); hideModal();
-    } catch(e) { showToast('Failed to submit','error'); }
-  };
-
-  window.approveExpense = async function(id) {
-    try { await updateDoc(doc(db, 'misc_expenses', id), { status: 'approved', approvedBy: currentUser?.uid, approvedByName: userData?.fullName||'Admin', approvedAt: serverTimestamp() }); await logAudit('approve_misc_expense', `Approved expense ${id}`); showToast('Expense approved','success'); } catch(e) { showToast('Approval failed','error'); }
-  };
-
-  window.rejectExpense = async function(id) {
-    const reason = prompt('Rejection reason:')||'Not specified';
-    try { await updateDoc(doc(db, 'misc_expenses', id), { status: 'rejected', rejectedBy: currentUser?.uid, rejectedByName: userData?.fullName||'Admin', rejectedAt: serverTimestamp(), rejectionReason: reason }); await logAudit('reject_misc_expense', `Rejected ${id}. Reason: ${reason}`); showToast('Expense rejected','info'); } catch(e) { showToast('Rejection failed','error'); }
-  };
-
-  window.exportSalaries = function(format) {
-    const rows = getSalaryRows(); const headers = 'Name,Role,Base Salary,Points,Point Value,Points Bonus,Final Salary';
-    const csv = [headers, ...rows.map(r => `"${r.name}","${r.role}","${r.baseSalary}","${r.points}","₦${r.pointValue}/5pts","${r.pointBonus>=0?'+':''}${r.pointBonus}","${r.finalSalary}"`)].join('\n');
-    const blob = new Blob([csv], { type: format==='csv'?'text/csv':'application/vnd.ms-excel' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `salaries_${new Date().toISOString().split('T')[0]}.${format}`; a.click();
-    document.getElementById('exportSalaryMenu')?.classList.remove('show'); showToast('Exported','success');
-  };
+  window.openAddExpenseModal = function() { showModal('Add Miscellaneous Expense',`<div class="form-row"><div class="form-group"><label>Expense Name *</label><input class="form-control" id="expName" placeholder="e.g., Generator Fuel"></div><div class="form-group"><label>Category</label><select class="form-control" id="expCategory"><option value="Fuel">Fuel</option><option value="Transport">Transport</option><option value="Maintenance">Maintenance</option><option value="Utilities">Utilities</option><option value="Supplies">Office Supplies</option><option value="Miscellaneous">Miscellaneous</option></select></div></div><div class="form-row"><div class="form-group"><label>Amount (₦) *</label><input type="number" class="form-control" id="expAmount" placeholder="0" min="1"></div><div class="form-group"><label>Date</label><input type="date" class="form-control" id="expDate"></div></div><div class="form-row"><div class="form-group"><label>Money Issued By *</label><input class="form-control" id="expIssuedBy" placeholder="e.g., Admin Name"></div><div class="form-group"><label>Item Bought By *</label><input class="form-control" id="expBoughtBy" placeholder="e.g., Staff Name"></div></div><div class="form-group"><label>Notes</label><textarea class="form-control" id="expNotes" rows="2"></textarea></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="submitExpense()"><i class="fas fa-paper-plane"></i> Submit</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`); document.getElementById('expDate').value=new Date().toISOString().split('T')[0]; };
+  window.submitExpense = async function() { const name=document.getElementById('expName')?.value?.trim();const amount=parseFloat(document.getElementById('expAmount')?.value);const issuedBy=document.getElementById('expIssuedBy')?.value?.trim();const boughtBy=document.getElementById('expBoughtBy')?.value?.trim();const category=document.getElementById('expCategory')?.value;const notes=document.getElementById('expNotes')?.value?.trim();const dateStr=document.getElementById('expDate')?.value;if(!name||!amount||!issuedBy||!boughtBy){showToast('Fill all required fields','error');return;} try{await addDoc(collection(db,'misc_expenses'),{name,amount,category,notes:notes||'',issuedByName:issuedBy,boughtByName:boughtBy,expenseDate:dateStr||new Date().toISOString().split('T')[0],status:'pending_approval',createdBy:currentUser?.uid,createdByName:userData?.fullName||'Admin',createdAt:serverTimestamp()});showToast('Submitted','success');hideModal();}catch(e){showToast('Failed','error');} };
+  window.approveExpense = async function(id) { try{await updateDoc(doc(db,'misc_expenses',id),{status:'approved',approvedBy:currentUser?.uid,approvedByName:userData?.fullName||'Admin',approvedAt:serverTimestamp()});showToast('Approved','success');}catch(e){showToast('Failed','error');} };
+  window.rejectExpense = async function(id) { const r=prompt('Rejection reason:')||'Not specified'; try{await updateDoc(doc(db,'misc_expenses',id),{status:'rejected',rejectedBy:currentUser?.uid,rejectedByName:userData?.fullName||'Admin',rejectedAt:serverTimestamp(),rejectionReason:r});showToast('Rejected','info');}catch(e){showToast('Failed','error');} };
 
   document.getElementById('exportSalaryBtn')?.addEventListener('click',(e)=>{e.stopPropagation();document.getElementById('exportSalaryMenu')?.classList.toggle('show');});
-  document.addEventListener('click',()=>document.getElementById('exportSalaryMenu')?.classList.remove('show'));
-  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function() { document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); this.classList.add('active'); currentTab=this.dataset.tab; document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active')); document.getElementById(currentTab+'Panel').classList.add('active'); }));
+  document.getElementById('exportAllBtn')?.addEventListener('click',(e)=>{e.stopPropagation();document.getElementById('exportAllMenu')?.classList.toggle('show');});
+  document.addEventListener('click',()=>{document.getElementById('exportSalaryMenu')?.classList.remove('show');document.getElementById('exportAllMenu')?.classList.remove('show');});
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));this.classList.add('active');currentTab=this.dataset.tab;document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active'));document.getElementById(currentTab+'Panel').classList.add('active');}));
 
-  onAuthStateChanged(auth, async (u) => {
-    if(!u){window.location.href='auth.html';return;} currentUser=u;
-    try {
-      const snap = await getDoc(doc(db, 'users', u.uid));
-      if(!snap.exists()||(snap.data().role!=='admin'&&snap.data().role!=='super_admin')){await signOut(auth);window.location.href='auth.html';return;}
-      userData = snap.data();
-      document.getElementById('userName').textContent = userData.fullName?.split(' ')[0]||'Admin';
-      document.getElementById('userRole').textContent = userData.role==='super_admin'?'Super Admin':'Admin';
-      document.getElementById('userAvatar').textContent = (userData.fullName||'A').charAt(0).toUpperCase();
-      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-      await loadPointValue(); loadAllData(); await logAudit('view_finance','Viewed finance page');
-    } catch(e) { showToast('Error loading data','error'); }
-  });
-
-  document.getElementById('logoutBtn').addEventListener('click', async () => { try { await logAudit('logout','Logged out'); } catch(e){} await signOut(auth); window.location.href='auth.html'; });
-  window.addEventListener('beforeunload', cleanup);
+  onAuthStateChanged(auth,async(u)=>{if(!u){window.location.href='auth.html';return;}currentUser=u;try{const snap=await getDoc(doc(db,'users',u.uid));if(!snap.exists()||(snap.data().role!=='admin'&&snap.data().role!=='super_admin')){await signOut(auth);window.location.href='auth.html';return;}userData=snap.data();document.getElementById('userName').textContent=userData.fullName?.split(' ')[0]||'Admin';document.getElementById('userRole').textContent=userData.role==='super_admin'?'Super Admin':'Admin';document.getElementById('userAvatar').textContent=(userData.fullName||'A').charAt(0).toUpperCase();document.getElementById('currentDate').textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});await loadPointValue();loadAllData();}catch(e){showToast('Error','error');}});
+  document.getElementById('logoutBtn').addEventListener('click',async()=>{try{await logAudit('logout','Logged out');}catch(e){}await signOut(auth);window.location.href='auth.html';});
+  window.addEventListener('beforeunload',cleanup);
 </script>
 </body>
 </html>
