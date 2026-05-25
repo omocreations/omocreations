@@ -128,6 +128,10 @@
     .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); } .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
     .badge-purple { background: rgba(139,92,246,0.1); color: var(--purple); }
 
+    .ack-badge { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
+    .ack-badge.pending { background: rgba(245,158,11,0.1); color: var(--warning); animation: pulseGlow 2s infinite; }
+    .ack-badge.done { background: rgba(16,185,129,0.1); color: var(--success); }
+
     .salary-summary { background: linear-gradient(135deg, #1a1a2e 0%, #2d2d4a 100%); color: white; padding: 18px; border-radius: 16px; border: 1px solid rgba(255,77,166,0.3); }
     .salary-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 0.9rem; }
     .salary-row.total { border-top: 1px solid rgba(255,255,255,0.2); margin-top: 8px; padding-top: 12px; font-weight: 700; font-size: 1.2rem; }
@@ -150,6 +154,11 @@
     .ann-card .ann-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.72rem; color: var(--gray); }
     .ann-card .ann-tags { display: flex; gap: 6px; flex-wrap: wrap; }
 
+    .reply-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(0,0,0,0.06); }
+    .reply-item { background: var(--gray-light); border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+    .reply-item .rep-header { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--gray); margin-bottom: 4px; }
+    .reply-item .rep-body { font-size: 0.82rem; color: var(--dark); }
+
     .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; } .grid-2col .panel { margin-bottom: 0; }
 
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
@@ -164,10 +173,6 @@
     .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 14px; font-size: 0.9rem; outline: none; background: white; font-family: 'Poppins', sans-serif; }
     .form-control:focus { border-color: var(--primary); }
     textarea.form-control { min-height: 90px; resize: vertical; }
-
-    .acknowledgment-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
-    .acknowledgment-badge.pending { background: rgba(245,158,11,0.1); color: var(--warning); animation: pulseGlow 2s infinite; }
-    .acknowledgment-badge.done { background: rgba(16,185,129,0.1); color: var(--success); }
 
     .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
     .toast { background: white; color: var(--dark); padding: 14px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 0.85rem; animation: slideInRight 0.3s ease; border-left: 4px solid var(--primary); pointer-events: auto; }
@@ -264,7 +269,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, where, orderBy, limit, onSnapshot, updateDoc, serverTimestamp, arrayUnion, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, query, where, orderBy, limit, onSnapshot, updateDoc, serverTimestamp, arrayUnion, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
   const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
@@ -274,7 +279,6 @@
 
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }); }
   function formatFullDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
-  function formatTime(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }); }
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
@@ -327,7 +331,7 @@
     document.getElementById('finalSalary').textContent = formatCurrency(final);
   }
 
-  // ========== ANNOUNCEMENTS - MATCHING YOUR DATA STRUCTURE ==========
+  // ========== ANNOUNCEMENTS - THREE TYPES ==========
   async function loadAnnouncements() {
     try {
       const div = document.getElementById('announcementsList');
@@ -335,143 +339,152 @@
 
       let allAnnouncements = [];
 
-      // Load ALL announcements (both "all" and "specific" targeting)
       try {
-        const snap = await getDocs(query(
-          collection(db, 'announcements'), 
-          orderBy('createdAt', 'desc'), 
-          limit(30)
-        ));
-        
-        // Filter client-side to match the user
-        const filtered = snap.docs
-          .map(d => ({ id: d.id, ...d.data() }))
-          .filter(a => {
-            // Show if target is "all"
-            if (a.target === 'all') return true;
-            // Show if target is "specific" and user is in recipientIds
-            if (a.target === 'specific' && a.recipientIds && a.recipientIds.includes(currentUser?.uid)) return true;
-            return false;
-          });
-        
+        const snap = await getDocs(query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(30)));
+        const filtered = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => {
+          if (a.target === 'all') return true;
+          if (a.target === 'specific' && a.recipientIds && a.recipientIds.includes(currentUser?.uid)) return true;
+          return false;
+        });
         allAnnouncements.push(...filtered);
       } catch(e) {
-        console.warn('Announcements query error:', e.message);
-        // Fallback: load without orderBy
         try {
           const fallbackSnap = await getDocs(collection(db, 'announcements'));
-          const filtered = fallbackSnap.docs
-            .map(d => ({ id: d.id, ...d.data() }))
-            .filter(a => {
-              if (a.target === 'all') return true;
-              if (a.target === 'specific' && a.recipientIds && a.recipientIds.includes(currentUser?.uid)) return true;
-              return false;
-            })
-            .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
-            .slice(0, 10);
+          const filtered = fallbackSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => {
+            if (a.target === 'all') return true;
+            if (a.target === 'specific' && a.recipientIds && a.recipientIds.includes(currentUser?.uid)) return true;
+            return false;
+          }).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).slice(0, 10);
           allAnnouncements.push(...filtered);
-        } catch(e2) { console.warn('Fallback failed:', e2.message); }
+        } catch(e2) {}
       }
 
-      // Remove duplicates
-      const seen = new Set();
-      const unique = [];
-      for (const a of allAnnouncements) {
-        if (!seen.has(a.id)) { seen.add(a.id); unique.push(a); }
-      }
+      const seen = new Set(); const unique = [];
+      for (const a of allAnnouncements) { if (!seen.has(a.id)) { seen.add(a.id); unique.push(a); } }
       unique.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
-      if (unique.length === 0) {
-        div.innerHTML = '<div class="empty-state"><i class="fas fa-bullhorn"></i><p>No announcements yet</p></div>';
-        return;
-      }
+      if (unique.length === 0) { div.innerHTML = '<div class="empty-state"><i class="fas fa-bullhorn"></i><p>No announcements yet</p></div>'; return; }
 
       div.innerHTML = unique.slice(0, 10).map(a => {
         const isRead = a.readBy?.includes(currentUser.uid);
         const isSpecific = a.target === 'specific';
-        const requiresAck = a.requireAcknowledgment === true;
+        const annType = a.announcementType || 'inform';
         const hasAcknowledged = a.acknowledgedBy?.includes(currentUser.uid);
+        const hasReplied = a.replies?.some(r => r.userId === currentUser.uid);
         const targetDesc = a.targetDescription || (isSpecific ? 'Personal' : 'Everyone');
         
-        let cardClass = isRead ? 'read' : 'unread';
-        if (isSpecific) cardClass = 'specific';
+        let cardClass = isRead ? 'read' : 'unread'; if (isSpecific) cardClass = 'specific';
+
+        let actionBadge = '', actionButton = '';
+        const typeLabel = annType === 'acknowledge' ? 'Acknowledge' : annType === 'reply' ? 'Reply Needed' : 'Info';
+        const typeBadgeClass = annType === 'acknowledge' ? 'badge-warning' : annType === 'reply' ? 'badge-info' : 'badge-purple';
+
+        if (annType === 'acknowledge' && !hasAcknowledged) {
+          actionBadge = '<span class="ack-badge pending"><i class="fas fa-hand-pointer"></i> Acknowledge Required</span>';
+          actionButton = `<button class="btn btn-sm btn-warning" onclick="event.stopPropagation();acknowledgeAnnouncement('${a.id}')"><i class="fas fa-hand-pointer"></i> Acknowledge</button>`;
+        } else if (annType === 'acknowledge' && hasAcknowledged) {
+          actionBadge = '<span class="ack-badge done"><i class="fas fa-check-circle"></i> Acknowledged ✓</span>';
+        }
+        if (annType === 'reply' && !hasReplied) {
+          actionBadge = '<span class="ack-badge pending"><i class="fas fa-reply"></i> Reply Required</span>';
+          actionButton = `<button class="btn btn-sm btn-info" onclick="event.stopPropagation();openReplyModal('${a.id}')"><i class="fas fa-reply"></i> Reply</button>`;
+        } else if (annType === 'reply' && hasReplied) {
+          actionBadge = '<span class="ack-badge done"><i class="fas fa-check-circle"></i> Replied ✓</span>';
+        }
 
         return `<div class="ann-card ${cardClass}" onclick="openAnnouncementDetail('${a.id}')">
           <div class="ann-top">
             <h4>${!isRead ? '<span style="display:inline-block;width:7px;height:7px;background:var(--warning);border-radius:50%;margin-right:6px;vertical-align:middle;"></span>' : ''}${a.title || 'Untitled'}</h4>
             <div class="ann-tags" style="flex-shrink:0;">
-              <span class="badge ${isSpecific ? 'badge-purple' : 'badge-info'}" style="font-size:0.6rem;">${targetDesc}</span>
-              ${!isRead ? '<span class="badge badge-warning" style="font-size:0.6rem;">New</span>' : ''}
-              ${requiresAck && !hasAcknowledged ? '<span class="acknowledgment-badge pending" style="font-size:0.6rem;"><i class="fas fa-hand-pointer"></i> Acknowledge</span>' : ''}
-              ${hasAcknowledged ? '<span class="acknowledgment-badge done" style="font-size:0.6rem;"><i class="fas fa-check-circle"></i> Acknowledged</span>' : ''}
+              <span class="badge ${isSpecific?'badge-purple':'badge-info'}" style="font-size:0.6rem;">${targetDesc}</span>
+              <span class="badge ${typeBadgeClass}" style="font-size:0.6rem;">${typeLabel}</span>
+              ${!isRead?'<span class="badge badge-warning" style="font-size:0.6rem;">New</span>':''}
             </div>
           </div>
-          <div class="ann-preview">${(a.message || '').substring(0, 130)}${(a.message || '').length > 130 ? '...' : ''}</div>
+          <div class="ann-preview">${(a.message||'').substring(0,130)}${(a.message||'').length>130?'...':''}</div>
+          ${actionBadge?`<div style="margin-bottom:8px;">${actionBadge}</div>`:''}
           <div class="ann-bottom">
-            <span><i class="far fa-user"></i> ${a.sentByName || 'Admin'}</span>
+            <span><i class="far fa-user"></i> ${a.sentByName||'Admin'}</span>
             <span><i class="far fa-clock"></i> ${formatFullDate(a.createdAt)}</span>
-            ${a.acknowledgedBy?.length ? `<span><i class="far fa-check-circle"></i> ${a.acknowledgedBy.length} ack.</span>` : ''}
-            ${requiresAck && !hasAcknowledged ? `<button class="btn btn-sm btn-warning" onclick="event.stopPropagation();acknowledgeAnnouncement('${a.id}')"><i class="fas fa-hand-pointer"></i> Acknowledge</button>` : ''}
+            ${a.acknowledgedBy?.length?`<span><i class="far fa-check-circle"></i> ${a.acknowledgedBy.length}</span>`:''}
+            ${a.replies?.length?`<span><i class="far fa-comment"></i> ${a.replies.length}</span>`:''}
+            ${actionButton}
           </div>
         </div>`;
       }).join('');
-
-    } catch(e) {
-      console.error('Announcements error:', e.message);
-      const div = document.getElementById('announcementsList');
-      if (div) div.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Could not load announcements</p></div>';
-    }
+    } catch(e) { console.error('Announcements error:', e.message); }
   }
 
-  // Acknowledge announcement
-  window.acknowledgeAnnouncement = async (announcementId) => {
+  window.acknowledgeAnnouncement = async (id) => {
     try {
-      await updateDoc(doc(db, 'announcements', announcementId), {
-        acknowledgedBy: arrayUnion(currentUser.uid),
-        readBy: arrayUnion(currentUser.uid)
-      });
-      showToast('Announcement acknowledged! ✓', 'success');
-      loadAnnouncements();
-    } catch(e) { showToast('Failed to acknowledge', 'error'); }
+      await updateDoc(doc(db, 'announcements', id), { acknowledgedBy: arrayUnion(currentUser.uid), readBy: arrayUnion(currentUser.uid) });
+      showToast('Announcement acknowledged! ✓', 'success'); loadAnnouncements();
+    } catch(e) { showToast('Failed', 'error'); }
   };
 
-  // Open announcement detail
+  window.openReplyModal = function(id) {
+    showModal('Reply to Announcement', `
+      <p style="color:var(--info);margin-bottom:12px;"><i class="fas fa-info-circle"></i> Your response is required.</p>
+      <div class="form-group"><label>Your Reply *</label><textarea class="form-control" id="replyMessage" rows="4" placeholder="Type your reply here..."></textarea></div>
+      <button class="btn btn-primary" onclick="submitReply('${id}')" style="width:100%;"><i class="fas fa-paper-plane"></i> Submit Reply</button>
+      <button class="btn btn-outline" onclick="hideModal()" style="width:100%;margin-top:8px;">Cancel</button>
+    `);
+  };
+
+  window.submitReply = async (id) => {
+    const message = document.getElementById('replyMessage')?.value?.trim();
+    if (!message) { showToast('Please type a reply', 'error'); return; }
+    try {
+      await updateDoc(doc(db, 'announcements', id), {
+        replies: arrayUnion({ userId: currentUser.uid, userName: userData?.fullName || 'Staff', message, createdAt: serverTimestamp() }),
+        readBy: arrayUnion(currentUser.uid)
+      });
+      showToast('Reply submitted!', 'success'); hideModal(); loadAnnouncements();
+    } catch(e) { showToast('Failed', 'error'); }
+  };
+
   window.openAnnouncementDetail = async (id) => {
     try {
       const snap = await getDoc(doc(db, 'announcements', id));
       if (!snap.exists()) return;
       const a = snap.data();
       const isRead = a.readBy?.includes(currentUser?.uid);
+      const annType = a.announcementType || 'inform';
       const hasAcknowledged = a.acknowledgedBy?.includes(currentUser?.uid);
-      const requiresAck = a.requireAcknowledgment === true;
+      const hasReplied = a.replies?.some(r => r.userId === currentUser?.uid);
       const isSpecific = a.target === 'specific';
+      const typeLabel = annType === 'acknowledge' ? 'Inform & Acknowledge' : annType === 'reply' ? 'Inform & Reply' : 'Inform Only';
 
-      // Mark as read
-      if (!isRead) {
-        await updateDoc(doc(db, 'announcements', id), { readBy: arrayUnion(currentUser.uid) });
-      }
+      if (!isRead) await updateDoc(doc(db, 'announcements', id), { readBy: arrayUnion(currentUser.uid) });
+
+      const repliesHtml = (a.replies || []).length > 0 ? `
+        <h4 style="font-size:0.9rem;margin:16px 0 10px;"><i class="far fa-comments"></i> Replies (${a.replies.length})</h4>
+        ${(a.replies||[]).map(r=>`<div class="reply-item"><div class="rep-header"><strong>${r.userName||'Staff'}</strong><span>${formatFullDate(r.createdAt)}</span></div><div class="rep-body">${r.message}</div></div>`).join('')}
+      ` : '';
+
+      let actionHtml = '';
+      if (annType === 'acknowledge' && !hasAcknowledged) actionHtml = `<button class="btn btn-warning" onclick="acknowledgeAnnouncement('${id}');hideModal();" style="width:100%;"><i class="fas fa-hand-pointer"></i> Acknowledge</button>`;
+      else if (annType === 'acknowledge' && hasAcknowledged) actionHtml = '<p style="color:var(--success);text-align:center;padding:12px;"><i class="fas fa-check-circle"></i> Acknowledged</p>';
+      if (annType === 'reply' && !hasReplied) actionHtml = `<div class="reply-section"><p style="font-weight:600;margin-bottom:12px;color:var(--info);"><i class="fas fa-reply"></i> Your reply is required</p><div class="form-group"><textarea class="form-control" id="replyMessage" rows="3" placeholder="Type your reply..."></textarea></div><button class="btn btn-primary" onclick="submitReply('${id}')" style="width:100%;"><i class="fas fa-paper-plane"></i> Submit Reply</button></div>`;
+      else if (annType === 'reply' && hasReplied) actionHtml = '<p style="color:var(--success);text-align:center;padding:12px;"><i class="fas fa-check-circle"></i> Replied</p>';
 
       showModal(a.title || 'Announcement', `
         <div style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px;">
-          <span style="background:var(--primary-soft);padding:3px 10px;border-radius:20px;font-size:0.7rem;"><i class="far fa-user"></i> ${a.sentByName || 'Admin'}</span>
+          <span style="background:var(--primary-soft);padding:3px 10px;border-radius:20px;font-size:0.7rem;"><i class="far fa-user"></i> ${a.sentByName||'Admin'}</span>
           <span style="background:var(--gray-light);padding:3px 10px;border-radius:20px;font-size:0.7rem;"><i class="far fa-clock"></i> ${formatFullDate(a.createdAt)}</span>
-          <span class="badge ${isSpecific ? 'badge-purple' : 'badge-info'}">${a.targetDescription || (isSpecific ? 'Personal' : 'Everyone')}</span>
-          ${requiresAck ? (hasAcknowledged ? '<span class="acknowledgment-badge done">Acknowledged</span>' : '<span class="acknowledgment-badge pending">Acknowledge Required</span>') : ''}
+          <span class="badge ${annType==='acknowledge'?'badge-warning':annType==='reply'?'badge-info':'badge-purple'}">${typeLabel}</span>
+          <span class="badge ${isSpecific?'badge-purple':'badge-info'}">${a.targetDescription||(isSpecific?'Personal':'Everyone')}</span>
         </div>
-        <div style="background:var(--gray-light);border-radius:14px;padding:18px;font-size:0.9rem;line-height:1.7;color:var(--dark);margin-bottom:16px;">
-          ${a.message || 'No content'}
-        </div>
-        ${a.recipientIds?.length ? `<p style="font-size:0.75rem;color:var(--gray);margin-bottom:12px;"><i class="fas fa-users"></i> Sent to ${a.recipientIds.length} recipient(s)</p>` : ''}
-        ${requiresAck && !hasAcknowledged ? `<button class="btn btn-warning" onclick="acknowledgeAnnouncement('${id}');hideModal();" style="width:100%;"><i class="fas fa-hand-pointer"></i> Acknowledge This Announcement</button>` : ''}
+        <div style="background:var(--gray-light);border-radius:14px;padding:18px;font-size:0.9rem;line-height:1.7;color:var(--dark);margin-bottom:16px;">${a.message||'No content'}</div>
+        ${repliesHtml} ${actionHtml}
         <button class="btn btn-outline" onclick="hideModal()" style="width:100%;margin-top:8px;">Close</button>
       `);
-    } catch(e) { showToast('Could not load announcement', 'error'); }
+    } catch(e) { showToast('Could not load', 'error'); }
   };
 
   function loadDashboard() {
     cleanup();
     const today = new Date().toISOString().split('T')[0];
-
     unsubscribes.push(onSnapshot(doc(db, 'users', currentUser.uid), (snap) => {
       if (!snap.exists()) return;
       userData = snap.data();
@@ -482,61 +495,34 @@
       document.getElementById('totalPoints').textContent = userData.totalPoints || 0;
       updateSalaryDisplay();
     }));
-
-    unsubscribes.push(onSnapshot(doc(db, 'system_settings', 'points'), (s) => {
-      if (s.exists()) globalPointValue = s.data().value || 500;
-      updateSalaryDisplay();
-    }));
-
+    unsubscribes.push(onSnapshot(doc(db, 'system_settings', 'points'), (s) => { if (s.exists()) globalPointValue = s.data().value || 500; updateSalaryDisplay(); }));
     unsubscribes.push(onSnapshot(collection(db, 'sales'), (snap) => {
       let todayTotal = 0, todayCount = 0;
-      snap.forEach(d => {
-        const s = d.data(); if (s.status === 'returned') return;
-        const sd = s.createdAt?.toDate ? s.createdAt.toDate().toISOString().split('T')[0] : '';
-        if (sd === today) { todayTotal += s.totalAmount || 0; todayCount++; }
-      });
+      snap.forEach(d => { const s = d.data(); if (s.status === 'returned') return; const sd = s.createdAt?.toDate ? s.createdAt.toDate().toISOString().split('T')[0] : ''; if (sd === today) { todayTotal += s.totalAmount || 0; todayCount++; } });
       document.getElementById('todaySales').textContent = formatCurrency(todayTotal);
       document.getElementById('todaySalesCount').textContent = `${todayCount} transactions`;
     }));
-
-    unsubscribes.push(onSnapshot(query(collection(db, 'tasks'), where('status', 'in', ['pending', 'in_progress', 'submitted'])), (snap) => {
-      document.getElementById('activeTasks').textContent = snap.size;
-    }));
-
-    unsubscribes.push(onSnapshot(query(collection(db, 'stock_items'), where('status', 'in', ['low', 'out_of_stock'])), (snap) => {
-      document.getElementById('lowStock').textContent = snap.size;
-    }));
-
+    unsubscribes.push(onSnapshot(query(collection(db, 'tasks'), where('status', 'in', ['pending', 'in_progress', 'submitted'])), (snap) => { document.getElementById('activeTasks').textContent = snap.size; }));
+    unsubscribes.push(onSnapshot(query(collection(db, 'stock_items'), where('status', 'in', ['low', 'out_of_stock'])), (snap) => { document.getElementById('lowStock').textContent = snap.size; }));
     unsubscribes.push(onSnapshot(query(collection(db, 'attendance'), where('date', '==', today)), (snap) => {
       document.getElementById('presentToday').textContent = snap.size;
       document.getElementById('lateCount').textContent = `${snap.docs.filter(d => d.data().status === 'late').length} late`;
     }));
-
     unsubscribes.push(onSnapshot(query(collection(db, 'tasks'), orderBy('createdAt', 'desc'), limit(5)), (snap) => {
       const tbody = document.getElementById('recentTasksTable');
-      if (snap.empty) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-clipboard-list"></i><p>No tasks assigned</p></div></td></tr>'; return; }
-      tbody.innerHTML = ''; snap.forEach(d => {
-        const t = d.data();
-        const stBadge = t.status === 'acknowledged' ? 'badge-success' : t.status === 'submitted' ? 'badge-warning' : t.status === 'in_progress' ? 'badge-info' : 'badge-pending';
-        const stLabel = t.status === 'acknowledged' ? 'Done' : t.status === 'submitted' ? 'Submitted' : t.status === 'in_progress' ? 'Active' : 'Pending';
-        tbody.innerHTML += `<tr><td><strong>${t.title}</strong></td><td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.assignedByName || 'Staff'}</td><td>${formatDate(t.deadline)}</td><td><span class="badge ${stBadge}">${stLabel}</span></td></tr>`;
-      });
+      if (snap.empty) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-clipboard-list"></i><p>No tasks</p></div></td></tr>'; return; }
+      tbody.innerHTML = ''; snap.forEach(d => { const t = d.data(); const stBadge = t.status==='acknowledged'?'badge-success':t.status==='submitted'?'badge-warning':t.status==='in_progress'?'badge-info':'badge-pending'; const stLabel = t.status==='acknowledged'?'Done':t.status==='submitted'?'Submitted':t.status==='in_progress'?'Active':'Pending'; tbody.innerHTML += `<tr><td><strong>${t.title}</strong></td><td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.assignedByName||'Staff'}</td><td>${formatDate(t.deadline)}</td><td><span class="badge ${stBadge}">${stLabel}</span></td></tr>`; });
     }));
-
     unsubscribes.push(onSnapshot(query(collection(db, 'notifications'), where('userId', '==', currentUser.uid), where('isRead', '==', false)), (snap) => {
-      const badge = document.getElementById('notificationBadge');
-      const navBadge = document.getElementById('navNotifBadge');
-      const count = snap.size;
+      const badge = document.getElementById('notificationBadge'), navBadge = document.getElementById('navNotifBadge'); const count = snap.size;
       if (badge) { badge.textContent = count; badge.style.display = count > 0 ? 'flex' : 'none'; if (count > 0) badge.classList.add('show'); else badge.classList.remove('show'); }
       if (navBadge) { navBadge.textContent = count; if (count > 0) navBadge.classList.add('show'); else navBadge.classList.remove('show'); }
     }));
-
     loadAnnouncements();
   }
 
   onAuthStateChanged(auth, async (u) => {
-    if (!u) { window.location.href = 'auth.html'; return; }
-    currentUser = u;
+    if (!u) { window.location.href = 'auth.html'; return; } currentUser = u;
     try {
       const snap = await getDoc(doc(db, 'users', u.uid));
       if (!snap.exists() || snap.data().status !== 'active') { await signOut(auth); window.location.href = 'auth.html'; return; }
@@ -547,7 +533,6 @@
       buildSidebar(); loadDashboard();
     } catch (e) { showToast('Error loading', 'error'); }
   });
-
   window.addEventListener('beforeunload', cleanup);
 </script>
 </body>
