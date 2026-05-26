@@ -269,7 +269,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, where, orderBy, limit, onSnapshot, updateDoc, serverTimestamp, arrayUnion, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, query, where, orderBy, limit, onSnapshot, updateDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
   const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
@@ -331,14 +331,12 @@
     document.getElementById('finalSalary').textContent = formatCurrency(final);
   }
 
-  // ========== ANNOUNCEMENTS - THREE TYPES ==========
+  // ========== ANNOUNCEMENTS - THREE TYPES (FIXED REPLY) ==========
   async function loadAnnouncements() {
     try {
       const div = document.getElementById('announcementsList');
       if (!div || !currentUser) return;
-
       let allAnnouncements = [];
-
       try {
         const snap = await getDocs(query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(30)));
         const filtered = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => {
@@ -358,11 +356,9 @@
           allAnnouncements.push(...filtered);
         } catch(e2) {}
       }
-
       const seen = new Set(); const unique = [];
       for (const a of allAnnouncements) { if (!seen.has(a.id)) { seen.add(a.id); unique.push(a); } }
       unique.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
       if (unique.length === 0) { div.innerHTML = '<div class="empty-state"><i class="fas fa-bullhorn"></i><p>No announcements yet</p></div>'; return; }
 
       div.innerHTML = unique.slice(0, 10).map(a => {
@@ -372,9 +368,7 @@
         const hasAcknowledged = a.acknowledgedBy?.includes(currentUser.uid);
         const hasReplied = a.replies?.some(r => r.userId === currentUser.uid);
         const targetDesc = a.targetDescription || (isSpecific ? 'Personal' : 'Everyone');
-        
         let cardClass = isRead ? 'read' : 'unread'; if (isSpecific) cardClass = 'specific';
-
         let actionBadge = '', actionButton = '';
         const typeLabel = annType === 'acknowledge' ? 'Acknowledge' : annType === 'reply' ? 'Reply Needed' : 'Info';
         const typeBadgeClass = annType === 'acknowledge' ? 'badge-warning' : annType === 'reply' ? 'badge-info' : 'badge-purple';
@@ -393,33 +387,32 @@
         }
 
         return `<div class="ann-card ${cardClass}" onclick="openAnnouncementDetail('${a.id}')">
-          <div class="ann-top">
-            <h4>${!isRead ? '<span style="display:inline-block;width:7px;height:7px;background:var(--warning);border-radius:50%;margin-right:6px;vertical-align:middle;"></span>' : ''}${a.title || 'Untitled'}</h4>
-            <div class="ann-tags" style="flex-shrink:0;">
-              <span class="badge ${isSpecific?'badge-purple':'badge-info'}" style="font-size:0.6rem;">${targetDesc}</span>
-              <span class="badge ${typeBadgeClass}" style="font-size:0.6rem;">${typeLabel}</span>
-              ${!isRead?'<span class="badge badge-warning" style="font-size:0.6rem;">New</span>':''}
-            </div>
-          </div>
+          <div class="ann-top"><h4>${!isRead?'<span style="display:inline-block;width:7px;height:7px;background:var(--warning);border-radius:50%;margin-right:6px;vertical-align:middle;"></span>':''}${a.title||'Untitled'}</h4>
+            <div class="ann-tags" style="flex-shrink:0;"><span class="badge ${isSpecific?'badge-purple':'badge-info'}" style="font-size:0.6rem;">${targetDesc}</span><span class="badge ${typeBadgeClass}" style="font-size:0.6rem;">${typeLabel}</span>${!isRead?'<span class="badge badge-warning" style="font-size:0.6rem;">New</span>':''}</div></div>
           <div class="ann-preview">${(a.message||'').substring(0,130)}${(a.message||'').length>130?'...':''}</div>
           ${actionBadge?`<div style="margin-bottom:8px;">${actionBadge}</div>`:''}
-          <div class="ann-bottom">
-            <span><i class="far fa-user"></i> ${a.sentByName||'Admin'}</span>
-            <span><i class="far fa-clock"></i> ${formatFullDate(a.createdAt)}</span>
-            ${a.acknowledgedBy?.length?`<span><i class="far fa-check-circle"></i> ${a.acknowledgedBy.length}</span>`:''}
-            ${a.replies?.length?`<span><i class="far fa-comment"></i> ${a.replies.length}</span>`:''}
-            ${actionButton}
-          </div>
+          <div class="ann-bottom"><span><i class="far fa-user"></i> ${a.sentByName||'Admin'}</span><span><i class="far fa-clock"></i> ${formatFullDate(a.createdAt)}</span>${a.acknowledgedBy?.length?`<span><i class="far fa-check-circle"></i> ${a.acknowledgedBy.length}</span>`:''}${a.replies?.length?`<span><i class="far fa-comment"></i> ${a.replies.length}</span>`:''}${actionButton}</div>
         </div>`;
       }).join('');
     } catch(e) { console.error('Announcements error:', e.message); }
   }
 
+  // FIXED: Acknowledge without arrayUnion + serverTimestamp
   window.acknowledgeAnnouncement = async (id) => {
     try {
-      await updateDoc(doc(db, 'announcements', id), { acknowledgedBy: arrayUnion(currentUser.uid), readBy: arrayUnion(currentUser.uid) });
-      showToast('Announcement acknowledged! ✓', 'success'); loadAnnouncements();
-    } catch(e) { showToast('Failed', 'error'); }
+      const annRef = doc(db, 'announcements', id);
+      const annSnap = await getDoc(annRef);
+      if (!annSnap.exists()) { showToast('Announcement not found', 'error'); return; }
+      const currentData = annSnap.data();
+      const existingAck = currentData.acknowledgedBy || [];
+      const existingReadBy = currentData.readBy || [];
+      await updateDoc(annRef, {
+        acknowledgedBy: existingAck.includes(currentUser.uid) ? existingAck : [...existingAck, currentUser.uid],
+        readBy: existingReadBy.includes(currentUser.uid) ? existingReadBy : [...existingReadBy, currentUser.uid]
+      });
+      showToast('Announcement acknowledged! ✓', 'success');
+      loadAnnouncements();
+    } catch(e) { console.error('Acknowledge error:', e); showToast('Failed: ' + e.message, 'error'); }
   };
 
   window.openReplyModal = function(id) {
@@ -431,16 +424,26 @@
     `);
   };
 
+  // FIXED: Reply with plain object (no serverTimestamp inside array)
   window.submitReply = async (id) => {
     const message = document.getElementById('replyMessage')?.value?.trim();
     if (!message) { showToast('Please type a reply', 'error'); return; }
     try {
-      await updateDoc(doc(db, 'announcements', id), {
-        replies: arrayUnion({ userId: currentUser.uid, userName: userData?.fullName || 'Staff', message, createdAt: serverTimestamp() }),
-        readBy: arrayUnion(currentUser.uid)
+      const annRef = doc(db, 'announcements', id);
+      const annSnap = await getDoc(annRef);
+      if (!annSnap.exists()) { showToast('Announcement not found', 'error'); return; }
+      const currentData = annSnap.data();
+      const existingReplies = currentData.replies || [];
+      const existingReadBy = currentData.readBy || [];
+      const newReply = { userId: currentUser.uid, userName: userData?.fullName || 'Staff', message: message, createdAt: new Date().toISOString() };
+      await updateDoc(annRef, {
+        replies: [...existingReplies, newReply],
+        readBy: existingReadBy.includes(currentUser.uid) ? existingReadBy : [...existingReadBy, currentUser.uid]
       });
-      showToast('Reply submitted!', 'success'); hideModal(); loadAnnouncements();
-    } catch(e) { showToast('Failed', 'error'); }
+      showToast('Reply submitted!', 'success');
+      hideModal();
+      loadAnnouncements();
+    } catch(e) { console.error('Reply error:', e); showToast('Failed: ' + e.message, 'error'); }
   };
 
   window.openAnnouncementDetail = async (id) => {
@@ -454,14 +457,9 @@
       const hasReplied = a.replies?.some(r => r.userId === currentUser?.uid);
       const isSpecific = a.target === 'specific';
       const typeLabel = annType === 'acknowledge' ? 'Inform & Acknowledge' : annType === 'reply' ? 'Inform & Reply' : 'Inform Only';
+      if (!isRead) await updateDoc(doc(db, 'announcements', id), { readBy: existingReadBy.includes(currentUser.uid) ? existingReadBy : [...existingReadBy, currentUser.uid] });
 
-      if (!isRead) await updateDoc(doc(db, 'announcements', id), { readBy: arrayUnion(currentUser.uid) });
-
-      const repliesHtml = (a.replies || []).length > 0 ? `
-        <h4 style="font-size:0.9rem;margin:16px 0 10px;"><i class="far fa-comments"></i> Replies (${a.replies.length})</h4>
-        ${(a.replies||[]).map(r=>`<div class="reply-item"><div class="rep-header"><strong>${r.userName||'Staff'}</strong><span>${formatFullDate(r.createdAt)}</span></div><div class="rep-body">${r.message}</div></div>`).join('')}
-      ` : '';
-
+      const repliesHtml = (a.replies || []).length > 0 ? `<h4 style="font-size:0.9rem;margin:16px 0 10px;"><i class="far fa-comments"></i> Replies (${a.replies.length})</h4>${(a.replies||[]).map(r=>`<div class="reply-item"><div class="rep-header"><strong>${r.userName||'Staff'}</strong><span>${formatFullDate(r.createdAt)}</span></div><div class="rep-body">${r.message}</div></div>`).join('')}` : '';
       let actionHtml = '';
       if (annType === 'acknowledge' && !hasAcknowledged) actionHtml = `<button class="btn btn-warning" onclick="acknowledgeAnnouncement('${id}');hideModal();" style="width:100%;"><i class="fas fa-hand-pointer"></i> Acknowledge</button>`;
       else if (annType === 'acknowledge' && hasAcknowledged) actionHtml = '<p style="color:var(--success);text-align:center;padding:12px;"><i class="fas fa-check-circle"></i> Acknowledged</p>';
