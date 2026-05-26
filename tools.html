@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#ff4da6">
+  <meta name="theme-color" content="#f97316">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Tools & Machines · OmoCreations</title>
@@ -36,7 +36,6 @@
     @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,0.4)}50%{box-shadow:0 0 0 10px rgba(249,115,22,0)} }
     @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
     @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
-    @keyframes pulseGlow { 0%,100%{box-shadow:0 0 5px #f97316}50%{box-shadow:0 0 20px #f97316} }
 
     .sidebar { width: var(--sidebar-width); min-width: var(--sidebar-width); background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%); color: white; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; overflow-x: hidden; transition: transform 0.3s ease; z-index: 1000; border-right: 1px solid rgba(255,77,166,0.2); }
     .sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); } .sidebar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
@@ -207,13 +206,25 @@
 <div class="modal-overlay" id="modalOverlay"><div class="modal"><div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="hideModal()">&times;</button></div><div id="modalContent"></div></div></div>
 <div class="toast-container" id="toastContainer"></div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<!-- Firebase SDKs loaded via compat/UMD for GitHub Pages compatibility -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-  const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
-  const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+<script>
+  // Initialize Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
+    authDomain: "fashion-46e5d.firebaseapp.com",
+    projectId: "fashion-46e5d",
+    storageBucket: "fashion-46e5d.firebasestorage.app",
+    messagingSenderId: "408062284317",
+    appId: "1:408062284317:web:eb905bce68926c10a0ecf4"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
   let currentUser = null, userData = null, unsubscribes = [];
   let allTools = [], categories = ['Sewing Machine','Cutting Machine','Embroidery Machine','Heat Press','Printer','Hand Tool','Power Tool','Other'];
@@ -225,345 +236,338 @@
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
 
-  function showToast(msg, type='success') { const c = document.getElementById('toastContainer'); if (!c) return; const t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`; c.appendChild(t); setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(100%)'; t.style.transition='all 0.3s ease'; setTimeout(()=>t.remove(),300); }, 3500); }
-  async function logAudit(action, note) { try { await addDoc(collection(db,'audit_logs'),{actionType:action,performedBy:currentUser?.uid||'unknown',performedByName:userData?.fullName||'Staff',performedAt:serverTimestamp(),note:note||''}); } catch(e){} }
-  function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
-  window.hideModal = hideModal;
-  function showModal(title, content) { document.getElementById('modalTitle').textContent = title; document.getElementById('modalContent').innerHTML = content; document.getElementById('modalOverlay').classList.add('active'); }
-  function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
-
-  window.toggleSidebar = function() { const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay'); if(window.innerWidth<=768){if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';}} };
-  window.closeSidebar = function() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow=''; };
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
-
-  function isAdmin() { return userData?.role === 'admin' || userData?.role === 'super_admin'; }
-
-  function buildSidebar() {
-    const nav = document.getElementById('sidebarNav'); if(!nav) return;
-    const dashboardLink = isAdmin() ? 'admin-dashboard.html' : 'attendant-dashboard.html';
-    let navHTML = `<div class="nav-section"><div class="nav-section-title">MAIN</div>
-      <button class="nav-item" onclick="navigateTo('${dashboardLink}')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
-      <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
-      <button class="nav-item" onclick="navigateTo('store.html')"><i class="fas fa-store"></i><span>Store</span></button>
-      <button class="nav-item active"><i class="fas fa-tools"></i><span>Tools & Machines</span></button>
-      <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
-      <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
-      <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button></div>`;
-    if(isAdmin()){ navHTML+=`<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
-      <button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff</span></button>
-      <button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>
-      <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
-      <button class="nav-item" onclick="navigateTo('orders.html')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button>
-      <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
-      <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit</span></button></div>
-      <div class="nav-section"><div class="nav-section-title">SHOP</div><button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button><button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><span>Catalog</span></button></div>`; }
-    else { navHTML+=`<div class="nav-section"><div class="nav-section-title">WORK</div>
-      <button class="nav-item" onclick="navigateTo('tasks.html')"><i class="fas fa-tasks"></i><span>Tasks</span></button>
-      <button class="nav-item" onclick="navigateTo('orders.html')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button>
-      <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
-      <button class="nav-item" onclick="navigateTo('notifications.html')"><i class="fas fa-bell"></i><span>Notifications</span></button></div>
-      <div class="nav-section"><div class="nav-section-title">ACCOUNT</div><button class="nav-item" onclick="navigateTo('attendant-profile.html')"><i class="fas fa-user"></i><span>My Profile</span></button></div>`; }
-    navHTML += `<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>`;
-    nav.innerHTML = navHTML;
-    document.getElementById('logoutBtn')?.addEventListener('click',async()=>{await signOut(auth);window.location.href='auth.html';});
+  function showToast(msg, type) {
+    type = type || 'success';
+    var c = document.getElementById('toastContainer'); if (!c) return;
+    var t = document.createElement('div'); t.className = 'toast ' + type;
+    t.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + '"></i> ' + msg;
+    c.appendChild(t);
+    setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = 'all 0.3s ease'; setTimeout(function() { t.remove(); }, 300); }, 3500);
   }
 
-  function showPinModal(title,action,onSuccess){ showModal(title,`<p style="text-align:center;margin-bottom:20px;">Enter your 4-digit PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`);document.getElementById('pin1').focus();document.querySelectorAll('#modalOverlay .pin-input').forEach((inp,i,arr)=>{inp.addEventListener('input',e=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();});});document.getElementById('verifyPinBtn').onclick=()=>{const pin=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');if(pin===(userData?.attendantPin||'1234')){hideModal();onSuccess();}else{showToast('Invalid PIN','error');}}; }
+  function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
+  window.hideModal = hideModal;
+  function showModal(title, content) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalContent').innerHTML = content;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  function cleanup() { unsubscribes.forEach(function(u) { u(); }); unsubscribes = []; }
+
+  window.toggleSidebar = function() {
+    var s = document.getElementById('sidebar'), o = document.getElementById('sidebarOverlay');
+    if (window.innerWidth <= 768) {
+      if (s.classList.contains('mobile-open')) { s.classList.remove('mobile-open'); o.classList.remove('active'); document.body.style.overflow = ''; }
+      else { s.classList.add('mobile-open'); o.classList.add('active'); document.body.style.overflow = 'hidden'; }
+    }
+  };
+  window.closeSidebar = function() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow = ''; };
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSidebar(); });
+
+  function isAdmin() { return userData && (userData.role === 'admin' || userData.role === 'super_admin'); }
+
+  function buildSidebar() {
+    var nav = document.getElementById('sidebarNav'); if (!nav) return;
+    var dashboardLink = isAdmin() ? 'admin-dashboard.html' : 'attendant-dashboard.html';
+    var navHTML = '<div class="nav-section"><div class="nav-section-title">MAIN</div>' +
+      '<button class="nav-item" onclick="navigateTo(\'' + dashboardLink + '\')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>' +
+      '<button class="nav-item" onclick="navigateTo(\'inventory.html\')"><i class="fas fa-box"></i><span>Inventory</span></button>' +
+      '<button class="nav-item" onclick="navigateTo(\'store.html\')"><i class="fas fa-store"></i><span>Store</span></button>' +
+      '<button class="nav-item active"><i class="fas fa-tools"></i><span>Tools & Machines</span></button>' +
+      '<button class="nav-item" onclick="navigateTo(\'sales.html\')"><i class="fas fa-cash-register"></i><span>Sales</span></button>' +
+      '<button class="nav-item" onclick="navigateTo(\'purchases.html\')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>' +
+      '<button class="nav-item" onclick="navigateTo(\'customers.html\')"><i class="fas fa-users"></i><span>Customers</span></button></div>';
+    if (isAdmin()) {
+      navHTML += '<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>' +
+        '<button class="nav-item" onclick="navigateTo(\'staff-management.html\')"><i class="fas fa-users-cog"></i><span>Staff</span></button>' +
+        '<button class="nav-item" onclick="navigateTo(\'approvals.html\')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>' +
+        '<button class="nav-item" onclick="navigateTo(\'announcements.html\')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>' +
+        '<button class="nav-item" onclick="navigateTo(\'orders.html\')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button>' +
+        '<button class="nav-item" onclick="navigateTo(\'finance.html\')"><i class="fas fa-chart-line"></i><span>Finance</span></button>' +
+        '<button class="nav-item" onclick="navigateTo(\'audit.html\')"><i class="fas fa-history"></i><span>Audit</span></button></div>' +
+        '<div class="nav-section"><div class="nav-section-title">SHOP</div>' +
+        '<button class="nav-item" onclick="navigateTo(\'shop.html\')"><i class="fas fa-store"></i><span>Shop</span></button>' +
+        '<button class="nav-item" onclick="navigateTo(\'catalog.html\')"><i class="fas fa-book-open"></i><span>Catalog</span></button></div>';
+    } else {
+      navHTML += '<div class="nav-section"><div class="nav-section-title">WORK</div>' +
+        '<button class="nav-item" onclick="navigateTo(\'tasks.html\')"><i class="fas fa-tasks"></i><span>Tasks</span></button>' +
+        '<button class="nav-item" onclick="navigateTo(\'orders.html\')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button>' +
+        '<button class="nav-item" onclick="navigateTo(\'announcements.html\')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>' +
+        '<button class="nav-item" onclick="navigateTo(\'notifications.html\')"><i class="fas fa-bell"></i><span>Notifications</span></button></div>' +
+        '<div class="nav-section"><div class="nav-section-title">ACCOUNT</div>' +
+        '<button class="nav-item" onclick="navigateTo(\'attendant-profile.html\')"><i class="fas fa-user"></i><span>My Profile</span></button></div>';
+    }
+    navHTML += '<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>';
+    nav.innerHTML = navHTML;
+    document.getElementById('logoutBtn').addEventListener('click', function() { auth.signOut(); window.location.href = 'auth.html'; });
+  }
+
+  function showPinModal(title, action, onSuccess) {
+    showModal(title, '<p style="text-align:center;margin-bottom:20px;">Enter your 4-digit PIN to ' + action + '</p>' +
+      '<div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div>' +
+      '<button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>');
+    document.getElementById('pin1').focus();
+    document.querySelectorAll('#modalOverlay .pin-input').forEach(function(inp, i, arr) {
+      inp.addEventListener('input', function(e) { if (e.target.value && i < arr.length - 1) arr[i + 1].focus(); });
+    });
+    document.getElementById('verifyPinBtn').onclick = function() {
+      var pin = ['pin1','pin2','pin3','pin4'].map(function(id) { return document.getElementById(id).value; }).join('');
+      if (pin === ((userData && userData.attendantPin) || '1234')) { hideModal(); onSuccess(); }
+      else { showToast('Invalid PIN', 'error'); }
+    };
+  }
 
   function updateCategoryFilter() {
-    const f = document.getElementById('categoryFilter');
-    if(f) f.innerHTML = '<option value="all">All Categories</option>' + categories.map(c=>`<option value="${c}">${c}</option>`).join('');
+    var f = document.getElementById('categoryFilter');
+    if (f) f.innerHTML = '<option value="all">All Categories</option>' + categories.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
   }
 
   function loadTools() {
     cleanup();
-    unsubscribes.push(onSnapshot(query(collection(db,'tools_machines'),orderBy('createdAt','desc')),snap=>{
-      allTools = snap.docs.map(d=>({id:d.id,...d.data()}));
-      // Update categories from actual data
-      const usedCats = new Set(allTools.map(t=>t.category).filter(Boolean));
-      usedCats.forEach(c=>{if(!categories.includes(c))categories.push(c);});
+    unsubscribes.push(db.collection('tools_machines').orderBy('createdAt', 'desc').onSnapshot(function(snap) {
+      allTools = snap.docs.map(function(d) { var data = d.data(); data.id = d.id; return data; });
+      var usedCats = {};
+      allTools.forEach(function(t) { if (t.category && !categories.includes(t.category)) { categories.push(t.category); } });
       updateCategoryFilter();
       renderAllTables();
     }));
   }
 
   function renderAllTables() {
-    const search = (document.getElementById('searchInput')?.value||'').toLowerCase();
-    const catFilter = document.getElementById('categoryFilter')?.value||'all';
-    let filtered = [...allTools];
-    if(search) filtered = filtered.filter(t=>(t.name||'').toLowerCase().includes(search)||(t.description||'').toLowerCase().includes(search));
-    if(catFilter!=='all') filtered = filtered.filter(t=>t.category===catFilter);
+    var search = (document.getElementById('searchInput').value || '').toLowerCase();
+    var catFilter = document.getElementById('categoryFilter').value || 'all';
+    var filtered = allTools.slice();
+    if (search) filtered = filtered.filter(function(t) { return (t.name||'').toLowerCase().includes(search) || (t.description||'').toLowerCase().includes(search); });
+    if (catFilter !== 'all') filtered = filtered.filter(function(t) { return t.category === catFilter; });
 
-    const available = filtered.filter(t=>t.status!=='sold');
-    const sold = filtered.filter(t=>t.status==='sold');
-    const now = new Date(); const thisMonth = now.getMonth(); const thisYear = now.getFullYear();
-    const monthlyRev = sold.filter(t=>{const d=t.soldDate?.toDate();return d&&d.getMonth()===thisMonth&&d.getFullYear()===thisYear;}).reduce((s,t)=>s+(t.soldPrice||t.price||0),0);
+    var available = filtered.filter(function(t) { return t.status !== 'sold'; });
+    var sold = filtered.filter(function(t) { return t.status === 'sold'; });
+    var now = new Date(), thisMonth = now.getMonth(), thisYear = now.getFullYear();
+    var monthlyRev = sold.filter(function(t) { var d = t.soldDate ? t.soldDate.toDate() : null; return d && d.getMonth() === thisMonth && d.getFullYear() === thisYear; }).reduce(function(s, t) { return s + (t.soldPrice || t.price || 0); }, 0);
 
     document.getElementById('totalTools').textContent = allTools.length;
-    document.getElementById('availableTools').textContent = allTools.filter(t=>t.status!=='sold').length;
-    document.getElementById('soldTools').textContent = allTools.filter(t=>t.status==='sold').length;
-    document.getElementById('totalValue').textContent = formatCurrency(available.reduce((s,t)=>s+(t.price||0),0));
+    document.getElementById('availableTools').textContent = allTools.filter(function(t) { return t.status !== 'sold'; }).length;
+    document.getElementById('soldTools').textContent = allTools.filter(function(t) { return t.status === 'sold'; }).length;
+    document.getElementById('totalValue').textContent = formatCurrency(available.reduce(function(s, t) { return s + (t.price || 0); }, 0));
     document.getElementById('monthlyRevenue').textContent = formatCurrency(monthlyRev);
     document.getElementById('allCount').textContent = filtered.length;
     document.getElementById('availCount').textContent = available.length;
     document.getElementById('soldCount').textContent = sold.length;
 
-    // All table
-    const allTbody = document.getElementById('toolsTable');
-    allTbody.innerHTML = filtered.length===0?'<tr><td colspan="9"><div class="empty-state"><i class="fas fa-tools"></i><p>No items found</p></div></td></tr>':filtered.map(t=>{
-      const isSold=t.status==='sold';
-      return `<tr class="${isSold?'sold-row':''}"><td><strong>${t.name||'-'}</strong></td><td><span class="badge badge-orange">${t.category||'General'}</span></td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.description||'-'}</td><td>${formatCurrency(t.price)}</td><td>${isSold?formatCurrency(t.soldPrice||t.price):'-'}</td><td><span class="badge badge-${isSold?'danger':'success'}">${isSold?'Sold':'Available'}</span></td><td>${isSold?formatDate(t.soldDate):formatDate(t.createdAt)}</td><td>${isSold?(t.soldTo||'Walk-in'):'-'}</td><td><div style="display:flex;gap:4px;">${!isSold?`<button class="btn btn-sm btn-success" onclick="openSellToolModal('${t.id}')"><i class="fas fa-tags"></i> Sell</button>`:''}<button class="btn btn-sm btn-outline" onclick="openEditToolModal('${t.id}')"><i class="fas fa-edit"></i></button>${!isSold?`<button class="btn btn-sm btn-outline" onclick="printToolLabel('${t.id}')"><i class="fas fa-print"></i></button>`:''}${isAdmin()?`<button class="btn btn-sm btn-danger" onclick="deleteTool('${t.id}')"><i class="fas fa-trash"></i></button>`:''}</div></td></tr>`;
+    var allTbody = document.getElementById('toolsTable');
+    allTbody.innerHTML = filtered.length === 0 ? '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-tools"></i><p>No items found</p></div></td></tr>' : filtered.map(function(t) {
+      var isSold = t.status === 'sold';
+      return '<tr class="' + (isSold ? 'sold-row' : '') + '"><td><strong>' + (t.name || '-') + '</strong></td><td><span class="badge badge-orange">' + (t.category || 'General') + '</span></td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (t.description || '-') + '</td><td>' + formatCurrency(t.price) + '</td><td>' + (isSold ? formatCurrency(t.soldPrice || t.price) : '-') + '</td><td><span class="badge badge-' + (isSold ? 'danger' : 'success') + '">' + (isSold ? 'Sold' : 'Available') + '</span></td><td>' + (isSold ? formatDate(t.soldDate) : formatDate(t.createdAt)) + '</td><td>' + (isSold ? (t.soldTo || 'Walk-in') : '-') + '</td><td><div style="display:flex;gap:4px;">' + (!isSold ? '<button class="btn btn-sm btn-success" onclick="openSellToolModal(\'' + t.id + '\')"><i class="fas fa-tags"></i> Sell</button>' : '') + '<button class="btn btn-sm btn-outline" onclick="openEditToolModal(\'' + t.id + '\')"><i class="fas fa-edit"></i></button>' + (!isSold ? '<button class="btn btn-sm btn-outline" onclick="printToolLabel(\'' + t.id + '\')"><i class="fas fa-print"></i></button>' : '') + (isAdmin() ? '<button class="btn btn-sm btn-danger" onclick="deleteTool(\'' + t.id + '\')"><i class="fas fa-trash"></i></button>' : '') + '</div></td></tr>';
     }).join('');
 
-    // Available table
-    const avTbody = document.getElementById('availableTable');
-    avTbody.innerHTML = available.length===0?'<tr><td colspan="6"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items sold</p></div></td></tr>':available.map(t=>`<tr><td><strong>${t.name||'-'}</strong></td><td><span class="badge badge-orange">${t.category||'General'}</span></td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.description||'-'}</td><td>${formatCurrency(t.price)}</td><td>${formatDate(t.createdAt)}</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-success" onclick="openSellToolModal('${t.id}')"><i class="fas fa-tags"></i> Sell</button><button class="btn btn-sm btn-outline" onclick="openEditToolModal('${t.id}')"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline" onclick="printToolLabel('${t.id}')"><i class="fas fa-print"></i></button></div></td></tr>`).join('');
+    var avTbody = document.getElementById('availableTable');
+    avTbody.innerHTML = available.length === 0 ? '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items sold</p></div></td></tr>' : available.map(function(t) {
+      return '<tr><td><strong>' + (t.name || '-') + '</strong></td><td><span class="badge badge-orange">' + (t.category || 'General') + '</span></td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (t.description || '-') + '</td><td>' + formatCurrency(t.price) + '</td><td>' + formatDate(t.createdAt) + '</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-success" onclick="openSellToolModal(\'' + t.id + '\')"><i class="fas fa-tags"></i> Sell</button><button class="btn btn-sm btn-outline" onclick="openEditToolModal(\'' + t.id + '\')"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline" onclick="printToolLabel(\'' + t.id + '\')"><i class="fas fa-print"></i></button></div></td></tr>';
+    }).join('');
 
-    // Sold table
-    const sTbody = document.getElementById('soldTable');
-    sTbody.innerHTML = sold.length===0?'<tr><td colspan="8"><div class="empty-state"><i class="fas fa-tags"></i><p>No items sold yet</p></div></td></tr>':sold.map(t=>{
-      const profit = (t.soldPrice||t.price||0)-(t.price||0);
-      return `<tr><td><strong>${t.name||'-'}</strong></td><td>${t.category||'General'}</td><td>${formatCurrency(t.price)}</td><td>${formatCurrency(t.soldPrice||t.price)}</td><td>${formatFullDate(t.soldDate)}</td><td>${t.soldTo||'Walk-in'}</td><td style="color:${profit>=0?'var(--success)':'var(--danger)'};font-weight:600;">${profit>=0?'+':''}${formatCurrency(profit)}</td><td><button class="btn btn-sm btn-outline" onclick="printReceipt('${t.id}')"><i class="fas fa-receipt"></i></button></td></tr>`;
+    var sTbody = document.getElementById('soldTable');
+    sTbody.innerHTML = sold.length === 0 ? '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-tags"></i><p>No items sold yet</p></div></td></tr>' : sold.map(function(t) {
+      var profit = (t.soldPrice || t.price || 0) - (t.price || 0);
+      return '<tr><td><strong>' + (t.name || '-') + '</strong></td><td>' + (t.category || 'General') + '</td><td>' + formatCurrency(t.price) + '</td><td>' + formatCurrency(t.soldPrice || t.price) + '</td><td>' + formatFullDate(t.soldDate) + '</td><td>' + (t.soldTo || 'Walk-in') + '</td><td style="color:' + (profit >= 0 ? 'var(--success)' : 'var(--danger)') + ';font-weight:600;">' + (profit >= 0 ? '+' : '') + formatCurrency(profit) + '</td><td><button class="btn btn-sm btn-outline" onclick="printReceipt(\'' + t.id + '\')"><i class="fas fa-receipt"></i></button></td></tr>';
     }).join('');
   }
 
   // ========== ADD TOOL ==========
   window.openAddToolModal = function() {
-    const catOpts = categories.map(c=>`<option value="${c}">${c}</option>`).join('');
-    showModal('Add Tool / Machine', `
-      <div class="form-row">
-        <div class="form-group"><label>Item Name *</label><input class="form-control" id="toolName" placeholder="e.g., Sewing Machine"></div>
-        <div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="toolCategory" style="flex:1;">${catOpts}</select><input class="form-control" id="newCategory" placeholder="New category" style="flex:0.5;"></div></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Brand / Model</label><input class="form-control" id="toolBrand" placeholder="e.g., Singer 4423"></div>
-        <div class="form-group"><label>Serial Number</label><input class="form-control" id="toolSerial" placeholder="Optional"></div>
-      </div>
-      <div class="form-group"><label>Description / Condition</label><textarea class="form-control" id="toolDesc" rows="2" placeholder="Brief description, condition..."></textarea></div>
-      <div class="form-row">
-        <div class="form-group"><label>Purchase Price ₦ *</label><input type="number" class="form-control" id="toolPrice" value="0" step="0.01" min="0" placeholder="How much you bought it"></div>
-        <div class="form-group"><label>Selling Price ₦</label><input type="number" class="form-control" id="toolSellPrice" value="0" step="0.01" min="0" placeholder="How much you'll sell it"></div>
-      </div>
-      <div class="form-group"><label>Quantity</label><input type="number" class="form-control" id="toolQty" value="1" min="1"></div>
-      <button class="btn btn-primary" onclick="addTool()" style="width:100%;"><i class="fas fa-plus"></i> Add Tool/Machine</button>
-    `);
+    var catOpts = categories.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+    showModal('Add Tool / Machine',
+      '<div class="form-row"><div class="form-group"><label>Item Name *</label><input class="form-control" id="toolName" placeholder="e.g., Sewing Machine"></div><div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="toolCategory" style="flex:1;">' + catOpts + '</select><input class="form-control" id="newCategory" placeholder="New category" style="flex:0.5;"></div></div></div>' +
+      '<div class="form-row"><div class="form-group"><label>Brand / Model</label><input class="form-control" id="toolBrand" placeholder="e.g., Singer 4423"></div><div class="form-group"><label>Serial Number</label><input class="form-control" id="toolSerial" placeholder="Optional"></div></div>' +
+      '<div class="form-group"><label>Description / Condition</label><textarea class="form-control" id="toolDesc" rows="2" placeholder="Brief description, condition..."></textarea></div>' +
+      '<div class="form-row"><div class="form-group"><label>Purchase Price ₦ *</label><input type="number" class="form-control" id="toolPrice" value="0" step="0.01" min="0"></div><div class="form-group"><label>Selling Price ₦</label><input type="number" class="form-control" id="toolSellPrice" value="0" step="0.01" min="0"></div></div>' +
+      '<div class="form-group"><label>Quantity</label><input type="number" class="form-control" id="toolQty" value="1" min="1"></div>' +
+      '<button class="btn btn-primary" onclick="addTool()" style="width:100%;"><i class="fas fa-plus"></i> Add Tool/Machine</button>');
   };
 
   window.addTool = async function() {
-    const name = document.getElementById('toolName')?.value?.trim();
-    const category = document.getElementById('newCategory')?.value?.trim() || document.getElementById('toolCategory')?.value || 'Other';
-    const brand = document.getElementById('toolBrand')?.value?.trim();
-    const serial = document.getElementById('toolSerial')?.value?.trim();
-    const description = document.getElementById('toolDesc')?.value?.trim();
-    const price = parseFloat(document.getElementById('toolPrice')?.value)||0;
-    const sellPrice = parseFloat(document.getElementById('toolSellPrice')?.value)||0;
-    const qty = parseInt(document.getElementById('toolQty')?.value)||1;
+    var name = (document.getElementById('toolName').value || '').trim();
+    var category = (document.getElementById('newCategory').value || '').trim() || document.getElementById('toolCategory').value || 'Other';
+    var brand = (document.getElementById('toolBrand').value || '').trim();
+    var serial = (document.getElementById('toolSerial').value || '').trim();
+    var description = (document.getElementById('toolDesc').value || '').trim();
+    var price = parseFloat(document.getElementById('toolPrice').value) || 0;
+    var sellPrice = parseFloat(document.getElementById('toolSellPrice').value) || 0;
+    var qty = parseInt(document.getElementById('toolQty').value) || 1;
 
-    if(!name){showToast('Name required','error');return;}
-    if(price<=0){showToast('Purchase price required','error');return;}
-    if(category && !categories.includes(category)){categories.push(category);updateCategoryFilter();}
+    if (!name) { showToast('Name required', 'error'); return; }
+    if (price <= 0) { showToast('Purchase price required', 'error'); return; }
+    if (category && !categories.includes(category)) { categories.push(category); updateCategoryFilter(); }
 
     try {
-      for(let i=0;i<qty;i++){
-        await addDoc(collection(db,'tools_machines'),{
-          name, category, brand, serialNumber: serial, description,
-          price, sellPrice: sellPrice||price,
+      for (var i = 0; i < qty; i++) {
+        await db.collection('tools_machines').add({
+          name: name, category: category, brand: brand, serialNumber: serial,
+          description: description, price: price, sellPrice: sellPrice || price,
           status: 'available',
-          addedBy: currentUser?.uid,
-          addedByName: userData?.fullName||'Staff',
-          createdAt: serverTimestamp()
+          addedBy: currentUser ? currentUser.uid : 'unknown',
+          addedByName: (userData && userData.fullName) || 'Staff',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       }
-      await logAudit('add_tool',`Added ${qty}x ${name}`);
-      showToast(qty>1?`${qty} items added!`:'Tool added!','success');
+      showToast(qty > 1 ? (qty + ' items added!') : 'Tool added!', 'success');
       hideModal();
-    } catch(e){showToast('Failed: '+e.message,'error');}
+    } catch(e) { showToast('Failed: ' + e.message, 'error'); }
   };
 
   // ========== SELL TOOL ==========
   window.openSellToolModal = function(id) {
-    const tool = allTools.find(t=>t.id===id); if(!tool)return;
-    showModal(`Sell: ${tool.name}`, `
-      <div style="background:rgba(249,115,22,0.05);padding:14px;border-radius:12px;margin-bottom:16px;">
-        <strong>${tool.name}</strong> ${tool.brand?`(${tool.brand})`:''}<br>
-        <span style="color:var(--gray);">${tool.category||'General'} | Cost: ${formatCurrency(tool.price)} | Listed: ${formatCurrency(tool.sellPrice||tool.price)}</span>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Customer Name *</label><input class="form-control" id="sellCustomer" placeholder="Buyer's name"></div>
-        <div class="form-group"><label>Phone</label><input class="form-control" id="sellPhone" placeholder="Buyer's phone"></div>
-      </div>
-      <div class="form-group"><label>Sell Price ₦</label><input type="number" class="form-control" id="sellPrice" value="${tool.sellPrice||tool.price}" step="0.01" min="0"></div>
-      <div class="form-group"><label>Payment Method</label><select class="form-control" id="sellPayment"><option value="cash">Cash</option><option value="transfer">Transfer</option><option value="pos">POS</option></select></div>
-      <div class="form-group"><label>Notes</label><textarea class="form-control" id="sellNotes" rows="2" placeholder="Any notes..."></textarea></div>
-      <div style="background:var(--gray-light);padding:10px;border-radius:10px;margin-bottom:12px;text-align:center;">
-        <span style="font-size:0.8rem;">Profit: </span><strong id="profitDisplay" style="color:var(--success);">₦0</strong>
-      </div>
-      <button class="btn btn-success" onclick="confirmSellTool('${id}')" style="width:100%;"><i class="fas fa-check"></i> Confirm Sale & Print Receipt</button>
-    `);
-    document.getElementById('sellPrice').addEventListener('input',function(){
-      const profit = parseFloat(this.value||0)-(tool.price||0);
+    var tool = allTools.find(function(t) { return t.id === id; });
+    if (!tool) return;
+    showModal('Sell: ' + tool.name,
+      '<div style="background:rgba(249,115,22,0.05);padding:14px;border-radius:12px;margin-bottom:16px;"><strong>' + tool.name + '</strong> ' + (tool.brand ? '(' + tool.brand + ')' : '') + '<br><span style="color:var(--gray);">' + (tool.category || 'General') + ' | Cost: ' + formatCurrency(tool.price) + ' | Listed: ' + formatCurrency(tool.sellPrice || tool.price) + '</span></div>' +
+      '<div class="form-row"><div class="form-group"><label>Customer Name *</label><input class="form-control" id="sellCustomer" placeholder="Buyer\'s name"></div><div class="form-group"><label>Phone</label><input class="form-control" id="sellPhone" placeholder="Buyer\'s phone"></div></div>' +
+      '<div class="form-group"><label>Sell Price ₦</label><input type="number" class="form-control" id="sellPrice" value="' + (tool.sellPrice || tool.price) + '" step="0.01" min="0"></div>' +
+      '<div class="form-group"><label>Payment Method</label><select class="form-control" id="sellPayment"><option value="cash">Cash</option><option value="transfer">Transfer</option><option value="pos">POS</option></select></div>' +
+      '<div class="form-group"><label>Notes</label><textarea class="form-control" id="sellNotes" rows="2" placeholder="Any notes..."></textarea></div>' +
+      '<div style="background:var(--gray-light);padding:10px;border-radius:10px;margin-bottom:12px;text-align:center;"><span style="font-size:0.8rem;">Profit: </span><strong id="profitDisplay" style="color:var(--success);">₦0</strong></div>' +
+      '<button class="btn btn-success" onclick="confirmSellTool(\'' + id + '\')" style="width:100%;"><i class="fas fa-check"></i> Confirm Sale & Print Receipt</button>');
+    document.getElementById('sellPrice').addEventListener('input', function() {
+      var profit = parseFloat(this.value || 0) - (tool.price || 0);
       document.getElementById('profitDisplay').textContent = formatCurrency(profit);
-      document.getElementById('profitDisplay').style.color = profit>=0?'var(--success)':'var(--danger)';
+      document.getElementById('profitDisplay').style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
     });
-    // Initial profit display
-    const initProfit = (tool.sellPrice||tool.price||0)-(tool.price||0);
+    var initProfit = (tool.sellPrice || tool.price || 0) - (tool.price || 0);
     document.getElementById('profitDisplay').textContent = formatCurrency(initProfit);
-    document.getElementById('profitDisplay').style.color = initProfit>=0?'var(--success)':'var(--danger)';
+    document.getElementById('profitDisplay').style.color = initProfit >= 0 ? 'var(--success)' : 'var(--danger)';
   };
 
   window.confirmSellTool = async function(id) {
-    const tool = allTools.find(t=>t.id===id);
-    const customer = document.getElementById('sellCustomer')?.value?.trim()||'Walk-in';
-    const phone = document.getElementById('sellPhone')?.value?.trim();
-    const price = parseFloat(document.getElementById('sellPrice')?.value)||0;
-    const payment = document.getElementById('sellPayment')?.value||'cash';
-    const notes = document.getElementById('sellNotes')?.value?.trim();
+    var tool = allTools.find(function(t) { return t.id === id; });
+    var customer = (document.getElementById('sellCustomer').value || '').trim() || 'Walk-in';
+    var phone = (document.getElementById('sellPhone').value || '').trim();
+    var price = parseFloat(document.getElementById('sellPrice').value) || 0;
+    var payment = document.getElementById('sellPayment').value || 'cash';
+    var notes = (document.getElementById('sellNotes').value || '').trim();
 
-    if(!customer || customer==='Walk-in'){
-      if(!confirm('No customer name entered. Continue as Walk-in?'))return;
-    }
-
-    showPinModal('Confirm Sale','sell this tool/machine',async()=>{
+    showPinModal('Confirm Sale', 'sell this tool/machine', async function() {
       try {
-        const receiptNumber = 'TLS-'+Date.now().toString().slice(-8);
-        await updateDoc(doc(db,'tools_machines',id),{
-          status: 'sold',
-          soldTo: customer,
-          soldPhone: phone,
-          soldPrice: price,
-          soldDate: serverTimestamp(),
-          soldBy: currentUser?.uid,
-          soldByName: userData?.fullName||'Staff',
-          paymentMethod: payment,
-          saleNotes: notes,
-          receiptNumber
+        var receiptNumber = 'TLS-' + Date.now().toString().slice(-8);
+        await db.collection('tools_machines').doc(id).update({
+          status: 'sold', soldTo: customer, soldPhone: phone, soldPrice: price,
+          soldDate: firebase.firestore.FieldValue.serverTimestamp(),
+          soldBy: currentUser ? currentUser.uid : 'unknown',
+          soldByName: (userData && userData.fullName) || 'Staff',
+          paymentMethod: payment, saleNotes: notes, receiptNumber: receiptNumber
         });
-        await logAudit('sell_tool',`Sold ${tool?.name} to ${customer} for ${formatCurrency(price)}`);
-        
-        // Show receipt
-        showToolReceipt({...tool, soldTo:customer, soldPhone:phone, soldPrice:price, receiptNumber, paymentMethod:payment, soldByName:userData?.fullName||'Staff', soldDate:new Date()});
-        showToast('Tool sold!','success');
-      } catch(e){showToast('Failed: '+e.message,'error');}
+        showToast('Tool sold!', 'success');
+        hideModal();
+      } catch(e) { showToast('Failed: ' + e.message, 'error'); }
     });
   };
 
   // ========== RECEIPT ==========
-  function showToolReceipt(sale) {
-    const profit = (sale.soldPrice||0)-(sale.price||0);
-    showModal('Sales Receipt', `
-      <div class="receipt-container" id="receiptPrintArea">
-        <div class="receipt-header"><h2>🔧 OmoCreations</h2><p>Tools & Machines</p><p style="font-size:0.8rem;">Receipt #${sale.receiptNumber||'N/A'}</p></div>
-        <p><strong>Item:</strong> ${sale.name||'-'}</p>
-        <p><strong>Category:</strong> ${sale.category||'General'}</p>
-        ${sale.brand?`<p><strong>Brand:</strong> ${sale.brand}</p>`:''}
-        <p><strong>Customer:</strong> ${sale.soldTo||'Walk-in'}</p>
-        ${sale.soldPhone?`<p><strong>Phone:</strong> ${sale.soldPhone}</p>`:''}
-        <p><strong>Payment:</strong> ${sale.paymentMethod||'cash'}</p>
-        <div class="receipt-items">
-          <div class="receipt-item"><span>Sell Price:</span><span>${formatCurrency(sale.soldPrice||sale.price)}</span></div>
-          <div class="receipt-item"><span>Cost Price:</span><span>${formatCurrency(sale.price)}</span></div>
-        </div>
-        <div class="receipt-total"><span>Profit:</span><span style="color:${profit>=0?'var(--success)':'var(--danger)'};">${profit>=0?'+':''}${formatCurrency(profit)}</span></div>
-        <p style="text-align:center;margin-top:12px;font-size:0.75rem;color:var(--gray);">Served by: ${sale.soldByName||'Staff'}<br>${formatFullDate(sale.soldDate)}</p>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:16px;">
-        <button class="btn btn-primary" onclick="printReceiptContent()" style="flex:1;"><i class="fas fa-print"></i> Print</button>
-        <button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>
-      </div>
-    `);
-  }
-
-  window.printReceiptContent = function() {
-    const content = document.getElementById('receiptPrintArea')?.innerHTML;
-    if(!content)return;
-    const w = window.open('','_blank','width=400,height=600');
-    w.document.write(`<html><head><title>Receipt</title><style>body{font-family:'Courier New',monospace;padding:20px;max-width:400px;margin:0 auto;}.receipt-container{border:2px dashed #f97316;border-radius:12px;padding:16px;}.receipt-header{text-align:center;border-bottom:2px dashed #f97316;padding-bottom:8px;margin-bottom:8px;}.receipt-header h2{color:#f97316;}.receipt-items{margin:10px 0;}.receipt-item{display:flex;justify-content:space-between;}.receipt-total{border-top:2px dashed #f97316;padding-top:8px;font-weight:bold;display:flex;justify-content:space-between;}</style></head><body>${content}</body></html>`);
-    w.document.close();setTimeout(()=>w.print(),300);
+  window.printReceipt = function(id) {
+    var t = allTools.find(function(x) { return x.id === id; });
+    if (!t) return;
+    var profit = (t.soldPrice || 0) - (t.price || 0);
+    showModal('Sales Receipt',
+      '<div class="receipt-container" id="receiptPrintArea"><div class="receipt-header"><h2>🔧 OmoCreations</h2><p>Tools & Machines</p><p style="font-size:0.8rem;">Receipt #' + (t.receiptNumber || 'N/A') + '</p></div>' +
+      '<p><strong>Item:</strong> ' + (t.name || '-') + '</p><p><strong>Category:</strong> ' + (t.category || 'General') + '</p>' + (t.brand ? '<p><strong>Brand:</strong> ' + t.brand + '</p>' : '') +
+      '<p><strong>Customer:</strong> ' + (t.soldTo || 'Walk-in') + '</p>' + (t.soldPhone ? '<p><strong>Phone:</strong> ' + t.soldPhone + '</p>' : '') +
+      '<p><strong>Payment:</strong> ' + (t.paymentMethod || 'cash') + '</p>' +
+      '<div class="receipt-items"><div class="receipt-item"><span>Sell Price:</span><span>' + formatCurrency(t.soldPrice || t.price) + '</span></div><div class="receipt-item"><span>Cost Price:</span><span>' + formatCurrency(t.price) + '</span></div></div>' +
+      '<div class="receipt-total"><span>Profit:</span><span style="color:' + (profit >= 0 ? 'var(--success)' : 'var(--danger)') + ';">' + (profit >= 0 ? '+' : '') + formatCurrency(profit) + '</span></div>' +
+      '<p style="text-align:center;margin-top:12px;font-size:0.75rem;color:var(--gray);">Served by: ' + (t.soldByName || 'Staff') + '<br>' + formatFullDate(t.soldDate) + '</p></div>' +
+      '<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn btn-primary" onclick="printReceiptContent()" style="flex:1;"><i class="fas fa-print"></i> Print</button><button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button></div>');
   };
 
-  window.printReceipt = function(id) {
-    const t = allTools.find(x=>x.id===id);
-    if(t) showToolReceipt(t);
+  window.printReceiptContent = function() {
+    var content = document.getElementById('receiptPrintArea');
+    if (!content) return;
+    var w = window.open('', '_blank', 'width=400,height=600');
+    w.document.write('<html><head><title>Receipt</title><style>body{font-family:"Courier New",monospace;padding:20px;max-width:400px;margin:0 auto;}.receipt-container{border:2px dashed #f97316;border-radius:12px;padding:16px;}.receipt-header{text-align:center;border-bottom:2px dashed #f97316;padding-bottom:8px;margin-bottom:8px;}.receipt-header h2{color:#f97316;}.receipt-items{margin:10px 0;}.receipt-item{display:flex;justify-content:space-between;}.receipt-total{border-top:2px dashed #f97316;padding-top:8px;font-weight:bold;display:flex;justify-content:space-between;}</style></head><body>' + content.innerHTML + '</body></html>');
+    w.document.close(); setTimeout(function() { w.print(); }, 300);
   };
 
   window.printToolLabel = function(id) {
-    const t = allTools.find(x=>x.id===id);
-    if(!t)return;
-    const w = window.open('','_blank','width=350,height=400');
-    w.document.write(`<html><head><title>Label</title><style>body{font-family:Arial,sans-serif;padding:20px;text-align:center;}h1{font-size:18px;margin-bottom:8px;}p{margin:4px 0;font-size:14px;}.price{font-size:22px;font-weight:bold;color:#f97316;}.barcode{font-family:'Courier New',monospace;font-size:12px;margin-top:12px;padding:8px;border:1px dashed #000;}</style></head><body><h1>${t.name}</h1><p>${t.category||'General'}</p>${t.brand?`<p>Brand: ${t.brand}</p>`:''}<p class="price">${formatCurrency(t.sellPrice||t.price)}</p><div class="barcode">*${t.id?.substring(0,12).toUpperCase()}*</div><p style="font-size:10px;margin-top:8px;">🔧 OmoCreations</p></body></html>`);
-    w.document.close();setTimeout(()=>w.print(),300);
+    var t = allTools.find(function(x) { return x.id === id; });
+    if (!t) return;
+    var w = window.open('', '_blank', 'width=350,height=400');
+    w.document.write('<html><head><title>Label</title><style>body{font-family:Arial,sans-serif;padding:20px;text-align:center;}h1{font-size:18px;margin-bottom:8px;}p{margin:4px 0;font-size:14px;}.price{font-size:22px;font-weight:bold;color:#f97316;}.barcode{font-family:"Courier New",monospace;font-size:12px;margin-top:12px;padding:8px;border:1px dashed #000;}</style></head><body><h1>' + (t.name || '') + '</h1><p>' + (t.category || 'General') + '</p>' + (t.brand ? '<p>Brand: ' + t.brand + '</p>' : '') + '<p class="price">' + formatCurrency(t.sellPrice || t.price) + '</p><div class="barcode">*' + (t.id ? t.id.substring(0,12).toUpperCase() : '') + '*</div><p style="font-size:10px;margin-top:8px;">🔧 OmoCreations</p></body></html>');
+    w.document.close(); setTimeout(function() { w.print(); }, 300);
   };
 
   // ========== EDIT TOOL ==========
   window.openEditToolModal = function(id) {
-    const tool = allTools.find(t=>t.id===id); if(!tool)return;
-    const catOpts = categories.map(c=>`<option value="${c}" ${tool.category===c?'selected':''}>${c}</option>`).join('');
-    showModal(`Edit: ${tool.name}`, `
-      <div class="form-row"><div class="form-group"><label>Item Name</label><input class="form-control" id="editName" value="${tool.name||''}"></div><div class="form-group"><label>Category</label><select class="form-control" id="editCategory">${catOpts}</select></div></div>
-      <div class="form-row"><div class="form-group"><label>Brand</label><input class="form-control" id="editBrand" value="${tool.brand||''}"></div><div class="form-group"><label>Serial</label><input class="form-control" id="editSerial" value="${tool.serialNumber||''}"></div></div>
-      <div class="form-group"><label>Description</label><textarea class="form-control" id="editDesc" rows="2">${tool.description||''}</textarea></div>
-      <div class="form-row"><div class="form-group"><label>Cost Price ₦</label><input type="number" class="form-control" id="editPrice" value="${tool.price||0}" step="0.01" min="0"></div><div class="form-group"><label>Sell Price ₦</label><input type="number" class="form-control" id="editSellPrice" value="${tool.sellPrice||tool.price||0}" step="0.01" min="0"></div></div>
-      <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEditTool('${id}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
-    `);
+    var tool = allTools.find(function(t) { return t.id === id; });
+    if (!tool) return;
+    var catOpts = categories.map(function(c) { return '<option value="' + c + '"' + (tool.category === c ? ' selected' : '') + '>' + c + '</option>'; }).join('');
+    showModal('Edit: ' + tool.name,
+      '<div class="form-row"><div class="form-group"><label>Item Name</label><input class="form-control" id="editName" value="' + (tool.name || '') + '"></div><div class="form-group"><label>Category</label><select class="form-control" id="editCategory">' + catOpts + '</select></div></div>' +
+      '<div class="form-row"><div class="form-group"><label>Brand</label><input class="form-control" id="editBrand" value="' + (tool.brand || '') + '"></div><div class="form-group"><label>Serial</label><input class="form-control" id="editSerial" value="' + (tool.serialNumber || '') + '"></div></div>' +
+      '<div class="form-group"><label>Description</label><textarea class="form-control" id="editDesc" rows="2">' + (tool.description || '') + '</textarea></div>' +
+      '<div class="form-row"><div class="form-group"><label>Cost Price ₦</label><input type="number" class="form-control" id="editPrice" value="' + (tool.price || 0) + '" step="0.01" min="0"></div><div class="form-group"><label>Sell Price ₦</label><input type="number" class="form-control" id="editSellPrice" value="' + (tool.sellPrice || tool.price || 0) + '" step="0.01" min="0"></div></div>' +
+      '<div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEditTool(\'' + id + '\')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>');
   };
 
   window.saveEditTool = async function(id) {
-    const name = document.getElementById('editName')?.value?.trim();
-    if(!name){showToast('Name required','error');return;}
+    var name = (document.getElementById('editName').value || '').trim();
+    if (!name) { showToast('Name required', 'error'); return; }
     try {
-      await updateDoc(doc(db,'tools_machines',id),{
-        name, category: document.getElementById('editCategory')?.value,
-        brand: document.getElementById('editBrand')?.value?.trim(),
-        serialNumber: document.getElementById('editSerial')?.value?.trim(),
-        description: document.getElementById('editDesc')?.value?.trim(),
-        price: parseFloat(document.getElementById('editPrice')?.value)||0,
-        sellPrice: parseFloat(document.getElementById('editSellPrice')?.value)||0,
-        updatedAt: serverTimestamp()
+      await db.collection('tools_machines').doc(id).update({
+        name: name, category: document.getElementById('editCategory').value,
+        brand: (document.getElementById('editBrand').value || '').trim(),
+        serialNumber: (document.getElementById('editSerial').value || '').trim(),
+        description: (document.getElementById('editDesc').value || '').trim(),
+        price: parseFloat(document.getElementById('editPrice').value) || 0,
+        sellPrice: parseFloat(document.getElementById('editSellPrice').value) || 0,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      showToast('Updated','success'); hideModal();
-    } catch(e){showToast('Failed','error');}
+      showToast('Updated', 'success'); hideModal();
+    } catch(e) { showToast('Failed', 'error'); }
   };
 
   window.deleteTool = async function(id) {
-    if(!confirm('Delete this tool permanently?'))return;
-    showPinModal('Confirm Delete','delete tool',async()=>{try{await deleteDoc(doc(db,'tools_machines',id));showToast('Deleted','success');}catch(e){showToast('Failed','error');}});
+    if (!confirm('Delete this tool permanently?')) return;
+    showPinModal('Confirm Delete', 'delete tool', async function() {
+      try { await db.collection('tools_machines').doc(id).delete(); showToast('Deleted', 'success'); } catch(e) { showToast('Failed', 'error'); }
+    });
   };
 
   window.exportData = function(format) {
-    const h=['Name','Category','Brand','Serial','Description','Price','Sell Price','Status','Sold To','Sold Date','Payment'];
-    const rows=allTools.map(t=>[t.name||'',t.category||'',t.brand||'',t.serialNumber||'',t.description||'',t.price||0,t.sellPrice||0,t.status||'available',t.soldTo||'',t.soldDate?formatFullDate(t.soldDate):'',t.paymentMethod||'']);
-    const csv=[h.join(','),...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');
-    const b=new Blob([csv],{type:format==='csv'?'text/csv':'application/vnd.ms-excel'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`tools_${new Date().toISOString().split('T')[0]}.${format}`;a.click();
-    document.getElementById('exportMenu').classList.remove('show');showToast('Exported','success');
+    var h = ['Name','Category','Brand','Serial','Description','Price','Sell Price','Status','Sold To','Sold Date','Payment'];
+    var rows = allTools.map(function(t) { return [t.name||'',t.category||'',t.brand||'',t.serialNumber||'',t.description||'',t.price||0,t.sellPrice||0,t.status||'available',t.soldTo||'',t.soldDate?formatFullDate(t.soldDate):'',t.paymentMethod||'']; });
+    var csv = [h.join(','), rows.map(function(r) { return r.map(function(c) { return '"' + c + '"'; }).join(','); }).join('\n')].join('\n');
+    var b = new Blob([csv], { type: format === 'csv' ? 'text/csv' : 'application/vnd.ms-excel' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'tools_' + new Date().toISOString().split('T')[0] + '.' + format; a.click();
+    document.getElementById('exportMenu').classList.remove('show'); showToast('Exported', 'success');
   };
 
-  window.refreshData = ()=>{loadTools();showToast('Refreshed','success');};
+  window.refreshData = function() { loadTools(); showToast('Refreshed', 'success'); };
 
-  document.getElementById('searchInput').addEventListener('input',renderAllTables);
-  document.getElementById('categoryFilter').addEventListener('change',renderAllTables);
-  document.getElementById('exportDropdownBtn').addEventListener('click',(e)=>{e.stopPropagation();document.getElementById('exportMenu').classList.toggle('show');});
-  document.addEventListener('click',()=>document.getElementById('exportMenu').classList.remove('show'));
-  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){
-    currentTab=this.dataset.tab;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));this.classList.add('active');
-    document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active'));
-    document.getElementById(currentTab+'Panel').classList.add('active');renderAllTables();
-  }));
+  document.getElementById('searchInput').addEventListener('input', renderAllTables);
+  document.getElementById('categoryFilter').addEventListener('change', renderAllTables);
+  document.getElementById('exportDropdownBtn').addEventListener('click', function(e) { e.stopPropagation(); document.getElementById('exportMenu').classList.toggle('show'); });
+  document.addEventListener('click', function() { document.getElementById('exportMenu').classList.remove('show'); });
+  document.querySelectorAll('.tab').forEach(function(t) { t.addEventListener('click', function() {
+    currentTab = this.dataset.tab;
+    document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); }); this.classList.add('active');
+    document.querySelectorAll('.page-view').forEach(function(p) { p.classList.remove('active'); });
+    document.getElementById(currentTab + 'Panel').classList.add('active'); renderAllTables();
+  }); });
 
-  onAuthStateChanged(auth,async(u)=>{
-    if(!u){window.location.href='auth.html';return;} currentUser=u;
+  auth.onAuthStateChanged(async function(u) {
+    if (!u) { window.location.href = 'auth.html'; return; }
+    currentUser = u;
     try {
-      const snap = await getDoc(doc(db,'users',u.uid));
-      if(!snap.exists()||snap.data().status!=='active'){await signOut(auth);window.location.href='auth.html';return;}
+      var snap = await db.collection('users').doc(u.uid).get();
+      if (!snap.exists || snap.data().status !== 'active') { auth.signOut(); window.location.href = 'auth.html'; return; }
       userData = snap.data();
-      document.getElementById('userName').textContent = userData.fullName?.split(' ')[0]||'Staff';
-      document.getElementById('userRole').textContent = userData.role?.replace('_',' ')||'Staff';
-      document.getElementById('userAvatar').textContent = (userData.fullName||'A').charAt(0).toUpperCase();
-      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+      document.getElementById('userName').textContent = (userData.fullName || 'A').split(' ')[0] || 'Staff';
+      document.getElementById('userRole').textContent = (userData.role || 'staff').replace('_', ' ');
+      document.getElementById('userAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
+      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
       buildSidebar(); loadTools();
-    } catch(e){showToast('Error','error');}
+    } catch(e) { showToast('Error loading', 'error'); }
   });
-  window.addEventListener('beforeunload',cleanup);
+
+  window.addEventListener('beforeunload', cleanup);
 </script>
 </body>
 </html>
