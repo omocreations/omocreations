@@ -14,285 +14,176 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
-      --primary-soft:#fff0f6; --dark:#1a1a2e; --gray:#6b7280;
-      --gray-light:#f3f4f6; --success:#10b981; --warning:#f59e0b;
-      --danger:#ef4444; --info:#3b82f6;
-      --sidebar-width:280px; --header-height:70px;
+      --primary: #ff4da6; --primary-dark: #e6398c; --primary-light: #ffb3d9;
+      --primary-soft: #fff0f6; --dark: #1a1a2e; --gray: #6b7280;
+      --gray-light: #f3f4f6; --success: #10b981; --warning: #f59e0b;
+      --danger: #ef4444; --info: #3b82f6; --purple: #8b5cf6;
+      --sidebar-width: 280px; --header-height: 70px;
     }
 
-    html { font-size:16px; -webkit-text-size-adjust:100%; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
 
     body {
-      font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-      background:linear-gradient(135deg,#f9fafb 0%,#fff0f6 100%);
-      display:flex; min-height:100vh; overflow-x:hidden;
-      -webkit-font-smoothing:antialiased;
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f9fafb 0%, #fff0f6 100%);
+      display: flex; min-height: 100vh; overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
     @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
     @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
-    @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
+    @keyframes slideInRight { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
+    @keyframes pulseGlow { 0%,100%{box-shadow:0 0 5px #ff4da6}50%{box-shadow:0 0 20px #ff4da6} }
 
     .sidebar {
-      width:var(--sidebar-width); min-width:var(--sidebar-width);
-      background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%);
-      color:white; position:fixed; top:0; left:0; height:100vh;
-      overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000;
-      border-right:1px solid rgba(255,77,166,0.2);
+      width: var(--sidebar-width); min-width: var(--sidebar-width);
+      background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+      color: white; position: fixed; top: 0; left: 0; height: 100vh;
+      overflow-y: auto; overflow-x: hidden;
+      transition: transform 0.3s ease; z-index: 1000;
+      border-right: 1px solid rgba(255,77,166,0.2);
     }
-    .sidebar::-webkit-scrollbar { width:4px; }
-    .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); }
-    .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
-    .sidebar-header {
-      padding:24px 18px; display:flex; align-items:center; gap:12px;
-      border-bottom:1px solid rgba(255,77,166,0.2); position:sticky; top:0; z-index:10;
-      background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%);
-    }
-    .sidebar-header .close-sidebar {
-      display:none; background:rgba(255,255,255,0.1); border:none; color:white;
-      width:32px; height:32px; border-radius:50%; cursor:pointer;
-      font-size:1.2rem; margin-left:auto; align-items:center; justify-content:center;
-    }
-    .logo-icon {
-      width:42px; height:42px; background:linear-gradient(135deg,var(--primary),var(--primary-dark));
-      border-radius:12px; display:flex; align-items:center; justify-content:center;
-      font-size:1.3rem; font-weight:700; flex-shrink:0;
-      animation:flameRing 2s ease-in-out infinite;
-    }
-    .logo-text { font-size:1.25rem; font-weight:800; font-family:'Playfair Display',serif; white-space:nowrap; }
-    .logo-text span { color:var(--primary); }
+    .sidebar-header { padding: 24px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,77,166,0.2); position: sticky; top: 0; z-index: 10; background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%); }
+    .sidebar-header .close-sidebar { display: none; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; margin-left: auto; align-items: center; justify-content: center; }
+    .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; flex-shrink: 0; animation: flameRing 2s ease-in-out infinite; }
+    .logo-text { font-size: 1.25rem; font-weight: 800; font-family: 'Playfair Display', serif; white-space: nowrap; } .logo-text span { color: var(--primary); }
 
-    .sidebar-nav { padding:20px 12px; display:flex; flex-direction:column; }
-    .nav-section { margin-bottom:20px; }
-    .nav-section-title {
-      font-size:0.65rem; text-transform:uppercase; letter-spacing:2px;
-      color:rgba(255,255,255,0.4); padding:8px 14px 6px; font-weight:600; white-space:nowrap;
-    }
-    .nav-item {
-      display:flex; align-items:center; gap:14px; padding:12px 14px; border-radius:12px;
-      color:rgba(255,255,255,0.7); cursor:pointer; border:none; background:none;
-      width:100%; font-size:0.9rem; font-weight:500; text-align:left; margin-bottom:3px;
-      transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; text-decoration:none;
-    }
-    .nav-item i { width:22px; font-size:1.1rem; text-align:center; flex-shrink:0; }
-    .nav-item:hover { background:rgba(255,77,166,0.15); color:white; transform:translateX(5px); }
-    .nav-item.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; box-shadow:0 5px 15px rgba(255,77,166,0.3); }
-    .nav-item.logout { color:rgba(239,68,68,0.7); margin-top:auto; }
-    .nav-item.logout:hover { background:rgba(239,68,68,0.15); color:#ef4444; }
+    .sidebar-nav { padding: 20px 12px; display: flex; flex-direction: column; }
+    .nav-section { margin-bottom: 20px; }
+    .nav-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.4); padding: 8px 14px 6px; font-weight: 600; white-space: nowrap; }
+    .nav-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; color: rgba(255,255,255,0.7); cursor: pointer; border: none; background: none; width: 100%; font-size: 0.9rem; font-weight: 500; text-align: left; margin-bottom: 3px; transition: all 0.2s; font-family: 'Poppins', sans-serif; white-space: nowrap; text-decoration: none; }
+    .nav-item i { width: 22px; font-size: 1.1rem; text-align: center; flex-shrink: 0; } .nav-item:hover { background: rgba(255,77,166,0.15); color: white; transform: translateX(5px); }
+    .nav-item.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 5px 15px rgba(255,77,166,0.3); }
+    .nav-item.logout { color: rgba(239,68,68,0.7); margin-top: auto; } .nav-item.logout:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
 
-    .sidebar-footer {
-      padding:20px; border-top:1px solid rgba(255,77,166,0.2);
-      position:sticky; bottom:0; background:linear-gradient(0deg,#0f0f1a 0%,transparent 100%);
-    }
-    .user-profile { display:flex; align-items:center; gap:12px; }
-    .user-avatar {
-      width:44px; height:44px; border-radius:12px;
-      background:linear-gradient(135deg,var(--primary),var(--primary-dark));
-      display:flex; align-items:center; justify-content:center;
-      font-weight:700; color:white; flex-shrink:0; font-size:1.1rem;
-    }
-    .user-details { white-space:nowrap; }
-    .user-details h4 { font-size:0.85rem; font-weight:600; }
-    .user-details p { font-size:0.7rem; opacity:0.6; }
+    .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,77,166,0.2); position: sticky; bottom: 0; background: linear-gradient(0deg, #0f0f1a 0%, transparent 100%); }
+    .user-profile { display: flex; align-items: center; gap: 12px; }
+    .user-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; flex-shrink: 0; font-size: 1.1rem; }
+    .user-details { white-space: nowrap; } .user-details h4 { font-size: 0.85rem; font-weight: 600; } .user-details p { font-size: 0.7rem; opacity: 0.6; }
 
-    .sidebar-overlay {
-      position:fixed; inset:0; background:rgba(0,0,0,0.5);
-      backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:999; display:none;
-    }
-    .sidebar-overlay.active { display:block; }
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 999; display: none; } .sidebar-overlay.active { display: block; }
 
-    .main-content {
-      flex:1; margin-left:var(--sidebar-width); transition:margin-left 0.3s ease;
-      min-height:100vh; width:calc(100% - var(--sidebar-width));
-    }
+    .main-content { flex: 1; margin-left: var(--sidebar-width); transition: margin-left 0.3s ease; min-height: 100vh; width: calc(100% - var(--sidebar-width)); }
 
-    .top-bar {
-      height:var(--header-height); background:rgba(255,255,255,0.98);
-      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
-      padding:0 28px; display:flex; align-items:center; justify-content:space-between;
-      border-bottom:1px solid rgba(255,77,166,0.15); position:sticky; top:0; z-index:50;
-    }
-    .top-bar-left { display:flex; align-items:center; gap:14px; }
-    .menu-toggle {
-      background:none; border:none; font-size:1.3rem; color:var(--gray);
-      cursor:pointer; padding:10px; border-radius:10px; transition:all 0.2s;
-      display:none; align-items:center; justify-content:center;
-    }
-    .menu-toggle:hover { background:var(--primary-soft); color:var(--primary); }
-    .page-title { font-size:1.5rem; font-weight:700; color:var(--dark); font-family:'Playfair Display',serif; }
-    .current-date { color:var(--gray); font-size:0.85rem; white-space:nowrap; }
+    .top-bar { height: var(--header-height); background: rgba(255,255,255,0.98); backdrop-filter: blur(12px); padding: 0 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,77,166,0.15); position: sticky; top: 0; z-index: 50; }
+    .top-bar-left { display: flex; align-items: center; gap: 14px; }
+    .menu-toggle { background: none; border: none; font-size: 1.3rem; color: var(--gray); cursor: pointer; padding: 10px; border-radius: 10px; transition: all 0.2s; display: none; align-items: center; justify-content: center; }
+    .menu-toggle:hover { background: var(--primary-soft); color: var(--primary); }
+    .page-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
+    .current-date { color: var(--gray); font-size: 0.85rem; white-space: nowrap; }
 
-    .notification-btn {
-      position:relative; cursor:pointer; padding:10px; border-radius:12px;
-      background:none; border:none; transition:all 0.2s; font-size:1.2rem; color:var(--gray);
-      display:flex; align-items:center;
-    }
-    .notification-btn:hover { background:var(--primary-soft); color:var(--primary); }
-    .notification-badge {
-      position:absolute; top:2px; right:2px;
-      background:linear-gradient(135deg,var(--danger),#dc2626);
-      color:white; font-size:0.6rem; font-weight:700;
-      min-width:20px; height:20px; padding:0 6px; border-radius:20px;
-      display:none; align-items:center; justify-content:center;
-    }
-    .notification-badge.show { display:flex; animation:pulse 0.3s ease; }
+    .notification-btn { position: relative; cursor: pointer; padding: 10px; border-radius: 12px; background: none; border: none; transition: all 0.2s; font-size: 1.2rem; color: var(--gray); display: flex; align-items: center; }
+    .notification-btn:hover { background: var(--primary-soft); color: var(--primary); }
+    .notification-badge { position: absolute; top: 2px; right: 2px; background: linear-gradient(135deg, var(--danger), #dc2626); color: white; font-size: 0.6rem; font-weight: 700; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 20px; display: none; align-items: center; justify-content: center; }
+    .notification-badge.show { display: flex; animation: pulseGlow 0.3s ease; }
 
-    .content-wrapper { padding:28px; max-width:1400px; }
+    .content-wrapper { padding: 28px; max-width: 1400px; width: 100%; }
 
-    .welcome-banner {
-      background:linear-gradient(135deg,var(--primary-soft),white);
-      border-radius:20px; padding:24px; margin-bottom:24px;
-      display:flex; align-items:center; justify-content:space-between;
-      border:1px solid rgba(255,77,166,0.15); flex-wrap:wrap; gap:16px;
+    .welcome-banner { background: linear-gradient(135deg, var(--primary-soft), white); border-radius: 20px; padding: 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,77,166,0.15); flex-wrap: wrap; gap: 16px; }
+    .welcome-text h2 { font-size: 1.4rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
+    .points-display { text-align: right; }
+    .points-value { font-size: 2.5rem; font-weight: 800; color: var(--primary); font-family: 'Playfair Display', serif; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: white; padding: 18px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(255,77,166,0.1); transition: all 0.3s; animation: fadeInUp 0.5s ease forwards; opacity: 0; }
+    .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}.stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}
+    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(255,77,166,0.15); }
+    .stat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .stat-header span { font-size: 0.65rem; color: var(--gray); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-icon { width: 36px; height: 36px; border-radius: 12px; background: var(--primary-soft); display: flex; align-items: center; justify-content: center; color: var(--primary); }
+    .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--dark); font-family: 'Playfair Display', serif; line-height: 1; }
+    .stat-change { font-size: 0.65rem; margin-top: 4px; color: var(--gray); }
+
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+
+    .panel { background: white; border-radius: 24px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(255,77,166,0.08); }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+    .panel-header h3 { font-size: 1.1rem; font-weight: 700; color: var(--dark); display: flex; align-items: center; gap: 10px; } .panel-header h3 i { color: var(--primary); }
+
+    .btn { padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; background: white; border: 1px solid rgba(0,0,0,0.08); transition: all 0.2s; font-family: 'Poppins', sans-serif; white-space: nowrap; text-decoration: none; color: inherit; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; }
+    .btn-outline { border: 1.5px solid rgba(255,77,166,0.3); color: var(--primary); background: transparent; }
+    .btn-sm { padding: 5px 12px; font-size: 0.7rem; }
+    .btn-success { background: var(--success); color: white; border: none; }
+    .btn-warning { background: var(--warning); color: white; border: none; }
+
+    .badge { padding: 5px 12px; border-radius: 40px; font-size: 0.7rem; font-weight: 600; display: inline-block; white-space: nowrap; }
+    .badge-success { background: rgba(16,185,129,0.1); color: var(--success); } .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
+    .badge-info { background: rgba(59,130,246,0.1); color: var(--info); } .badge-purple { background: rgba(139,92,246,0.1); color: var(--purple); }
+
+    .ack-badge { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
+    .ack-badge.pending { background: rgba(245,158,11,0.1); color: var(--warning); animation: pulseGlow 2s infinite; }
+    .ack-badge.done { background: rgba(16,185,129,0.1); color: var(--success); }
+
+    .salary-summary { background: linear-gradient(135deg, #1a1a2e 0%, #2d2d4a 100%); color: white; padding: 16px; border-radius: 14px; margin-bottom: 15px; border: 1px solid rgba(255,77,166,0.3); }
+    .salary-row { display: flex; justify-content: space-between; padding: 6px 0; }
+    .salary-row.total { border-top: 1px solid rgba(255,255,255,0.2); margin-top: 6px; padding-top: 10px; font-weight: 700; font-size: 1.1rem; }
+
+    .points-breakdown { background: white; border-radius: 14px; padding: 16px; border: 1px solid rgba(255,77,166,0.1); }
+    .points-row { display: flex; justify-content: space-between; padding: 8px 0; }
+    .points-row .positive { color: var(--success); font-weight: 600; } .points-row .negative { color: var(--danger); font-weight: 600; }
+
+    .ann-card { border-radius: 14px; padding: 14px; margin-bottom: 10px; border-left: 4px solid var(--primary); cursor: pointer; transition: all 0.2s; }
+    .ann-card:hover { transform: translateX(3px); box-shadow: 0 4px 12px rgba(255,77,166,0.1); }
+    .ann-card.unread { background: rgba(255,77,166,0.05); border-left-color: var(--warning); }
+    .ann-card.read { background: var(--primary-soft); }
+    .ann-card .ann-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+    .ann-card .ann-top h4 { font-size: 0.85rem; font-weight: 600; color: var(--dark); }
+    .ann-card .ann-preview { font-size: 0.78rem; color: var(--gray); margin-bottom: 8px; line-height: 1.4; }
+    .ann-card .ann-bottom { display: flex; align-items: center; justify-content: space-between; font-size: 0.68rem; color: var(--gray); flex-wrap: wrap; gap: 4px; }
+    .ann-card .ann-tags { display: flex; gap: 4px; flex-wrap: wrap; flex-shrink: 0; }
+
+    .task-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.04); flex-wrap: wrap; gap: 10px; }
+    .task-item:last-child { border-bottom: none; }
+    .task-info h4 { font-size: 0.9rem; margin-bottom: 4px; }
+    .task-info p { font-size: 0.7rem; color: var(--gray); }
+
+    .leave-type-selector { display: flex; gap: 10px; margin-bottom: 15px; }
+    .leave-type-btn { flex: 1; padding: 12px; border: 2px solid rgba(0,0,0,0.08); border-radius: 14px; text-align: center; cursor: pointer; font-weight: 600; font-size: 0.85rem; background: white; transition: all 0.2s; font-family: 'Poppins', sans-serif; }
+    .leave-type-btn.active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+    .leave-summary { background: var(--primary-soft); padding: 12px; border-radius: 12px; margin-top: 10px; font-size: 0.85rem; font-weight: 600; color: var(--primary); text-align: center; }
+    .form-group { margin-bottom: 15px; }
+    .form-control { width: 100%; padding: 12px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08); font-family: 'Poppins', sans-serif; font-size: 0.9rem; }
+    .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,77,166,0.1); }
+
+    .reply-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(0,0,0,0.06); }
+    .reply-item { background: var(--gray-light); border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+    .reply-item .rep-header { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--gray); margin-bottom: 4px; }
+    .reply-item .rep-body { font-size: 0.82rem; color: var(--dark); }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: white; border-radius: 28px; padding: 28px; max-width: 550px; width: 100%; max-height: 85vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray); padding: 5px; }
+    .modal-close:hover { color: var(--danger); }
+
+    .empty-state { text-align: center; padding: 30px; color: var(--gray); } .empty-state i { font-size: 2rem; color: var(--primary-light); margin-bottom: 10px; display: block; }
+
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .toast { background: white; color: var(--dark); padding: 14px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 0.85rem; animation: slideInRight 0.3s ease; border-left: 4px solid var(--primary); pointer-events: auto; }
+    .toast.success { border-left-color: var(--success); } .toast.error { border-left-color: var(--danger); }
+
+    @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 992px) { .grid-2col { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); width: 280px !important; min-width: 280px !important; }
+      .sidebar.mobile-open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.3); }
+      .sidebar-header .close-sidebar { display: flex !important; } .menu-toggle { display: flex !important; }
+      .main-content { margin-left: 0 !important; width: 100% !important; } .content-wrapper { padding: 16px 12px; }
+      .top-bar { padding: 0 16px; } .page-title { font-size: 1.1rem; } .current-date { display: none; }
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; } .stat-value { font-size: 1.4rem; }
+      .welcome-banner { flex-direction: column; text-align: center; } .points-display { text-align: center; }
     }
-    .welcome-text h2 { font-size:1.4rem; font-weight:700; color:var(--dark); font-family:'Playfair Display',serif; }
-    .points-display { text-align:right; }
-    .points-value { font-size:2.5rem; font-weight:800; color:var(--primary); font-family:'Playfair Display',serif; }
-
-    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
-    .stat-card {
-      background:white; padding:18px 16px; border-radius:20px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(255,77,166,0.1);
-      transition:all 0.3s; position:relative; overflow:hidden;
-      animation:fadeInUp 0.5s ease forwards; opacity:0;
-    }
-    .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.1s}
-    .stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.2s}
-    .stat-card::before {
-      content:''; position:absolute; inset:-2px;
-      background:linear-gradient(45deg,var(--primary),var(--primary-light),var(--primary));
-      background-size:400%; border-radius:20px; opacity:0; transition:opacity 0.3s; z-index:-1;
-    }
-    .stat-card:hover { transform:translateY(-5px); box-shadow:0 12px 24px rgba(255,77,166,0.15); }
-    .stat-card:hover::before { opacity:0.3; animation:flameRing 2s linear infinite; }
-    .stat-header { display:flex; justify-content:space-between; margin-bottom:12px; }
-    .stat-header span { font-size:0.65rem; color:var(--gray); text-transform:uppercase; font-weight:600; letter-spacing:1px; }
-    .stat-icon { width:36px; height:36px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; color:var(--primary); }
-    .stat-value { font-size:1.8rem; font-weight:800; color:var(--dark); font-family:'Playfair Display',serif; line-height:1; }
-
-    .two-column { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px; }
-
-    .panel {
-      background:white; border-radius:24px; padding:24px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(255,77,166,0.08); margin-bottom:24px;
-    }
-    .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
-    .panel-header h3 { font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:10px; color:var(--dark); }
-    .panel-header h3 i { color:var(--primary); }
-
-    .announcement-card {
-      background:var(--primary-soft); border-radius:14px; padding:14px; margin-bottom:10px;
-      border-left:4px solid var(--primary); cursor:pointer; transition:all 0.2s;
-    }
-    .announcement-card:hover { transform:translateX(5px); box-shadow:0 4px 12px rgba(255,77,166,0.15); }
-    .announcement-card h4 { font-size:0.9rem; margin-bottom:6px; }
-    .announcement-card p { font-size:0.8rem; color:var(--gray); }
-    .announcement-card .meta { font-size:0.65rem; color:var(--gray); margin-top:8px; }
-
-    .task-item {
-      display:flex; align-items:center; justify-content:space-between;
-      padding:14px 0; border-bottom:1px solid rgba(0,0,0,0.04); flex-wrap:wrap; gap:10px;
-    }
-    .task-item:last-child { border-bottom:none; }
-    .task-info h4 { font-size:0.9rem; margin-bottom:4px; }
-    .task-info p { font-size:0.7rem; color:var(--gray); }
-
-    .badge { padding:5px 12px; border-radius:40px; font-size:0.7rem; font-weight:600; display:inline-block; white-space:nowrap; }
-    .badge-success { background:rgba(16,185,129,0.1); color:var(--success); }
-    .badge-warning { background:rgba(245,158,11,0.1); color:var(--warning); }
-    .badge-info { background:rgba(59,130,246,0.1); color:var(--info); }
-
-    .btn {
-      padding:8px 16px; border-radius:40px; font-weight:600; font-size:0.75rem;
-      cursor:pointer; display:inline-flex; align-items:center; gap:6px;
-      background:white; border:1px solid rgba(0,0,0,0.08); transition:all 0.2s;
-      font-family:'Poppins',sans-serif; white-space:nowrap;
-    }
-    .btn:hover { transform:translateY(-2px); }
-    .btn-primary { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; border:none; }
-    .btn-success { background:var(--success); color:white; border:none; }
-    .btn-outline { border:1.5px solid rgba(255,77,166,0.3); color:var(--primary); background:transparent; }
-    .btn-sm { padding:6px 12px; font-size:0.7rem; }
-
-    .tabs-container { display:flex; gap:6px; margin-bottom:15px; background:var(--gray-light); padding:5px; border-radius:40px; }
-    .tab-btn {
-      padding:8px 16px; border-radius:40px; font-weight:600; font-size:0.75rem;
-      border:none; background:none; color:var(--gray); cursor:pointer; flex:1; transition:all 0.2s;
-      font-family:'Poppins',sans-serif;
-    }
-    .tab-btn.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; }
-    .tab-content { display:none; } .tab-content.active { display:block; }
-
-    .leave-type-selector { display:flex; gap:10px; margin-bottom:15px; }
-    .leave-type-btn {
-      flex:1; padding:12px; border:2px solid rgba(0,0,0,0.08); border-radius:14px;
-      text-align:center; cursor:pointer; font-weight:600; font-size:0.85rem;
-      background:white; transition:all 0.2s; font-family:'Poppins',sans-serif;
-    }
-    .leave-type-btn.active { border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
-    .leave-summary {
-      background:var(--primary-soft); padding:12px; border-radius:12px; margin-top:10px;
-      font-size:0.85rem; font-weight:600; color:var(--primary); text-align:center;
-    }
-    .form-group { margin-bottom:15px; }
-    .form-control {
-      width:100%; padding:12px; border-radius:14px; border:1px solid rgba(0,0,0,0.08);
-      font-family:'Poppins',sans-serif; font-size:0.9rem; transition:all 0.2s;
-    }
-    .form-control:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(255,77,166,0.1); }
-
-    .salary-summary {
-      background:linear-gradient(135deg,#1a1a2e 0%,#2d2d4a 100%); color:white;
-      padding:16px; border-radius:14px; margin-bottom:15px; border:1px solid rgba(255,77,166,0.3);
-    }
-    .salary-row { display:flex; justify-content:space-between; padding:6px 0; }
-    .salary-row.total { border-top:1px solid rgba(255,255,255,0.2); margin-top:6px; padding-top:10px; font-weight:700; font-size:1.1rem; }
-
-    .points-breakdown { background:white; border-radius:14px; padding:16px; margin-top:15px; border:1px solid rgba(255,77,166,0.1); }
-    .points-row { display:flex; justify-content:space-between; padding:8px 0; }
-    .points-row .positive { color:var(--success); font-weight:600; }
-    .points-row .negative { color:var(--danger); font-weight:600; }
-
-    .empty-state { text-align:center; padding:30px; color:var(--gray); }
-    .empty-state i { font-size:2rem; color:var(--primary-light); margin-bottom:10px; display:block; }
-
-    .toast-container { position:fixed; bottom:24px; right:24px; z-index:3000; display:flex; flex-direction:column; gap:10px; }
-    .toast {
-      background:white; color:var(--dark); padding:14px 20px; border-radius:50px;
-      box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px;
-      font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease;
-      border-left:4px solid var(--primary); transition:all 0.3s ease;
-    }
-    .toast.success { border-left-color:var(--success); }
-    .toast.error { border-left-color:var(--danger); }
-    .toast i { font-size:1.1rem; }
-    .toast.success i { color:var(--success); }
-    .toast.error i { color:var(--danger); }
-
-    @media (max-width:1200px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
-    @media (max-width:992px) { .two-column { grid-template-columns:1fr; } }
-    @media (max-width:768px) {
-      .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; }
-      .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); }
-      .sidebar-header .close-sidebar { display:flex !important; }
-      .menu-toggle { display:flex !important; }
-      .main-content { margin-left:0 !important; width:100% !important; }
-      .content-wrapper { padding:16px 12px; }
-      .top-bar { padding:0 16px; }
-      .page-title { font-size:1.1rem; }
-      .current-date { display:none; }
-      .stats-grid { grid-template-columns:1fr 1fr; gap:10px; }
-      .stat-card { padding:14px 12px; }
-      .stat-value { font-size:1.4rem; }
-      .welcome-banner { flex-direction:column; text-align:center; }
-      .points-display { text-align:center; }
-    }
-    @media (max-width:480px) { .stats-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -300,18 +191,10 @@
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <div class="logo-icon">✨</div>
-    <div class="logo-text"><span>Omo</span>creations</div>
-    <button class="close-sidebar" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
-  </div>
+  <div class="sidebar-header"><div class="logo-icon">✨</div><div class="logo-text"><span>Omo</span>Creations</div><button class="close-sidebar" onclick="closeSidebar()"><i class="fas fa-times"></i></button></div>
   <nav class="sidebar-nav">
     <div class="nav-section"><div class="nav-section-title">MAIN</div>
       <button class="nav-item active"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
-    </div>
-    <div class="nav-section"><div class="nav-section-title">INFO</div>
-      <button class="nav-item" onclick="navigateTo('notifications.html')"><i class="fas fa-bell"></i><span>Notifications</span></button>
-      <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
     </div>
     <div class="nav-section"><div class="nav-section-title">ACCOUNT</div>
       <button class="nav-item" onclick="navigateTo('staff-profile.html')"><i class="fas fa-user"></i><span>My Profile</span></button>
@@ -323,10 +206,7 @@
 
 <main class="main-content">
   <header class="top-bar">
-    <div class="top-bar-left">
-      <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-      <h1 class="page-title">Worker Dashboard</h1>
-    </div>
+    <div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">Worker Dashboard</h1></div>
     <div style="display:flex;align-items:center;gap:16px;">
       <button class="notification-btn" onclick="navigateTo('notifications.html')">
         <i class="far fa-bell"></i>
@@ -339,7 +219,7 @@
   <div class="content-wrapper">
 
     <div class="welcome-banner">
-      <div class="welcome-text"><h2>Welcome, <span id="welcomeName">Worker</span>! 👋</h2><p id="currentDay"></p></div>
+      <div class="welcome-text"><h2>Welcome, <span id="welcomeName">Worker</span>! 👋</h2><p id="currentDay" style="color:var(--gray);margin-top:4px;"></p></div>
       <div class="points-display"><div class="points-value" id="totalPoints">0</div><div style="font-size:0.8rem;color:var(--gray);">Total Points · ₦<span id="pointValue">500</span>/5pts</div></div>
     </div>
 
@@ -347,16 +227,16 @@
       <div class="stat-card"><div class="stat-header"><span>Tasks Done</span><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div><div class="stat-value" id="tasksDone">0</div></div>
       <div class="stat-card"><div class="stat-header"><span>Pending</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-value" id="pendingTasks">0</div></div>
       <div class="stat-card"><div class="stat-header"><span>In Progress</span><div class="stat-icon"><i class="fas fa-spinner"></i></div></div><div class="stat-value" id="inProgressTasks">0</div></div>
-      <div class="stat-card"><div class="stat-header"><span>Leave Days</span><div class="stat-icon"><i class="fas fa-umbrella-beach"></i></div></div><div class="stat-value" id="leaveDays">2</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Leave Days</span><div class="stat-icon"><i class="fas fa-umbrella-beach"></i></div></div><div class="stat-value" id="leaveDays">2</div><div class="stat-change">remaining</div></div>
     </div>
 
-    <div class="two-column">
+    <div class="grid-2col">
       <div>
         <div class="panel">
-          <div class="panel-header"><h3><i class="fas fa-money-bill-wave"></i> Salary & Points Overview</h3></div>
+          <div class="panel-header"><h3><i class="fas fa-money-bill-wave"></i> Salary & Points</h3></div>
           <div class="salary-summary">
             <div class="salary-row"><span>Base Salary</span><span id="salaryBase">₦0</span></div>
-            <div class="salary-row"><span>Point Value (5pts)</span><span>₦<span id="salaryPointValue">500</span></span></div>
+            <div class="salary-row"><span>Point Value</span><span>₦<span id="salaryPointValue">500</span>/5pts</span></div>
           </div>
           <div class="points-breakdown">
             <h4 style="margin-bottom:12px;font-size:0.9rem;"><i class="fas fa-coins"></i> Points Breakdown</h4>
@@ -383,16 +263,8 @@
 
       <div>
         <div class="panel">
-          <div class="panel-header">
-            <h3><i class="fas fa-bullhorn"></i> Announcements</h3>
-            <button class="btn btn-outline btn-sm" onclick="markAllAnnouncementsRead()"><i class="fas fa-check-double"></i> Mark All Read</button>
-          </div>
-          <div class="tabs-container">
-            <button class="tab-btn active" data-tab="general">General</button>
-            <button class="tab-btn" data-tab="personal">Personal</button>
-          </div>
-          <div id="generalAnnouncements" class="tab-content active" style="max-height:250px;overflow-y:auto;"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></div>
-          <div id="personalAnnouncements" class="tab-content" style="max-height:250px;overflow-y:auto;"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></div>
+          <div class="panel-header"><h3><i class="fas fa-bullhorn"></i> Announcements</h3></div>
+          <div id="workerAnnouncementsList" style="max-height:400px;overflow-y:auto;"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading announcements...</p></div></div>
         </div>
       </div>
     </div>
@@ -405,233 +277,279 @@
   </div>
 </main>
 
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal"><div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="hideModal()">&times;</button></div><div id="modalContent"></div></div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, where, orderBy, limit, onSnapshot, addDoc, updateDoc, serverTimestamp, increment, writeBatch, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, query, where, orderBy, limit, onSnapshot, addDoc, updateDoc, serverTimestamp, increment, writeBatch, arrayUnion, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
-    authDomain: "fashion-46e5d.firebaseapp.com",
-    projectId: "fashion-46e5d",
-    storageBucket: "fashion-46e5d.firebasestorage.app",
-    messagingSenderId: "408062284317",
-    appId: "1:408062284317:web:eb905bce68926c10a0ecf4"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
+  const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
 
   let currentUser = null, userData = null, globalPointValue = 500, unsubscribes = [], selectedLeaveDays = 1;
 
-  function formatDate(d) { if(!d) return '-'; const date=d.toDate?d.toDate():new Date(d); return date.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}); }
-  function formatDateTime(d) { if(!d) return '-'; const date=d.toDate?d.toDate():new Date(d); return date.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
-  function formatCurrency(n) { return '₦'+(n||0).toLocaleString(); }
-  function navigateTo(url) { window.location.href=url; }
+  function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }); }
+  function formatFullDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
+  function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
+  function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
 
-  function showToast(msg, type='success') {
-    const c=document.getElementById('toastContainer'); if(!c) return;
-    const t=document.createElement('div'); t.className=`toast ${type}`;
-    t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
-    c.appendChild(t);
-    setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500);
-  }
-
+  function showToast(msg, type='success') { const c = document.getElementById('toastContainer'); if (!c) return; const t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`; c.appendChild(t); setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(100%)'; t.style.transition='all 0.3s ease'; setTimeout(()=>t.remove(),300); }, 3500); }
+  function showModal(title, content) { document.getElementById('modalTitle').textContent = title; document.getElementById('modalContent').innerHTML = content; document.getElementById('modalOverlay').classList.add('active'); }
+  window.hideModal = function() { document.getElementById('modalOverlay').classList.remove('active'); };
   function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
 
   window.toggleSidebar = function() {
-    const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay');
-    if(window.innerWidth<=768){
-      if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}
-      else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';}
+    const s = document.getElementById('sidebar'), o = document.getElementById('sidebarOverlay');
+    if (window.innerWidth <= 768) {
+      if (s.classList.contains('mobile-open')) { s.classList.remove('mobile-open'); o.classList.remove('active'); document.body.style.overflow = ''; }
+      else { s.classList.add('mobile-open'); o.classList.add('active'); document.body.style.overflow = 'hidden'; }
     }
   };
-  window.closeSidebar = function() {
-    document.getElementById('sidebar').classList.remove('mobile-open');
-    document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow='';
-  };
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
+  window.closeSidebar = function() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow = ''; };
 
-  window.selectLeaveDays = function(days) {
-    selectedLeaveDays=days;
-    document.querySelectorAll('.leave-type-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelector(`[data-days="${days}"]`).classList.add('active');
-    updateLeaveSummary();
-  };
+  window.selectLeaveDays = function(days) { selectedLeaveDays = days; document.querySelectorAll('.leave-type-btn').forEach(b=>b.classList.remove('active')); document.querySelector(`[data-days="${days}"]`).classList.add('active'); updateLeaveSummary(); };
+  function updateLeaveSummary() { const startDate = document.getElementById('leaveStartDate').value; const summary = document.getElementById('leaveSummary'); if (!startDate) { summary.style.display = 'none'; return; } const start = new Date(startDate); const end = new Date(start); end.setDate(end.getDate()+selectedLeaveDays-1); const resume = new Date(end); resume.setDate(resume.getDate()+1); summary.style.display = 'block'; summary.innerHTML = `📅 Leave: ${startDate} → Resume: ${resume.toISOString().split('T')[0]} (${selectedLeaveDays} day${selectedLeaveDays>1?'s':''})`; }
+  document.getElementById('leaveStartDate').addEventListener('change', updateLeaveSummary);
 
-  function updateLeaveSummary() {
-    const startDate=document.getElementById('leaveStartDate').value;
-    const summary=document.getElementById('leaveSummary');
-    if(!startDate){summary.style.display='none';return;}
-    const start=new Date(startDate); const end=new Date(start); end.setDate(end.getDate()+selectedLeaveDays-1);
-    const resume=new Date(end); resume.setDate(resume.getDate()+1);
-    summary.style.display='block';
-    summary.innerHTML=`📅 Leave: ${startDate} → Resume: ${resume.toISOString().split('T')[0]} (${selectedLeaveDays} day${selectedLeaveDays>1?'s':''})`;
+  // ========== ANNOUNCEMENTS (THREE TYPES WITH REPLY) ==========
+  async function loadWorkerAnnouncements() {
+    try {
+      const div = document.getElementById('workerAnnouncementsList');
+      if (!div || !currentUser) return;
+      let allAnnouncements = [];
+      try {
+        const snap = await getDocs(query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(30)));
+        const filtered = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => {
+          if (a.target === 'all' || a.target === 'workers') return true;
+          if (a.target === 'specific' && a.recipientIds && a.recipientIds.includes(currentUser?.uid)) return true;
+          return false;
+        });
+        allAnnouncements.push(...filtered);
+      } catch(e) {
+        try {
+          const fallbackSnap = await getDocs(collection(db, 'announcements'));
+          const filtered = fallbackSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => {
+            if (a.target === 'all' || a.target === 'workers') return true;
+            if (a.target === 'specific' && a.recipientIds && a.recipientIds.includes(currentUser?.uid)) return true;
+            return false;
+          }).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).slice(0, 10);
+          allAnnouncements.push(...filtered);
+        } catch(e2) {}
+      }
+      const seen = new Set(); const unique = [];
+      for (const a of allAnnouncements) { if (!seen.has(a.id)) { seen.add(a.id); unique.push(a); } }
+      unique.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+      if (unique.length === 0) { div.innerHTML = '<div class="empty-state"><i class="fas fa-bullhorn"></i><p>No announcements yet</p></div>'; return; }
+
+      div.innerHTML = unique.slice(0, 10).map(a => {
+        const isRead = a.readBy?.includes(currentUser.uid);
+        const annType = a.announcementType || 'inform';
+        const hasAcknowledged = a.acknowledgedBy?.includes(currentUser.uid);
+        const hasReplied = a.replies?.some(r => r.userId === currentUser.uid);
+        const typeLabel = annType === 'acknowledge' ? 'Acknowledge' : annType === 'reply' ? 'Reply' : 'Info';
+        const typeBadgeClass = annType === 'acknowledge' ? 'badge-warning' : annType === 'reply' ? 'badge-info' : 'badge-purple';
+        let actionBadge = '', actionButton = '';
+        if (annType === 'acknowledge' && !hasAcknowledged) { actionBadge = '<span class="ack-badge pending"><i class="fas fa-hand-pointer"></i> Acknowledge</span>'; actionButton = `<button class="btn btn-sm btn-warning" onclick="event.stopPropagation();acknowledgeAnnouncement('${a.id}')"><i class="fas fa-hand-pointer"></i></button>`; }
+        else if (annType === 'acknowledge' && hasAcknowledged) actionBadge = '<span class="ack-badge done"><i class="fas fa-check-circle"></i> Done</span>';
+        if (annType === 'reply' && !hasReplied) { actionBadge = '<span class="ack-badge pending"><i class="fas fa-reply"></i> Reply</span>'; actionButton = `<button class="btn btn-sm btn-info" onclick="event.stopPropagation();openReplyModal('${a.id}')"><i class="fas fa-reply"></i></button>`; }
+        else if (annType === 'reply' && hasReplied) actionBadge = '<span class="ack-badge done"><i class="fas fa-check-circle"></i> Done</span>';
+
+        return `<div class="ann-card ${isRead?'read':'unread'}" onclick="openAnnouncementDetail('${a.id}')">
+          <div class="ann-top"><h4>${!isRead?'<span style="display:inline-block;width:7px;height:7px;background:var(--warning);border-radius:50%;margin-right:6px;"></span>':''}${a.title||'Untitled'}</h4>
+            <div class="ann-tags"><span class="badge ${typeBadgeClass}" style="font-size:0.6rem;">${typeLabel}</span>${!isRead?'<span class="badge badge-warning" style="font-size:0.6rem;">New</span>':''}</div></div>
+          <div class="ann-preview">${(a.message||'').substring(0,120)}${(a.message||'').length>120?'...':''}</div>
+          ${actionBadge?`<div style="margin-bottom:6px;">${actionBadge}</div>`:''}
+          <div class="ann-bottom"><span><i class="far fa-user"></i> ${a.sentByName||'Admin'}</span><span>${formatFullDate(a.createdAt)}</span>${actionButton}</div>
+        </div>`;
+      }).join('');
+    } catch(e) { console.error('Announcements error:', e.message); }
   }
 
-  document.getElementById('leaveStartDate').addEventListener('change',updateLeaveSummary);
-
-  document.querySelectorAll('[data-tab]').forEach(t=>t.addEventListener('click',function(){
-    const container=this.closest('.panel');
-    container.querySelectorAll('[data-tab]').forEach(x=>x.classList.remove('active'));
-    this.classList.add('active');
-    container.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-    document.getElementById(this.dataset.tab+'Announcements').classList.add('active');
-  }));
-
-  window.markAllAnnouncementsRead = async ()=>{
-    if(!currentUser) return;
-    const snap=await getDocs(collection(db,'announcements'));
-    const batch=writeBatch(db);
-    snap.forEach(d=>{if(!d.data().readBy?.includes(currentUser.uid)) batch.update(d.ref,{readBy:arrayUnion(currentUser.uid)});});
-    await batch.commit(); showToast('All announcements marked as read','success');
+  window.acknowledgeAnnouncement = async (id) => {
+    try {
+      const annRef = doc(db, 'announcements', id);
+      const annSnap = await getDoc(annRef);
+      if (!annSnap.exists()) return;
+      const d = annSnap.data();
+      const ack = d.acknowledgedBy || []; const rb = d.readBy || [];
+      await updateDoc(annRef, { acknowledgedBy: ack.includes(currentUser.uid)?ack:[...ack,currentUser.uid], readBy: rb.includes(currentUser.uid)?rb:[...rb,currentUser.uid] });
+      showToast('Acknowledged! ✓', 'success'); loadWorkerAnnouncements();
+    } catch(e) { showToast('Failed', 'error'); }
   };
 
-  window.startTask = async (taskId)=>{await updateDoc(doc(db,'tasks',taskId),{status:'in_progress',startedAt:serverTimestamp()});showToast('Task started!','success');};
-
-  window.submitTask = async (taskId)=>{
-    const taskRef=doc(db,'tasks',taskId); const taskSnap=await getDoc(taskRef); const task=taskSnap.data();
-    const early=new Date()<=task.deadline.toDate(); const points=early?5:-5;
-    await updateDoc(taskRef,{status:'completed',submittedAt:serverTimestamp(),pointsEarned:points});
-    await updateDoc(doc(db,'users',currentUser.uid),{totalPoints:increment(points),tasksCompleted:increment(1)});
-    await addDoc(collection(db,'coin_transactions'),{userId:currentUser.uid,points,reason:task.title,createdAt:serverTimestamp()});
-    showToast(`Task submitted! ${points>0?'+':''}${points} points earned!`,'success');
+  window.openReplyModal = function(id) {
+    showModal('Reply to Announcement', `
+      <p style="color:var(--info);margin-bottom:12px;"><i class="fas fa-info-circle"></i> Your response is required.</p>
+      <div class="form-group"><label>Your Reply *</label><textarea class="form-control" id="replyMessage" rows="4" placeholder="Type your reply..."></textarea></div>
+      <button class="btn btn-primary" onclick="submitReply('${id}')" style="width:100%;"><i class="fas fa-paper-plane"></i> Submit Reply</button>
+      <button class="btn btn-outline" onclick="hideModal()" style="width:100%;margin-top:8px;">Cancel</button>
+    `);
   };
 
+  window.submitReply = async (id) => {
+    const message = document.getElementById('replyMessage')?.value?.trim();
+    if (!message) { showToast('Please type a reply', 'error'); return; }
+    try {
+      const annRef = doc(db, 'announcements', id); const annSnap = await getDoc(annRef);
+      if (!annSnap.exists()) return;
+      const d = annSnap.data(); const reps = d.replies || []; const rb = d.readBy || [];
+      await updateDoc(annRef, { replies: [...reps, { userId: currentUser.uid, userName: userData?.fullName||'Staff', message, createdAt: new Date().toISOString() }], readBy: rb.includes(currentUser.uid)?rb:[...rb,currentUser.uid] });
+      showToast('Reply submitted!', 'success'); hideModal(); loadWorkerAnnouncements();
+    } catch(e) { showToast('Failed: '+e.message, 'error'); }
+  };
+
+  window.openAnnouncementDetail = async (id) => {
+    try {
+      const snap = await getDoc(doc(db, 'announcements', id)); if (!snap.exists()) return;
+      const a = snap.data();
+      const annType = a.announcementType || 'inform';
+      const hasAcknowledged = a.acknowledgedBy?.includes(currentUser?.uid);
+      const hasReplied = a.replies?.some(r => r.userId === currentUser?.uid);
+      const typeLabel = annType === 'acknowledge' ? 'Inform & Acknowledge' : annType === 'reply' ? 'Inform & Reply' : 'Inform Only';
+
+      if (!a.readBy?.includes(currentUser?.uid)) {
+        const rb = a.readBy || [];
+        await updateDoc(doc(db, 'announcements', id), { readBy: [...rb, currentUser.uid] });
+      }
+
+      const repliesHtml = (a.replies || []).length > 0 ? `<h4 style="font-size:0.9rem;margin:16px 0 10px;"><i class="far fa-comments"></i> Replies (${a.replies.length})</h4>${(a.replies||[]).map(r=>`<div class="reply-item"><div class="rep-header"><strong>${r.userName||'Staff'}</strong><span>${formatFullDate(r.createdAt)}</span></div><div class="rep-body">${r.message}</div></div>`).join('')}` : '';
+      let actionHtml = '';
+      if (annType === 'acknowledge' && !hasAcknowledged) actionHtml = `<button class="btn btn-warning" onclick="acknowledgeAnnouncement('${id}');hideModal();" style="width:100%;"><i class="fas fa-hand-pointer"></i> Acknowledge</button>`;
+      else if (annType === 'acknowledge' && hasAcknowledged) actionHtml = '<p style="color:var(--success);text-align:center;padding:12px;"><i class="fas fa-check-circle"></i> Acknowledged</p>';
+      if (annType === 'reply' && !hasReplied) actionHtml = `<div class="reply-section"><p style="font-weight:600;margin-bottom:12px;color:var(--info);"><i class="fas fa-reply"></i> Your reply is required</p><div class="form-group"><textarea class="form-control" id="replyMessage" rows="3" placeholder="Type your reply..."></textarea></div><button class="btn btn-primary" onclick="submitReply('${id}')" style="width:100%;"><i class="fas fa-paper-plane"></i> Submit Reply</button></div>`;
+      else if (annType === 'reply' && hasReplied) actionHtml = '<p style="color:var(--success);text-align:center;padding:12px;"><i class="fas fa-check-circle"></i> Replied</p>';
+
+      showModal(a.title || 'Announcement', `
+        <div style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px;">
+          <span style="background:var(--primary-soft);padding:3px 10px;border-radius:20px;font-size:0.7rem;"><i class="far fa-user"></i> ${a.sentByName||'Admin'}</span>
+          <span style="background:var(--gray-light);padding:3px 10px;border-radius:20px;font-size:0.7rem;"><i class="far fa-clock"></i> ${formatFullDate(a.createdAt)}</span>
+          <span class="badge ${annType==='acknowledge'?'badge-warning':annType==='reply'?'badge-info':'badge-purple'}">${typeLabel}</span>
+        </div>
+        <div style="background:var(--gray-light);border-radius:14px;padding:18px;font-size:0.9rem;line-height:1.7;color:var(--dark);margin-bottom:16px;">${a.message||'No content'}</div>
+        ${repliesHtml} ${actionHtml}
+        <button class="btn btn-outline" onclick="hideModal()" style="width:100%;margin-top:8px;">Close</button>
+      `);
+    } catch(e) { showToast('Could not load', 'error'); }
+  };
+
+  // ========== LOAD DASHBOARD ==========
   function loadDashboard() {
-    if(!currentUser) return; cleanup();
+    if (!currentUser) return; cleanup();
 
-    unsubscribes.push(onSnapshot(doc(db,'users',currentUser.uid),(snap)=>{
-      if(!snap.exists()) return;
-      userData=snap.data();
-      document.getElementById('userAvatar').textContent=(userData.fullName||'S').charAt(0).toUpperCase();
-      document.getElementById('userName').textContent=userData.fullName?.split(' ')[0]||'Worker';
-      document.getElementById('userRole').textContent=userData.role||'Staff';
-      document.getElementById('welcomeName').textContent=userData.fullName?.split(' ')[0]||'Worker';
-      document.getElementById('currentDay').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
-      document.getElementById('totalPoints').textContent=userData.totalPoints||0;
-      document.getElementById('leaveDays').textContent=userData.leaveDaysRemaining??2;
+    unsubscribes.push(onSnapshot(doc(db, 'users', currentUser.uid), (snap) => {
+      if (!snap.exists()) return;
+      userData = snap.data();
+      document.getElementById('userAvatar').textContent = (userData.fullName || 'S').charAt(0).toUpperCase();
+      document.getElementById('userName').textContent = userData.fullName?.split(' ')[0] || 'Worker';
+      document.getElementById('userRole').textContent = userData.role || 'Staff';
+      document.getElementById('welcomeName').textContent = userData.fullName?.split(' ')[0] || 'Worker';
+      document.getElementById('currentDay').textContent = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
+      document.getElementById('totalPoints').textContent = userData.totalPoints || 0;
+      document.getElementById('leaveDays').textContent = userData.leaveDaysRemaining ?? 2;
       updateSalaryDisplay();
     }));
 
-    unsubscribes.push(onSnapshot(doc(db,'system_settings','points'),(s)=>{
-      if(s.exists()) globalPointValue=s.data().value||500;
-      updateSalaryDisplay();
-    }));
+    unsubscribes.push(onSnapshot(doc(db, 'system_settings', 'points'), (s) => { if (s.exists()) globalPointValue = s.data().value || 500; updateSalaryDisplay(); }));
 
-    unsubscribes.push(onSnapshot(query(collection(db,'coin_transactions'),where('userId','==',currentUser.uid)),(snap)=>{
-      let added=0,deducted=0;
-      snap.forEach(d=>{const pts=d.data().points||0;if(pts>0)added+=pts;else deducted+=Math.abs(pts);});
-      document.getElementById('pointsAdded').textContent=`+${added}`;
-      document.getElementById('pointsDeducted').textContent=`-${deducted}`;
-      document.getElementById('netPoints').textContent=userData?.totalPoints||0;
+    unsubscribes.push(onSnapshot(query(collection(db, 'coin_transactions'), where('userId', '==', currentUser.uid)), (snap) => {
+      let added = 0, deducted = 0;
+      snap.forEach(d => { const pts = d.data().points || 0; if (pts > 0) added += pts; else deducted += Math.abs(pts); });
+      document.getElementById('pointsAdded').textContent = `+${added}`;
+      document.getElementById('pointsDeducted').textContent = `-${deducted}`;
+      document.getElementById('netPoints').textContent = userData?.totalPoints || 0;
       updateSalaryDisplay();
     }));
 
     function updateSalaryDisplay() {
-      if(!userData) return;
-      const ppv=globalPointValue/5;
-      const bonus=(userData.totalPoints||0)*ppv;
-      const final=(userData.baseSalary||0)+bonus;
-      document.getElementById('salaryBase').textContent=formatCurrency(userData.baseSalary||0);
-      document.getElementById('salaryPointValue').textContent=globalPointValue;
-      document.getElementById('pointValue').textContent=globalPointValue;
-      document.getElementById('pointsBonusValue').textContent=formatCurrency(bonus);
-      document.getElementById('finalSalary').textContent=formatCurrency(final);
+      if (!userData) return;
+      const ppv = globalPointValue / 5, bonus = (userData.totalPoints || 0) * ppv, final = (userData.baseSalary || 0) + bonus;
+      document.getElementById('salaryBase').textContent = formatCurrency(userData.baseSalary || 0);
+      document.getElementById('salaryPointValue').textContent = globalPointValue;
+      document.getElementById('pointValue').textContent = globalPointValue;
+      document.getElementById('pointsBonusValue').textContent = formatCurrency(bonus);
+      document.getElementById('finalSalary').textContent = formatCurrency(final);
     }
 
-    const tasksQuery=query(collection(db,'tasks'),where('assignedTo','==',currentUser.uid));
-    unsubscribes.push(onSnapshot(tasksQuery,(snap)=>{
-      const tasks=snap.docs.map(d=>({id:d.id,...d.data()}));
-      document.getElementById('pendingTasks').textContent=tasks.filter(t=>t.status==='pending').length;
-      document.getElementById('inProgressTasks').textContent=tasks.filter(t=>t.status==='in_progress').length;
-      document.getElementById('tasksDone').textContent=tasks.filter(t=>t.status==='completed').length;
+    unsubscribes.push(onSnapshot(query(collection(db, 'tasks'), where('assignedTo', '==', currentUser.uid)), (snap) => {
+      const tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      document.getElementById('pendingTasks').textContent = tasks.filter(t => t.status === 'pending').length;
+      document.getElementById('inProgressTasks').textContent = tasks.filter(t => t.status === 'in_progress').length;
+      document.getElementById('tasksDone').textContent = tasks.filter(t => t.status === 'completed' || t.status === 'submitted' || t.status === 'acknowledged').length;
 
-      const taskDiv=document.getElementById('myTasksList');
-      if(tasks.length===0){taskDiv.innerHTML='<div class="empty-state"><i class="fas fa-tasks"></i><p>No tasks assigned yet</p></div>';return;}
+      const taskDiv = document.getElementById('myTasksList');
+      if (tasks.length === 0) { taskDiv.innerHTML = '<div class="empty-state"><i class="fas fa-tasks"></i><p>No tasks assigned yet</p></div>'; return; }
 
-      let html='';
-      const pendingTasks=tasks.filter(t=>t.status==='pending');
-      const inProgressTasks=tasks.filter(t=>t.status==='in_progress');
-      const completedTasks=tasks.filter(t=>t.status==='completed');
+      let html = '';
+      const pending = tasks.filter(t => t.status === 'pending');
+      const inProgress = tasks.filter(t => t.status === 'in_progress');
+      const done = tasks.filter(t => t.status === 'completed' || t.status === 'submitted' || t.status === 'acknowledged');
 
-      if(pendingTasks.length>0){
-        html+='<h4 style="margin-bottom:12px;color:var(--warning);"><i class="fas fa-clock"></i> Available to Start</h4>';
-        pendingTasks.forEach(t=>{html+=`<div class="task-item"><div class="task-info"><h4>${t.title}</h4><p>Deadline: ${formatDate(t.deadline)}</p></div><button class="btn btn-primary btn-sm" onclick="startTask('${t.id}')"><i class="fas fa-play"></i> Start</button></div>`;});
+      if (pending.length > 0) {
+        html += '<h4 style="margin-bottom:12px;color:var(--warning);"><i class="fas fa-clock"></i> Available to Start</h4>';
+        pending.forEach(t => { html += `<div class="task-item"><div class="task-info"><h4>${t.title}</h4><p>Deadline: ${formatDate(t.deadline)}</p></div><button class="btn btn-primary btn-sm" onclick="startTask('${t.id}')"><i class="fas fa-play"></i> Start</button></div>`; });
       }
-      if(inProgressTasks.length>0){
-        html+='<h4 style="margin:20px 0 12px;color:var(--info);"><i class="fas fa-spinner"></i> In Progress</h4>';
-        inProgressTasks.forEach(t=>{html+=`<div class="task-item"><div class="task-info"><h4>${t.title}</h4><p>Started: ${formatDate(t.startedAt)} · Deadline: ${formatDate(t.deadline)}</p></div><button class="btn btn-success btn-sm" onclick="submitTask('${t.id}')"><i class="fas fa-check"></i> Submit</button></div>`;});
+      if (inProgress.length > 0) {
+        html += '<h4 style="margin:20px 0 12px;color:var(--info);"><i class="fas fa-spinner"></i> In Progress</h4>';
+        inProgress.forEach(t => { html += `<div class="task-item"><div class="task-info"><h4>${t.title}</h4><p>Started: ${formatDate(t.startedAt)} · Deadline: ${formatDate(t.deadline)}</p></div><button class="btn btn-success btn-sm" onclick="submitTask('${t.id}')"><i class="fas fa-check"></i> Submit</button></div>`; });
       }
-      if(completedTasks.length>0){
-        html+='<h4 style="margin:20px 0 12px;color:var(--success);"><i class="fas fa-check-circle"></i> Completed</h4>';
-        completedTasks.slice(0,3).forEach(t=>{html+=`<div class="task-item"><div class="task-info"><h4>${t.title} ✓</h4><p>Completed: ${formatDate(t.submittedAt)}</p></div><span class="badge badge-success"><i class="fas fa-star"></i> +${t.pointsEarned||0} pts</span></div>`;});
+      if (done.length > 0) {
+        html += '<h4 style="margin:20px 0 12px;color:var(--success);"><i class="fas fa-check-circle"></i> Completed</h4>';
+        done.slice(0, 5).forEach(t => { html += `<div class="task-item"><div class="task-info"><h4>${t.title} ✓</h4><p>Completed: ${formatDate(t.submittedAt || t.acknowledgedAt)}</p></div><span class="badge badge-success"><i class="fas fa-star"></i> +${t.pointsEarned||0} pts</span></div>`; });
       }
-      taskDiv.innerHTML=html||'<div class="empty-state"><i class="fas fa-tasks"></i><p>No tasks available</p></div>';
+      taskDiv.innerHTML = html || '<div class="empty-state"><i class="fas fa-tasks"></i><p>No tasks available</p></div>';
     }));
 
-    const generalQuery=query(collection(db,'announcements'),where('target','in',['all','workers']),orderBy('createdAt','desc'),limit(10));
-    unsubscribes.push(onSnapshot(generalQuery,(snap)=>{
-      const div=document.getElementById('generalAnnouncements');
-      if(snap.empty){div.innerHTML='<div class="empty-state"><i class="fas fa-bullhorn"></i><p>No general announcements</p></div>';return;}
-      div.innerHTML=snap.docs.map(d=>{const a=d.data();const isRead=a.readBy?.includes(currentUser.uid);return`<div class="announcement-card" onclick="openAnnouncement('${d.id}')"><h4>${!isRead?'<i class="fas fa-circle" style="color:var(--primary);font-size:0.5rem;"></i> ':''}${a.title}</h4><p>${(a.message||'').substring(0,80)}${(a.message||'').length>80?'...':''}</p><div class="meta"><span>From: ${a.author||'Admin'}</span><span>${formatDateTime(a.createdAt)}</span></div></div>`;}).join('');
+    unsubscribes.push(onSnapshot(query(collection(db, 'notifications'), where('userId', '==', currentUser.uid), where('isRead', '==', false)), (snap) => {
+      const badge = document.getElementById('notificationBadge'); const count = snap.size;
+      badge.textContent = count; if (count > 0) badge.classList.add('show'); else badge.classList.remove('show');
     }));
 
-    const personalQuery=query(collection(db,'announcements'),where('recipientIds','array-contains',currentUser.uid),orderBy('createdAt','desc'),limit(10));
-    unsubscribes.push(onSnapshot(personalQuery,(snap)=>{
-      const div=document.getElementById('personalAnnouncements');
-      if(snap.empty){div.innerHTML='<div class="empty-state"><i class="fas fa-envelope"></i><p>No personal announcements</p></div>';return;}
-      div.innerHTML=snap.docs.map(d=>{const a=d.data();const isRead=a.readBy?.includes(currentUser.uid);return`<div class="announcement-card" style="border-left-color:var(--info);" onclick="openAnnouncement('${d.id}')"><h4>${!isRead?'<i class="fas fa-circle" style="color:var(--info);font-size:0.5rem;"></i> ':''}${a.title}</h4><p>${(a.message||'').substring(0,80)}${(a.message||'').length>80?'...':''}</p><div class="meta"><span>From: ${a.author||'Admin'}</span><span>${formatDateTime(a.createdAt)}</span></div></div>`;}).join('');
-    }));
-
-    unsubscribes.push(onSnapshot(query(collection(db,'notifications'),where('userId','==',currentUser.uid),where('isRead','==',false)),(snap)=>{
-      const badge=document.getElementById('notificationBadge');
-      const count=snap.size; badge.textContent=count;
-      if(count>0)badge.classList.add('show');else badge.classList.remove('show');
-    }));
+    loadWorkerAnnouncements();
   }
 
-  window.openAnnouncement = async (id)=>{
-    const snap=await getDoc(doc(db,'announcements',id)); if(!snap.exists()) return;
-    const a=snap.data();
-    if(!a.readBy?.includes(currentUser.uid)) await updateDoc(doc(db,'announcements',id),{readBy:arrayUnion(currentUser.uid)});
-    showToast(`📢 ${a.title}: ${a.message}`,'info');
+  window.startTask = async (taskId) => { await updateDoc(doc(db, 'tasks', taskId), { status: 'in_progress', startedAt: serverTimestamp() }); showToast('Task started!', 'success'); };
+  window.submitTask = async (taskId) => {
+    const taskRef = doc(db, 'tasks', taskId); const taskSnap = await getDoc(taskRef); const task = taskSnap.data();
+    const early = new Date() <= task.deadline.toDate(); const points = early ? 5 : -5;
+    await updateDoc(taskRef, { status: 'completed', submittedAt: serverTimestamp(), pointsEarned: points, submittedBy: currentUser.uid });
+    await updateDoc(doc(db, 'users', currentUser.uid), { totalPoints: increment(points), tasksCompleted: increment(1) });
+    await addDoc(collection(db, 'coin_transactions'), { userId: currentUser.uid, points, reason: task.title, createdAt: serverTimestamp() });
+    showToast(`Task submitted! ${points>0?'+':''}${points} points`, 'success');
   };
 
-  document.getElementById('requestLeaveBtn').addEventListener('click',async()=>{
-    const startDate=document.getElementById('leaveStartDate').value;
-    if(!startDate){showToast('Please select a start date','error');return;}
-    const start=new Date(startDate); const end=new Date(start); end.setDate(end.getDate()+selectedLeaveDays-1);
-    const resume=new Date(end); resume.setDate(resume.getDate()+1);
-    if((userData.leaveDaysRemaining??2)<selectedLeaveDays){showToast(`Only ${userData.leaveDaysRemaining??2} leave day${(userData.leaveDaysRemaining??2)>1?'s':''} remaining`,'error');return;}
-    const requestedDates=selectedLeaveDays===1?[startDate]:[startDate,end.toISOString().split('T')[0]];
-    await addDoc(collection(db,'leave_requests'),{userId:currentUser.uid,requestedDates,resumeDate:resume.toISOString().split('T')[0],days:selectedLeaveDays,reason:'Leave request',status:'pending',createdAt:serverTimestamp()});
-    await addDoc(collection(db,'notifications'),{userId:currentUser.uid,type:'leave_requested',title:'Leave Request Sent',message:`Your ${selectedLeaveDays}-day leave starting ${startDate} has been sent for admin approval.`,isRead:false,createdAt:serverTimestamp()});
-    showToast('✅ Leave request sent!','success');
-    document.getElementById('leaveStartDate').value=''; document.getElementById('leaveSummary').style.display='none';
+  document.getElementById('requestLeaveBtn').addEventListener('click', async () => {
+    const startDate = document.getElementById('leaveStartDate').value;
+    if (!startDate) { showToast('Please select a start date', 'error'); return; }
+    const start = new Date(startDate); const end = new Date(start); end.setDate(end.getDate() + selectedLeaveDays - 1);
+    if ((userData.leaveDaysRemaining ?? 2) < selectedLeaveDays) { showToast(`Only ${userData.leaveDaysRemaining??2} day(s) remaining`, 'error'); return; }
+    const requestedDates = selectedLeaveDays === 1 ? [startDate] : [startDate, end.toISOString().split('T')[0]];
+    await addDoc(collection(db, 'leave_requests'), { userId: currentUser.uid, requestedDates, resumeDate: new Date(end.getTime()+86400000).toISOString().split('T')[0], days: selectedLeaveDays, reason: 'Leave request', status: 'pending', createdAt: serverTimestamp() });
+    showToast('✅ Leave request sent!', 'success');
+    document.getElementById('leaveStartDate').value = ''; document.getElementById('leaveSummary').style.display = 'none';
   });
 
-  onAuthStateChanged(auth, async (u)=>{
-    if(!u){window.location.href='auth.html';return;} currentUser=u;
+  onAuthStateChanged(auth, async (u) => {
+    if (!u) { window.location.href = 'auth.html'; return; } currentUser = u;
     try {
-      const snap=await getDoc(doc(db,'users',u.uid));
-      if(!snap.exists()||snap.data().status!=='active'){await signOut(auth);window.location.href='auth.html';return;}
-      userData=snap.data();
-      if(userData.role!=='staff'&&userData.role!=='attendant'&&userData.role!=='attendant_chief'){
-        if(userData.role==='admin'||userData.role==='super_admin')window.location.href='admin-dashboard.html';
-        else window.location.href='auth.html'; return;
-      }
-      document.getElementById('currentDate').textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+      const snap = await getDoc(doc(db, 'users', u.uid));
+      if (!snap.exists() || snap.data().status !== 'active') { await signOut(auth); window.location.href = 'auth.html'; return; }
+      userData = snap.data();
+      if (userData.role === 'admin' || userData.role === 'super_admin') { window.location.href = 'admin-dashboard.html'; return; }
+      if (userData.role === 'attendant' || userData.role === 'attendant_chief') { window.location.href = 'attendant-dashboard.html'; return; }
+      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
       loadDashboard();
-    } catch(e){showToast('Error loading','error');}
+    } catch(e) { showToast('Error loading', 'error'); }
   });
 
-  document.getElementById('logoutBtn').addEventListener('click',async()=>{await signOut(auth);window.location.href='auth.html';});
-  window.addEventListener('beforeunload',cleanup);
+  document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'auth.html'; });
+  window.addEventListener('beforeunload', cleanup);
 </script>
 </body>
 </html>
