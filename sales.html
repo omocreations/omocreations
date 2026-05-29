@@ -768,13 +768,45 @@
   };
 
   window.viewReceipt = (id)=>{const s=allSales.find(x=>x.id===id);if(s)showReceiptModal(s);};
+
   window.printReceipt = (id)=>{
     const s=allSales.find(x=>x.id===id);if(!s)return;
     const dateStr=s.createdAt?new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     const timeStr=s.createdAt?new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     const w=window.open('','_blank');
-    w.document.write(`<html><head><title>Receipt</title><style>body{font-family:monospace;padding:5px;max-width:280px;margin:0 auto;font-size:11px;line-height:1.2;}*{margin:0;padding:0;box-sizing:border-box;}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:4px;margin-bottom:4px;}.h h2{font-size:13px;color:#ff4da6;margin:0;}.h p{font-size:9px;margin:1px 0;}.addr{font-size:8px;margin:1px 0;}.cust{font-size:9px;margin:3px 0;}.items{margin:4px 0;}.item{display:flex;justify-content:space-between;font-size:9px;margin:1px 0;}.total{border-top:1px dashed #000;padding-top:3px;font-weight:bold;font-size:11px;text-align:right;}.thanks{text-align:center;font-size:9px;margin-top:6px;font-style:italic;}</style></head><body><div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way</p><p class="addr">Behind Laroy Suite, Abeokuta 111101</p><p class="addr">Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p>#${s.receiptNumber}</p><p>${dateStr} ${timeStr}</p></div><p class="cust">Customer: ${s.customerName}<br>Served by: ${s.attendantName}</p><div class="items">${s.items.map(i=>`<div class="item"><span>${i.quantity}x ${i.name}${i.sizeLabel?` (${i.sizeLabel})`:''}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('')}</div><div class="total">Total: ${formatCurrency(s.totalAmount)}</div><p class="thanks">Thanks for your patronage! ❤️</p></body></html>`);
-    w.document.close();w.print();
+    w.document.write(`<html><head><title>Receipt #${s.receiptNumber}</title><style>
+      @page { margin: 0; size: 80mm auto; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: 'Courier New', monospace; padding: 2mm 3mm; max-width: 76mm; margin: 0 auto; font-size: 7pt; line-height: 1.15; }
+      .h { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 2px; margin-bottom: 2px; }
+      .h h2 { font-size: 9pt; color: #000; margin: 0; font-weight: bold; }
+      .h .addr { font-size: 6pt; margin: 0; line-height: 1.1; }
+      .h .rec { font-size: 7pt; margin: 1px 0; }
+      .cust { font-size: 6.5pt; margin: 2px 0; line-height: 1.1; }
+      .items { margin: 2px 0; }
+      .item { display: flex; justify-content: space-between; font-size: 6.5pt; margin: 0; padding: 0; line-height: 1.15; }
+      .item span:first-child { flex: 1; }
+      .item span:last-child { text-align: right; min-width: 55px; white-space: nowrap; }
+      .total { border-top: 1px dashed #000; padding-top: 2px; margin-top: 2px; font-weight: bold; font-size: 8pt; text-align: right; }
+      .thanks { text-align: center; font-size: 6.5pt; margin-top: 3px; font-style: italic; }
+    </style></head><body>
+    <div class="h">
+      <h2>✨ OmoCreations ✨</h2>
+      <p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p>
+      <p class="addr">Abeokuta 111101, Ogun State, Nigeria</p>
+      <p class="addr">📞 0807 734 0294</p>
+      <p class="rec">#${s.receiptNumber}</p>
+      <p class="rec">${dateStr} ${timeStr}</p>
+    </div>
+    <p class="cust">Customer: ${s.customerName}<br>Served by: ${s.attendantName}</p>
+    <div class="items">
+      ${s.items.map(i=>`<div class="item"><span>${i.quantity}x ${i.name}${i.sizeLabel?` (${i.sizeLabel})`:''}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('')}
+    </div>
+    <div class="total">Total: ${formatCurrency(s.totalAmount)}</div>
+    <p class="thanks">Thanks for your patronage! ❤️</p>
+    </body></html>`);
+    w.document.close();
+    setTimeout(() => w.print(), 300);
   };
 
   window.exportSalesData = ()=>{const headers=['Receipt #','Date','Customer','Phone','Items','Total','Payment','Status'];const rows=allSales.map(s=>[s.receiptNumber||'',s.createdAt?.toDate().toLocaleString()||'',s.customerName||'',s.customerPhone||'',s.items?.length||0,s.totalAmount||0,s.paymentMethod||'',s.status||'completed']);const csv=[headers.join(','),...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');const b=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`sales_${new Date().toISOString().split('T')[0]}.csv`;a.click();showToast('Exported','success');};
