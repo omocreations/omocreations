@@ -147,7 +147,7 @@
     .content-wrapper { padding: 28px; max-width: 1600px; width: 100%; }
 
     /* Stats Grid */
-    .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
     .stat-card {
       background: white; padding: 18px 16px; border-radius: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(255,77,166,0.1);
@@ -156,7 +156,6 @@
     }
     .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}
     .stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}
-    .stat-card:nth-child(5){animation-delay:0.25s}.stat-card:nth-child(6){animation-delay:0.30s}
     .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(255,77,166,0.15); }
     .stat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .stat-header span { font-size: 0.65rem; color: var(--gray); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
@@ -164,8 +163,14 @@
     .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--dark); font-family: 'Playfair Display', serif; line-height: 1; }
     .stat-change { font-size: 0.65rem; margin-top: 6px; color: var(--gray); }
 
+    /* Second stats row */
+    .stats-grid-2 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stats-grid-2 .stat-card { animation: fadeInUp 0.5s ease forwards; opacity: 0; }
+    .stats-grid-2 .stat-card:nth-child(1){animation-delay:0.25s}.stats-grid-2 .stat-card:nth-child(2){animation-delay:0.30s}
+    .stats-grid-2 .stat-card:nth-child(3){animation-delay:0.35s}.stats-grid-2 .stat-card:nth-child(4){animation-delay:0.40s}
+
     /* Quick Actions */
-    .quick-actions { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 28px; }
+    .quick-actions { display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px; margin-bottom: 28px; }
     .quick-action {
       background: white; padding: 16px 12px; border-radius: 18px; text-align: center;
       cursor: pointer; border: 1px solid rgba(255,77,166,0.1); transition: all 0.3s;
@@ -173,7 +178,7 @@
     }
     .quick-action:nth-child(1){animation-delay:0.10s}.quick-action:nth-child(2){animation-delay:0.15s}
     .quick-action:nth-child(3){animation-delay:0.20s}.quick-action:nth-child(4){animation-delay:0.25s}
-    .quick-action:nth-child(5){animation-delay:0.30s}.quick-action:nth-child(6){animation-delay:0.35s}
+    .quick-action:nth-child(5){animation-delay:0.30s}.quick-action:nth-child(6){animation-delay:0.35s}.quick-action:nth-child(7){animation-delay:0.40s}
     .quick-action:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(255,77,166,0.15); border-color: var(--primary); }
     .quick-action i { font-size: 1.6rem; color: var(--primary); margin-bottom: 8px; display: block; }
     .quick-action h4 { font-size: 0.75rem; color: var(--dark); font-weight: 600; }
@@ -212,6 +217,7 @@
     .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
     .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
     .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
+    .badge-purple { background: rgba(139,92,246,0.1); color: #8b5cf6; }
 
     .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; width: 100%; }
     .data-table { width: 100%; border-collapse: collapse; min-width: 100%; }
@@ -257,8 +263,8 @@
     .toast.success { border-left-color: var(--success); } .toast.error { border-left-color: var(--danger); }
     .toast i { font-size: 1.1rem; }
 
-    @media (max-width: 1400px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } .quick-actions { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .grid-2col { grid-template-columns: 1fr; } }
+    @media (max-width: 1400px) { .stats-grid, .stats-grid-2 { grid-template-columns: repeat(3, 1fr); } .quick-actions { grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 1100px) { .stats-grid, .stats-grid-2 { grid-template-columns: repeat(2, 1fr); } .grid-2col { grid-template-columns: 1fr; } }
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); width: 280px !important; min-width: 280px !important; }
       .sidebar.mobile-open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.3); }
@@ -269,9 +275,9 @@
       .top-bar { padding: 0 16px; }
       .page-title { font-size: 1.1rem; }
       .current-date { display: none; }
-      .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .stats-grid, .stats-grid-2 { grid-template-columns: 1fr 1fr; gap: 10px; }
       .stat-card { padding: 14px 12px; } .stat-value { font-size: 1.4rem; }
-      .quick-actions { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .quick-actions { grid-template-columns: repeat(3, 1fr); gap: 10px; }
       .panel { padding: 16px 12px; border-radius: 18px; margin-bottom: 20px; }
       .data-table th, .data-table td { padding: 10px 8px; font-size: 0.75rem; }
     }
@@ -314,17 +320,24 @@
       <div class="quick-action" onclick="navigateTo('store.html')"><i class="fas fa-store-alt"></i><h4>Store</h4></div>
       <div class="quick-action" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><h4>Sales</h4></div>
       <div class="quick-action" onclick="navigateTo('purchases.html')"><i class="fas fa-truck"></i><h4>Purchases</h4><span class="action-badge" id="purchasesPendingBadge">0</span></div>
-      <div class="quick-action" onclick="navigateTo('tasks.html')"><i class="fas fa-tasks"></i><h4>Tasks</h4></div>
+      <div class="quick-action" onclick="navigateTo('tools-machines.html')"><i class="fas fa-tools"></i><h4>Tools & Machines</h4></div>
+      <div class="quick-action" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><h4>Catalog</h4></div>
     </div>
 
-    <!-- Stats Grid -->
+    <!-- Stats Grid Row 1 -->
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-header"><span>Revenue (MTD)</span><div class="stat-icon"><i class="fas fa-arrow-down"></i></div></div><div class="stat-value" id="moneyIn">₦0</div><div class="stat-change">Retail + Wholesale</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Revenue (MTD)</span><div class="stat-icon"><i class="fas fa-arrow-down"></i></div></div><div class="stat-value" id="moneyIn">₦0</div><div class="stat-change">Retail + Wholesale + Machines</div></div>
       <div class="stat-card"><div class="stat-header"><span>Expenses (MTD)</span><div class="stat-icon"><i class="fas fa-arrow-up"></i></div></div><div class="stat-value" id="moneyOut">₦0</div><div class="stat-change">Purchases + Store + Payroll</div></div>
       <div class="stat-card"><div class="stat-header"><span>Net Profit</span><div class="stat-icon"><i class="fas fa-chart-line"></i></div></div><div class="stat-value" id="netProfit">₦0</div><div class="stat-change">This month</div></div>
       <div class="stat-card"><div class="stat-header"><span>Total Staff</span><div class="stat-icon"><i class="fas fa-users"></i></div></div><div class="stat-value" id="totalStaff">0</div><div class="stat-change" id="activeStaff">0 active</div></div>
+    </div>
+
+    <!-- Stats Grid Row 2 -->
+    <div class="stats-grid-2">
       <div class="stat-card"><div class="stat-header"><span>Inventory</span><div class="stat-icon"><i class="fas fa-boxes"></i></div></div><div class="stat-value" id="totalStock">0</div><div class="stat-change" id="stockStatus">items</div></div>
       <div class="stat-card"><div class="stat-header"><span>Store Stock</span><div class="stat-icon"><i class="fas fa-warehouse"></i></div></div><div class="stat-value" id="totalStoreItems">0</div><div class="stat-change">bulk items</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Tools & Machines</span><div class="stat-icon"><i class="fas fa-tools"></i></div></div><div class="stat-value" id="totalMachineItems">0</div><div class="stat-change" id="machineStatus">items</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Machine Value</span><div class="stat-icon"><i class="fas fa-coins"></i></div></div><div class="stat-value" id="totalMachineValue">₦0</div><div class="stat-change">available items</div></div>
     </div>
 
     <!-- Pending Staff Approvals -->
@@ -391,7 +404,7 @@
   const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
 
   let currentUser = null, userData = null, unsubscribes = [];
-  let monthlyRevenue = 0, monthlyWholesale = 0, monthlyInvPurchases = 0, monthlyStorePurchases = 0, monthlySalaries = 0, monthlyRefunds = 0;
+  let monthlyRevenue = 0, monthlyWholesale = 0, monthlyMachineRevenue = 0, monthlyInvPurchases = 0, monthlyStorePurchases = 0, monthlySalaries = 0, monthlyRefunds = 0;
 
   function formatTime(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }); }
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }); }
@@ -403,7 +416,6 @@
   async function logAudit(action, note) { try { await addDoc(collection(db, 'audit_logs'), { actionType: action, performedBy: currentUser?.uid||'unknown', performedByName: userData?.fullName||'Admin', performedAt: serverTimestamp(), note: note||'' }); } catch(e){} }
   function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
 
-  // FIX: Mobile-only sidebar toggle (no desktop collapse)
   window.toggleSidebar = function() {
     const s = document.getElementById('sidebar'), o = document.getElementById('sidebarOverlay');
     if (window.innerWidth <= 768) {
@@ -430,6 +442,7 @@
     <div class="nav-section"><div class="nav-section-title">OPERATIONS</div>
       <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
       <button class="nav-item" onclick="navigateTo('store.html')"><i class="fas fa-store"></i><span>Store</span></button>
+      <button class="nav-item" onclick="navigateTo('tools-machines.html')"><i class="fas fa-tools"></i><span>Tools & Machines</span></button>
       <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
       <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
       <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
@@ -447,7 +460,7 @@
   function updateBadge(id, count) { const el = document.getElementById(id); if (el) { el.textContent = count; if (count > 0) el.classList.add('show'); else el.classList.remove('show'); } }
 
   function updateMoneyDisplay() {
-    const totalRevenue = Math.max(0, monthlyRevenue + monthlyWholesale - monthlyRefunds);
+    const totalRevenue = Math.max(0, monthlyRevenue + monthlyWholesale + monthlyMachineRevenue - monthlyRefunds);
     const totalExpenses = monthlyInvPurchases + monthlyStorePurchases + monthlySalaries;
     document.getElementById('moneyIn').textContent = formatCurrency(totalRevenue);
     document.getElementById('moneyOut').textContent = formatCurrency(totalExpenses);
@@ -458,6 +471,7 @@
     cleanup();
     const now = new Date(); const thisMonth = now.getMonth(); const thisYear = now.getFullYear();
 
+    // Users
     unsubscribes.push(onSnapshot(collection(db, 'users'), (snap) => {
       const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       const staff = users.filter(u => ['staff','attendant','attendant_chief','admin','super_admin'].includes(u.role));
@@ -475,17 +489,42 @@
       }
     }));
 
+    // Stock items
     unsubscribes.push(onSnapshot(collection(db, 'stock_items'), (snap) => {
       const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       document.getElementById('totalStock').textContent = items.reduce((s, i) => s + (i.quantityAvailable || 0), 0);
       document.getElementById('stockStatus').textContent = `${items.length} items`;
     }));
 
+    // Store items
     unsubscribes.push(onSnapshot(collection(db, 'store_items'), (snap) => {
       const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       document.getElementById('totalStoreItems').textContent = items.reduce((s, i) => s + (i.bulkQty || 0), 0);
     }));
 
+    // Tools & Machines
+    unsubscribes.push(onSnapshot(collection(db, 'tools_machines'), (snap) => {
+      const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const available = items.filter(i => i.status !== 'sold');
+      const totalValue = available.reduce((s, i) => s + (i.price || 0), 0);
+      document.getElementById('totalMachineItems').textContent = items.length;
+      document.getElementById('machineStatus').textContent = `${available.length} available, ${items.length - available.length} sold`;
+      document.getElementById('totalMachineValue').textContent = formatCurrency(totalValue);
+      
+      // Calculate monthly machine revenue
+      monthlyMachineRevenue = 0;
+      items.forEach(i => {
+        if (i.status === 'sold' && i.soldDate) {
+          const dt = i.soldDate.toDate ? i.soldDate.toDate() : new Date(i.soldDate);
+          if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) {
+            monthlyMachineRevenue += i.price || 0;
+          }
+        }
+      });
+      updateMoneyDisplay();
+    }));
+
+    // Sales
     unsubscribes.push(onSnapshot(collection(db, 'sales'), (snap) => {
       monthlyRevenue = 0; const sales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       sales.forEach(s => { if (s.status === 'returned') return; const dt = s.createdAt?.toDate ? s.createdAt.toDate() : new Date(s.createdAt || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyRevenue += s.totalAmount || 0; });
@@ -497,22 +536,26 @@
       }
     }));
 
+    // Wholesale sales
     unsubscribes.push(onSnapshot(collection(db, 'wholesale_sales'), (snap) => {
       monthlyWholesale = 0; snap.docs.forEach(d => { const s = d.data(); const dt = s.createdAt?.toDate ? s.createdAt.toDate() : new Date(s.createdAt || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyWholesale += s.totalAmount || 0; });
       updateMoneyDisplay();
     }));
 
+    // Returns
     unsubscribes.push(onSnapshot(collection(db, 'returns'), (snap) => {
       monthlyRefunds = 0; snap.docs.forEach(d => { const r = d.data(); if (r.returnAction === 'refund') { const dt = r.createdAt?.toDate ? r.createdAt.toDate() : new Date(r.createdAt || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyRefunds += r.totalRefund || 0; } });
       updateMoneyDisplay();
     }));
 
+    // Purchase requests
     unsubscribes.push(onSnapshot(collection(db, 'purchase_requests'), (snap) => {
       monthlyInvPurchases = 0; const purchases = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       purchases.forEach(p => { if (p.status === 'purchased') { const dt = p.purchasedAt?.toDate ? p.purchasedAt.toDate() : new Date(p.purchasedAt || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyInvPurchases += p.receivedItems?.reduce((s, i) => s + ((i.received || i.suggested) * (i.price || i.unitPrice)), 0) || 0; } });
       updateMoneyDisplay();
     }));
 
+    // Store purchases
     unsubscribes.push(onSnapshot(collection(db, 'store_purchases'), (snap) => {
       monthlyStorePurchases = 0; snap.docs.forEach(d => { const p = d.data(); const dt = p.date?.toDate ? p.date.toDate() : new Date(p.date || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyStorePurchases += p.totalCost || 0; });
       updateMoneyDisplay();
@@ -534,6 +577,7 @@
       });
     }));
 
+    // Audit logs
     unsubscribes.push(onSnapshot(query(collection(db, 'audit_logs'), orderBy('performedAt', 'desc'), limit(8)), (snap) => {
       const tbody = document.getElementById('auditTable'); if (!tbody) return;
       if (snap.empty) { tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><i class="fas fa-history"></i><p>No activity yet</p></div></td></tr>'; return; }
