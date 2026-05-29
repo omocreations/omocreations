@@ -203,7 +203,7 @@
     .panel-header h3 i { color: var(--primary); }
 
     .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 16px; }
-    .data-table { width: 100%; border-collapse: collapse; min-width: 1300px; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 1500px; }
     .data-table th {
       text-align: left; padding: 14px 10px; font-size: 0.7rem; font-weight: 600;
       color: var(--gray); text-transform: uppercase; letter-spacing: 1px;
@@ -335,7 +335,7 @@
       .stat-card { padding: 14px 12px; }
       .stat-value { font-size: 1.4rem; }
       .panel { padding: 16px 12px; border-radius: 18px; }
-      .data-table { min-width: 1000px; }
+      .data-table { min-width: 1200px; }
       .data-table th, .data-table td { padding: 10px 6px; font-size: 0.75rem; }
       .modal { padding: 20px; border-radius: 20px; }
       .form-row, .form-row-3 { grid-template-columns: 1fr; }
@@ -418,12 +418,14 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Item Name</th><th>Category</th><th>Initial Qty</th><th>Sold</th>
-                <th>Remaining</th><th>Unit Price</th><th>½ Price</th><th>¼ Price</th>
+                <th>Item Name</th><th>Category</th>
+                <th>Init Qty</th><th>Init ½</th><th>Init ¼</th>
+                <th>Sold</th><th>Remaining</th>
+                <th>Unit Price</th><th>½ Price</th><th>¼ Price</th>
                 <th>Revenue</th><th>Status</th><th>Actions</th>
               </tr>
             </thead>
-            <tbody id="inventoryTable"><tr><td colspan="11"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading inventory...</p></div></td></tr></tbody>
+            <tbody id="inventoryTable"><tr><td colspan="13"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading inventory...</p></div></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -571,7 +573,6 @@
     showPinModal('Unlock Revenue', 'view total revenue', () => { revenueRevealed = true; updateRevenueDisplay(); logAudit('reveal_revenue', 'Revenue revealed'); showToast('Revenue unlocked', 'success'); });
   };
 
-  // Calculate revenue per item by summing sales that contain that item
   function calculateRevenueFromSales() {
     const revenueMap = {};
     const soldQtyMap = {};
@@ -647,7 +648,7 @@
 
   function getItemStatus(item) {
     if (item.status === 'pending_approval') return 'pending_approval';
-    const qty = item.quantityAvailable || 0;
+    const qty = (item.quantityAvailable || 0) + (item.halfQuantityAvailable || 0) + (item.quarterQuantityAvailable || 0);
     const threshold = item.threshold || 10;
     if (qty === 0) return 'out_of_stock';
     if (qty <= threshold) return 'low';
@@ -677,21 +678,25 @@
     const tbody = document.getElementById('inventoryTable');
     if (tbody) {
       if (available.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><i class="fas fa-box"></i><p>No items found. Click "Add Item" to get started.</p></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="13"><div class="empty-state"><i class="fas fa-box"></i><p>No items found. Click "Add Item" to get started.</p></div></td></tr>';
       } else {
         tbody.innerHTML = available.map(item => {
           const st = getItemStatus(item), sb = st==='available'?'success':st==='low'?'warning':'danger';
           const adminUser = isAdmin();
-          const initialQty = (item.initialStock || 0);
+          const initQty = (item.initialStock || 0);
+          const initHalf = (item.initialHalfQty || 0);
+          const initQuarter = (item.initialQuarterQty || 0);
           const soldQty = getItemSoldQty(item);
-          const remainingQty = (item.quantityAvailable || 0);
+          const remainingQty = (item.quantityAvailable || 0) + (item.halfQuantityAvailable || 0) + (item.quarterQuantityAvailable || 0);
           const itemRevenue = getItemRevenue(item);
           const showRevenue = revenueRevealed || adminUser;
           
           return `<tr>
             <td><strong>${item.name||'-'}</strong></td>
             <td><span class="badge badge-purple">${item.category||'-'}</span></td>
-            <td>${initialQty}</td>
+            <td>${initQty} <span class="price-type-badge">1</span></td>
+            <td>${initHalf?initHalf+' <span class="price-type-badge">½</span>':'-'}</td>
+            <td>${initQuarter?initQuarter+' <span class="price-type-badge">¼</span>':'-'}</td>
             <td>${soldQty}</td>
             <td style="color:${remainingQty===0?'var(--danger)':st==='low'?'var(--warning)':'inherit'};font-weight:600;">${remainingQty}</td>
             <td>${formatCurrency(item.unitPrice)}<span class="price-type-badge">1</span></td>
@@ -714,8 +719,8 @@
       if (lowAndOut.length === 0) lTbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items well stocked</p></div></td></tr>';
       else lTbody.innerHTML = lowAndOut.map(item => `<tr>
         <td><strong>${item.name||'-'}</strong></td><td>${item.category||'-'}</td>
-        <td>${item.initialStock||0}</td><td>${getItemSoldQty(item)}</td>
-        <td style="color:var(--danger);font-weight:600;">${item.quantityAvailable||0}</td><td>${item.threshold||10}</td>
+        <td>${(item.initialStock||0)+(item.initialHalfQty||0)+(item.initialQuarterQty||0)}</td><td>${getItemSoldQty(item)}</td>
+        <td style="color:var(--danger);font-weight:600;">${(item.quantityAvailable||0)+(item.halfQuantityAvailable||0)+(item.quarterQuantityAvailable||0)}</td><td>${item.threshold||10}</td>
         <td>${formatCurrency(item.unitPrice)}</td>
         <td><span class="badge badge-${getItemStatus(item)==='out_of_stock'?'danger':'warning'}">${getItemStatus(item).replace(/_/g,' ')}</span></td>
         <td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')"><i class="fas fa-box-open"></i></button><button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')"><i class="fas fa-edit"></i></button></div></td></tr>`).join('');
@@ -724,7 +729,6 @@
 
   function loadInventory() {
     cleanup();
-    // Load stock_items
     unsubscribes.push(onSnapshot(collection(db, 'stock_items'), snap => {
       allItems = snap.docs.map(d => {
         const data = d.data();
@@ -732,6 +736,8 @@
           id: d.id,
           ...data,
           quantityAvailable: data.quantityAvailable || 0,
+          halfQuantityAvailable: data.halfQuantityAvailable || 0,
+          quarterQuantityAvailable: data.quarterQuantityAvailable || 0,
           quantitySold: data.quantitySold || 0,
           totalSoldQty: data.totalSoldQty || data.quantitySold || 0,
           totalSoldValue: data.totalSoldValue || 0,
@@ -739,20 +745,20 @@
           halfPrice: data.halfPrice || 0,
           quarterPrice: data.quarterPrice || 0,
           threshold: data.threshold || 10,
-          initialStock: data.initialStock || 0
+          initialStock: data.initialStock || 0,
+          initialHalfQty: data.initialHalfQty || 0,
+          initialQuarterQty: data.initialQuarterQty || 0
         };
       });
       allItems.sort((a,b) => (a.name||'').localeCompare(b.name||''));
       renderInventory();
     }));
 
-    // Load sales to calculate revenue
     unsubscribes.push(onSnapshot(query(collection(db, 'sales'), orderBy('createdAt', 'desc')), snap => {
       allSales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderInventory();
     }));
 
-    // Also load wholesale sales
     unsubscribes.push(onSnapshot(collection(db, 'wholesale_sales'), snap => {
       const ws = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       allSales = [...allSales.filter(s => !ws.find(w => w.id === s.id)), ...ws];
@@ -764,8 +770,12 @@
   window.openAddItemModal = function() {
     showModal('Add New Item', `
       <div class="form-row"><div class="form-group"><label>Item Name *</label><input class="form-control" id="itemName" placeholder="e.g., Rhinestone"></div><div class="form-group"><label>Category *</label><div style="display:flex;gap:8px;"><select class="form-control" id="itemCategory">${categories.map(c => `<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div>
-      <div class="form-group"><label>Initial Quantity *</label><input type="number" class="form-control" id="itemQty" value="0" min="0"></div>
-      <p style="font-size:0.75rem;color:var(--gray);margin-bottom:15px;">Set prices. Revenue starts at ₦0 and updates automatically when sales are made.</p>
+      <p style="font-size:0.75rem;color:var(--gray);margin-bottom:15px;">Enter quantities for each size type. Revenue starts at ₦0 and updates automatically when sales are made.</p>
+      <div class="form-row-3">
+        <div class="form-group"><label>Unit Quantity (1) *</label><input type="number" class="form-control" id="itemQty" value="0" min="0" placeholder="Full units"></div>
+        <div class="form-group"><label>Half Quantity (½)</label><input type="number" class="form-control" id="itemHalfQty" value="0" min="0" placeholder="Half units"></div>
+        <div class="form-group"><label>Quarter Quantity (¼)</label><input type="number" class="form-control" id="itemQuarterQty" value="0" min="0" placeholder="Quarter units"></div>
+      </div>
       <div class="form-row-3">
         <div class="form-group"><label>Unit Price (1) ₦ *</label><input type="number" class="form-control" id="itemPrice" value="0" step="0.01" min="0"></div>
         <div class="form-group"><label>Half Price (½) ₦</label><input type="number" class="form-control" id="itemHalfPrice" value="0" step="0.01" min="0"></div>
@@ -779,6 +789,8 @@
   window.addItem = function() {
     const name = document.getElementById('itemName')?.value?.trim();
     const qty = parseInt(document.getElementById('itemQty')?.value) || 0;
+    const halfQty = parseInt(document.getElementById('itemHalfQty')?.value) || 0;
+    const quarterQty = parseInt(document.getElementById('itemQuarterQty')?.value) || 0;
     const price = parseFloat(document.getElementById('itemPrice')?.value) || 0;
     const halfPrice = parseFloat(document.getElementById('itemHalfPrice')?.value) || 0;
     const quarterPrice = parseFloat(document.getElementById('itemQuarterPrice')?.value) || 0;
@@ -786,12 +798,17 @@
     const category = document.getElementById('itemCategory')?.value || 'other';
     if (!name) { showToast('Name required', 'error'); return; }
     if (price <= 0) { showToast('Unit price must be > 0', 'error'); return; }
+    const totalQty = qty + halfQty + quarterQty;
     const adminUser = isAdmin();
-    const status = adminUser ? (qty===0?'out_of_stock':qty<=threshold?'low':'available') : 'pending_approval';
+    const status = adminUser ? (totalQty===0?'out_of_stock':totalQty<=threshold?'low':'available') : 'pending_approval';
     addDoc(collection(db, 'stock_items'), {
       name, category,
       initialStock: qty,
+      initialHalfQty: halfQty,
+      initialQuarterQty: quarterQty,
       quantityAvailable: qty,
+      halfQuantityAvailable: halfQty,
+      quarterQuantityAvailable: quarterQty,
       quantitySold: 0,
       totalSoldQty: 0,
       totalSoldValue: 0,
@@ -812,8 +829,9 @@
   // ========== RESTOCK OPTIONS ==========
   window.openRestockOptions = function(itemId) {
     const item = allItems.find(i => i.id === itemId); if (!item) return;
+    const totalAvail = (item.quantityAvailable||0) + (item.halfQuantityAvailable||0) + (item.quarterQuantityAvailable||0);
     showModal(`Restock: ${item.name}`, `
-      <p style="margin-bottom:12px;color:var(--gray);">Current: <strong>${item.quantityAvailable||0}</strong> | Threshold: ${item.threshold||10}</p>
+      <p style="margin-bottom:12px;color:var(--gray);">Current Total: <strong>${totalAvail}</strong> | Threshold: ${item.threshold||10}</p>
       <p style="margin-bottom:12px;font-weight:600;">Choose source:</p>
       <div class="restock-options">
         <div class="restock-option" onclick="restockFromStore('${itemId}')">
@@ -840,7 +858,16 @@
     const itemRevenue = getItemRevenue(item);
     showModal(`Edit: ${item.name}`, `
       <div class="form-group"><label>Item Name</label><input class="form-control" value="${item.name||''}" readonly></div>
-      <div class="form-row"><div class="form-group"><label>Initial Qty</label><input type="number" class="form-control" value="${item.initialStock||0}" readonly></div><div class="form-group"><label>Available Qty</label><input type="number" class="form-control" value="${item.quantityAvailable||0}" readonly></div></div>
+      <div class="form-row-3">
+        <div class="form-group"><label>Initial Unit Qty</label><input type="number" class="form-control" value="${item.initialStock||0}" readonly></div>
+        <div class="form-group"><label>Initial Half Qty</label><input type="number" class="form-control" value="${item.initialHalfQty||0}" readonly></div>
+        <div class="form-group"><label>Initial Quarter Qty</label><input type="number" class="form-control" value="${item.initialQuarterQty||0}" readonly></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label>Avail Unit Qty</label><input type="number" class="form-control" value="${item.quantityAvailable||0}" readonly></div>
+        <div class="form-group"><label>Avail Half Qty</label><input type="number" class="form-control" value="${item.halfQuantityAvailable||0}" readonly></div>
+        <div class="form-group"><label>Avail Quarter Qty</label><input type="number" class="form-control" value="${item.quarterQuantityAvailable||0}" readonly></div>
+      </div>
       <div class="form-row"><div class="form-group"><label>Total Sold (from sales)</label><input type="number" class="form-control" value="${soldQty}" readonly></div><div class="form-group"><label>Revenue (from sales)</label><input class="form-control" value="${formatCurrency(itemRevenue)}" readonly></div></div>
       <div class="form-row"><div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="editCategory">${categories.map(c => `<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div>
       <div class="form-row-3">
@@ -860,8 +887,8 @@
     const category = document.getElementById('editCategory')?.value;
     if (price <= 0) { showToast('Unit price must be > 0', 'error'); return; }
     const item = allItems.find(i => i.id === id);
-    const qty = item?.quantityAvailable || 0;
-    const status = qty === 0 ? 'out_of_stock' : qty <= threshold ? 'low' : 'available';
+    const totalQty = (item?.quantityAvailable||0) + (item?.halfQuantityAvailable||0) + (item?.quarterQuantityAvailable||0);
+    const status = totalQty === 0 ? 'out_of_stock' : totalQty <= threshold ? 'low' : 'available';
     try { await updateDoc(doc(db, 'stock_items', id), { category, unitPrice: price, halfPrice, quarterPrice, threshold, status, updatedAt: serverTimestamp() }); await logAudit('edit_item', `Updated ${item?.name}`); showToast('Updated', 'success'); hideModal(); } catch (e) { showToast('Failed', 'error'); }
   };
 
@@ -870,9 +897,10 @@
     const item = allItems.find(i => i.id === id); if (!item) return;
     const soldQty = getItemSoldQty(item);
     const itemRevenue = getItemRevenue(item);
+    const totalAvail = (item.quantityAvailable||0) + (item.halfQuantityAvailable||0) + (item.quarterQuantityAvailable||0);
     try {
       const snap = await getDocs(query(collection(db, 'audit_logs'), orderBy('performedAt','desc')));
-      let html = `<div style="margin-bottom:16px;"><h4>${item.name}</h4><p>Initial: ${item.initialStock||0} | Available: ${item.quantityAvailable||0} | Sold: ${soldQty} | Revenue: ${formatCurrency(itemRevenue)}</p></div>`;
+      let html = `<div style="margin-bottom:16px;"><h4>${item.name}</h4><p>Initial: ${(item.initialStock||0)+(item.initialHalfQty||0)+(item.initialQuarterQty||0)} | Available: ${totalAvail} | Sold: ${soldQty} | Revenue: ${formatCurrency(itemRevenue)}</p></div>`;
       const logs = snap.docs.map(d => d.data()).filter(l => l.note && l.note.includes(item.name));
       if (logs.length === 0) html += '<div class="empty-state"><i class="fas fa-history"></i><p>No history</p></div>';
       else { html += '<div style="max-height:300px;overflow-y:auto;"><table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Action</th><th>By</th><th>Details</th></tr>'; logs.forEach(l => { html += `<tr><td>${formatDate(l.performedAt)}</td><td><span class="badge badge-info">${l.actionType||'-'}</span></td><td>${l.performedByName||'-'}</td><td>${l.note||'-'}</td></tr>`; }); html += '</table></div>'; }
@@ -888,8 +916,8 @@
 
   // ========== EXPORT & REFRESH ==========
   window.exportData = function(format) {
-    const headers = ['Name','Category','Initial Qty','Sold','Remaining','Unit Price','Half Price','Quarter Price','Revenue','Status'];
-    const rows = allItems.map(i => [i.name||'',i.category||'',i.initialStock||0,getItemSoldQty(i),i.quantityAvailable||0,i.unitPrice||0,i.halfPrice||0,i.quarterPrice||0,getItemRevenue(i),getItemStatus(i)]);
+    const headers = ['Name','Category','Init Qty','Init Half','Init Quarter','Sold','Remaining','Unit Price','Half Price','Quarter Price','Revenue','Status'];
+    const rows = allItems.map(i => [i.name||'',i.category||'',i.initialStock||0,i.initialHalfQty||0,i.initialQuarterQty||0,getItemSoldQty(i),(i.quantityAvailable||0)+(i.halfQuantityAvailable||0)+(i.quarterQuantityAvailable||0),i.unitPrice||0,i.halfPrice||0,i.quarterPrice||0,getItemRevenue(i),getItemStatus(i)]);
     const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: format==='csv'?'text/csv':'application/vnd.ms-excel' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `inventory_${new Date().toISOString().split('T')[0]}.${format}`; a.click();
