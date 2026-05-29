@@ -128,6 +128,19 @@
     .current-date { color:var(--gray); font-size:0.85rem; white-space:nowrap; }
     .content-wrapper { padding:28px; max-width:1500px; }
 
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .stat-card {
+      background:white; padding:18px 16px; border-radius:20px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(255,77,166,0.1);
+      transition:all 0.3s; position:relative; overflow:hidden;
+    }
+    .stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 24px rgba(255,77,166,0.1); }
+    .stat-header { display:flex; justify-content:space-between; margin-bottom:10px; }
+    .stat-header span { font-size:0.65rem; color:var(--gray); text-transform:uppercase; font-weight:600; letter-spacing:1px; }
+    .stat-icon { width:36px; height:36px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; color:var(--primary); }
+    .stat-value { font-size:1.8rem; font-weight:800; color:var(--dark); font-family:'Playfair Display',serif; line-height:1; }
+    .stat-sub { font-size:0.65rem; color:var(--gray); margin-top:4px; }
+
     .filter-bar { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
     .search-wrapper { flex:1; min-width:200px; position:relative; }
     .search-wrapper i { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--gray); }
@@ -287,7 +300,7 @@
     .toast.success i { color:var(--success); }
     .toast.error i { color:var(--danger); }
 
-    @media (max-width:1400px) { .product-grid { grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); } }
+    @media (max-width:1400px) { .product-grid { grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); } .stats-grid { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:768px) {
       .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; }
       .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); }
@@ -301,8 +314,9 @@
       .product-grid { grid-template-columns:repeat(2,1fr); gap:12px; }
       .panel { padding:16px 12px; border-radius:18px; }
       .form-row { grid-template-columns:1fr; }
+      .stats-grid { grid-template-columns:1fr 1fr; gap:10px; }
     }
-    @media (max-width:480px) { .product-grid { grid-template-columns:1fr; } }
+    @media (max-width:480px) { .product-grid { grid-template-columns:1fr; } .stats-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -315,33 +329,7 @@
     <div class="logo-text"><span>Omo</span>creations</div>
     <button class="close-sidebar" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
   </div>
-  <nav class="sidebar-nav">
-    <div class="nav-section"><div class="nav-section-title">OVERVIEW</div>
-      <button class="nav-item" onclick="navigateTo('admin-dashboard.html')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
-      <button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>
-      <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
-    </div>
-    <div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
-      <button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff Management</span></button>
-      <button class="nav-item" onclick="navigateTo('make-admin.html')"><i class="fas fa-user-shield"></i><span>Make Admin</span></button>
-      <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
-      <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit Logs</span></button>
-    </div>
-    <div class="nav-section"><div class="nav-section-title">MONITORING</div>
-      <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
-      <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
-      <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
-      <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
-      <button class="nav-item" onclick="navigateTo('orders-admin.html')"><i class="fas fa-clipboard-list"></i><span>Orders Admin</span></button>
-    </div>
-    <div class="nav-section"><div class="nav-section-title">SHOP &amp; KIOSK</div>
-      <button class="nav-item" onclick="window.open('kiosk.html','_blank')"><i class="fas fa-desktop"></i><span>Launch Kiosk</span></button>
-      <button class="nav-item" onclick="navigateTo('kiosk-settings.html')"><i class="fas fa-cog"></i><span>Kiosk Settings</span></button>
-      <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
-      <button class="nav-item active"><i class="fas fa-book-open"></i><span>Catalog</span></button>
-    </div>
-    <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
-  </nav>
+  <nav class="sidebar-nav" id="sidebarNav"></nav>
   <div class="sidebar-footer"><div class="user-profile"><div class="user-avatar" id="userAvatar">A</div><div class="user-details"><h4 id="userName">Admin</h4><p id="userRole">Admin</p></div></div></div>
 </aside>
 
@@ -353,10 +341,18 @@
 
   <div class="content-wrapper">
 
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-header"><span>Published</span><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div><div class="stat-value" id="publishedStat">0</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Drafts</span><div class="stat-icon"><i class="fas fa-pen"></i></div></div><div class="stat-value" id="draftStat">0</div></div>
+      <div class="stat-card"><div class="stat-header"><span>New Stock</span><div class="stat-icon"><i class="fas fa-box"></i></div></div><div class="stat-value" id="newStat">0</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Machine Items</span><div class="stat-icon"><i class="fas fa-cog"></i></div></div><div class="stat-value" id="machineStat">0</div></div>
+    </div>
+
     <div class="tabs-container">
       <button class="tab active" data-tab="published"><i class="fas fa-check-circle"></i> Published <span class="count" id="publishedCount">0</span></button>
       <button class="tab" data-tab="draft"><i class="fas fa-pen"></i> Yet to Publish <span class="count" id="draftCount">0</span></button>
       <button class="tab" data-tab="new"><i class="fas fa-box"></i> New Loaded Stock <span class="count" id="newCount">0</span></button>
+      <button class="tab" data-tab="machine"><i class="fas fa-cog"></i> Machine Items <span class="count" id="machineCount">0</span></button>
     </div>
 
     <div class="filter-bar">
@@ -364,6 +360,7 @@
       <select class="filter-select" id="categoryFilter"><option value="all">All Categories</option></select>
       <button class="btn btn-outline btn-sm" onclick="refreshCatalog()"><i class="fas fa-sync-alt"></i> Refresh</button>
       <button class="btn btn-primary btn-sm" onclick="syncFromInventory()"><i class="fas fa-sync"></i> Sync from Inventory</button>
+      <button class="btn btn-outline btn-sm" onclick="syncFromMachine()"><i class="fas fa-cog"></i> Sync from Machine</button>
       <span style="margin-left:auto;font-size:0.8rem;color:var(--gray);" id="productCount">0 products</span>
     </div>
 
@@ -380,6 +377,11 @@
     <!-- NEW LOADED STOCK -->
     <div id="newPanel" class="page-view">
       <div class="product-grid" id="newGrid"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading new stock...</p></div></div>
+    </div>
+
+    <!-- MACHINE ITEMS -->
+    <div id="machinePanel" class="page-view">
+      <div class="product-grid" id="machineGrid"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading machine items...</p></div></div>
     </div>
 
   </div>
@@ -410,7 +412,7 @@
   const db = getFirestore(app);
 
   let currentUser = null, userData = null, unsubscribes = [];
-  let allProducts = [], categories = [], currentTab = 'published';
+  let allProducts = [], allMachineItems = [], categories = [], currentTab = 'published';
   let currentEditId = null;
 
   const CLOUDINARY_CLOUD_NAME = 'dw80fw9un';
@@ -420,6 +422,7 @@
   function formatCurrency(n) { return '₦' + (n||0).toLocaleString(); }
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
+  function isAdmin() { return userData?.role==='admin'||userData?.role==='super_admin'; }
 
   function showToast(msg, type='success') {
     const c = document.getElementById('toastContainer'); if(!c) return;
@@ -449,6 +452,39 @@
   };
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
 
+  function buildSidebar() {
+    const nav=document.getElementById('sidebarNav'); if(!nav) return;
+    const dashboardLink=isAdmin()?'admin-dashboard.html':'attendant-dashboard.html';
+    nav.innerHTML=`
+      <div class="nav-section"><div class="nav-section-title">OVERVIEW</div>
+        <button class="nav-item" onclick="navigateTo('${dashboardLink}')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+        ${isAdmin()?`<button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button><button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>`:''}
+      </div>
+      ${isAdmin()?`<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
+        <button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff Management</span></button>
+        <button class="nav-item" onclick="navigateTo('make-admin.html')"><i class="fas fa-user-shield"></i><span>Make Admin</span></button>
+        <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
+        <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit Logs</span></button>
+      </div>`:''}
+      <div class="nav-section"><div class="nav-section-title">MONITORING</div>
+        <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
+        <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
+        <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
+        <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
+        <button class="nav-item" onclick="navigateTo('history.html')"><i class="fas fa-history"></i><span>History</span></button>
+        ${isAdmin()?`<button class="nav-item" onclick="navigateTo('orders-admin.html')"><i class="fas fa-clipboard-list"></i><span>Orders Admin</span></button>`:''}
+      </div>
+      ${isAdmin()?`<div class="nav-section"><div class="nav-section-title">SHOP &amp; KIOSK</div>
+        <button class="nav-item" onclick="window.open('kiosk.html','_blank')"><i class="fas fa-desktop"></i><span>Launch Kiosk</span></button>
+        <button class="nav-item" onclick="navigateTo('kiosk-settings.html')"><i class="fas fa-cog"></i><span>Kiosk Settings</span></button>
+        <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
+        <button class="nav-item active"><i class="fas fa-book-open"></i><span>Catalog</span></button>
+      </div>`:`<button class="nav-item" onclick="navigateTo('attendant-profile.html')"><i class="fas fa-user"></i><span>Profile</span></button>`}
+      <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
+    `;
+    document.getElementById('logoutBtn')?.addEventListener('click',async()=>{try{await signOut(auth);}catch(e){}window.location.href='auth.html';});
+  }
+
   // ========== LOAD CATEGORIES ==========
   async function loadCategories() {
     try {
@@ -467,6 +503,7 @@
 
   // ========== RENDER PRODUCTS ==========
   function getProductStatus(product) {
+    if(product.source === 'machine') return 'machine';
     if(product.isNew && !product.published) return 'new';
     if(product.published) return 'published';
     return 'draft';
@@ -481,9 +518,10 @@
     let tagsHtml = '';
     if(p.isHot) tagsHtml += '<span class="product-tag hot">🔥 Hot Item</span>';
     if(hasDiscount) tagsHtml += `<span class="product-tag discount">-${discountPercent}% Off</span>`;
+    if(p.source === 'machine') tagsHtml += '<span class="product-tag" style="background:rgba(59,130,246,0.1);color:var(--info);">⚙️ Machine</span>';
 
-    const statusLabels = { published:'Published', draft:'Draft', new:'New Stock' };
-    const statusClasses = { published:'published', draft:'draft', new:'new' };
+    const statusLabels = { published:'Published', draft:'Draft', new:'New Stock', machine:'Machine' };
+    const statusClasses = { published:'published', draft:'draft', new:'new', machine:'published' };
 
     return `
       <div class="product-card">
@@ -502,13 +540,15 @@
           <div class="product-stock">📦 Stock: ${p.inStock||0} | Sold: ${p.soldCount||0}</div>
           ${tagsHtml?`<div class="product-tags">${tagsHtml}</div>`:''}
           <div class="product-actions">
-            <button class="btn btn-sm btn-outline" onclick="openEditModal('${p.id}')"><i class="fas fa-edit"></i> Edit</button>
-            <button class="btn btn-sm ${p.published?'btn-warning':'btn-success'}" onclick="togglePublish('${p.id}')">
-              <i class="fas fa-${p.published?'eye-slash':'eye'}"></i> ${p.published?'Unpublish':'Publish'}
-            </button>
-            <button class="btn btn-sm btn-outline" onclick="toggleHot('${p.id}')">
-              <i class="fas fa-${p.isHot?'fire-alt':'fire'}" style="color:${p.isHot?'var(--warning)':'inherit'};"></i> ${p.isHot?'Unmark Hot':'Hot'}
-            </button>
+            <button class="btn btn-sm btn-outline" onclick="openEditModal('${p.id}','${p.source||'catalog'}')"><i class="fas fa-edit"></i> Edit</button>
+            ${p.source !== 'machine' ? `
+              <button class="btn btn-sm ${p.published?'btn-warning':'btn-success'}" onclick="togglePublish('${p.id}')">
+                <i class="fas fa-${p.published?'eye-slash':'eye'}"></i> ${p.published?'Unpublish':'Publish'}
+              </button>
+              <button class="btn btn-sm btn-outline" onclick="toggleHot('${p.id}')">
+                <i class="fas fa-${p.isHot?'fire-alt':'fire'}" style="color:${p.isHot?'var(--warning)':'inherit'};"></i> ${p.isHot?'Unmark Hot':'Hot'}
+              </button>
+            ` : ''}
           </div>
         </div>
       </div>
@@ -519,18 +559,25 @@
     const search = (document.getElementById('searchInput')?.value||'').toLowerCase();
     const catFilter = document.getElementById('categoryFilter')?.value||'all';
 
-    let filtered = [...allProducts];
+    let filtered = [...allProducts, ...allMachineItems.map(m=>({...m,source:'machine'}))];
     if(search) filtered = filtered.filter(p=>(p.name||'').toLowerCase().includes(search)||(p.description||'').toLowerCase().includes(search));
     if(catFilter!=='all') filtered = filtered.filter(p=>p.category===catFilter);
 
-    const published = filtered.filter(p=>p.published===true);
-    const draft = filtered.filter(p=>!p.published && !p.isNew);
-    const newStock = filtered.filter(p=>p.isNew===true && !p.published);
+    const published = filtered.filter(p=>p.published===true && p.source!=='machine');
+    const draft = filtered.filter(p=>!p.published && !p.isNew && p.source!=='machine');
+    const newStock = filtered.filter(p=>p.isNew===true && !p.published && p.source!=='machine');
+    const machineItems = filtered.filter(p=>p.source==='machine');
 
     document.getElementById('publishedCount').textContent = published.length;
     document.getElementById('draftCount').textContent = draft.length;
     document.getElementById('newCount').textContent = newStock.length;
+    document.getElementById('machineCount').textContent = machineItems.length;
     document.getElementById('productCount').textContent = `${filtered.length} products`;
+
+    document.getElementById('publishedStat').textContent = published.length;
+    document.getElementById('draftStat').textContent = draft.length;
+    document.getElementById('newStat').textContent = newStock.length;
+    document.getElementById('machineStat').textContent = machineItems.length;
 
     document.getElementById('publishedGrid').innerHTML = published.length===0
       ? '<div class="empty-state"><i class="fas fa-check-circle"></i><p>No published products</p></div>'
@@ -543,16 +590,44 @@
     document.getElementById('newGrid').innerHTML = newStock.length===0
       ? '<div class="empty-state"><i class="fas fa-box"></i><p>No new stock to review. Click "Sync from Inventory" to load.</p></div>'
       : newStock.map(p=>renderProductCard(p)).join('');
+
+    document.getElementById('machineGrid').innerHTML = machineItems.length===0
+      ? '<div class="empty-state"><i class="fas fa-cog"></i><p>No machine items. Click "Sync from Machine" to load.</p></div>'
+      : machineItems.map(p=>renderProductCard(p)).join('');
   }
 
   // ========== DATA LOADING ==========
-  function loadProducts() {
+  function loadAllData() {
     cleanup();
+    // Load catalog
     unsubscribes.push(onSnapshot(collection(db,'catalog'),(snap)=>{
-      allProducts = snap.docs.map(d=>({id:d.id,...d.data()}));
+      allProducts = snap.docs.map(d=>({id:d.id,source:'catalog',...d.data()}));
       console.log(`📦 Loaded ${allProducts.length} catalog products`);
       renderAllProducts();
     },(error)=>{console.error('Error loading catalog:',error);}));
+
+    // Load machine items
+    unsubscribes.push(onSnapshot(collection(db,'machine'),(snap)=>{
+      allMachineItems = snap.docs.map(d=>{
+        const data = d.data();
+        return {
+          id:d.id,source:'machine',
+          name:data.name||data.itemName||'Machine Item',
+          category:data.category||'other',
+          description:data.description||'',
+          price:data.price||data.unitPrice||0,
+          discountPercent:0,
+          inStock:data.quantity||data.inStock||0,
+          soldCount:data.sold||data.soldCount||0,
+          imageUrl:data.imageUrl||data.image||'',
+          isHot:data.isHot||false,
+          isNew:false,
+          published:true
+        };
+      });
+      console.log(`⚙️ Loaded ${allMachineItems.length} machine items`);
+      renderAllProducts();
+    },(error)=>{console.error('Error loading machine:',error);}));
   }
 
   // ========== SYNC FROM INVENTORY ==========
@@ -569,6 +644,7 @@
             price:item.unitPrice||0,discountPercent:0,
             inStock:item.quantityAvailable||0,soldCount:item.quantitySold||0,
             imageUrl:'',isHot:false,isNew:true,published:false,
+            source:'catalog',
             createdAt:serverTimestamp(),updatedAt:serverTimestamp()
           });
           count++;
@@ -583,9 +659,54 @@
     } catch(e){showToast('Sync error: '+e.message,'error');}
   };
 
+  // ========== SYNC FROM MACHINE ==========
+  window.syncFromMachine = async ()=>{
+    try {
+      const machineSnap = await getDocs(collection(db,'machine'));
+      let count=0;
+      for(const d of machineSnap.docs){
+        const item = d.data();
+        const existing = allProducts.find(p=>p.machineId===d.id);
+        if(!existing){
+          await addDoc(collection(db,'catalog'),{
+            machineId:d.id,
+            name:item.name||item.itemName||'Machine Item',
+            category:item.category||'other',
+            description:item.description||'',
+            price:item.price||item.unitPrice||0,
+            discountPercent:0,
+            inStock:item.quantity||item.inStock||0,
+            soldCount:item.sold||item.soldCount||0,
+            imageUrl:item.imageUrl||item.image||'',
+            isHot:false,isNew:true,published:false,
+            source:'catalog',
+            createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+          });
+          count++;
+        } else {
+          await updateDoc(doc(db,'catalog',existing.id),{
+            inStock:item.quantity||item.inStock||0,
+            soldCount:item.sold||item.soldCount||0,
+            price:item.price||item.unitPrice||0,
+            name:item.name||item.itemName||existing.name,
+            imageUrl:item.imageUrl||item.image||existing.imageUrl,
+            updatedAt:serverTimestamp()
+          });
+        }
+      }
+      showToast(`Synced ${count} new products from machine!`,'success');
+    } catch(e){showToast('Sync error: '+e.message,'error');}
+  };
+
   // ========== EDIT MODAL ==========
-  window.openEditModal = (id)=>{
-    const p = allProducts.find(x=>x.id===id); if(!p) return;
+  window.openEditModal = (id,source)=>{
+    let p;
+    if(source==='machine'){
+      p = allMachineItems.find(x=>x.id===id);
+    } else {
+      p = allProducts.find(x=>x.id===id);
+    }
+    if(!p) return;
     currentEditId = id;
 
     showModal(`Edit: ${p.name}`,`
@@ -619,9 +740,9 @@
         <div class="form-group"><label>Stock Quantity</label><input type="number" class="form-control" id="editStock" value="${p.inStock||0}" readonly></div>
         <div class="form-group"><label>Sold Count</label><input type="number" class="form-control" id="editSold" value="${p.soldCount||0}" readonly></div>
       </div>
-      <p style="font-size:0.7rem;color:var(--gray);margin-bottom:15px;">Stock and sold counts are managed from inventory. Changes here won't affect actual stock.</p>
+      <p style="font-size:0.7rem;color:var(--gray);margin-bottom:15px;">Stock and sold counts are managed from source (inventory/machine). Changes here won't affect actual stock.</p>
       <div style="display:flex;gap:10px;">
-        <button class="btn btn-primary" onclick="saveProduct('${id}')"><i class="fas fa-save"></i> Save Changes</button>
+        <button class="btn btn-primary" onclick="saveProduct('${id}','${source}')"><i class="fas fa-save"></i> Save Changes</button>
         <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
       </div>
     `);
@@ -650,18 +771,23 @@
     input.click();
   };
 
-  window.saveProduct = async (id)=>{
+  window.saveProduct = async (id,source)=>{
     const isHot = document.getElementById('editHotToggle')?.classList.contains('active');
+    const updateData = {
+      name:document.getElementById('editName')?.value?.trim()||'',
+      category:document.getElementById('editCategory')?.value||'other',
+      description:document.getElementById('editDesc')?.value?.trim()||'',
+      price:parseFloat(document.getElementById('editPrice')?.value)||0,
+      discountPercent:parseInt(document.getElementById('editDiscount')?.value)||0,
+      imageUrl:document.getElementById('editImageUrl')?.value||'',
+      isHot,updatedAt:serverTimestamp()
+    };
     try {
-      await updateDoc(doc(db,'catalog',id),{
-        name:document.getElementById('editName')?.value?.trim()||'',
-        category:document.getElementById('editCategory')?.value||'other',
-        description:document.getElementById('editDesc')?.value?.trim()||'',
-        price:parseFloat(document.getElementById('editPrice')?.value)||0,
-        discountPercent:parseInt(document.getElementById('editDiscount')?.value)||0,
-        imageUrl:document.getElementById('editImageUrl')?.value||'',
-        isHot,updatedAt:serverTimestamp()
-      });
+      if(source==='machine'){
+        await updateDoc(doc(db,'machine',id),updateData);
+      } else {
+        await updateDoc(doc(db,'catalog',id),updateData);
+      }
       showToast('Product updated!','success'); hideModal();
     } catch(e){showToast('Error: '+e.message,'error');}
   };
@@ -678,7 +804,7 @@
     showToast(p.isHot?'Removed from hot items':'Marked as hot!','success');
   };
 
-  window.refreshCatalog = ()=>{loadProducts();showToast('Refreshed','success');};
+  window.refreshCatalog = ()=>{loadAllData();showToast('Refreshed','success');};
 
   // ========== EVENT LISTENERS ==========
   document.getElementById('searchInput').addEventListener('input',renderAllProducts);
@@ -702,11 +828,12 @@
       document.getElementById('userRole').textContent = userData.role?.replace('_',' ')||'Staff';
       document.getElementById('userAvatar').textContent = (userData.fullName||'A').charAt(0).toUpperCase();
       document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-      await loadCategories(); loadProducts();
+      buildSidebar();
+      await loadCategories();
+      loadAllData();
     } catch(e){showToast('Error loading','error');}
   });
 
-  document.getElementById('logoutBtn').addEventListener('click',async()=>{await signOut(auth);window.location.href='auth.html';});
   window.addEventListener('beforeunload',cleanup);
 </script>
 </body>
