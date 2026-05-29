@@ -60,7 +60,7 @@
     .content-wrapper { padding: 28px; max-width: 1400px; width: 100%; }
 
     .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: white; padding: 18px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(255,77,166,0.1); transition: all 0.3s; animation: fadeInUp 0.5s ease forwards; opacity: 0; }
+    .stat-card { background: white; padding: 18px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(255,77,166,0.1); transition: all 0.3s; animation: fadeInUp 0.5s ease forwards; opacity: 0; position: relative; overflow: hidden; }
     .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}.stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}.stat-card:nth-child(5){animation-delay:0.25s}
     .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(255,77,166,0.15); }
     .stat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -68,6 +68,19 @@
     .stat-icon { width: 36px; height: 36px; border-radius: 12px; background: var(--primary-soft); display: flex; align-items: center; justify-content: center; color: var(--primary); }
     .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--dark); font-family: 'Playfair Display', serif; line-height: 1; }
     .stat-change { font-size: 0.65rem; margin-top: 4px; color: var(--gray); }
+
+    .stat-card.value-locked .stat-value {
+      filter: blur(8px); user-select: none; cursor: pointer; position: relative;
+    }
+    .stat-card.value-locked .stat-value::after {
+      content: '\f023'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; color: var(--gray); filter: none;
+    }
+    .stat-card .value-hint {
+      font-size: 0.6rem; color: var(--primary); text-align: center; cursor: pointer; margin-top: 2px; display: none;
+    }
+    .stat-card.value-locked .value-hint { display: block; }
 
     .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
     .search-wrapper { flex: 1; min-width: 200px; position: relative; } .search-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray); }
@@ -171,8 +184,8 @@
       <div class="stat-card"><div class="stat-header"><span>Total Items</span><div class="stat-icon"><i class="fas fa-tools"></i></div></div><div class="stat-value" id="totalTools">0</div></div>
       <div class="stat-card"><div class="stat-header"><span>Available</span><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div><div class="stat-value" id="availableTools">0</div></div>
       <div class="stat-card"><div class="stat-header"><span>Sold</span><div class="stat-icon"><i class="fas fa-tags"></i></div></div><div class="stat-value" id="soldTools">0</div></div>
-      <div class="stat-card"><div class="stat-header"><span>Inventory Value</span><div class="stat-icon"><i class="fas fa-boxes"></i></div></div><div class="stat-value" id="totalValue">₦0</div></div>
-      <div class="stat-card"><div class="stat-header"><span>Revenue (MTD)</span><div class="stat-icon"><i class="fas fa-naira-sign"></i></div></div><div class="stat-value" id="monthlyRevenue">₦0</div></div>
+      <div class="stat-card value-locked" id="totalValueCard"><div class="stat-header"><span>Inventory Value</span><div class="stat-icon"><i class="fas fa-boxes"></i></div></div><div class="stat-value" id="totalValue">₦0</div><div class="value-hint" onclick="revealStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
+      <div class="stat-card value-locked" id="monthlyRevenueCard"><div class="stat-header"><span>Revenue (MTD)</span><div class="stat-icon"><i class="fas fa-naira-sign"></i></div></div><div class="stat-value" id="monthlyRevenue">₦0</div><div class="value-hint" onclick="revealStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
     </div>
 
     <div class="tabs-container">
@@ -185,6 +198,7 @@
       <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search tools & machines..."></div>
       <select class="filter-select" id="categoryFilter"><option value="all">All Categories</option></select>
       <div class="export-dropdown"><button class="btn btn-outline" id="exportDropdownBtn"><i class="fas fa-download"></i> Export</button><div class="export-menu" id="exportMenu"><div class="export-item" onclick="exportData('csv')"><i class="fas fa-file-csv"></i> CSV</div><div class="export-item" onclick="exportData('excel')"><i class="fas fa-file-excel"></i> Excel</div></div></div>
+      <button class="btn btn-outline btn-sm" onclick="syncToCatalog()"><i class="fas fa-sync"></i> Sync to Catalog</button>
       <button class="btn btn-primary btn-sm" onclick="openAddToolModal()"><i class="fas fa-plus"></i> Add Tool/Machine</button>
     </div>
 
@@ -229,6 +243,7 @@
   let currentUser = null, userData = null, unsubscribes = [];
   let allTools = [], allCustomers = [], categories = ['Sewing Machine','Cutting Machine','Embroidery Machine','Heat Press','Printer','Hand Tool','Power Tool','Other'];
   let currentTab = 'all', sellCustomerType = 'existing';
+  let statsRevealed = false;
 
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
   function formatFullDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
@@ -272,6 +287,20 @@
     document.getElementById('verifyPinBtn').onclick = function() { const pin = ['pin1','pin2','pin3','pin4'].map(function(id) { return document.getElementById(id).value; }).join(''); if (pin === ((userData && userData.attendantPin) || '1234')) { hideModal(); onSuccess(); } else { showToast('Invalid PIN', 'error'); } };
   }
 
+  window.revealStats = function() {
+    if (statsRevealed) return;
+    if (isAdmin()) { statsRevealed = true; updateStatsDisplay(); return; }
+    showPinModal('Unlock Stats', 'view financial figures', function() { statsRevealed = true; updateStatsDisplay(); showToast('Stats unlocked', 'success'); });
+  };
+
+  function updateStatsDisplay() {
+    if (!statsRevealed) return;
+    ['totalValueCard','monthlyRevenueCard'].forEach(function(id) {
+      const card = document.getElementById(id);
+      if (card) { card.classList.remove('value-locked'); const valEl = card.querySelector('.stat-value'); if (valEl) { valEl.style.filter = 'none'; valEl.style.cursor = 'default'; } const hint = card.querySelector('.value-hint'); if (hint) hint.style.display = 'none'; }
+    });
+  }
+
   async function loadCustomers() {
     try { const snap = await db.collection('customers').where('status', '==', 'approved').get(); allCustomers = snap.docs.map(function(d) { const data = d.data(); data.id = d.id; return data; }); } catch(e) { allCustomers = []; }
   }
@@ -308,6 +337,47 @@
     document.getElementById('soldTable').innerHTML = sold.length === 0 ? '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-tags"></i><p>No items sold yet</p></div></td></tr>' : sold.map(function(t) { return '<tr><td><strong>' + (t.name || '-') + '</strong></td><td>' + (t.category || 'General') + '</td><td>' + formatCurrency(t.price) + '</td><td>' + formatFullDate(t.soldDate) + '</td><td>' + (t.soldTo || 'Walk-in') + '</td><td><span class="badge badge-info">' + (t.paymentMethod || 'cash') + '</span></td><td><button class="btn btn-sm btn-outline" onclick="printReceipt(\'' + t.id + '\')"><i class="fas fa-receipt"></i></button></td></tr>'; }).join('');
   }
 
+  // ========== SYNC TO CATALOG ==========
+  window.syncToCatalog = async function() {
+    try {
+      let count = 0;
+      for (const tool of allTools) {
+        const existingSnap = await db.collection('catalog').where('machineId','==',tool.id).get();
+        if (existingSnap.empty) {
+          await db.collection('catalog').add({
+            machineId: tool.id,
+            name: tool.name || 'Machine Item',
+            category: tool.category || 'other',
+            description: tool.description || '',
+            price: tool.price || 0,
+            discountPercent: 0,
+            inStock: tool.status === 'sold' ? 0 : 1,
+            soldCount: tool.status === 'sold' ? 1 : 0,
+            imageUrl: tool.imageUrl || '',
+            isHot: false,
+            isNew: true,
+            published: false,
+            source: 'catalog',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          count++;
+        } else {
+          const existing = existingSnap.docs[0];
+          await db.collection('catalog').doc(existing.id).update({
+            inStock: tool.status === 'sold' ? 0 : 1,
+            soldCount: tool.status === 'sold' ? 1 : 0,
+            price: tool.price || 0,
+            name: tool.name || existing.data().name,
+            description: tool.description || existing.data().description,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      }
+      showToast('Synced ' + count + ' new items to catalog!', 'success');
+    } catch(e) { showToast('Sync error: ' + e.message, 'error'); }
+  };
+
   // ========== ADD TOOL ==========
   window.openAddToolModal = function() {
     const catOpts = categories.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
@@ -336,7 +406,7 @@
     } catch(e) { showToast('Failed: ' + e.message, 'error'); }
   };
 
-  // ========== SELL TOOL (WITH CUSTOMER LOADING) ==========
+  // ========== SELL TOOL ==========
   window.openSellToolModal = async function(id) {
     await loadCustomers();
     const tool = allTools.find(function(t) { return t.id === id; }); if (!tool) return;
@@ -455,11 +525,12 @@
       const snap = await db.collection('users').doc(u.uid).get();
       if (!snap.exists || snap.data().status !== 'active') { auth.signOut(); window.location.href = 'auth.html'; return; }
       userData = snap.data();
+      if (isAdmin()) { statsRevealed = true; }
       document.getElementById('userName').textContent = (userData.fullName || 'A').split(' ')[0] || 'Staff';
       document.getElementById('userRole').textContent = (userData.role || 'staff').replace('_', ' ');
       document.getElementById('userAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
       document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
-      buildSidebar(); loadTools();
+      buildSidebar(); loadTools(); updateStatsDisplay();
     } catch(e) { showToast('Error loading', 'error'); }
   });
   window.addEventListener('beforeunload', cleanup);
