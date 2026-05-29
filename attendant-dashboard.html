@@ -104,9 +104,9 @@
     .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--dark); font-family: 'Playfair Display', serif; line-height: 1; }
     .stat-change { font-size: 0.65rem; margin-top: 6px; color: var(--gray); }
 
-    .quick-actions { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
+    .quick-actions { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 28px; }
     .quick-action { background: white; padding: 16px 12px; border-radius: 18px; text-align: center; cursor: pointer; border: 1px solid rgba(255,77,166,0.1); transition: all 0.3s; animation: fadeInUp 0.5s ease forwards; opacity: 0; }
-    .quick-action:nth-child(1){animation-delay:0.10s}.quick-action:nth-child(2){animation-delay:0.15s}.quick-action:nth-child(3){animation-delay:0.20s}.quick-action:nth-child(4){animation-delay:0.25s}.quick-action:nth-child(5){animation-delay:0.30s}
+    .quick-action:nth-child(1){animation-delay:0.10s}.quick-action:nth-child(2){animation-delay:0.15s}.quick-action:nth-child(3){animation-delay:0.20s}.quick-action:nth-child(4){animation-delay:0.25s}.quick-action:nth-child(5){animation-delay:0.30s}.quick-action:nth-child(6){animation-delay:0.35s}
     .quick-action:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(255,77,166,0.15); border-color: var(--primary); }
     .quick-action i { font-size: 1.5rem; color: var(--primary); margin-bottom: 8px; display: block; }
     .quick-action h4 { font-size: 0.75rem; color: var(--dark); font-weight: 600; }
@@ -189,7 +189,7 @@
       .content-wrapper { padding: 16px 12px; } .top-bar { padding: 0 16px; }
       .page-title { font-size: 1.1rem; } .current-date { display: none; }
       .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; } .stat-value { font-size: 1.4rem; }
-      .quick-actions { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .quick-actions { grid-template-columns: repeat(3, 1fr); gap: 10px; }
       .welcome-banner { flex-direction: column; text-align: center; } .points-display { text-align: center; }
     }
   </style>
@@ -225,6 +225,7 @@
       <div class="quick-action" onclick="navigateTo('tasks.html')"><i class="fas fa-tasks"></i><h4>Tasks</h4></div>
       <div class="quick-action" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><h4>Inventory</h4></div>
       <div class="quick-action" onclick="navigateTo('store.html')"><i class="fas fa-store-alt"></i><h4>Store</h4></div>
+      <div class="quick-action" onclick="navigateTo('tools-machines.html')"><i class="fas fa-tools"></i><h4>Tools & Machines</h4></div>
       <div class="quick-action" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><h4>Purchases</h4></div>
     </div>
 
@@ -304,6 +305,7 @@
     </div><div class="nav-section"><div class="nav-section-title">OPERATIONS</div>
       <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
       <button class="nav-item" onclick="navigateTo('store.html')"><i class="fas fa-store"></i><span>Store</span></button>
+      <button class="nav-item" onclick="navigateTo('tools-machines.html')"><i class="fas fa-tools"></i><span>Tools & Machines</span></button>
       <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
       <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
       <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
@@ -331,7 +333,7 @@
     document.getElementById('finalSalary').textContent = formatCurrency(final);
   }
 
-  // ========== ANNOUNCEMENTS - THREE TYPES (FIXED REPLY) ==========
+  // ========== ANNOUNCEMENTS ==========
   async function loadAnnouncements() {
     try {
       const div = document.getElementById('announcementsList');
@@ -397,7 +399,6 @@
     } catch(e) { console.error('Announcements error:', e.message); }
   }
 
-  // FIXED: Acknowledge without arrayUnion + serverTimestamp
   window.acknowledgeAnnouncement = async (id) => {
     try {
       const annRef = doc(db, 'announcements', id);
@@ -424,7 +425,6 @@
     `);
   };
 
-  // FIXED: Reply with plain object (no serverTimestamp inside array)
   window.submitReply = async (id) => {
     const message = document.getElementById('replyMessage')?.value?.trim();
     if (!message) { showToast('Please type a reply', 'error'); return; }
@@ -451,13 +451,17 @@
       const snap = await getDoc(doc(db, 'announcements', id));
       if (!snap.exists()) return;
       const a = snap.data();
-      const isRead = a.readBy?.includes(currentUser?.uid);
       const annType = a.announcementType || 'inform';
       const hasAcknowledged = a.acknowledgedBy?.includes(currentUser?.uid);
       const hasReplied = a.replies?.some(r => r.userId === currentUser?.uid);
       const isSpecific = a.target === 'specific';
       const typeLabel = annType === 'acknowledge' ? 'Inform & Acknowledge' : annType === 'reply' ? 'Inform & Reply' : 'Inform Only';
-      if (!isRead) await updateDoc(doc(db, 'announcements', id), { readBy: existingReadBy.includes(currentUser.uid) ? existingReadBy : [...existingReadBy, currentUser.uid] });
+      
+      // Mark as read
+      const existingReadBy = a.readBy || [];
+      if (!existingReadBy.includes(currentUser.uid)) {
+        await updateDoc(doc(db, 'announcements', id), { readBy: [...existingReadBy, currentUser.uid] });
+      }
 
       const repliesHtml = (a.replies || []).length > 0 ? `<h4 style="font-size:0.9rem;margin:16px 0 10px;"><i class="far fa-comments"></i> Replies (${a.replies.length})</h4>${(a.replies||[]).map(r=>`<div class="reply-item"><div class="rep-header"><strong>${r.userName||'Staff'}</strong><span>${formatFullDate(r.createdAt)}</span></div><div class="rep-body">${r.message}</div></div>`).join('')}` : '';
       let actionHtml = '';
