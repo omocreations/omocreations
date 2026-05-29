@@ -160,6 +160,19 @@
     .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--dark); font-family: 'Playfair Display', serif; line-height: 1; }
     .stat-sub { font-size: 0.65rem; color: var(--gray); margin-top: 4px; }
 
+    .stat-card.value-locked .stat-value {
+      filter: blur(8px); user-select: none; cursor: pointer; position: relative;
+    }
+    .stat-card.value-locked .stat-value::after {
+      content: '\f023'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; color: var(--gray); filter: none;
+    }
+    .stat-card .value-hint {
+      font-size: 0.6rem; color: var(--primary); text-align: center; cursor: pointer; margin-top: 2px; display: none;
+    }
+    .stat-card.value-locked .value-hint { display: block; }
+
     .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
     .search-wrapper { flex: 1; min-width: 200px; position: relative; }
     .search-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray); }
@@ -292,6 +305,14 @@
     .empty-state { text-align: center; padding: 40px 20px; color: var(--gray); }
     .empty-state i { font-size: 2.5rem; color: var(--primary-light); margin-bottom: 10px; display: block; }
 
+    .pin-input-container { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
+    .pin-input {
+      width: 55px; height: 65px; text-align: center; font-size: 1.8rem; font-weight: 700;
+      border: 2px solid rgba(255,77,166,0.2); border-radius: 14px; outline: none;
+      font-family: 'Poppins', sans-serif;
+    }
+    .pin-input:focus { border-color: var(--primary); }
+
     .toast-container {
       position: fixed; bottom: 24px; right: 24px; z-index: 3000;
       display: flex; flex-direction: column; gap: 10px;
@@ -370,8 +391,8 @@
     <div class="stats-grid" id="statsGrid">
       <div class="stat-card"><div class="stat-header"><span>Total Customers</span><div class="stat-icon"><i class="fas fa-users"></i></div></div><div class="stat-value" id="totalCustomers">0</div></div>
       <div class="stat-card"><div class="stat-header"><span>Total Sales</span><div class="stat-icon"><i class="fas fa-shopping-bag"></i></div></div><div class="stat-value" id="totalSalesCount">0</div></div>
-      <div class="stat-card"><div class="stat-header"><span>Total Revenue</span><div class="stat-icon"><i class="fas fa-naira-sign"></i></div></div><div class="stat-value" id="totalRevenue">₦0</div></div>
-      <div class="stat-card"><div class="stat-header"><span>Avg. Per Customer</span><div class="stat-icon"><i class="fas fa-chart-line"></i></div></div><div class="stat-value" id="avgPerCustomer">₦0</div></div>
+      <div class="stat-card value-locked" id="totalRevenueCard"><div class="stat-header"><span>Total Revenue</span><div class="stat-icon"><i class="fas fa-naira-sign"></i></div></div><div class="stat-value" id="totalRevenue">₦0</div><div class="value-hint" onclick="revealRevenueStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
+      <div class="stat-card value-locked" id="avgPerCustomerCard"><div class="stat-header"><span>Avg. Per Customer</span><div class="stat-icon"><i class="fas fa-chart-line"></i></div></div><div class="stat-value" id="avgPerCustomer">₦0</div><div class="value-hint" onclick="revealRevenueStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
     </div>
 
     <div class="tabs-container">
@@ -454,6 +475,7 @@
 
   let currentUser = null, userData = null, unsubscribes = [];
   let allSales = [], allCustomers = [], allReturns = [], currentTab = 'customers';
+  let revenueRevealed = false;
 
   function formatTime(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }) + ' ' + date.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }); }
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
@@ -483,6 +505,42 @@
   function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
 
   function isAdmin() { return userData?.role==='admin'||userData?.role==='super_admin'; }
+
+  function showPinModal(title, action, onSuccess) {
+    showModal(title, `<p style="text-align:center;margin-bottom:20px;">Enter your 4-digit PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`);
+    document.getElementById('pin1').focus();
+    document.querySelectorAll('#modalOverlay .pin-input').forEach((inp,i,arr)=>{inp.addEventListener('input',e=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();});});
+    document.getElementById('verifyPinBtn').onclick=()=>{const pin=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');if(pin===(userData?.attendantPin||'1234')){hideModal();onSuccess();}else{showToast('Invalid PIN','error');}};
+  }
+
+  window.revealRevenueStats = function() {
+    if (revenueRevealed) return;
+    if (isAdmin()) {
+      revenueRevealed = true;
+      updateRevenueDisplay();
+      return;
+    }
+    showPinModal('Unlock Revenue', 'view revenue figures', () => {
+      revenueRevealed = true;
+      updateRevenueDisplay();
+      logAudit('reveal_revenue', 'History revenue revealed');
+      showToast('Revenue unlocked', 'success');
+    });
+  };
+
+  function updateRevenueDisplay() {
+    if (!revenueRevealed) return;
+    ['totalRevenueCard', 'avgPerCustomerCard'].forEach(id => {
+      const card = document.getElementById(id);
+      if (card) {
+        card.classList.remove('value-locked');
+        const valEl = card.querySelector('.stat-value');
+        if (valEl) { valEl.style.filter = 'none'; valEl.style.cursor = 'default'; }
+        const hint = card.querySelector('.value-hint');
+        if (hint) hint.style.display = 'none';
+      }
+    });
+  }
 
   window.toggleSidebar = function() {
     const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay');
@@ -556,7 +614,6 @@
       }
     });
 
-    // Also add walk-in sales as unnamed entries
     allSales.forEach(s => {
       if (!s.customerId && s.customerName && s.status !== 'returned') {
         const key = 'walkin-' + (s.customerPhone || s.customerName);
@@ -578,7 +635,6 @@
   function renderAll() {
     const customerStats = getCustomerStats();
 
-    // Stats
     const totalRevenue = allSales.filter(s => s.status !== 'returned').reduce((s, sale) => s + (sale.totalAmount || 0), 0);
     document.getElementById('totalCustomers').textContent = allCustomers.filter(c => c.status === 'approved').length;
     document.getElementById('totalSalesCount').textContent = allSales.filter(s => s.status !== 'returned').length;
@@ -589,7 +645,6 @@
     document.getElementById('allSalesCount').textContent = allSales.length;
     document.getElementById('returnsCount').textContent = allReturns.length;
 
-    // Customers Table
     const cTbody = document.getElementById('customersTable');
     if (cTbody) {
       if (customerStats.length === 0) {
@@ -611,7 +666,6 @@
       }
     }
 
-    // All Sales Table
     const sTbody = document.getElementById('allSalesTable');
     if (sTbody) {
       const sorted = [...allSales].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
@@ -630,7 +684,6 @@
       }
     }
 
-    // Returns Table
     const rTbody = document.getElementById('returnsTable');
     if (rTbody) {
       const sorted = [...allReturns].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
@@ -681,7 +734,6 @@
     }));
   }
 
-  // ========== CUSTOMER DETAIL MODAL ==========
   window.showCustomerDetail = (customerId, name, phone, email, address) => {
     const customerSales = allSales.filter(s => s.customerId === customerId && s.status !== 'returned');
     const customerReturns = allReturns.filter(r => r.customerId === customerId);
@@ -757,7 +809,6 @@
     renderAll();
   }));
 
-  // Check URL for customerId parameter
   const urlParams = new URLSearchParams(window.location.search);
   const urlCustomerId = urlParams.get('customerId');
 
@@ -774,9 +825,11 @@
       document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
       buildSidebar();
       loadAllData();
+      if (isAdmin()) {
+        revenueRevealed = true;
+      }
       await logAudit('view_history', 'Viewed history page');
 
-      // If customerId passed in URL, open that customer after data loads
       if (urlCustomerId) {
         setTimeout(() => {
           const cust = allCustomers.find(c => c.id === urlCustomerId);
