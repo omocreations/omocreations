@@ -413,7 +413,7 @@
 
   let currentUser = null, userData = null, unsubscribes = [];
   let allProducts = [], allMachineItems = [], categories = [], currentTab = 'published';
-  let currentEditId = null;
+  let currentEditId = null, currentEditSource = null;
 
   const CLOUDINARY_CLOUD_NAME = 'dw80fw9un';
   const CLOUDINARY_UPLOAD_PRESET = 'kiosk_attendance';
@@ -541,14 +541,12 @@
           ${tagsHtml?`<div class="product-tags">${tagsHtml}</div>`:''}
           <div class="product-actions">
             <button class="btn btn-sm btn-outline" onclick="openEditModal('${p.id}','${p.source||'catalog'}')"><i class="fas fa-edit"></i> Edit</button>
-            ${p.source !== 'machine' ? `
-              <button class="btn btn-sm ${p.published?'btn-warning':'btn-success'}" onclick="togglePublish('${p.id}')">
-                <i class="fas fa-${p.published?'eye-slash':'eye'}"></i> ${p.published?'Unpublish':'Publish'}
-              </button>
-              <button class="btn btn-sm btn-outline" onclick="toggleHot('${p.id}')">
-                <i class="fas fa-${p.isHot?'fire-alt':'fire'}" style="color:${p.isHot?'var(--warning)':'inherit'};"></i> ${p.isHot?'Unmark Hot':'Hot'}
-              </button>
-            ` : ''}
+            <button class="btn btn-sm ${p.published?'btn-warning':'btn-success'}" onclick="togglePublishCard('${p.id}','${p.source||'catalog'}')">
+              <i class="fas fa-${p.published?'eye-slash':'eye'}"></i> ${p.published?'Unpublish':'Publish'}
+            </button>
+            <button class="btn btn-sm btn-outline" onclick="toggleHot('${p.id}','${p.source||'catalog'}')">
+              <i class="fas fa-${p.isHot?'fire-alt':'fire'}" style="color:${p.isHot?'var(--warning)':'inherit'};"></i> ${p.isHot?'Unmark Hot':'Hot'}
+            </button>
           </div>
         </div>
       </div>
@@ -656,47 +654,50 @@
         }
       }
       showToast(`Synced ${count} new products from inventory!`,'success');
-    } catch(e){showToast('Sync error: '+e.message,'error');}
+    } catch(e){console.error('Sync error:',e);showToast('Sync error: '+e.message,'error');}
   };
 
   // ========== SYNC FROM TOOLS & MACHINES ==========
   window.syncFromMachine = async ()=>{
     try {
       const machineSnap = await getDocs(collection(db,'tools_machines'));
-      let count=0;
+      let count = 0;
       for(const d of machineSnap.docs){
         const item = d.data();
-        const existing = allProducts.find(p=>p.machineId===d.id);
-        if(!existing){
+        let existingDoc = null;
+        for(const p of allProducts){
+          if(p.machineId === d.id){existingDoc = p;break;}
+        }
+        if(!existingDoc){
           await addDoc(collection(db,'catalog'),{
-            machineId:d.id,
-            name:item.name||'Machine Item',
-            category:item.category||'other',
-            description:item.description||'',
-            price:item.price||0,
-            discountPercent:0,
-            inStock:item.status==='sold'?0:1,
-            soldCount:item.status==='sold'?1:0,
-            imageUrl:item.imageUrl||'',
-            isHot:false,isNew:true,published:false,
-            source:'catalog',
-            createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+            machineId: d.id,
+            name: item.name || 'Machine Item',
+            category: item.category || 'other',
+            description: item.description || '',
+            price: item.price || 0,
+            discountPercent: 0,
+            inStock: item.status === 'sold' ? 0 : 1,
+            soldCount: item.status === 'sold' ? 1 : 0,
+            imageUrl: item.imageUrl || '',
+            isHot: false, isNew: true, published: false,
+            source: 'catalog',
+            createdAt: serverTimestamp(), updatedAt: serverTimestamp()
           });
           count++;
         } else {
-          await updateDoc(doc(db,'catalog',existing.id),{
-            inStock:item.status==='sold'?0:1,
-            soldCount:item.status==='sold'?1:0,
-            price:item.price||0,
-            name:item.name||existing.data().name,
-            description:item.description||existing.data().description,
-            imageUrl:item.imageUrl||existing.data().imageUrl,
-            updatedAt:serverTimestamp()
+          await updateDoc(doc(db,'catalog',existingDoc.id),{
+            inStock: item.status === 'sold' ? 0 : 1,
+            soldCount: item.status === 'sold' ? 1 : 0,
+            price: item.price || 0,
+            name: item.name || existingDoc.name,
+            description: item.description || existingDoc.description,
+            imageUrl: item.imageUrl || existingDoc.imageUrl,
+            updatedAt: serverTimestamp()
           });
         }
       }
       showToast(`Synced ${count} new products from Tools & Machines!`,'success');
-    } catch(e){showToast('Sync error: '+e.message,'error');}
+    } catch(e){console.error('Sync error:',e);showToast('Sync error: '+e.message,'error');}
   };
 
   // ========== EDIT MODAL ==========
@@ -709,6 +710,7 @@
     }
     if(!p) return;
     currentEditId = id;
+    currentEditSource = source;
 
     showModal(`Edit: ${p.name}`,`
       <div class="form-row">
@@ -741,7 +743,7 @@
         <div class="form-group"><label>Stock Quantity</label><input type="number" class="form-control" id="editStock" value="${p.inStock||0}" readonly></div>
         <div class="form-group"><label>Sold Count</label><input type="number" class="form-control" id="editSold" value="${p.soldCount||0}" readonly></div>
       </div>
-      <p style="font-size:0.7rem;color:var(--gray);margin-bottom:15px;">Stock and sold counts are managed from source (inventory/tools_machines). Changes here won't affect actual stock.</p>
+      <p style="font-size:0.7rem;color:var(--gray);margin-bottom:15px;">Stock and sold counts are managed from source. Changes here won't affect actual stock.</p>
       <div style="display:flex;gap:10px;">
         <button class="btn btn-primary" onclick="saveProduct('${id}','${source}')"><i class="fas fa-save"></i> Save Changes</button>
         <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
@@ -775,13 +777,13 @@
   window.saveProduct = async (id,source)=>{
     const isHot = document.getElementById('editHotToggle')?.classList.contains('active');
     const updateData = {
-      name:document.getElementById('editName')?.value?.trim()||'',
-      category:document.getElementById('editCategory')?.value||'other',
-      description:document.getElementById('editDesc')?.value?.trim()||'',
-      price:parseFloat(document.getElementById('editPrice')?.value)||0,
-      discountPercent:parseInt(document.getElementById('editDiscount')?.value)||0,
-      imageUrl:document.getElementById('editImageUrl')?.value||'',
-      isHot,updatedAt:serverTimestamp()
+      name: document.getElementById('editName')?.value?.trim() || '',
+      category: document.getElementById('editCategory')?.value || 'other',
+      description: document.getElementById('editDesc')?.value?.trim() || '',
+      price: parseFloat(document.getElementById('editPrice')?.value) || 0,
+      discountPercent: parseInt(document.getElementById('editDiscount')?.value) || 0,
+      imageUrl: document.getElementById('editImageUrl')?.value || '',
+      isHot, updatedAt: serverTimestamp()
     };
     try {
       if(source==='machine'){
@@ -790,7 +792,27 @@
         await updateDoc(doc(db,'catalog',id),updateData);
       }
       showToast('Product updated!','success'); hideModal();
-    } catch(e){showToast('Error: '+e.message,'error');}
+    } catch(e){console.error('Save error:',e);showToast('Error: '+e.message,'error');}
+  };
+
+  // ========== TOGGLE PUBLISH ==========
+  window.togglePublishCard = async (id,source)=>{
+    let p;
+    if(source==='machine'){
+      p = allMachineItems.find(x=>x.id===id);
+    } else {
+      p = allProducts.find(x=>x.id===id);
+    }
+    if(!p) return;
+    try {
+      if(source==='machine'){
+        // Machine items are always published - update in tools_machines
+        await updateDoc(doc(db,'tools_machines',id),{published:!p.published,isNew:false,updatedAt:serverTimestamp()});
+      } else {
+        await updateDoc(doc(db,'catalog',id),{published:!p.published,isNew:false,updatedAt:serverTimestamp()});
+      }
+      showToast(p.published?'Unpublished!':'Published!','success');
+    } catch(e){console.error('Toggle error:',e);showToast('Error: '+e.message,'error');}
   };
 
   window.togglePublish = async (id)=>{
@@ -799,10 +821,23 @@
     showToast(p.published?'Unpublished':'Published!','success');
   };
 
-  window.toggleHot = async (id)=>{
-    const p = allProducts.find(x=>x.id===id); if(!p) return;
-    await updateDoc(doc(db,'catalog',id),{isHot:!p.isHot});
-    showToast(p.isHot?'Removed from hot items':'Marked as hot!','success');
+  // ========== TOGGLE HOT ==========
+  window.toggleHot = async (id,source)=>{
+    let p;
+    if(source==='machine'){
+      p = allMachineItems.find(x=>x.id===id);
+    } else {
+      p = allProducts.find(x=>x.id===id);
+    }
+    if(!p) return;
+    try {
+      if(source==='machine'){
+        await updateDoc(doc(db,'tools_machines',id),{isHot:!p.isHot,updatedAt:serverTimestamp()});
+      } else {
+        await updateDoc(doc(db,'catalog',id),{isHot:!p.isHot,updatedAt:serverTimestamp()});
+      }
+      showToast(p.isHot?'Removed from hot items':'Marked as hot!','success');
+    } catch(e){console.error('Toggle hot error:',e);showToast('Error: '+e.message,'error');}
   };
 
   window.refreshCatalog = ()=>{loadAllData();showToast('Refreshed','success');};
