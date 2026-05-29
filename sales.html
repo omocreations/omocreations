@@ -132,15 +132,9 @@
       transition:all 0.3s; position:relative; overflow:hidden;
       animation:fadeInUp 0.5s ease forwards; opacity:0;
     }
-    .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.1s}
-    .stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.2s}
-    .stat-card::before {
-      content:''; position:absolute; inset:-2px;
-      background:linear-gradient(45deg,var(--primary),var(--primary-light),var(--primary));
-      background-size:400%; border-radius:20px; opacity:0; transition:opacity 0.3s; z-index:-1;
-    }
+    .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}
+    .stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}
     .stat-card:hover { transform:translateY(-5px); box-shadow:0 12px 24px rgba(255,77,166,0.15); }
-    .stat-card:hover::before { opacity:0.3; animation:flameRing 2s linear infinite; }
     .stat-header { display:flex; justify-content:space-between; margin-bottom:12px; }
     .stat-header span { font-size:0.65rem; color:var(--gray); text-transform:uppercase; font-weight:600; letter-spacing:1px; }
     .stat-icon { width:36px; height:36px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; color:var(--primary); }
@@ -502,12 +496,23 @@
   }
 
   window.revealStats = function() {
-    if(isAdmin()||statsRevealed) return;
-    showPinModal('View Financial Stats','view sales figures',()=>{statsRevealed=true;updateStatsDisplay();logAudit('reveal_sales_stats','Sales figures revealed');showToast('Sales figures unlocked','success');});
+    if(statsRevealed) return;
+    if(isAdmin()){statsRevealed=true;updateStatsDisplay();return;}
+    showPinModal('Unlock Financial Stats','view sales figures',()=>{statsRevealed=true;updateStatsDisplay();logAudit('reveal_sales_stats','Sales figures revealed');showToast('Sales figures unlocked','success');});
   };
 
   function updateStatsDisplay() {
-    ['todayCard','weekCard','monthCard','yearCard'].forEach(id=>{const card=document.getElementById(id);if(card){card.classList.remove('value-locked');const hint=card.querySelector('.value-hint');if(hint)hint.style.display='none';}});
+    if(!statsRevealed) return;
+    ['todayCard','weekCard','monthCard','yearCard'].forEach(id=>{
+      const card=document.getElementById(id);
+      if(card){
+        card.classList.remove('value-locked');
+        const valEl=card.querySelector('.stat-value');
+        if(valEl){valEl.style.filter='none';valEl.style.cursor='default';}
+        const hint=card.querySelector('.value-hint');
+        if(hint)hint.style.display='none';
+      }
+    });
   }
 
   function updateStats(){
@@ -783,12 +788,12 @@
       const snap=await getDoc(doc(db,'users',u.uid));
       if(!snap.exists()||snap.data().status!=='active'){await signOut(auth);window.location.href='auth.html';return;}
       userData=snap.data();
-      if(isAdmin()) statsRevealed=true;
       document.getElementById('userName').textContent=userData.fullName?.split(' ')[0]||'Staff';
       document.getElementById('userRole').textContent=userData.role?.replace('_',' ')||'Staff';
       document.getElementById('userAvatar').textContent=(userData.fullName||'A').charAt(0).toUpperCase();
       document.getElementById('currentDate').textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-      buildSidebar(); loadSales(); updateStatsDisplay();
+      buildSidebar(); loadSales();
+      if(isAdmin()){statsRevealed=true;updateStatsDisplay();}
       await logAudit('view_sales','Viewed sales');
     }catch(e){showToast('Error loading','error');}
   });
