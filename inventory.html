@@ -184,6 +184,7 @@
   let currentUser = null, userData = null, unsubscribes = [];
   let allItems = [], allRejectedItems = [], categories = [], allSales = [];
   let currentTab = 'all', revenueRevealed = false;
+  let pendingAction = null;
 
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
@@ -192,28 +193,26 @@
 
   function showToast(msg, type='success') { const c=document.getElementById('toastContainer'); if(!c)return; const t=document.createElement('div'); t.className=`toast ${type}`; t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`; c.appendChild(t); setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500); }
   async function logAudit(action, note) { try { await addDoc(collection(db,'audit_logs'),{actionType:action,performedBy:currentUser?.uid||'unknown',performedByName:userData?.fullName||'Staff',performedAt:serverTimestamp(),note:note||''}); } catch(e){} }
-  function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
+  function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); pendingAction = null; }
   window.hideModal = hideModal;
   function showModal(title, content) { document.getElementById('modalTitle').textContent=title; document.getElementById('modalContent').innerHTML=content; document.getElementById('modalOverlay').classList.add('active'); }
   function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
 
   window.toggleSidebar = function() { const s=document.getElementById('sidebar'),o=document.getElementById('sidebarOverlay'); if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';} else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';} };
   window.closeSidebar = function() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow=''; };
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){hideModal();closeSidebar();}});
 
   function isAdmin() { return userData?.role==='admin'||userData?.role==='super_admin'; }
+  function getPin() { return userData?.attendantPin || '1234'; }
 
-  // Use the same PIN as revenue blur (attendantPin)
-  function getAdminPin() { return userData?.attendantPin || '1234'; }
-
-  function showAdminPinModal(title, action, onSuccess) {
+  function showPinModal(title, action, onSuccess) {
     showModal(title, `<p style="text-align:center;margin-bottom:20px;">Enter your 4-digit PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`);
     document.getElementById('pin1').focus();
     document.querySelectorAll('#modalOverlay .pin-input').forEach((inp,i,arr)=>{ inp.addEventListener('input',(e)=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();}); });
-    document.getElementById('verifyPinBtn').onclick = ()=>{ const pin=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join(''); if(pin===getAdminPin()){hideModal();onSuccess();}else{showToast('Invalid PIN','error');} };
+    document.getElementById('verifyPinBtn').onclick = ()=>{ const pin=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join(''); if(pin===getPin()){hideModal();if(onSuccess)onSuccess();}else{showToast('Invalid PIN','error');} };
   }
 
-  window.revealTotalRevenue = function() { if(revenueRevealed)return; showAdminPinModal('Unlock Revenue','view total revenue',()=>{revenueRevealed=true;updateRevenueDisplay();logAudit('reveal_revenue','Revenue revealed');showToast('Revenue unlocked','success');}); };
+  window.revealTotalRevenue = function() { if(revenueRevealed)return; showPinModal('Unlock Revenue','view total revenue',()=>{revenueRevealed=true;updateRevenueDisplay();logAudit('reveal_revenue','Revenue revealed');showToast('Revenue unlocked','success');}); };
 
   function calculateRevenueFromSales() { const revenueMap={}, soldQtyMap={}; allSales.forEach(sale=>{if(sale.status==='returned')return;if(!sale.items||!Array.isArray(sale.items))return; sale.items.forEach(item=>{const itemId=item.id;if(!itemId)return;const qty=item.quantity||0;const price=item.unitPrice||0;const itemRevenue=qty*price;revenueMap[itemId]=(revenueMap[itemId]||0)+itemRevenue;soldQtyMap[itemId]=(soldQtyMap[itemId]||0)+qty;});}); return {revenueMap,soldQtyMap}; }
   function updateRevenueDisplay() { const card=document.getElementById('totalRevenueCard'); const valEl=document.getElementById('totalRevenue'); if(revenueRevealed||isAdmin()){card.classList.remove('value-locked');const{revenueMap}=calculateRevenueFromSales();const totalRev=allItems.reduce((s,item)=>s+(revenueMap[item.id]||item.totalSoldValue||0),0);valEl.textContent=formatCurrency(totalRev);valEl.style.filter='none';valEl.style.cursor='default';} }
@@ -290,19 +289,21 @@
   window.restockFromStore = function(itemId) { hideModal(); navigateTo('store.html'); };
   window.restockFromThirdParty = function(itemId) { hideModal(); navigateTo('purchases.html'); };
 
-  // ========== EDIT ITEM (PIN required for all edits) ==========
+  // ========== EDIT ITEM (FIXED: opens modal directly, PIN on save) ==========
   window.openEditItem = function(id) {
     const item=allItems.find(i=>i.id===id);if(!item)return;
     const soldQty=getItemSoldQty(item);const itemRevenue=getItemRevenue(item);const adminUser=isAdmin();
-    const editContent = `<div class="form-group"><label>Item Name</label><input class="form-control" id="editName" value="${item.name||''}" ${adminUser?'':'readonly'}></div><div class="form-row-3"><div class="form-group"><label>Initial Unit Qty</label><input type="number" class="form-control" id="editInitQty" value="${item.initialStock||0}" min="0" ${adminUser?'':'readonly'}></div><div class="form-group"><label>Initial Half Qty</label><input type="number" class="form-control" id="editInitHalfQty" value="${item.initialHalfQty||0}" min="0" ${adminUser?'':'readonly'}></div><div class="form-group"><label>Initial Quarter Qty</label><input type="number" class="form-control" id="editInitQuarterQty" value="${item.initialQuarterQty||0}" min="0" ${adminUser?'':'readonly'}></div></div><div class="form-row-3"><div class="form-group"><label>Avail Unit Qty</label><input type="number" class="form-control" id="editAvailQty" value="${item.quantityAvailable||0}" min="0" ${adminUser?'':'readonly'}></div><div class="form-group"><label>Avail Half Qty</label><input type="number" class="form-control" id="editAvailHalfQty" value="${item.halfQuantityAvailable||0}" min="0" ${adminUser?'':'readonly'}></div><div class="form-group"><label>Avail Quarter Qty</label><input type="number" class="form-control" id="editAvailQuarterQty" value="${item.quarterQuantityAvailable||0}" min="0" ${adminUser?'':'readonly'}></div></div><div class="form-row"><div class="form-group"><label>Total Sold (from sales)</label><input type="number" class="form-control" value="${soldQty}" readonly></div><div class="form-group"><label>Revenue (from sales)</label><input class="form-control" value="${formatCurrency(itemRevenue)}" readonly></div></div><div class="form-row"><div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="editCategory">${categories.map(c=>`<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="editPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>½ Price ₦</label><input type="number" class="form-control" id="editHalfPrice" value="${item.halfPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>¼ Price ₦</label><input type="number" class="form-control" id="editQuarterPrice" value="${item.quarterPrice||0}" step="0.01" min="0"></div></div><div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||10}" min="1"></div>${!adminUser?'<p style="font-size:0.75rem;color:var(--warning);margin-bottom:15px;"><i class="fas fa-info-circle"></i> Admin fields are read-only. Save will require PIN verification.</p>':''}<div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEditWrapper('${id}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
-    
-    if(adminUser){showModal(`Edit: ${item.name}`,editContent);}
-    else{showAdminPinModal('Admin PIN Required','edit this item',()=>{showModal(`Edit: ${item.name}`,editContent);});}
+    const editContent = `<div class="form-group"><label>Item Name</label><input class="form-control" id="editName" value="${item.name||''}"></div><div class="form-row-3"><div class="form-group"><label>Initial Unit Qty</label><input type="number" class="form-control" id="editInitQty" value="${item.initialStock||0}" min="0"></div><div class="form-group"><label>Initial Half Qty</label><input type="number" class="form-control" id="editInitHalfQty" value="${item.initialHalfQty||0}" min="0"></div><div class="form-group"><label>Initial Quarter Qty</label><input type="number" class="form-control" id="editInitQuarterQty" value="${item.initialQuarterQty||0}" min="0"></div></div><div class="form-row-3"><div class="form-group"><label>Avail Unit Qty</label><input type="number" class="form-control" id="editAvailQty" value="${item.quantityAvailable||0}" min="0"></div><div class="form-group"><label>Avail Half Qty</label><input type="number" class="form-control" id="editAvailHalfQty" value="${item.halfQuantityAvailable||0}" min="0"></div><div class="form-group"><label>Avail Quarter Qty</label><input type="number" class="form-control" id="editAvailQuarterQty" value="${item.quarterQuantityAvailable||0}" min="0"></div></div><div class="form-row"><div class="form-group"><label>Total Sold (from sales)</label><input type="number" class="form-control" value="${soldQty}" readonly></div><div class="form-group"><label>Revenue (from sales)</label><input class="form-control" value="${formatCurrency(itemRevenue)}" readonly></div></div><div class="form-row"><div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="editCategory">${categories.map(c=>`<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="editPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>½ Price ₦</label><input type="number" class="form-control" id="editHalfPrice" value="${item.halfPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>¼ Price ₦</label><input type="number" class="form-control" id="editQuarterPrice" value="${item.quarterPrice||0}" step="0.01" min="0"></div></div><div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||10}" min="1"></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEditWrapper('${id}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
+    showModal(`Edit: ${item.name}`,editContent);
   };
 
-  window.saveEditWrapper = function(id) { showAdminPinModal('Confirm Save','save changes',()=>{saveEdit(id);}); };
+  window.saveEditWrapper = function(id) {
+    hideModal();
+    showPinModal('Confirm Save','save changes',()=>{saveEdit(id);});
+  };
 
   window.saveEdit = async function(id) {
+    const item=allItems.find(i=>i.id===id);
     const name=document.getElementById('editName')?.value?.trim();
     const initQty=parseInt(document.getElementById('editInitQty')?.value)||0;
     const initHalfQty=parseInt(document.getElementById('editInitHalfQty')?.value)||0;
@@ -319,22 +320,21 @@
     if(price<=0){showToast('Unit price must be > 0','error');return;}
     const totalQty=availQty+availHalfQty+availQuarterQty;
     const status=totalQty===0?'out_of_stock':totalQty<=threshold?'low':'available';
-    const adminUser=isAdmin();
     try{
-      const updateData={name,category,unitPrice:price,halfPrice,quarterPrice,threshold,status,updatedAt:serverTimestamp()};
-      if(adminUser){updateData.initialStock=initQty;updateData.initialHalfQty=initHalfQty;updateData.initialQuarterQty=initQuarterQty;updateData.quantityAvailable=availQty;updateData.halfQuantityAvailable=availHalfQty;updateData.quarterQuantityAvailable=availQuarterQty;}
-      await updateDoc(doc(db,'stock_items',id),updateData);await logAudit('edit_item',`Updated ${name} - Prices/Category${adminUser?' and quantities':''}`);showToast('Updated successfully!','success');hideModal();
+      await updateDoc(doc(db,'stock_items',id),{name,category,initialStock:initQty,initialHalfQty:initHalfQty,initialQuarterQty:initQuarterQty,quantityAvailable:availQty,halfQuantityAvailable:availHalfQty,quarterQuantityAvailable:availQuarterQty,unitPrice:price,halfPrice,quarterPrice,threshold,status,updatedAt:serverTimestamp()});
+      await logAudit('edit_item',`Updated: ${name} (${item?.name||id})`);
+      showToast('Updated successfully!','success');
     }catch(e){showToast('Failed: '+e.message,'error');}
   };
 
-  // ========== DELETE (PIN required) ==========
+  // ========== DELETE (PIN required for non-admin) ==========
   window.deleteItem = function(id) {
     const item=allItems.find(i=>i.id===id);if(!item)return;
     const confirmDelete=()=>{if(!confirm(`Are you sure you want to delete "${item.name}"? This action cannot be undone.`))return;deleteDoc(doc(db,'stock_items',id)).then(async()=>{await logAudit('delete_item',`Deleted: ${item.name} (ID: ${id})`);showToast('Item deleted permanently!','success');}).catch(e=>showToast('Failed: '+e.message,'error'));};
-    if(isAdmin()){confirmDelete();}else{showAdminPinModal('Admin PIN Required','delete this item',confirmDelete);}
+    if(isAdmin()){confirmDelete();}else{showPinModal('PIN Required','delete this item',confirmDelete);}
   };
 
-  // ========== REJECT (Admin only, auto-creates collection) ==========
+  // ========== REJECT (Admin only) ==========
   window.rejectItem = function(id) {
     if(!isAdmin()){showToast('Only admin can reject inventory items','error');return;}
     const item=allItems.find(i=>i.id===id);if(!item)return;
@@ -345,15 +345,7 @@
     const reason=document.getElementById('rejectionReason')?.value?.trim();if(!reason){showToast('Please provide a rejection reason','error');return;}
     const item=allItems.find(i=>i.id===id);if(!item)return;
     try{
-      // This will auto-create the rejected_inventory collection if it doesn't exist
-      await addDoc(collection(db,'rejected_inventory'),{
-        originalId:id,name:item.name,category:item.category||'other',
-        initialStock:item.initialStock||0,initialHalfQty:item.initialHalfQty||0,initialQuarterQty:item.initialQuarterQty||0,
-        quantityAvailable:item.quantityAvailable||0,halfQuantityAvailable:item.halfQuantityAvailable||0,quarterQuantityAvailable:item.quarterQuantityAvailable||0,
-        unitPrice:item.unitPrice||0,halfPrice:item.halfPrice||0,quarterPrice:item.quarterPrice||0,
-        rejectionReason:reason,rejectedBy:currentUser?.uid,rejectedByName:userData?.fullName||'Admin',
-        rejectedAt:serverTimestamp(),status:'rejected'
-      });
+      await addDoc(collection(db,'rejected_inventory'),{originalId:id,name:item.name,category:item.category||'other',initialStock:item.initialStock||0,initialHalfQty:item.initialHalfQty||0,initialQuarterQty:item.initialQuarterQty||0,quantityAvailable:item.quantityAvailable||0,halfQuantityAvailable:item.halfQuantityAvailable||0,quarterQuantityAvailable:item.quarterQuantityAvailable||0,unitPrice:item.unitPrice||0,halfPrice:item.halfPrice||0,quarterPrice:item.quarterPrice||0,rejectionReason:reason,rejectedBy:currentUser?.uid,rejectedByName:userData?.fullName||'Admin',rejectedAt:serverTimestamp(),status:'rejected'});
       await deleteDoc(doc(db,'stock_items',id));
       await logAudit('reject_item',`Rejected: ${item.name} - Reason: ${reason}`);
       showToast('Item rejected and moved to rejected inventory','success');hideModal();
@@ -364,7 +356,7 @@
   window.restoreItem = function(id) {
     const item=allRejectedItems.find(i=>i.id===id);if(!item)return;
     const restoreAction=async()=>{try{await addDoc(collection(db,'stock_items'),{name:item.name,category:item.category||'other',initialStock:item.initialStock||0,initialHalfQty:item.initialHalfQty||0,initialQuarterQty:item.initialQuarterQty||0,quantityAvailable:item.quantityAvailable||0,halfQuantityAvailable:item.halfQuantityAvailable||0,quarterQuantityAvailable:item.quarterQuantityAvailable||0,unitPrice:item.unitPrice||0,halfPrice:item.halfPrice||0,quarterPrice:item.quarterPrice||0,threshold:10,status:'available',restoredFromRejected:true,restoredBy:currentUser?.uid,restoredByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});await deleteDoc(doc(db,'rejected_inventory',id));await logAudit('restore_item',`Restored: ${item.name} from rejected inventory`);showToast('Item restored to inventory!','success');}catch(e){showToast('Failed: '+e.message,'error');}};
-    if(isAdmin()){restoreAction();}else{showAdminPinModal('Admin PIN Required','restore this item',restoreAction);}
+    if(isAdmin()){restoreAction();}else{showPinModal('PIN Required','restore this item',restoreAction);}
   };
 
   window.permanentlyDeleteItem = function(id) { const item=allRejectedItems.find(i=>i.id===id);if(!item)return;if(!confirm(`Permanently delete "${item.name}"? This cannot be undone.`))return;deleteDoc(doc(db,'rejected_inventory',id)).then(async()=>{await logAudit('perm_delete',`Permanently deleted rejected item: ${item.name}`);showToast('Permanently deleted!','success');}).catch(e=>showToast('Failed: '+e.message,'error')); };
