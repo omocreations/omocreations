@@ -15,20 +15,9 @@
 
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    :root {
-      --primary: #ff4da6; --primary-dark: #e6398c; --primary-light: #ffb3d9;
-      --primary-soft: #fff0f6; --dark: #1a1a2e; --gray: #6b7280;
-      --gray-light: #f3f4f6; --success: #10b981; --warning: #f59e0b;
-      --danger: #ef4444; --info: #3b82f6;
-      --sidebar-width: 280px; --header-height: 70px;
-    }
+    :root { --primary: #ff4da6; --primary-dark: #e6398c; --primary-light: #ffb3d9; --primary-soft: #fff0f6; --dark: #1a1a2e; --gray: #6b7280; --gray-light: #f3f4f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --info: #3b82f6; --sidebar-width: 280px; --header-height: 70px; }
     html { font-size: 16px; -webkit-text-size-adjust: 100%; }
-    body {
-      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #f9fafb 0%, #fff0f6 100%);
-      display: flex; min-height: 100vh; overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
+    body { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #f9fafb 0%, #fff0f6 100%); display: flex; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
     @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
     @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
     @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
@@ -118,15 +107,7 @@
     .toast { background: white; color: var(--dark); padding: 14px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 0.85rem; animation: slideIn 0.3s ease; border-left: 4px solid var(--primary); transition: all 0.3s ease; }
     .toast.success { border-left-color: var(--success); } .toast.error { border-left-color: var(--danger); } .toast i { font-size: 1.1rem; }
     @media (max-width: 1400px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); width: 280px !important; min-width: 280px !important; } .sidebar.mobile-open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.3); }
-      .sidebar-header .close-sidebar { display: flex !important; } .menu-toggle { display: flex !important; }
-      .main-content { margin-left: 0 !important; width: 100% !important; } .content-wrapper { padding: 16px 12px; } .top-bar { padding: 0 16px; }
-      .page-title { font-size: 1.1rem; } .current-date { display: none; } .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-      .stat-card { padding: 14px 12px; } .stat-value { font-size: 1.4rem; } .panel { padding: 16px 12px; border-radius: 18px; }
-      .data-table { min-width: 1200px; } .data-table th, .data-table td { padding: 10px 6px; font-size: 0.75rem; }
-      .modal { padding: 20px; border-radius: 20px; } .form-row, .form-row-3 { grid-template-columns: 1fr; } .restock-options { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 768px) { .sidebar { transform: translateX(-100%); width: 280px !important; min-width: 280px !important; } .sidebar.mobile-open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.3); } .sidebar-header .close-sidebar { display: flex !important; } .menu-toggle { display: flex !important; } .main-content { margin-left: 0 !important; width: 100% !important; } .content-wrapper { padding: 16px 12px; } .top-bar { padding: 0 16px; } .page-title { font-size: 1.1rem; } .current-date { display: none; } .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; } .stat-card { padding: 14px 12px; } .stat-value { font-size: 1.4rem; } .panel { padding: 16px 12px; border-radius: 18px; } .data-table { min-width: 1200px; } .data-table th, .data-table td { padding: 10px 6px; font-size: 0.75rem; } .modal { padding: 20px; border-radius: 20px; } .form-row, .form-row-3 { grid-template-columns: 1fr; } .restock-options { grid-template-columns: 1fr; } }
     @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } .content-wrapper { padding: 12px 8px; } }
   </style>
 </head>
@@ -195,7 +176,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, deleteDoc, setDoc, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
   const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
@@ -222,23 +203,17 @@
 
   function isAdmin() { return userData?.role==='admin'||userData?.role==='super_admin'; }
 
-  async function getAdminPin() { try { const snap=await getDoc(doc(db,'system_settings','admin_pin')); return snap.exists()?snap.data().value:'9999'; } catch(e) { return '9999'; } }
+  // Use the same PIN as revenue blur (attendantPin)
+  function getAdminPin() { return userData?.attendantPin || '1234'; }
 
   function showAdminPinModal(title, action, onSuccess) {
-    showModal(title, `<p style="text-align:center;margin-bottom:20px;">Enter Admin Authorization Code to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="adminPin1"><input type="password" maxlength="1" class="pin-input" id="adminPin2"><input type="password" maxlength="1" class="pin-input" id="adminPin3"><input type="password" maxlength="1" class="pin-input" id="adminPin4"></div><button class="btn btn-primary" id="verifyAdminPinBtn" style="width:100%;">Verify</button>`);
-    document.getElementById('adminPin1').focus();
-    document.querySelectorAll('#modalOverlay .pin-input').forEach((inp,i,arr)=>{ inp.addEventListener('input',(e)=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();}); });
-    document.getElementById('verifyAdminPinBtn').onclick = async ()=>{ const pin=['adminPin1','adminPin2','adminPin3','adminPin4'].map(id=>document.getElementById(id).value).join(''); const adminPin=await getAdminPin(); if(pin===adminPin){hideModal();onSuccess();}else{showToast('Invalid admin code','error');} };
-  }
-
-  function showAttendantPinModal(title, action, onSuccess) {
     showModal(title, `<p style="text-align:center;margin-bottom:20px;">Enter your 4-digit PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`);
     document.getElementById('pin1').focus();
     document.querySelectorAll('#modalOverlay .pin-input').forEach((inp,i,arr)=>{ inp.addEventListener('input',(e)=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();}); });
-    document.getElementById('verifyPinBtn').onclick = ()=>{ const pin=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join(''); if(pin===(userData?.attendantPin||'1234')){hideModal();onSuccess();}else{showToast('Invalid PIN','error');} };
+    document.getElementById('verifyPinBtn').onclick = ()=>{ const pin=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join(''); if(pin===getAdminPin()){hideModal();onSuccess();}else{showToast('Invalid PIN','error');} };
   }
 
-  window.revealTotalRevenue = function() { if(revenueRevealed)return; if(isAdmin()){revenueRevealed=true;updateRevenueDisplay();return;} showAttendantPinModal('Unlock Revenue','view total revenue',()=>{revenueRevealed=true;updateRevenueDisplay();logAudit('reveal_revenue','Revenue revealed');showToast('Revenue unlocked','success');}); };
+  window.revealTotalRevenue = function() { if(revenueRevealed)return; showAdminPinModal('Unlock Revenue','view total revenue',()=>{revenueRevealed=true;updateRevenueDisplay();logAudit('reveal_revenue','Revenue revealed');showToast('Revenue unlocked','success');}); };
 
   function calculateRevenueFromSales() { const revenueMap={}, soldQtyMap={}; allSales.forEach(sale=>{if(sale.status==='returned')return;if(!sale.items||!Array.isArray(sale.items))return; sale.items.forEach(item=>{const itemId=item.id;if(!itemId)return;const qty=item.quantity||0;const price=item.unitPrice||0;const itemRevenue=qty*price;revenueMap[itemId]=(revenueMap[itemId]||0)+itemRevenue;soldQtyMap[itemId]=(soldQtyMap[itemId]||0)+qty;});}); return {revenueMap,soldQtyMap}; }
   function updateRevenueDisplay() { const card=document.getElementById('totalRevenueCard'); const valEl=document.getElementById('totalRevenue'); if(revenueRevealed||isAdmin()){card.classList.remove('value-locked');const{revenueMap}=calculateRevenueFromSales();const totalRev=allItems.reduce((s,item)=>s+(revenueMap[item.id]||item.totalSoldValue||0),0);valEl.textContent=formatCurrency(totalRev);valEl.style.filter='none';valEl.style.cursor='default';} }
@@ -285,7 +260,7 @@
           const initQty=(item.initialStock||0);const initHalf=(item.initialHalfQty||0);const initQuarter=(item.initialQuarterQty||0);
           const soldQty=getItemSoldQty(item);const remainingQty=(item.quantityAvailable||0)+(item.halfQuantityAvailable||0)+(item.quarterQuantityAvailable||0);
           const itemRevenue=getItemRevenue(item);const showRevenue=revenueRevealed||adminUser;
-          return `<tr><td><strong>${item.name||'-'}</strong></td><td><span class="badge badge-purple">${item.category||'-'}</span></td><td>${initQty} <span class="price-type-badge">1</span></td><td>${initHalf?initHalf+' <span class="price-type-badge">½</span>':'-'}</td><td>${initQuarter?initQuarter+' <span class="price-type-badge">¼</span>':'-'}</td><td>${soldQty}</td><td style="color:${remainingQty===0?'var(--danger)':st==='low'?'var(--warning)':'inherit'};font-weight:600;">${remainingQty}</td><td>${formatCurrency(item.unitPrice)}<span class="price-type-badge">1</span></td><td>${item.halfPrice?formatCurrency(item.halfPrice)+'<span class="price-type-badge">½</span>':'-'}</td><td>${item.quarterPrice?formatCurrency(item.quarterPrice)+'<span class="price-type-badge">¼</span>':'-'}</td><td style="font-weight:600;">${showRevenue?formatCurrency(itemRevenue):'₦••••'}</td><td><span class="badge badge-${sb}">${st.replace(/_/g,' ')}</span></td><td><div style="display:flex;gap:4px;flex-wrap:wrap;">${['low','out_of_stock'].includes(st)?`<button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')" title="Restock"><i class="fas fa-box-open"></i></button>`:''}<button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')" title="Edit"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline" onclick="viewHistory('${item.id}')" title="History"><i class="fas fa-history"></i></button><button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')" title="Delete"><i class="fas fa-trash"></i></button>${!adminUser?`<button class="btn btn-sm btn-warning" onclick="rejectItem('${item.id}')" title="Reject"><i class="fas fa-ban"></i></button>`:''}</div></td></tr>`;
+          return `<tr><td><strong>${item.name||'-'}</strong></td><td><span class="badge badge-purple">${item.category||'-'}</span></td><td>${initQty} <span class="price-type-badge">1</span></td><td>${initHalf?initHalf+' <span class="price-type-badge">½</span>':'-'}</td><td>${initQuarter?initQuarter+' <span class="price-type-badge">¼</span>':'-'}</td><td>${soldQty}</td><td style="color:${remainingQty===0?'var(--danger)':st==='low'?'var(--warning)':'inherit'};font-weight:600;">${remainingQty}</td><td>${formatCurrency(item.unitPrice)}<span class="price-type-badge">1</span></td><td>${item.halfPrice?formatCurrency(item.halfPrice)+'<span class="price-type-badge">½</span>':'-'}</td><td>${item.quarterPrice?formatCurrency(item.quarterPrice)+'<span class="price-type-badge">¼</span>':'-'}</td><td style="font-weight:600;">${showRevenue?formatCurrency(itemRevenue):'₦••••'}</td><td><span class="badge badge-${sb}">${st.replace(/_/g,' ')}</span></td><td><div style="display:flex;gap:4px;flex-wrap:wrap;">${['low','out_of_stock'].includes(st)?`<button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')" title="Restock"><i class="fas fa-box-open"></i></button>`:''}<button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')" title="Edit"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline" onclick="viewHistory('${item.id}')" title="History"><i class="fas fa-history"></i></button><button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')" title="Delete"><i class="fas fa-trash"></i></button>${adminUser?`<button class="btn btn-sm btn-warning" onclick="rejectItem('${item.id}')" title="Reject"><i class="fas fa-ban"></i></button>`:''}</div></td></tr>`;
         }).join('');
       }
     }
@@ -315,18 +290,17 @@
   window.restockFromStore = function(itemId) { hideModal(); navigateTo('store.html'); };
   window.restockFromThirdParty = function(itemId) { hideModal(); navigateTo('purchases.html'); };
 
-  // ========== EDIT ITEM ==========
+  // ========== EDIT ITEM (PIN required for all edits) ==========
   window.openEditItem = function(id) {
     const item=allItems.find(i=>i.id===id);if(!item)return;
     const soldQty=getItemSoldQty(item);const itemRevenue=getItemRevenue(item);const adminUser=isAdmin();
-    showModal(`Edit: ${item.name}`,`<div class="form-group"><label>Item Name</label><input class="form-control" id="editName" value="${item.name||''}" ${adminUser?'':'readonly'}></div><div class="form-row-3"><div class="form-group"><label>Initial Unit Qty</label><input type="number" class="form-control" id="editInitQty" value="${item.initialStock||0}" min="0" ${adminUser?'':'readonly'}></div><div class="form-group"><label>Initial Half Qty</label><input type="number" class="form-control" id="editInitHalfQty" value="${item.initialHalfQty||0}" min="0" ${adminUser?'':'readonly'}></div><div class="form-group"><label>Initial Quarter Qty</label><input type="number" class="form-control" id="editInitQuarterQty" value="${item.initialQuarterQty||0}" min="0" ${adminUser?'':'readonly'}></div></div><div class="form-row-3"><div class="form-group"><label>Avail Unit Qty</label><input type="number" class="form-control" id="editAvailQty" value="${item.quantityAvailable||0}" min="0" ${adminUser?'':'readonly'}></div><div class="form-group"><label>Avail Half Qty</label><input type="number" class="form-control" id="editAvailHalfQty" value="${item.halfQuantityAvailable||0}" min="0" ${adminUser?'':'readonly'}></div><div class="form-group"><label>Avail Quarter Qty</label><input type="number" class="form-control" id="editAvailQuarterQty" value="${item.quarterQuantityAvailable||0}" min="0" ${adminUser?'':'readonly'}></div></div><div class="form-row"><div class="form-group"><label>Total Sold (from sales)</label><input type="number" class="form-control" value="${soldQty}" readonly></div><div class="form-group"><label>Revenue (from sales)</label><input class="form-control" value="${formatCurrency(itemRevenue)}" readonly></div></div><div class="form-row"><div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="editCategory">${categories.map(c=>`<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="editPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>½ Price ₦</label><input type="number" class="form-control" id="editHalfPrice" value="${item.halfPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>¼ Price ₦</label><input type="number" class="form-control" id="editQuarterPrice" value="${item.quarterPrice||0}" step="0.01" min="0"></div></div><div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||10}" min="1"></div>${!adminUser?'<p style="font-size:0.75rem;color:var(--warning);margin-bottom:15px;"><i class="fas fa-info-circle"></i> As an attendant, you can only edit prices and threshold. Name and quantity changes require admin authorization.</p>':''}<div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEditWrapper('${id}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
+    const editContent = `<div class="form-group"><label>Item Name</label><input class="form-control" id="editName" value="${item.name||''}" ${adminUser?'':'readonly'}></div><div class="form-row-3"><div class="form-group"><label>Initial Unit Qty</label><input type="number" class="form-control" id="editInitQty" value="${item.initialStock||0}" min="0" ${adminUser?'':'readonly'}></div><div class="form-group"><label>Initial Half Qty</label><input type="number" class="form-control" id="editInitHalfQty" value="${item.initialHalfQty||0}" min="0" ${adminUser?'':'readonly'}></div><div class="form-group"><label>Initial Quarter Qty</label><input type="number" class="form-control" id="editInitQuarterQty" value="${item.initialQuarterQty||0}" min="0" ${adminUser?'':'readonly'}></div></div><div class="form-row-3"><div class="form-group"><label>Avail Unit Qty</label><input type="number" class="form-control" id="editAvailQty" value="${item.quantityAvailable||0}" min="0" ${adminUser?'':'readonly'}></div><div class="form-group"><label>Avail Half Qty</label><input type="number" class="form-control" id="editAvailHalfQty" value="${item.halfQuantityAvailable||0}" min="0" ${adminUser?'':'readonly'}></div><div class="form-group"><label>Avail Quarter Qty</label><input type="number" class="form-control" id="editAvailQuarterQty" value="${item.quarterQuantityAvailable||0}" min="0" ${adminUser?'':'readonly'}></div></div><div class="form-row"><div class="form-group"><label>Total Sold (from sales)</label><input type="number" class="form-control" value="${soldQty}" readonly></div><div class="form-group"><label>Revenue (from sales)</label><input class="form-control" value="${formatCurrency(itemRevenue)}" readonly></div></div><div class="form-row"><div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="editCategory">${categories.map(c=>`<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="editPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>½ Price ₦</label><input type="number" class="form-control" id="editHalfPrice" value="${item.halfPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>¼ Price ₦</label><input type="number" class="form-control" id="editQuarterPrice" value="${item.quarterPrice||0}" step="0.01" min="0"></div></div><div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||10}" min="1"></div>${!adminUser?'<p style="font-size:0.75rem;color:var(--warning);margin-bottom:15px;"><i class="fas fa-info-circle"></i> Admin fields are read-only. Save will require PIN verification.</p>':''}<div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEditWrapper('${id}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
+    
+    if(adminUser){showModal(`Edit: ${item.name}`,editContent);}
+    else{showAdminPinModal('Admin PIN Required','edit this item',()=>{showModal(`Edit: ${item.name}`,editContent);});}
   };
 
-  window.saveEditWrapper = function(id) {
-    const adminUser=isAdmin();
-    if(!adminUser){showAdminPinModal('Admin Authorization Required','edit item details',()=>{saveEdit(id);});}
-    else{saveEdit(id);}
-  };
+  window.saveEditWrapper = function(id) { showAdminPinModal('Confirm Save','save changes',()=>{saveEdit(id);}); };
 
   window.saveEdit = async function(id) {
     const name=document.getElementById('editName')?.value?.trim();
@@ -353,15 +327,16 @@
     }catch(e){showToast('Failed: '+e.message,'error');}
   };
 
-  // ========== DELETE ==========
+  // ========== DELETE (PIN required) ==========
   window.deleteItem = function(id) {
     const item=allItems.find(i=>i.id===id);if(!item)return;
     const confirmDelete=()=>{if(!confirm(`Are you sure you want to delete "${item.name}"? This action cannot be undone.`))return;deleteDoc(doc(db,'stock_items',id)).then(async()=>{await logAudit('delete_item',`Deleted: ${item.name} (ID: ${id})`);showToast('Item deleted permanently!','success');}).catch(e=>showToast('Failed: '+e.message,'error'));};
-    if(isAdmin()){confirmDelete();}else{showAdminPinModal('Admin Authorization Required','delete this item',confirmDelete);}
+    if(isAdmin()){confirmDelete();}else{showAdminPinModal('Admin PIN Required','delete this item',confirmDelete);}
   };
 
-  // ========== REJECT ==========
+  // ========== REJECT (Admin only, auto-creates collection) ==========
   window.rejectItem = function(id) {
+    if(!isAdmin()){showToast('Only admin can reject inventory items','error');return;}
     const item=allItems.find(i=>i.id===id);if(!item)return;
     showModal('Reject Item',`<p style="margin-bottom:12px;">Reject <strong>${item.name}</strong>?</p><div class="form-group"><label>Reason for rejection *</label><textarea class="form-control" id="rejectionReason" rows="3" placeholder="Why is this item being rejected?"></textarea></div><div style="display:flex;gap:10px;"><button class="btn btn-warning" onclick="confirmRejectItem('${id}')"><i class="fas fa-ban"></i> Reject Item</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
   };
@@ -369,15 +344,27 @@
   window.confirmRejectItem = async function(id) {
     const reason=document.getElementById('rejectionReason')?.value?.trim();if(!reason){showToast('Please provide a rejection reason','error');return;}
     const item=allItems.find(i=>i.id===id);if(!item)return;
-    const rejectAction=async()=>{try{await addDoc(collection(db,'rejected_inventory'),{originalId:id,name:item.name,category:item.category,initialStock:item.initialStock||0,initialHalfQty:item.initialHalfQty||0,initialQuarterQty:item.initialQuarterQty||0,quantityAvailable:item.quantityAvailable||0,halfQuantityAvailable:item.halfQuantityAvailable||0,quarterQuantityAvailable:item.quarterQuantityAvailable||0,unitPrice:item.unitPrice||0,halfPrice:item.halfPrice||0,quarterPrice:item.quarterPrice||0,rejectionReason:reason,rejectedBy:currentUser?.uid,rejectedByName:userData?.fullName||'Staff',rejectedAt:serverTimestamp(),status:'rejected'});await deleteDoc(doc(db,'stock_items',id));await logAudit('reject_item',`Rejected: ${item.name} - Reason: ${reason}`);showToast('Item rejected and moved to rejected inventory','success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}};
-    if(isAdmin()){rejectAction();}else{showAttendantPinModal('Confirm Rejection','reject this item',rejectAction);}
+    try{
+      // This will auto-create the rejected_inventory collection if it doesn't exist
+      await addDoc(collection(db,'rejected_inventory'),{
+        originalId:id,name:item.name,category:item.category||'other',
+        initialStock:item.initialStock||0,initialHalfQty:item.initialHalfQty||0,initialQuarterQty:item.initialQuarterQty||0,
+        quantityAvailable:item.quantityAvailable||0,halfQuantityAvailable:item.halfQuantityAvailable||0,quarterQuantityAvailable:item.quarterQuantityAvailable||0,
+        unitPrice:item.unitPrice||0,halfPrice:item.halfPrice||0,quarterPrice:item.quarterPrice||0,
+        rejectionReason:reason,rejectedBy:currentUser?.uid,rejectedByName:userData?.fullName||'Admin',
+        rejectedAt:serverTimestamp(),status:'rejected'
+      });
+      await deleteDoc(doc(db,'stock_items',id));
+      await logAudit('reject_item',`Rejected: ${item.name} - Reason: ${reason}`);
+      showToast('Item rejected and moved to rejected inventory','success');hideModal();
+    }catch(e){showToast('Failed: '+e.message,'error');}
   };
 
   // ========== RESTORE ==========
   window.restoreItem = function(id) {
     const item=allRejectedItems.find(i=>i.id===id);if(!item)return;
     const restoreAction=async()=>{try{await addDoc(collection(db,'stock_items'),{name:item.name,category:item.category||'other',initialStock:item.initialStock||0,initialHalfQty:item.initialHalfQty||0,initialQuarterQty:item.initialQuarterQty||0,quantityAvailable:item.quantityAvailable||0,halfQuantityAvailable:item.halfQuantityAvailable||0,quarterQuantityAvailable:item.quarterQuantityAvailable||0,unitPrice:item.unitPrice||0,halfPrice:item.halfPrice||0,quarterPrice:item.quarterPrice||0,threshold:10,status:'available',restoredFromRejected:true,restoredBy:currentUser?.uid,restoredByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});await deleteDoc(doc(db,'rejected_inventory',id));await logAudit('restore_item',`Restored: ${item.name} from rejected inventory`);showToast('Item restored to inventory!','success');}catch(e){showToast('Failed: '+e.message,'error');}};
-    if(isAdmin()){restoreAction();}else{showAdminPinModal('Admin Authorization Required','restore this item',restoreAction);}
+    if(isAdmin()){restoreAction();}else{showAdminPinModal('Admin PIN Required','restore this item',restoreAction);}
   };
 
   window.permanentlyDeleteItem = function(id) { const item=allRejectedItems.find(i=>i.id===id);if(!item)return;if(!confirm(`Permanently delete "${item.name}"? This cannot be undone.`))return;deleteDoc(doc(db,'rejected_inventory',id)).then(async()=>{await logAudit('perm_delete',`Permanently deleted rejected item: ${item.name}`);showToast('Permanently deleted!','success');}).catch(e=>showToast('Failed: '+e.message,'error')); };
