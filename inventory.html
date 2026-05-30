@@ -68,7 +68,7 @@
     .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
     .panel-header h3 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--dark); } .panel-header h3 i { color: var(--primary); }
     .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 16px; }
-    .data-table { width: 100%; border-collapse: collapse; min-width: 1500px; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 1600px; }
     .data-table th { text-align: left; padding: 14px 10px; font-size: 0.7rem; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--primary-soft); white-space: nowrap; background: white; }
     .data-table td { padding: 14px 10px; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 0.85rem; }
     .data-table tbody tr { transition: background 0.2s; } .data-table tbody tr:hover { background: var(--primary-soft); }
@@ -81,6 +81,9 @@
     .btn:hover { transform: translateY(-2px); } .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; }
     .btn-outline { border: 1.5px solid rgba(255,77,166,0.3); color: var(--primary); background: transparent; } .btn-sm { padding: 6px 12px; font-size: 0.7rem; }
     .btn-success { background: var(--success); color: white; border: none; } .btn-danger { background: var(--danger); color: white; border: none; } .btn-warning { background: var(--warning); color: white; border: none; }
+    .item-type-toggle { display: flex; gap: 10px; margin-bottom: 15px; }
+    .item-type-btn { flex: 1; padding: 12px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 14px; background: white; cursor: pointer; font-weight: 600; font-size: 0.85rem; font-family: 'Poppins', sans-serif; transition: all 0.2s; }
+    .item-type-btn.active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
     .restock-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
     .restock-option { padding: 20px 16px; border: 2px solid rgba(0,0,0,0.08); border-radius: 16px; cursor: pointer; text-align: center; transition: all 0.2s; }
     .restock-option:hover { border-color: var(--primary); background: var(--primary-soft); }
@@ -142,28 +145,29 @@
     <div class="filter-bar">
       <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search items..."></div>
       <select class="filter-select" id="categoryFilter"><option value="all">All Categories</option></select>
+      <select class="filter-select" id="itemTypeFilter"><option value="all">All Types</option><option value="fashion">Fashion Items (Unit/½/¼)</option><option value="pack">Pack Items (Pack/Unit)</option></select>
       <div class="export-dropdown"><button class="btn btn-outline" id="exportDropdownBtn"><i class="fas fa-download"></i> Export</button><div class="export-menu" id="exportMenu"><div class="export-item" onclick="exportData('csv')"><i class="fas fa-file-csv"></i> CSV</div><div class="export-item" onclick="exportData('excel')"><i class="fas fa-file-excel"></i> Excel</div></div></div>
       <button class="btn btn-primary" onclick="openAddItemModal()"><i class="fas fa-plus"></i> Add Item</button>
     </div>
 
     <div id="allPanel" class="page-view active">
       <div class="panel"><div class="panel-header"><h3><i class="fas fa-warehouse"></i> Stock Items</h3><button class="btn btn-outline btn-sm" onclick="refreshInventory()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item Name</th><th>Category</th><th>Init Qty</th><th>Init ½</th><th>Init ¼</th><th>Sold</th><th>Remaining</th><th>Unit Price</th><th>½ Price</th><th>¼ Price</th><th>Revenue</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="inventoryTable"><tr><td colspan="13"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading inventory...</p></div></td></tr></tbody></table></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item Name</th><th>Category</th><th>Type</th><th>Init Qty</th><th>Init ½/Pack</th><th>Init ¼</th><th>Sold</th><th>Remaining</th><th>Unit Price</th><th>½/Pack Price</th><th>¼ Price</th><th>Revenue</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="inventoryTable"><tr><td colspan="14"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading inventory...</p></div></td></tr></tbody></table></div>
       </div>
     </div>
 
     <div id="lowPanel" class="page-view">
       <div class="panel"><div class="panel-header"><h3><i class="fas fa-exclamation-triangle"></i> Low & Out of Stock</h3></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item Name</th><th>Category</th><th>Initial</th><th>Sold</th><th>Remaining</th><th>Threshold</th><th>Unit Price</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="lowTable"><tr><td colspan="9"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item Name</th><th>Category</th><th>Type</th><th>Initial</th><th>Sold</th><th>Remaining</th><th>Threshold</th><th>Unit Price</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="lowTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
       </div>
     </div>
 
     <div id="rejectedPanel" class="page-view">
       <div class="panel"><div class="panel-header"><h3><i class="fas fa-ban"></i> Rejected Inventory</h3></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item Name</th><th>Category</th><th>Initial</th><th>Rejected By</th><th>Reason</th><th>Date</th><th>Actions</th></tr></thead>
-        <tbody id="rejectedTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item Name</th><th>Category</th><th>Type</th><th>Initial</th><th>Rejected By</th><th>Reason</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody id="rejectedTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -184,7 +188,7 @@
   let currentUser = null, userData = null, unsubscribes = [];
   let allItems = [], allRejectedItems = [], categories = [], allSales = [];
   let currentTab = 'all', revenueRevealed = false;
-  let pendingAction = null;
+  let addItemType = 'fashion'; // 'fashion' or 'pack'
 
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
@@ -193,7 +197,7 @@
 
   function showToast(msg, type='success') { const c=document.getElementById('toastContainer'); if(!c)return; const t=document.createElement('div'); t.className=`toast ${type}`; t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`; c.appendChild(t); setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500); }
   async function logAudit(action, note) { try { await addDoc(collection(db,'audit_logs'),{actionType:action,performedBy:currentUser?.uid||'unknown',performedByName:userData?.fullName||'Staff',performedAt:serverTimestamp(),note:note||''}); } catch(e){} }
-  function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); pendingAction = null; }
+  function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
   window.hideModal = hideModal;
   function showModal(title, content) { document.getElementById('modalTitle').textContent=title; document.getElementById('modalContent').innerHTML=content; document.getElementById('modalOverlay').classList.add('active'); }
   function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
@@ -225,14 +229,21 @@
   window.addCategoryFromModal = async function() { const name=document.getElementById('newCategoryInput')?.value?.trim().toLowerCase(); if(!name){showToast('Enter category name','error');return;} if(categories.includes(name)){showToast('Already exists','error');return;} try{await setDoc(doc(db,'categories',name),{name,createdAt:serverTimestamp()});categories.push(name);updateCategoryDropdowns();await logAudit('add_category',`Added: ${name}`);showToast(`Category "${name}" added`,'success');hideModal();}catch(e){showToast('Failed','error');} };
   window.showAddCategoryModal = function() { showModal('Add New Category',`<div class="form-group"><label>Category Name *</label><input class="form-control" id="newCategoryInput" placeholder="e.g., Accessories"></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addCategoryFromModal()"><i class="fas fa-plus"></i> Add</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`); };
 
-  function getItemStatus(item) { if(item.status==='pending_approval')return'pending_approval';if(item.status==='rejected')return'rejected';const qty=(item.quantityAvailable||0)+(item.halfQuantityAvailable||0)+(item.quarterQuantityAvailable||0);const threshold=item.threshold||10;if(qty===0)return'out_of_stock';if(qty<=threshold)return'low';return'available'; }
+  function getItemTypeLabel(item) { return item.itemType==='pack'?'📦 Pack':'👗 Fashion'; }
+  function getTotalInitial(item) { if(item.itemType==='pack'){return(item.initialStock||0)+(item.initialPackQty||0);}return(item.initialStock||0)+(item.initialHalfQty||0)+(item.initialQuarterQty||0); }
+  function getTotalAvailable(item) { if(item.itemType==='pack'){return(item.quantityAvailable||0)+(item.packQuantityAvailable||0);}return(item.quantityAvailable||0)+(item.halfQuantityAvailable||0)+(item.quarterQuantityAvailable||0); }
+
+  function getItemStatus(item) { if(item.status==='pending_approval')return'pending_approval';if(item.status==='rejected')return'rejected';const qty=getTotalAvailable(item);const threshold=item.threshold||10;if(qty===0)return'out_of_stock';if(qty<=threshold)return'low';return'available'; }
 
   function renderInventory() {
     const search=(document.getElementById('searchInput')?.value||'').toLowerCase();
     const catFilter=document.getElementById('categoryFilter')?.value||'all';
+    const typeFilter=document.getElementById('itemTypeFilter')?.value||'all';
     let filtered=[...allItems];
     if(search)filtered=filtered.filter(i=>(i.name||'').toLowerCase().includes(search));
     if(catFilter!=='all')filtered=filtered.filter(i=>(i.category||'').toLowerCase()===catFilter.toLowerCase());
+    if(typeFilter==='fashion')filtered=filtered.filter(i=>i.itemType!=='pack');
+    if(typeFilter==='pack')filtered=filtered.filter(i=>i.itemType==='pack');
     const available=filtered.filter(i=>i.status!=='pending_approval'&&i.status!=='rejected');
     const lowAndOut=available.filter(i=>['low','out_of_stock'].includes(getItemStatus(i)));
     const rejected=[...allRejectedItems];
@@ -251,125 +262,197 @@
 
     const tbody=document.getElementById('inventoryTable');
     if(tbody){
-      if(available.length===0){tbody.innerHTML='<tr><td colspan="13"><div class="empty-state"><i class="fas fa-box"></i><p>No items found. Click "Add Item" to get started.</p></div></td></tr>';}
+      if(available.length===0){tbody.innerHTML='<tr><td colspan="14"><div class="empty-state"><i class="fas fa-box"></i><p>No items found. Click "Add Item" to get started.</p></div></td></tr>';}
       else{
         tbody.innerHTML=available.map(item=>{
           const st=getItemStatus(item),sb=st==='available'?'success':st==='low'?'warning':'danger';
-          const adminUser=isAdmin();
-          const initQty=(item.initialStock||0);const initHalf=(item.initialHalfQty||0);const initQuarter=(item.initialQuarterQty||0);
-          const soldQty=getItemSoldQty(item);const remainingQty=(item.quantityAvailable||0)+(item.halfQuantityAvailable||0)+(item.quarterQuantityAvailable||0);
+          const adminUser=isAdmin();const isPack=item.itemType==='pack';
+          const initQty=(item.initialStock||0);
+          const initSecond=isPack?(item.initialPackQty||0):(item.initialHalfQty||0);
+          const initThird=isPack?0:(item.initialQuarterQty||0);
+          const soldQty=getItemSoldQty(item);const remainingQty=getTotalAvailable(item);
           const itemRevenue=getItemRevenue(item);const showRevenue=revenueRevealed||adminUser;
-          return `<tr><td><strong>${item.name||'-'}</strong></td><td><span class="badge badge-purple">${item.category||'-'}</span></td><td>${initQty} <span class="price-type-badge">1</span></td><td>${initHalf?initHalf+' <span class="price-type-badge">½</span>':'-'}</td><td>${initQuarter?initQuarter+' <span class="price-type-badge">¼</span>':'-'}</td><td>${soldQty}</td><td style="color:${remainingQty===0?'var(--danger)':st==='low'?'var(--warning)':'inherit'};font-weight:600;">${remainingQty}</td><td>${formatCurrency(item.unitPrice)}<span class="price-type-badge">1</span></td><td>${item.halfPrice?formatCurrency(item.halfPrice)+'<span class="price-type-badge">½</span>':'-'}</td><td>${item.quarterPrice?formatCurrency(item.quarterPrice)+'<span class="price-type-badge">¼</span>':'-'}</td><td style="font-weight:600;">${showRevenue?formatCurrency(itemRevenue):'₦••••'}</td><td><span class="badge badge-${sb}">${st.replace(/_/g,' ')}</span></td><td><div style="display:flex;gap:4px;flex-wrap:wrap;">${['low','out_of_stock'].includes(st)?`<button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')" title="Restock"><i class="fas fa-box-open"></i></button>`:''}<button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')" title="Edit"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline" onclick="viewHistory('${item.id}')" title="History"><i class="fas fa-history"></i></button><button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')" title="Delete"><i class="fas fa-trash"></i></button>${adminUser?`<button class="btn btn-sm btn-warning" onclick="rejectItem('${item.id}')" title="Reject"><i class="fas fa-ban"></i></button>`:''}</div></td></tr>`;
+          const secondLabel=isPack?'P':'½';const thirdLabel='¼';
+          return `<tr><td><strong>${item.name||'-'}</strong></td><td><span class="badge badge-purple">${item.category||'-'}</span></td><td><span class="badge badge-info">${getItemTypeLabel(item)}</span></td><td>${initQty} <span class="price-type-badge">1</span></td><td>${initSecond?initSecond+` <span class="price-type-badge">${secondLabel}</span>`:'-'}</td><td>${isPack?'-':(initThird?initThird+` <span class="price-type-badge">${thirdLabel}</span>`:'-')}</td><td>${soldQty}</td><td style="color:${remainingQty===0?'var(--danger)':st==='low'?'var(--warning)':'inherit'};font-weight:600;">${remainingQty}</td><td>${formatCurrency(item.unitPrice)}<span class="price-type-badge">1</span></td><td>${isPack?(item.packPrice?formatCurrency(item.packPrice)+`<span class="price-type-badge">${secondLabel}</span>`:'-'):(item.halfPrice?formatCurrency(item.halfPrice)+`<span class="price-type-badge">½</span>`:'-')}</td><td>${isPack?'-':(item.quarterPrice?formatCurrency(item.quarterPrice)+`<span class="price-type-badge">¼</span>`:'-')}</td><td style="font-weight:600;">${showRevenue?formatCurrency(itemRevenue):'₦••••'}</td><td><span class="badge badge-${sb}">${st.replace(/_/g,' ')}</span></td><td><div style="display:flex;gap:4px;flex-wrap:wrap;">${['low','out_of_stock'].includes(st)?`<button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')" title="Restock"><i class="fas fa-box-open"></i></button>`:''}<button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')" title="Edit"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline" onclick="viewHistory('${item.id}')" title="History"><i class="fas fa-history"></i></button><button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')" title="Delete"><i class="fas fa-trash"></i></button>${adminUser?`<button class="btn btn-sm btn-warning" onclick="rejectItem('${item.id}')" title="Reject"><i class="fas fa-ban"></i></button>`:''}</div></td></tr>`;
         }).join('');
       }
     }
 
     const lTbody=document.getElementById('lowTable');
-    if(lTbody){if(lowAndOut.length===0)lTbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items well stocked</p></div></td></tr>';else lTbody.innerHTML=lowAndOut.map(item=>`<tr><td><strong>${item.name||'-'}</strong></td><td>${item.category||'-'}</td><td>${(item.initialStock||0)+(item.initialHalfQty||0)+(item.initialQuarterQty||0)}</td><td>${getItemSoldQty(item)}</td><td style="color:var(--danger);font-weight:600;">${(item.quantityAvailable||0)+(item.halfQuantityAvailable||0)+(item.quarterQuantityAvailable||0)}</td><td>${item.threshold||10}</td><td>${formatCurrency(item.unitPrice)}</td><td><span class="badge badge-${getItemStatus(item)==='out_of_stock'?'danger':'warning'}">${getItemStatus(item).replace(/_/g,' ')}</span></td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')"><i class="fas fa-box-open"></i></button><button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')"><i class="fas fa-edit"></i></button></div></td></tr>`).join('');}
+    if(lTbody){if(lowAndOut.length===0)lTbody.innerHTML='<tr><td colspan="10"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items well stocked</p></div></td></tr>';else lTbody.innerHTML=lowAndOut.map(item=>`<tr><td><strong>${item.name||'-'}</strong></td><td>${item.category||'-'}</td><td>${getItemTypeLabel(item)}</td><td>${getTotalInitial(item)}</td><td>${getItemSoldQty(item)}</td><td style="color:var(--danger);font-weight:600;">${getTotalAvailable(item)}</td><td>${item.threshold||10}</td><td>${formatCurrency(item.unitPrice)}</td><td><span class="badge badge-${getItemStatus(item)==='out_of_stock'?'danger':'warning'}">${getItemStatus(item).replace(/_/g,' ')}</span></td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')"><i class="fas fa-box-open"></i></button><button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')"><i class="fas fa-edit"></i></button></div></td></tr>`).join('');}
 
     const rTbody=document.getElementById('rejectedTable');
-    if(rTbody){if(rejected.length===0)rTbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="fas fa-ban"></i><p>No rejected items</p></div></td></tr>';else rTbody.innerHTML=rejected.map(item=>`<tr><td><strong>${item.name||'-'}</strong></td><td>${item.category||'-'}</td><td>${(item.initialStock||0)+(item.initialHalfQty||0)+(item.initialQuarterQty||0)}</td><td>${item.rejectedByName||'-'}</td><td>${item.rejectionReason||'-'}</td><td>${formatDate(item.rejectedAt)}</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-success" onclick="restoreItem('${item.id}')" title="Restore"><i class="fas fa-undo"></i> Restore</button><button class="btn btn-sm btn-danger" onclick="permanentlyDeleteItem('${item.id}')" title="Permanent Delete"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+    if(rTbody){if(rejected.length===0)rTbody.innerHTML='<tr><td colspan="8"><div class="empty-state"><i class="fas fa-ban"></i><p>No rejected items</p></div></td></tr>';else rTbody.innerHTML=rejected.map(item=>`<tr><td><strong>${item.name||'-'}</strong></td><td>${item.category||'-'}</td><td>${item.itemType==='pack'?'📦 Pack':'👗 Fashion'}</td><td>${getTotalInitial(item)}</td><td>${item.rejectedByName||'-'}</td><td>${item.rejectionReason||'-'}</td><td>${formatDate(item.rejectedAt)}</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-success" onclick="restoreItem('${item.id}')" title="Restore"><i class="fas fa-undo"></i> Restore</button><button class="btn btn-sm btn-danger" onclick="permanentlyDeleteItem('${item.id}')" title="Permanent Delete"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
   }
 
   function loadInventory() {
     cleanup();
-    unsubscribes.push(onSnapshot(collection(db,'stock_items'),snap=>{allItems=snap.docs.map(d=>{const data=d.data();return{id:d.id,...data,quantityAvailable:data.quantityAvailable||0,halfQuantityAvailable:data.halfQuantityAvailable||0,quarterQuantityAvailable:data.quarterQuantityAvailable||0,quantitySold:data.quantitySold||0,totalSoldQty:data.totalSoldQty||data.quantitySold||0,totalSoldValue:data.totalSoldValue||0,unitPrice:data.unitPrice||0,halfPrice:data.halfPrice||0,quarterPrice:data.quarterPrice||0,threshold:data.threshold||10,initialStock:data.initialStock||0,initialHalfQty:data.initialHalfQty||0,initialQuarterQty:data.initialQuarterQty||0};});allItems.sort((a,b)=>(a.name||'').localeCompare(b.name||''));renderInventory();}));
+    unsubscribes.push(onSnapshot(collection(db,'stock_items'),snap=>{allItems=snap.docs.map(d=>{const data=d.data();return{id:d.id,...data,quantityAvailable:data.quantityAvailable||0,halfQuantityAvailable:data.halfQuantityAvailable||0,quarterQuantityAvailable:data.quarterQuantityAvailable||0,packQuantityAvailable:data.packQuantityAvailable||0,quantitySold:data.quantitySold||0,totalSoldQty:data.totalSoldQty||data.quantitySold||0,totalSoldValue:data.totalSoldValue||0,unitPrice:data.unitPrice||0,halfPrice:data.halfPrice||0,quarterPrice:data.quarterPrice||0,packPrice:data.packPrice||0,threshold:data.threshold||10,initialStock:data.initialStock||0,initialHalfQty:data.initialHalfQty||0,initialQuarterQty:data.initialQuarterQty||0,initialPackQty:data.initialPackQty||0,itemType:data.itemType||'fashion'};});allItems.sort((a,b)=>(a.name||'').localeCompare(b.name||''));renderInventory();}));
     unsubscribes.push(onSnapshot(collection(db,'rejected_inventory'),snap=>{allRejectedItems=snap.docs.map(d=>{const data=d.data();return{id:d.id,...data};});allRejectedItems.sort((a,b)=>(b.rejectedAt?.seconds||0)-(a.rejectedAt?.seconds||0));renderInventory();}));
     unsubscribes.push(onSnapshot(query(collection(db,'sales'),orderBy('createdAt','desc')),snap=>{allSales=snap.docs.map(d=>({id:d.id,...d.data()}));renderInventory();}));
     unsubscribes.push(onSnapshot(collection(db,'wholesale_sales'),snap=>{const ws=snap.docs.map(d=>({id:d.id,...d.data()}));allSales=[...allSales.filter(s=>!ws.find(w=>w.id===s.id)),...ws];renderInventory();}));
   }
 
   // ========== ADD ITEM ==========
-  window.openAddItemModal = function() { showModal('Add New Item',`<div class="form-row"><div class="form-group"><label>Item Name *</label><input class="form-control" id="itemName" placeholder="e.g., Rhinestone"></div><div class="form-group"><label>Category *</label><div style="display:flex;gap:8px;"><select class="form-control" id="itemCategory">${categories.map(c=>`<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div><p style="font-size:0.75rem;color:var(--gray);margin-bottom:15px;">Enter quantities for each size type. Revenue starts at ₦0 and updates automatically when sales are made.</p><div class="form-row-3"><div class="form-group"><label>Unit Quantity (1) *</label><input type="number" class="form-control" id="itemQty" value="0" min="0" placeholder="Full units"></div><div class="form-group"><label>Half Quantity (½)</label><input type="number" class="form-control" id="itemHalfQty" value="0" min="0" placeholder="Half units"></div><div class="form-group"><label>Quarter Quantity (¼)</label><input type="number" class="form-control" id="itemQuarterQty" value="0" min="0" placeholder="Quarter units"></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price (1) ₦ *</label><input type="number" class="form-control" id="itemPrice" value="0" step="0.01" min="0"></div><div class="form-group"><label>Half Price (½) ₦</label><input type="number" class="form-control" id="itemHalfPrice" value="0" step="0.01" min="0"></div><div class="form-group"><label>Quarter Price (¼) ₦</label><input type="number" class="form-control" id="itemQuarterPrice" value="0" step="0.01" min="0"></div></div><div class="form-group"><label>Low Stock Threshold</label><input type="number" class="form-control" id="itemThreshold" value="10" min="1"></div><p style="font-size:0.75rem;color:var(--gray);">${isAdmin()?'Item available immediately.':'Item submitted for admin approval.'}</p><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addItem()"><i class="fas fa-plus"></i> Add</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`); };
+  window.openAddItemModal = function() {
+    addItemType = 'fashion';
+    showModal('Add New Item', `
+      <div class="item-type-toggle">
+        <button class="item-type-btn active" data-type="fashion" onclick="switchAddItemType('fashion')"><i class="fas fa-tshirt"></i> Fashion Item (Unit/½/¼)</button>
+        <button class="item-type-btn" data-type="pack" onclick="switchAddItemType('pack')"><i class="fas fa-box"></i> Pack Item (Unit/Pack)</button>
+      </div>
+      <div class="form-row"><div class="form-group"><label>Item Name *</label><input class="form-control" id="itemName" placeholder="e.g., Rhinestone"></div><div class="form-group"><label>Category *</label><div style="display:flex;gap:8px;"><select class="form-control" id="itemCategory">${categories.map(c=>`<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div>
+      <div id="fashionQtySection"><p style="font-size:0.75rem;color:var(--gray);margin-bottom:12px;">Enter quantities for each size type.</p><div class="form-row-3"><div class="form-group"><label>Unit Quantity (1) *</label><input type="number" class="form-control" id="itemQty" value="0" min="0"></div><div class="form-group"><label>Half Quantity (½)</label><input type="number" class="form-control" id="itemHalfQty" value="0" min="0"></div><div class="form-group"><label>Quarter Quantity (¼)</label><input type="number" class="form-control" id="itemQuarterQty" value="0" min="0"></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price (1) ₦ *</label><input type="number" class="form-control" id="itemPrice" value="0" step="0.01" min="0"></div><div class="form-group"><label>Half Price (½) ₦</label><input type="number" class="form-control" id="itemHalfPrice" value="0" step="0.01" min="0"></div><div class="form-group"><label>Quarter Price (¼) ₦</label><input type="number" class="form-control" id="itemQuarterPrice" value="0" step="0.01" min="0"></div></div></div>
+      <div id="packQtySection" style="display:none;"><p style="font-size:0.75rem;color:var(--gray);margin-bottom:12px;">Enter unit quantity and pack quantity with their prices.</p><div class="form-row"><div class="form-group"><label>Unit Quantity (1) *</label><input type="number" class="form-control" id="packItemQty" value="0" min="0"></div><div class="form-group"><label>Pack Quantity (e.g., 12/dozen)</label><input type="number" class="form-control" id="packQty" value="0" min="0"><small style="color:var(--gray);">Number of units per pack</small></div></div><div class="form-row"><div class="form-group"><label>Unit Price (1) ₦ *</label><input type="number" class="form-control" id="packItemPrice" value="0" step="0.01" min="0"></div><div class="form-group"><label>Pack Price (per pack) ₦</label><input type="number" class="form-control" id="packPrice" value="0" step="0.01" min="0"><small style="color:var(--gray);">Price for the full pack</small></div></div></div>
+      <div class="form-group"><label>Low Stock Threshold</label><input type="number" class="form-control" id="itemThreshold" value="10" min="1"></div>
+      <p style="font-size:0.75rem;color:var(--gray);">${isAdmin()?'Item available immediately.':'Item submitted for admin approval.'}</p>
+      <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addItem()"><i class="fas fa-plus"></i> Add</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
+  };
 
-  window.addItem = function() { const name=document.getElementById('itemName')?.value?.trim();const qty=parseInt(document.getElementById('itemQty')?.value)||0;const halfQty=parseInt(document.getElementById('itemHalfQty')?.value)||0;const quarterQty=parseInt(document.getElementById('itemQuarterQty')?.value)||0;const price=parseFloat(document.getElementById('itemPrice')?.value)||0;const halfPrice=parseFloat(document.getElementById('itemHalfPrice')?.value)||0;const quarterPrice=parseFloat(document.getElementById('itemQuarterPrice')?.value)||0;const threshold=parseInt(document.getElementById('itemThreshold')?.value)||10;const category=document.getElementById('itemCategory')?.value||'other';if(!name){showToast('Name required','error');return;}if(price<=0){showToast('Unit price must be > 0','error');return;}const totalQty=qty+halfQty+quarterQty;const adminUser=isAdmin();const status=adminUser?(totalQty===0?'out_of_stock':totalQty<=threshold?'low':'available'):'pending_approval';addDoc(collection(db,'stock_items'),{name,category,initialStock:qty,initialHalfQty:halfQty,initialQuarterQty:quarterQty,quantityAvailable:qty,halfQuantityAvailable:halfQty,quarterQuantityAvailable:quarterQty,quantitySold:0,totalSoldQty:0,totalSoldValue:0,unitPrice:price,halfPrice,quarterPrice,threshold,status,createdBy:currentUser?.uid,createdByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp()}).then(async()=>{await logAudit('add_item',`Added: ${name}`);showToast(adminUser?'Item added':'Submitted','success');hideModal();}).catch(e=>showToast('Failed: '+e.message,'error')); };
+  window.switchAddItemType = function(type) {
+    addItemType = type;
+    document.querySelectorAll('.item-type-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelector(`[data-type="${type}"]`)?.classList.add('active');
+    document.getElementById('fashionQtySection').style.display = type==='fashion'?'block':'none';
+    document.getElementById('packQtySection').style.display = type==='pack'?'block':'none';
+  };
+
+  window.addItem = function() {
+    const name=document.getElementById('itemName')?.value?.trim();
+    const category=document.getElementById('itemCategory')?.value||'other';
+    const threshold=parseInt(document.getElementById('itemThreshold')?.value)||10;
+    if(!name){showToast('Name required','error');return;}
+    const adminUser=isAdmin();
+    let data = {name,category,threshold,itemType:addItemType,status:adminUser?'available':'pending_approval',createdBy:currentUser?.uid,createdByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp(),quantitySold:0,totalSoldQty:0,totalSoldValue:0};
+
+    if(addItemType==='fashion'){
+      const qty=parseInt(document.getElementById('itemQty')?.value)||0;
+      const halfQty=parseInt(document.getElementById('itemHalfQty')?.value)||0;
+      const quarterQty=parseInt(document.getElementById('itemQuarterQty')?.value)||0;
+      const price=parseFloat(document.getElementById('itemPrice')?.value)||0;
+      const halfPrice=parseFloat(document.getElementById('itemHalfPrice')?.value)||0;
+      const quarterPrice=parseFloat(document.getElementById('itemQuarterPrice')?.value)||0;
+      if(price<=0){showToast('Unit price must be > 0','error');return;}
+      const totalQty=qty+halfQty+quarterQty;
+      data.initialStock=qty;data.initialHalfQty=halfQty;data.initialQuarterQty=quarterQty;
+      data.quantityAvailable=qty;data.halfQuantityAvailable=halfQty;data.quarterQuantityAvailable=quarterQty;
+      data.unitPrice=price;data.halfPrice=halfPrice;data.quarterPrice=quarterPrice;data.packPrice=0;
+      if(!adminUser)data.status='pending_approval';else data.status=totalQty===0?'out_of_stock':totalQty<=threshold?'low':'available';
+    }else{
+      const unitQty=parseInt(document.getElementById('packItemQty')?.value)||0;
+      const packQty=parseInt(document.getElementById('packQty')?.value)||0;
+      const unitPrice=parseFloat(document.getElementById('packItemPrice')?.value)||0;
+      const packPrice=parseFloat(document.getElementById('packPrice')?.value)||0;
+      if(unitPrice<=0){showToast('Unit price must be > 0','error');return;}
+      const totalQty=unitQty+packQty;
+      data.initialStock=unitQty;data.initialPackQty=packQty;
+      data.quantityAvailable=unitQty;data.packQuantityAvailable=packQty;
+      data.unitPrice=unitPrice;data.packPrice=packPrice;data.halfPrice=0;data.quarterPrice=0;
+      data.initialHalfQty=0;data.initialQuarterQty=0;data.halfQuantityAvailable=0;data.quarterQuantityAvailable=0;
+      if(!adminUser)data.status='pending_approval';else data.status=totalQty===0?'out_of_stock':totalQty<=threshold?'low':'available';
+    }
+    addDoc(collection(db,'stock_items'),data).then(async()=>{await logAudit('add_item',`Added: ${name}`);showToast(adminUser?'Item added':'Submitted','success');hideModal();}).catch(e=>showToast('Failed: '+e.message,'error'));
+  };
 
   // ========== RESTOCK ==========
-  window.openRestockOptions = function(itemId) { const item=allItems.find(i=>i.id===itemId);if(!item)return;const totalAvail=(item.quantityAvailable||0)+(item.halfQuantityAvailable||0)+(item.quarterQuantityAvailable||0);showModal(`Restock: ${item.name}`,`<p style="margin-bottom:12px;color:var(--gray);">Current Total: <strong>${totalAvail}</strong> | Threshold: ${item.threshold||10}</p><p style="margin-bottom:12px;font-weight:600;">Choose source:</p><div class="restock-options"><div class="restock-option" onclick="restockFromStore('${itemId}')"><i class="fas fa-store"></i><div class="label">From Store</div><div class="sub">Buy from your bulk stock</div></div><div class="restock-option" onclick="restockFromThirdParty('${itemId}')"><i class="fas fa-truck"></i><div class="label">From Third Party</div><div class="sub">Create purchase request</div></div></div><button class="btn btn-outline" onclick="hideModal()" style="width:100%;margin-top:12px;">Cancel</button>`); };
+  window.openRestockOptions = function(itemId) { const item=allItems.find(i=>i.id===itemId);if(!item)return;const totalAvail=getTotalAvailable(item);showModal(`Restock: ${item.name}`,`<p style="margin-bottom:12px;color:var(--gray);">Current Total: <strong>${totalAvail}</strong> | Threshold: ${item.threshold||10}</p><p style="margin-bottom:12px;font-weight:600;">Choose source:</p><div class="restock-options"><div class="restock-option" onclick="restockFromStore('${itemId}')"><i class="fas fa-store"></i><div class="label">From Store</div><div class="sub">Buy from your bulk stock</div></div><div class="restock-option" onclick="restockFromThirdParty('${itemId}')"><i class="fas fa-truck"></i><div class="label">From Third Party</div><div class="sub">Create purchase request</div></div></div><button class="btn btn-outline" onclick="hideModal()" style="width:100%;margin-top:12px;">Cancel</button>`); };
   window.restockFromStore = function(itemId) { hideModal(); navigateTo('store.html'); };
   window.restockFromThirdParty = function(itemId) { hideModal(); navigateTo('purchases.html'); };
 
-  // ========== EDIT ITEM (FIXED: opens modal directly, PIN on save) ==========
+  // ========== EDIT ITEM ==========
   window.openEditItem = function(id) {
     const item=allItems.find(i=>i.id===id);if(!item)return;
-    const soldQty=getItemSoldQty(item);const itemRevenue=getItemRevenue(item);const adminUser=isAdmin();
-    const editContent = `<div class="form-group"><label>Item Name</label><input class="form-control" id="editName" value="${item.name||''}"></div><div class="form-row-3"><div class="form-group"><label>Initial Unit Qty</label><input type="number" class="form-control" id="editInitQty" value="${item.initialStock||0}" min="0"></div><div class="form-group"><label>Initial Half Qty</label><input type="number" class="form-control" id="editInitHalfQty" value="${item.initialHalfQty||0}" min="0"></div><div class="form-group"><label>Initial Quarter Qty</label><input type="number" class="form-control" id="editInitQuarterQty" value="${item.initialQuarterQty||0}" min="0"></div></div><div class="form-row-3"><div class="form-group"><label>Avail Unit Qty</label><input type="number" class="form-control" id="editAvailQty" value="${item.quantityAvailable||0}" min="0"></div><div class="form-group"><label>Avail Half Qty</label><input type="number" class="form-control" id="editAvailHalfQty" value="${item.halfQuantityAvailable||0}" min="0"></div><div class="form-group"><label>Avail Quarter Qty</label><input type="number" class="form-control" id="editAvailQuarterQty" value="${item.quarterQuantityAvailable||0}" min="0"></div></div><div class="form-row"><div class="form-group"><label>Total Sold (from sales)</label><input type="number" class="form-control" value="${soldQty}" readonly></div><div class="form-group"><label>Revenue (from sales)</label><input class="form-control" value="${formatCurrency(itemRevenue)}" readonly></div></div><div class="form-row"><div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="editCategory">${categories.map(c=>`<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="editPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>½ Price ₦</label><input type="number" class="form-control" id="editHalfPrice" value="${item.halfPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>¼ Price ₦</label><input type="number" class="form-control" id="editQuarterPrice" value="${item.quarterPrice||0}" step="0.01" min="0"></div></div><div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||10}" min="1"></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEditWrapper('${id}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
+    const soldQty=getItemSoldQty(item);const itemRevenue=getItemRevenue(item);const isPack=item.itemType==='pack';
+    let editContent = `<div class="form-group"><label>Item Name</label><input class="form-control" id="editName" value="${item.name||''}"></div><div class="form-row"><div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="editCategory">${categories.map(c=>`<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div><div class="form-group"><label>Item Type</label><input class="form-control" value="${isPack?'Pack Item (Unit/Pack)':'Fashion Item (Unit/½/¼)'}" readonly></div></div>`;
+    if(isPack){
+      editContent += `<div class="form-row"><div class="form-group"><label>Init Unit Qty</label><input type="number" class="form-control" id="editInitQty" value="${item.initialStock||0}" min="0"></div><div class="form-group"><label>Init Pack Qty</label><input type="number" class="form-control" id="editInitPackQty" value="${item.initialPackQty||0}" min="0"></div></div><div class="form-row"><div class="form-group"><label>Avail Unit Qty</label><input type="number" class="form-control" id="editAvailQty" value="${item.quantityAvailable||0}" min="0"></div><div class="form-group"><label>Avail Pack Qty</label><input type="number" class="form-control" id="editAvailPackQty" value="${item.packQuantityAvailable||0}" min="0"></div></div><div class="form-row"><div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="editPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>Pack Price ₦</label><input type="number" class="form-control" id="editPackPrice" value="${item.packPrice||0}" step="0.01" min="0"></div></div>`;
+    }else{
+      editContent += `<div class="form-row-3"><div class="form-group"><label>Init Unit Qty</label><input type="number" class="form-control" id="editInitQty" value="${item.initialStock||0}" min="0"></div><div class="form-group"><label>Init Half Qty</label><input type="number" class="form-control" id="editInitHalfQty" value="${item.initialHalfQty||0}" min="0"></div><div class="form-group"><label>Init Quarter Qty</label><input type="number" class="form-control" id="editInitQuarterQty" value="${item.initialQuarterQty||0}" min="0"></div></div><div class="form-row-3"><div class="form-group"><label>Avail Unit Qty</label><input type="number" class="form-control" id="editAvailQty" value="${item.quantityAvailable||0}" min="0"></div><div class="form-group"><label>Avail Half Qty</label><input type="number" class="form-control" id="editAvailHalfQty" value="${item.halfQuantityAvailable||0}" min="0"></div><div class="form-group"><label>Avail Quarter Qty</label><input type="number" class="form-control" id="editAvailQuarterQty" value="${item.quarterQuantityAvailable||0}" min="0"></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="editPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>½ Price ₦</label><input type="number" class="form-control" id="editHalfPrice" value="${item.halfPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>¼ Price ₦</label><input type="number" class="form-control" id="editQuarterPrice" value="${item.quarterPrice||0}" step="0.01" min="0"></div></div>`;
+    }
+    editContent += `<div class="form-row"><div class="form-group"><label>Total Sold</label><input type="number" class="form-control" value="${soldQty}" readonly></div><div class="form-group"><label>Revenue</label><input class="form-control" value="${formatCurrency(itemRevenue)}" readonly></div></div><div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||10}" min="1"></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEditWrapper('${id}','${isPack?'pack':'fashion'}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
     showModal(`Edit: ${item.name}`,editContent);
   };
 
-  window.saveEditWrapper = function(id) {
+  window.saveEditWrapper = function(id, type) {
     hideModal();
-    showPinModal('Confirm Save','save changes',()=>{saveEdit(id);});
+    showPinModal('Confirm Save','save changes',()=>{saveEdit(id, type);});
   };
 
-  window.saveEdit = async function(id) {
-    const item=allItems.find(i=>i.id===id);
+  window.saveEdit = async function(id, type) {
     const name=document.getElementById('editName')?.value?.trim();
-    const initQty=parseInt(document.getElementById('editInitQty')?.value)||0;
-    const initHalfQty=parseInt(document.getElementById('editInitHalfQty')?.value)||0;
-    const initQuarterQty=parseInt(document.getElementById('editInitQuarterQty')?.value)||0;
-    const availQty=parseInt(document.getElementById('editAvailQty')?.value)||0;
-    const availHalfQty=parseInt(document.getElementById('editAvailHalfQty')?.value)||0;
-    const availQuarterQty=parseInt(document.getElementById('editAvailQuarterQty')?.value)||0;
-    const price=parseFloat(document.getElementById('editPrice')?.value)||0;
-    const halfPrice=parseFloat(document.getElementById('editHalfPrice')?.value)||0;
-    const quarterPrice=parseFloat(document.getElementById('editQuarterPrice')?.value)||0;
-    const threshold=parseInt(document.getElementById('editThreshold')?.value)||10;
     const category=document.getElementById('editCategory')?.value;
+    const threshold=parseInt(document.getElementById('editThreshold')?.value)||10;
     if(!name){showToast('Item name required','error');return;}
+    const price=parseFloat(document.getElementById('editPrice')?.value)||0;
     if(price<=0){showToast('Unit price must be > 0','error');return;}
-    const totalQty=availQty+availHalfQty+availQuarterQty;
-    const status=totalQty===0?'out_of_stock':totalQty<=threshold?'low':'available';
-    try{
-      await updateDoc(doc(db,'stock_items',id),{name,category,initialStock:initQty,initialHalfQty:initHalfQty,initialQuarterQty:initQuarterQty,quantityAvailable:availQty,halfQuantityAvailable:availHalfQty,quarterQuantityAvailable:availQuarterQty,unitPrice:price,halfPrice,quarterPrice,threshold,status,updatedAt:serverTimestamp()});
-      await logAudit('edit_item',`Updated: ${name} (${item?.name||id})`);
-      showToast('Updated successfully!','success');
-    }catch(e){showToast('Failed: '+e.message,'error');}
+    let updateData={name,category,threshold,unitPrice:price,updatedAt:serverTimestamp()};
+    if(type==='pack'){
+      const initQty=parseInt(document.getElementById('editInitQty')?.value)||0;
+      const initPackQty=parseInt(document.getElementById('editInitPackQty')?.value)||0;
+      const availQty=parseInt(document.getElementById('editAvailQty')?.value)||0;
+      const availPackQty=parseInt(document.getElementById('editAvailPackQty')?.value)||0;
+      const packPrice=parseFloat(document.getElementById('editPackPrice')?.value)||0;
+      const totalQty=availQty+availPackQty;
+      updateData={...updateData,initialStock:initQty,initialPackQty:initPackQty,quantityAvailable:availQty,packQuantityAvailable:availPackQty,packPrice,status:totalQty===0?'out_of_stock':totalQty<=threshold?'low':'available'};
+    }else{
+      const initQty=parseInt(document.getElementById('editInitQty')?.value)||0;
+      const initHalfQty=parseInt(document.getElementById('editInitHalfQty')?.value)||0;
+      const initQuarterQty=parseInt(document.getElementById('editInitQuarterQty')?.value)||0;
+      const availQty=parseInt(document.getElementById('editAvailQty')?.value)||0;
+      const availHalfQty=parseInt(document.getElementById('editAvailHalfQty')?.value)||0;
+      const availQuarterQty=parseInt(document.getElementById('editAvailQuarterQty')?.value)||0;
+      const halfPrice=parseFloat(document.getElementById('editHalfPrice')?.value)||0;
+      const quarterPrice=parseFloat(document.getElementById('editQuarterPrice')?.value)||0;
+      const totalQty=availQty+availHalfQty+availQuarterQty;
+      updateData={...updateData,initialStock:initQty,initialHalfQty:initHalfQty,initialQuarterQty:initQuarterQty,quantityAvailable:availQty,halfQuantityAvailable:availHalfQty,quarterQuantityAvailable:availQuarterQty,halfPrice,quarterPrice,status:totalQty===0?'out_of_stock':totalQty<=threshold?'low':'available'};
+    }
+    try{await updateDoc(doc(db,'stock_items',id),updateData);await logAudit('edit_item',`Updated: ${name}`);showToast('Updated successfully!','success');}catch(e){showToast('Failed: '+e.message,'error');}
   };
 
-  // ========== DELETE (PIN required for non-admin) ==========
+  // ========== DELETE ==========
   window.deleteItem = function(id) {
     const item=allItems.find(i=>i.id===id);if(!item)return;
-    const confirmDelete=()=>{if(!confirm(`Are you sure you want to delete "${item.name}"? This action cannot be undone.`))return;deleteDoc(doc(db,'stock_items',id)).then(async()=>{await logAudit('delete_item',`Deleted: ${item.name} (ID: ${id})`);showToast('Item deleted permanently!','success');}).catch(e=>showToast('Failed: '+e.message,'error'));};
+    const confirmDelete=()=>{if(!confirm(`Delete "${item.name}"? This cannot be undone.`))return;deleteDoc(doc(db,'stock_items',id)).then(async()=>{await logAudit('delete_item',`Deleted: ${item.name}`);showToast('Deleted!','success');}).catch(e=>showToast('Failed: '+e.message,'error'));};
     if(isAdmin()){confirmDelete();}else{showPinModal('PIN Required','delete this item',confirmDelete);}
   };
 
   // ========== REJECT (Admin only) ==========
   window.rejectItem = function(id) {
-    if(!isAdmin()){showToast('Only admin can reject inventory items','error');return;}
+    if(!isAdmin()){showToast('Only admin can reject','error');return;}
     const item=allItems.find(i=>i.id===id);if(!item)return;
-    showModal('Reject Item',`<p style="margin-bottom:12px;">Reject <strong>${item.name}</strong>?</p><div class="form-group"><label>Reason for rejection *</label><textarea class="form-control" id="rejectionReason" rows="3" placeholder="Why is this item being rejected?"></textarea></div><div style="display:flex;gap:10px;"><button class="btn btn-warning" onclick="confirmRejectItem('${id}')"><i class="fas fa-ban"></i> Reject Item</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
+    showModal('Reject Item',`<p style="margin-bottom:12px;">Reject <strong>${item.name}</strong>?</p><div class="form-group"><label>Reason *</label><textarea class="form-control" id="rejectionReason" rows="3" placeholder="Why?"></textarea></div><div style="display:flex;gap:10px;"><button class="btn btn-warning" onclick="confirmRejectItem('${id}')"><i class="fas fa-ban"></i> Reject</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
   };
 
   window.confirmRejectItem = async function(id) {
-    const reason=document.getElementById('rejectionReason')?.value?.trim();if(!reason){showToast('Please provide a rejection reason','error');return;}
+    const reason=document.getElementById('rejectionReason')?.value?.trim();if(!reason){showToast('Reason required','error');return;}
     const item=allItems.find(i=>i.id===id);if(!item)return;
     try{
-      await addDoc(collection(db,'rejected_inventory'),{originalId:id,name:item.name,category:item.category||'other',initialStock:item.initialStock||0,initialHalfQty:item.initialHalfQty||0,initialQuarterQty:item.initialQuarterQty||0,quantityAvailable:item.quantityAvailable||0,halfQuantityAvailable:item.halfQuantityAvailable||0,quarterQuantityAvailable:item.quarterQuantityAvailable||0,unitPrice:item.unitPrice||0,halfPrice:item.halfPrice||0,quarterPrice:item.quarterPrice||0,rejectionReason:reason,rejectedBy:currentUser?.uid,rejectedByName:userData?.fullName||'Admin',rejectedAt:serverTimestamp(),status:'rejected'});
+      await addDoc(collection(db,'rejected_inventory'),{originalId:id,name:item.name,category:item.category||'other',itemType:item.itemType||'fashion',initialStock:item.initialStock||0,initialHalfQty:item.initialHalfQty||0,initialQuarterQty:item.initialQuarterQty||0,initialPackQty:item.initialPackQty||0,quantityAvailable:item.quantityAvailable||0,halfQuantityAvailable:item.halfQuantityAvailable||0,quarterQuantityAvailable:item.quarterQuantityAvailable||0,packQuantityAvailable:item.packQuantityAvailable||0,unitPrice:item.unitPrice||0,halfPrice:item.halfPrice||0,quarterPrice:item.quarterPrice||0,packPrice:item.packPrice||0,rejectionReason:reason,rejectedBy:currentUser?.uid,rejectedByName:userData?.fullName||'Admin',rejectedAt:serverTimestamp()});
       await deleteDoc(doc(db,'stock_items',id));
-      await logAudit('reject_item',`Rejected: ${item.name} - Reason: ${reason}`);
-      showToast('Item rejected and moved to rejected inventory','success');hideModal();
+      await logAudit('reject_item',`Rejected: ${item.name} - ${reason}`);
+      showToast('Rejected!','success');hideModal();
     }catch(e){showToast('Failed: '+e.message,'error');}
   };
 
   // ========== RESTORE ==========
   window.restoreItem = function(id) {
     const item=allRejectedItems.find(i=>i.id===id);if(!item)return;
-    const restoreAction=async()=>{try{await addDoc(collection(db,'stock_items'),{name:item.name,category:item.category||'other',initialStock:item.initialStock||0,initialHalfQty:item.initialHalfQty||0,initialQuarterQty:item.initialQuarterQty||0,quantityAvailable:item.quantityAvailable||0,halfQuantityAvailable:item.halfQuantityAvailable||0,quarterQuantityAvailable:item.quarterQuantityAvailable||0,unitPrice:item.unitPrice||0,halfPrice:item.halfPrice||0,quarterPrice:item.quarterPrice||0,threshold:10,status:'available',restoredFromRejected:true,restoredBy:currentUser?.uid,restoredByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});await deleteDoc(doc(db,'rejected_inventory',id));await logAudit('restore_item',`Restored: ${item.name} from rejected inventory`);showToast('Item restored to inventory!','success');}catch(e){showToast('Failed: '+e.message,'error');}};
+    const restoreAction=async()=>{try{await addDoc(collection(db,'stock_items'),{name:item.name,category:item.category||'other',itemType:item.itemType||'fashion',initialStock:item.initialStock||0,initialHalfQty:item.initialHalfQty||0,initialQuarterQty:item.initialQuarterQty||0,initialPackQty:item.initialPackQty||0,quantityAvailable:item.quantityAvailable||0,halfQuantityAvailable:item.halfQuantityAvailable||0,quarterQuantityAvailable:item.quarterQuantityAvailable||0,packQuantityAvailable:item.packQuantityAvailable||0,unitPrice:item.unitPrice||0,halfPrice:item.halfPrice||0,quarterPrice:item.quarterPrice||0,packPrice:item.packPrice||0,threshold:10,status:'available',restoredFromRejected:true,restoredBy:currentUser?.uid,restoredByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});await deleteDoc(doc(db,'rejected_inventory',id));await logAudit('restore_item',`Restored: ${item.name}`);showToast('Restored!','success');}catch(e){showToast('Failed: '+e.message,'error');}};
     if(isAdmin()){restoreAction();}else{showPinModal('PIN Required','restore this item',restoreAction);}
   };
 
-  window.permanentlyDeleteItem = function(id) { const item=allRejectedItems.find(i=>i.id===id);if(!item)return;if(!confirm(`Permanently delete "${item.name}"? This cannot be undone.`))return;deleteDoc(doc(db,'rejected_inventory',id)).then(async()=>{await logAudit('perm_delete',`Permanently deleted rejected item: ${item.name}`);showToast('Permanently deleted!','success');}).catch(e=>showToast('Failed: '+e.message,'error')); };
+  window.permanentlyDeleteItem = function(id) { const item=allRejectedItems.find(i=>i.id===id);if(!item)return;if(!confirm(`Permanently delete "${item.name}"?`))return;deleteDoc(doc(db,'rejected_inventory',id)).then(async()=>{await logAudit('perm_delete',`Deleted rejected: ${item.name}`);showToast('Deleted!','success');}).catch(e=>showToast('Failed: '+e.message,'error')); };
 
   // ========== HISTORY ==========
-  window.viewHistory = async function(id) { const item=allItems.find(i=>i.id===id);if(!item)return;const soldQty=getItemSoldQty(item);const itemRevenue=getItemRevenue(item);const totalAvail=(item.quantityAvailable||0)+(item.halfQuantityAvailable||0)+(item.quarterQuantityAvailable||0);try{const snap=await getDocs(query(collection(db,'audit_logs'),orderBy('performedAt','desc')));let html=`<div style="margin-bottom:16px;"><h4>${item.name}</h4><p>Initial: ${(item.initialStock||0)+(item.initialHalfQty||0)+(item.initialQuarterQty||0)} | Available: ${totalAvail} | Sold: ${soldQty} | Revenue: ${formatCurrency(itemRevenue)}</p></div>`;const logs=snap.docs.map(d=>d.data()).filter(l=>l.note&&l.note.includes(item.name));if(logs.length===0)html+='<div class="empty-state"><i class="fas fa-history"></i><p>No history</p></div>';else{html+='<div style="max-height:300px;overflow-y:auto;"><table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Action</th><th>By</th><th>Details</th></tr>';logs.forEach(l=>{html+=`<tr><td>${formatDate(l.performedAt)}</td><td><span class="badge badge-info">${l.actionType||'-'}</span></td><td>${l.performedByName||'-'}</td><td>${l.note||'-'}</td></tr>`;});html+='</table></div>';}html+='<button class="btn btn-primary" onclick="hideModal()" style="margin-top:16px;width:100%;">Close</button>';showModal('History',html);}catch(e){showToast('Error','error');} };
+  window.viewHistory = async function(id) { const item=allItems.find(i=>i.id===id);if(!item)return;const soldQty=getItemSoldQty(item);const itemRevenue=getItemRevenue(item);const totalAvail=getTotalAvailable(item);try{const snap=await getDocs(query(collection(db,'audit_logs'),orderBy('performedAt','desc')));let html=`<div style="margin-bottom:16px;"><h4>${item.name}</h4><p>Initial: ${getTotalInitial(item)} | Available: ${totalAvail} | Sold: ${soldQty} | Revenue: ${formatCurrency(itemRevenue)}</p></div>`;const logs=snap.docs.map(d=>d.data()).filter(l=>l.note&&l.note.includes(item.name));if(logs.length===0)html+='<div class="empty-state"><i class="fas fa-history"></i><p>No history</p></div>';else{html+='<div style="max-height:300px;overflow-y:auto;"><table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Action</th><th>By</th><th>Details</th></tr>';logs.forEach(l=>{html+=`<tr><td>${formatDate(l.performedAt)}</td><td><span class="badge badge-info">${l.actionType||'-'}</span></td><td>${l.performedByName||'-'}</td><td>${l.note||'-'}</td></tr>`;});html+='</table></div>';}html+='<button class="btn btn-primary" onclick="hideModal()" style="margin-top:16px;width:100%;">Close</button>';showModal('History',html);}catch(e){showToast('Error','error');} };
 
   // ========== EXPORT & REFRESH ==========
-  window.exportData = function(format) { const headers=['Name','Category','Init Qty','Init Half','Init Quarter','Sold','Remaining','Unit Price','Half Price','Quarter Price','Revenue','Status'];const rows=allItems.map(i=>[i.name||'',i.category||'',i.initialStock||0,i.initialHalfQty||0,i.initialQuarterQty||0,getItemSoldQty(i),(i.quantityAvailable||0)+(i.halfQuantityAvailable||0)+(i.quarterQuantityAvailable||0),i.unitPrice||0,i.halfPrice||0,i.quarterPrice||0,getItemRevenue(i),getItemStatus(i)]);const csv=[headers.join(','),...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');const blob=new Blob([csv],{type:format==='csv'?'text/csv':'application/vnd.ms-excel'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`inventory_${new Date().toISOString().split('T')[0]}.${format}`;a.click();document.getElementById('exportMenu').classList.remove('show');showToast('Exported','success'); };
+  window.exportData = function(format) { const headers=['Name','Category','Type','Init Qty','Init Second','Init Third','Sold','Remaining','Unit Price','Second Price','Third Price','Revenue','Status'];const rows=allItems.map(i=>{const isPack=i.itemType==='pack';return[i.name||'',i.category||'',isPack?'Pack':'Fashion',i.initialStock||0,isPack?(i.initialPackQty||0):(i.initialHalfQty||0),isPack?0:(i.initialQuarterQty||0),getItemSoldQty(i),getTotalAvailable(i),i.unitPrice||0,isPack?(i.packPrice||0):(i.halfPrice||0),isPack?0:(i.quarterPrice||0),getItemRevenue(i),getItemStatus(i)];});const csv=[headers.join(','),...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');const blob=new Blob([csv],{type:format==='csv'?'text/csv':'application/vnd.ms-excel'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`inventory_${new Date().toISOString().split('T')[0]}.${format}`;a.click();document.getElementById('exportMenu').classList.remove('show');showToast('Exported','success'); };
   window.refreshInventory = function() { loadInventory(); showToast('Refreshed','success'); };
 
   document.getElementById('searchInput').addEventListener('input',renderInventory);
   document.getElementById('categoryFilter').addEventListener('change',renderInventory);
+  document.getElementById('itemTypeFilter').addEventListener('change',renderInventory);
   document.getElementById('exportDropdownBtn').addEventListener('click',(e)=>{e.stopPropagation();document.getElementById('exportMenu').classList.toggle('show');});
   document.addEventListener('click',()=>document.getElementById('exportMenu').classList.remove('show'));
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){currentTab=this.dataset.tab;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));this.classList.add('active');document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active'));document.getElementById(currentTab+'Panel').classList.add('active');renderInventory();}));
