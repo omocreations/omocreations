@@ -393,6 +393,7 @@
     <div class="tabs-container">
       <button class="tab active" data-tab="all"><i class="fas fa-warehouse"></i> All Items <span class="count" id="allCount">0</span></button>
       <button class="tab" data-tab="low"><i class="fas fa-exclamation-triangle"></i> Low Stock <span class="count" id="lowCount">0</span></button>
+      <button class="tab" data-tab="rejected"><i class="fas fa-ban"></i> Rejected <span class="count" id="rejectedCount">0</span></button>
     </div>
 
     <div class="filter-bar">
@@ -443,6 +444,18 @@
       </div>
     </div>
 
+    <div id="rejectedPanel" class="page-view">
+      <div class="panel">
+        <div class="panel-header"><h3><i class="fas fa-ban"></i> Rejected Inventory</h3></div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Item Name</th><th>Category</th><th>Initial</th><th>Rejected By</th><th>Reason</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="rejectedTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </main>
 
@@ -471,7 +484,7 @@
   const db = getFirestore(app);
 
   let currentUser = null, userData = null, unsubscribes = [];
-  let allItems = [], categories = [], allSales = [];
+  let allItems = [], allRejectedItems = [], categories = [], allSales = [];
   let currentTab = 'all', revenueRevealed = false;
 
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
@@ -517,51 +530,28 @@
 
   function isAdmin() { return userData?.role === 'admin' || userData?.role === 'super_admin'; }
 
-  function buildSidebar() {
-    const nav = document.getElementById('sidebarNav'); if (!nav) return;
-    const dashboardLink = isAdmin() ? 'admin-dashboard.html' : 'attendant-dashboard.html';
-    const adminUser = isAdmin();
-    let navHTML = `
-      <div class="nav-section"><div class="nav-section-title">MAIN</div>
-        <button class="nav-item" onclick="navigateTo('${dashboardLink}')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
-        <button class="nav-item active"><i class="fas fa-box"></i><span>Inventory</span></button>
-        <button class="nav-item" onclick="navigateTo('store.html')"><i class="fas fa-store"></i><span>Store</span></button>
-        <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
-        <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
-        <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
-      </div>`;
-    if (adminUser) {
-      navHTML += `
-      <div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
-        <button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff</span></button>
-        <button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>
-        <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
-        <button class="nav-item" onclick="navigateTo('orders-admin.html')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button>
-        <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
-        <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit</span></button>
-      </div>
-      <div class="nav-section"><div class="nav-section-title">SHOP</div>
-        <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
-        <button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><span>Catalog</span></button>
-      </div>`;
-    } else {
-      navHTML += `
-      <div class="nav-section"><div class="nav-section-title">WORK</div>
-        <button class="nav-item" onclick="navigateTo('tasks.html')"><i class="fas fa-tasks"></i><span>Tasks</span></button>
-        <button class="nav-item" onclick="navigateTo('orders.html')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button>
-        <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
-        <button class="nav-item" onclick="navigateTo('notifications.html')"><i class="fas fa-bell"></i><span>Notifications</span></button>
-      </div>
-      <div class="nav-section"><div class="nav-section-title">ACCOUNT</div>
-        <button class="nav-item" onclick="navigateTo('attendant-profile.html')"><i class="fas fa-user"></i><span>My Profile</span></button>
-      </div>`;
-    }
-    navHTML += `<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>`;
-    nav.innerHTML = navHTML;
-    document.getElementById('logoutBtn')?.addEventListener('click', async () => { try { await logAudit('logout', 'Logged out'); } catch (e) {} await signOut(auth); window.location.href = 'auth.html'; });
+  // Get admin PIN from system settings or default
+  async function getAdminPin() {
+    try {
+      const snap = await getDoc(doc(db, 'system_settings', 'admin_pin'));
+      return snap.exists() ? snap.data().value : '9999';
+    } catch(e) { return '9999'; }
   }
 
-  function showPinModal(title, action, onSuccess) {
+  function showAdminPinModal(title, action, onSuccess) {
+    showModal(title, `<p style="text-align:center;margin-bottom:20px;">Enter Admin Authorization Code to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="adminPin1"><input type="password" maxlength="1" class="pin-input" id="adminPin2"><input type="password" maxlength="1" class="pin-input" id="adminPin3"><input type="password" maxlength="1" class="pin-input" id="adminPin4"></div><button class="btn btn-primary" id="verifyAdminPinBtn" style="width:100%;">Verify</button>`);
+    document.getElementById('adminPin1').focus();
+    document.querySelectorAll('#modalOverlay .pin-input').forEach((inp, i, arr) => { 
+      inp.addEventListener('input', (e) => { if (e.target.value && i < arr.length - 1) arr[i + 1].focus(); }); 
+    });
+    document.getElementById('verifyAdminPinBtn').onclick = async () => { 
+      const pin = ['adminPin1','adminPin2','adminPin3','adminPin4'].map(id => document.getElementById(id).value).join(''); 
+      const adminPin = await getAdminPin();
+      if (pin === adminPin) { hideModal(); onSuccess(); } else { showToast('Invalid admin code', 'error'); } 
+    };
+  }
+
+  function showAttendantPinModal(title, action, onSuccess) {
     showModal(title, `<p style="text-align:center;margin-bottom:20px;">Enter your 4-digit PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`);
     document.getElementById('pin1').focus();
     document.querySelectorAll('#modalOverlay .pin-input').forEach((inp, i, arr) => { inp.addEventListener('input', (e) => { if (e.target.value && i < arr.length - 1) arr[i + 1].focus(); }); });
@@ -570,7 +560,8 @@
 
   window.revealTotalRevenue = function() {
     if (revenueRevealed) return;
-    showPinModal('Unlock Revenue', 'view total revenue', () => { revenueRevealed = true; updateRevenueDisplay(); logAudit('reveal_revenue', 'Revenue revealed'); showToast('Revenue unlocked', 'success'); });
+    if (isAdmin()) { revenueRevealed = true; updateRevenueDisplay(); return; }
+    showAttendantPinModal('Unlock Revenue', 'view total revenue', () => { revenueRevealed = true; updateRevenueDisplay(); logAudit('reveal_revenue', 'Revenue revealed'); showToast('Revenue unlocked', 'success'); });
   };
 
   function calculateRevenueFromSales() {
@@ -648,6 +639,7 @@
 
   function getItemStatus(item) {
     if (item.status === 'pending_approval') return 'pending_approval';
+    if (item.status === 'rejected') return 'rejected';
     const qty = (item.quantityAvailable || 0) + (item.halfQuantityAvailable || 0) + (item.quarterQuantityAvailable || 0);
     const threshold = item.threshold || 10;
     if (qty === 0) return 'out_of_stock';
@@ -661,20 +653,24 @@
     let filtered = [...allItems];
     if (search) filtered = filtered.filter(i => (i.name||'').toLowerCase().includes(search));
     if (catFilter !== 'all') filtered = filtered.filter(i => (i.category||'').toLowerCase() === catFilter.toLowerCase());
-    const available = filtered.filter(i => getItemStatus(i) !== 'pending_approval');
+    
+    const available = filtered.filter(i => i.status !== 'pending_approval' && i.status !== 'rejected');
     const lowAndOut = available.filter(i => ['low','out_of_stock'].includes(getItemStatus(i)));
+    const rejected = [...allRejectedItems];
 
     document.getElementById('totalItems').textContent = allItems.length;
     document.getElementById('availableItems').textContent = allItems.filter(i => getItemStatus(i)==='available').length;
     document.getElementById('lowStock').textContent = allItems.filter(i => getItemStatus(i)==='low').length;
     document.getElementById('allCount').textContent = available.length;
     document.getElementById('lowCount').textContent = lowAndOut.length;
+    document.getElementById('rejectedCount').textContent = rejected.length;
     updateRevenueDisplay();
 
     const banner = document.getElementById('lowStockBanner'), msg = document.getElementById('lowStockMsg');
     const lowCount = allItems.filter(i => ['low','out_of_stock'].includes(getItemStatus(i))).length;
     if (lowCount > 0) { banner.style.display = 'flex'; msg.textContent = `${lowCount} item(s) need restocking.`; } else { banner.style.display = 'none'; }
 
+    // All Items Table
     const tbody = document.getElementById('inventoryTable');
     if (tbody) {
       if (available.length === 0) {
@@ -708,12 +704,14 @@
               ${['low','out_of_stock'].includes(st)?`<button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')" title="Restock"><i class="fas fa-box-open"></i></button>`:''}
               <button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')" title="Edit"><i class="fas fa-edit"></i></button>
               <button class="btn btn-sm btn-outline" onclick="viewHistory('${item.id}')" title="History"><i class="fas fa-history"></i></button>
-              ${adminUser?`<button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')" title="Delete"><i class="fas fa-trash"></i></button>`:''}
+              <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+              ${!adminUser?`<button class="btn btn-sm btn-warning" onclick="rejectItem('${item.id}')" title="Reject"><i class="fas fa-ban"></i></button>`:''}
             </div></td></tr>`;
         }).join('');
       }
     }
 
+    // Low Stock Table
     const lTbody = document.getElementById('lowTable');
     if (lTbody) {
       if (lowAndOut.length === 0) lTbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items well stocked</p></div></td></tr>';
@@ -725,10 +723,28 @@
         <td><span class="badge badge-${getItemStatus(item)==='out_of_stock'?'danger':'warning'}">${getItemStatus(item).replace(/_/g,' ')}</span></td>
         <td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')"><i class="fas fa-box-open"></i></button><button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')"><i class="fas fa-edit"></i></button></div></td></tr>`).join('');
     }
+
+    // Rejected Items Table
+    const rTbody = document.getElementById('rejectedTable');
+    if (rTbody) {
+      if (rejected.length === 0) rTbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-ban"></i><p>No rejected items</p></div></td></tr>';
+      else rTbody.innerHTML = rejected.map(item => `<tr>
+        <td><strong>${item.name||'-'}</strong></td>
+        <td>${item.category||'-'}</td>
+        <td>${(item.initialStock||0)+(item.initialHalfQty||0)+(item.initialQuarterQty||0)}</td>
+        <td>${item.rejectedByName||'-'}</td>
+        <td>${item.rejectionReason||'-'}</td>
+        <td>${formatDate(item.rejectedAt)}</td>
+        <td><div style="display:flex;gap:4px;">
+          <button class="btn btn-sm btn-success" onclick="restoreItem('${item.id}')" title="Restore"><i class="fas fa-undo"></i> Restore</button>
+          <button class="btn btn-sm btn-danger" onclick="permanentlyDeleteItem('${item.id}')" title="Permanent Delete"><i class="fas fa-trash"></i></button>
+        </div></td></tr>`).join('');
+    }
   }
 
   function loadInventory() {
     cleanup();
+    // Load active stock_items
     unsubscribes.push(onSnapshot(collection(db, 'stock_items'), snap => {
       allItems = snap.docs.map(d => {
         const data = d.data();
@@ -754,6 +770,20 @@
       renderInventory();
     }));
 
+    // Load rejected items
+    unsubscribes.push(onSnapshot(collection(db, 'rejected_inventory'), snap => {
+      allRejectedItems = snap.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          ...data
+        };
+      });
+      allRejectedItems.sort((a,b) => (b.rejectedAt?.seconds||0) - (a.rejectedAt?.seconds||0));
+      renderInventory();
+    }));
+
+    // Load sales
     unsubscribes.push(onSnapshot(query(collection(db, 'sales'), orderBy('createdAt', 'desc')), snap => {
       allSales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderInventory();
@@ -851,22 +881,24 @@
   window.restockFromStore = function(itemId) { hideModal(); navigateTo('store.html'); };
   window.restockFromThirdParty = function(itemId) { hideModal(); navigateTo('purchases.html'); };
 
-  // ========== EDIT ITEM ==========
+  // ========== EDIT ITEM (UPDATED: editable name & qty for admin, PIN for attendant) ==========
   window.openEditItem = function(id) {
     const item = allItems.find(i => i.id === id); if (!item) return;
     const soldQty = getItemSoldQty(item);
     const itemRevenue = getItemRevenue(item);
+    const adminUser = isAdmin();
+    
     showModal(`Edit: ${item.name}`, `
-      <div class="form-group"><label>Item Name</label><input class="form-control" value="${item.name||''}" readonly></div>
+      <div class="form-group"><label>Item Name</label><input class="form-control" id="editName" value="${item.name||''}" ${adminUser?'':'readonly'}></div>
       <div class="form-row-3">
-        <div class="form-group"><label>Initial Unit Qty</label><input type="number" class="form-control" value="${item.initialStock||0}" readonly></div>
-        <div class="form-group"><label>Initial Half Qty</label><input type="number" class="form-control" value="${item.initialHalfQty||0}" readonly></div>
-        <div class="form-group"><label>Initial Quarter Qty</label><input type="number" class="form-control" value="${item.initialQuarterQty||0}" readonly></div>
+        <div class="form-group"><label>Initial Unit Qty</label><input type="number" class="form-control" id="editInitQty" value="${item.initialStock||0}" min="0" ${adminUser?'':'readonly'}></div>
+        <div class="form-group"><label>Initial Half Qty</label><input type="number" class="form-control" id="editInitHalfQty" value="${item.initialHalfQty||0}" min="0" ${adminUser?'':'readonly'}></div>
+        <div class="form-group"><label>Initial Quarter Qty</label><input type="number" class="form-control" id="editInitQuarterQty" value="${item.initialQuarterQty||0}" min="0" ${adminUser?'':'readonly'}></div>
       </div>
       <div class="form-row-3">
-        <div class="form-group"><label>Avail Unit Qty</label><input type="number" class="form-control" value="${item.quantityAvailable||0}" readonly></div>
-        <div class="form-group"><label>Avail Half Qty</label><input type="number" class="form-control" value="${item.halfQuantityAvailable||0}" readonly></div>
-        <div class="form-group"><label>Avail Quarter Qty</label><input type="number" class="form-control" value="${item.quarterQuantityAvailable||0}" readonly></div>
+        <div class="form-group"><label>Avail Unit Qty</label><input type="number" class="form-control" id="editAvailQty" value="${item.quantityAvailable||0}" min="0" ${adminUser?'':'readonly'}></div>
+        <div class="form-group"><label>Avail Half Qty</label><input type="number" class="form-control" id="editAvailHalfQty" value="${item.halfQuantityAvailable||0}" min="0" ${adminUser?'':'readonly'}></div>
+        <div class="form-group"><label>Avail Quarter Qty</label><input type="number" class="form-control" id="editAvailQuarterQty" value="${item.quarterQuantityAvailable||0}" min="0" ${adminUser?'':'readonly'}></div>
       </div>
       <div class="form-row"><div class="form-group"><label>Total Sold (from sales)</label><input type="number" class="form-control" value="${soldQty}" readonly></div><div class="form-group"><label>Revenue (from sales)</label><input class="form-control" value="${formatCurrency(itemRevenue)}" readonly></div></div>
       <div class="form-row"><div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="editCategory">${categories.map(c => `<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div>
@@ -876,23 +908,207 @@
         <div class="form-group"><label>¼ Price ₦</label><input type="number" class="form-control" id="editQuarterPrice" value="${item.quarterPrice||0}" step="0.01" min="0"></div>
       </div>
       <div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||10}" min="1"></div>
-      <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEdit('${id}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
+      ${!adminUser?'<p style="font-size:0.75rem;color:var(--warning);margin-bottom:15px;"><i class="fas fa-info-circle"></i> As an attendant, you can only edit prices and threshold. Name and quantity changes require admin authorization.</p>':''}
+      <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEditWrapper('${id}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
+  };
+
+  window.saveEditWrapper = function(id) {
+    const adminUser = isAdmin();
+    const nameChanged = document.getElementById('editName')?.value !== (allItems.find(i=>i.id===id)?.name||'');
+    const qtyChanged = !adminUser && (
+      document.getElementById('editInitQty')?.value != (allItems.find(i=>i.id===id)?.initialStock||0) ||
+      document.getElementById('editAvailQty')?.value != (allItems.find(i=>i.id===id)?.quantityAvailable||0)
+    );
+    
+    if (!adminUser && (nameChanged || qtyChanged)) {
+      showAdminPinModal('Admin Authorization Required', 'edit item name or quantity', () => {
+        saveEdit(id);
+      });
+    } else {
+      saveEdit(id);
+    }
   };
 
   window.saveEdit = async function(id) {
+    const name = document.getElementById('editName')?.value?.trim();
+    const initQty = parseInt(document.getElementById('editInitQty')?.value) || 0;
+    const initHalfQty = parseInt(document.getElementById('editInitHalfQty')?.value) || 0;
+    const initQuarterQty = parseInt(document.getElementById('editInitQuarterQty')?.value) || 0;
+    const availQty = parseInt(document.getElementById('editAvailQty')?.value) || 0;
+    const availHalfQty = parseInt(document.getElementById('editAvailHalfQty')?.value) || 0;
+    const availQuarterQty = parseInt(document.getElementById('editAvailQuarterQty')?.value) || 0;
     const price = parseFloat(document.getElementById('editPrice')?.value) || 0;
     const halfPrice = parseFloat(document.getElementById('editHalfPrice')?.value) || 0;
     const quarterPrice = parseFloat(document.getElementById('editQuarterPrice')?.value) || 0;
     const threshold = parseInt(document.getElementById('editThreshold')?.value) || 10;
     const category = document.getElementById('editCategory')?.value;
+    
+    if (!name) { showToast('Item name required', 'error'); return; }
     if (price <= 0) { showToast('Unit price must be > 0', 'error'); return; }
-    const item = allItems.find(i => i.id === id);
-    const totalQty = (item?.quantityAvailable||0) + (item?.halfQuantityAvailable||0) + (item?.quarterQuantityAvailable||0);
+    
+    const totalQty = availQty + availHalfQty + availQuarterQty;
     const status = totalQty === 0 ? 'out_of_stock' : totalQty <= threshold ? 'low' : 'available';
-    try { await updateDoc(doc(db, 'stock_items', id), { category, unitPrice: price, halfPrice, quarterPrice, threshold, status, updatedAt: serverTimestamp() }); await logAudit('edit_item', `Updated ${item?.name}`); showToast('Updated', 'success'); hideModal(); } catch (e) { showToast('Failed', 'error'); }
+    const adminUser = isAdmin();
+    
+    try { 
+      const updateData = { 
+        name, category, 
+        unitPrice: price, halfPrice, quarterPrice, 
+        threshold, status, 
+        updatedAt: serverTimestamp() 
+      };
+      
+      if (adminUser) {
+        updateData.initialStock = initQty;
+        updateData.initialHalfQty = initHalfQty;
+        updateData.initialQuarterQty = initQuarterQty;
+        updateData.quantityAvailable = availQty;
+        updateData.halfQuantityAvailable = availHalfQty;
+        updateData.quarterQuantityAvailable = availQuarterQty;
+      }
+      
+      await updateDoc(doc(db, 'stock_items', id), updateData); 
+      await logAudit('edit_item', `Updated ${name} - Prices/Category${adminUser?' and quantities':''}`);
+      showToast('Updated successfully!', 'success'); 
+      hideModal(); 
+    } catch (e) { showToast('Failed: ' + e.message, 'error'); }
   };
 
-  // ========== HISTORY & DELETE ==========
+  // ========== DELETE ITEM (admin direct, attendant PIN) ==========
+  window.deleteItem = function(id) {
+    const item = allItems.find(i=>i.id===id);
+    if (!item) return;
+    
+    const confirmDelete = () => {
+      if (!confirm(`Are you sure you want to delete "${item.name}"? This action cannot be undone.`)) return;
+      deleteDoc(doc(db,'stock_items',id))
+        .then(async () => { 
+          await logAudit('delete_item', `Deleted: ${item.name} (ID: ${id})`); 
+          showToast('Item deleted permanently!','success'); 
+        })
+        .catch(e => showToast('Failed: '+e.message,'error'));
+    };
+    
+    if (isAdmin()) {
+      confirmDelete();
+    } else {
+      showAdminPinModal('Admin Authorization Required', 'delete this item', confirmDelete);
+    }
+  };
+
+  // ========== REJECT ITEM (attendant can reject, moves to rejected collection) ==========
+  window.rejectItem = function(id) {
+    const item = allItems.find(i=>i.id===id);
+    if (!item) return;
+    
+    showModal('Reject Item', `
+      <p style="margin-bottom:12px;">Reject <strong>${item.name}</strong>?</p>
+      <div class="form-group"><label>Reason for rejection *</label><textarea class="form-control" id="rejectionReason" rows="3" placeholder="Why is this item being rejected?"></textarea></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-warning" onclick="confirmRejectItem('${id}')"><i class="fas fa-ban"></i> Reject Item</button>
+        <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
+      </div>`);
+  };
+
+  window.confirmRejectItem = async function(id) {
+    const reason = document.getElementById('rejectionReason')?.value?.trim();
+    if (!reason) { showToast('Please provide a rejection reason', 'error'); return; }
+    
+    const item = allItems.find(i=>i.id===id);
+    if (!item) return;
+    
+    const rejectAction = async () => {
+      try {
+        // Copy to rejected_inventory
+        await addDoc(collection(db, 'rejected_inventory'), {
+          originalId: id,
+          name: item.name,
+          category: item.category,
+          initialStock: item.initialStock || 0,
+          initialHalfQty: item.initialHalfQty || 0,
+          initialQuarterQty: item.initialQuarterQty || 0,
+          quantityAvailable: item.quantityAvailable || 0,
+          halfQuantityAvailable: item.halfQuantityAvailable || 0,
+          quarterQuantityAvailable: item.quarterQuantityAvailable || 0,
+          unitPrice: item.unitPrice || 0,
+          halfPrice: item.halfPrice || 0,
+          quarterPrice: item.quarterPrice || 0,
+          rejectionReason: reason,
+          rejectedBy: currentUser?.uid,
+          rejectedByName: userData?.fullName || 'Staff',
+          rejectedAt: serverTimestamp(),
+          status: 'rejected'
+        });
+        // Delete from stock_items
+        await deleteDoc(doc(db, 'stock_items', id));
+        await logAudit('reject_item', `Rejected: ${item.name} - Reason: ${reason}`);
+        showToast('Item rejected and moved to rejected inventory', 'success');
+        hideModal();
+      } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    };
+    
+    if (isAdmin()) {
+      rejectAction();
+    } else {
+      showAttendantPinModal('Confirm Rejection', 'reject this item', rejectAction);
+    }
+  };
+
+  // ========== RESTORE REJECTED ITEM ==========
+  window.restoreItem = function(id) {
+    const item = allRejectedItems.find(i=>i.id===id);
+    if (!item) return;
+    
+    const restoreAction = async () => {
+      try {
+        await addDoc(collection(db, 'stock_items'), {
+          name: item.name,
+          category: item.category || 'other',
+          initialStock: item.initialStock || 0,
+          initialHalfQty: item.initialHalfQty || 0,
+          initialQuarterQty: item.initialQuarterQty || 0,
+          quantityAvailable: item.quantityAvailable || 0,
+          halfQuantityAvailable: item.halfQuantityAvailable || 0,
+          quarterQuantityAvailable: item.quarterQuantityAvailable || 0,
+          unitPrice: item.unitPrice || 0,
+          halfPrice: item.halfPrice || 0,
+          quarterPrice: item.quarterPrice || 0,
+          threshold: 10,
+          status: 'available',
+          restoredFromRejected: true,
+          restoredBy: currentUser?.uid,
+          restoredByName: userData?.fullName || 'Staff',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+        await deleteDoc(doc(db, 'rejected_inventory', id));
+        await logAudit('restore_item', `Restored: ${item.name} from rejected inventory`);
+        showToast('Item restored to inventory!', 'success');
+      } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    };
+    
+    if (isAdmin()) {
+      restoreAction();
+    } else {
+      showAdminPinModal('Admin Authorization Required', 'restore this item', restoreAction);
+    }
+  };
+
+  // ========== PERMANENTLY DELETE REJECTED ==========
+  window.permanentlyDeleteItem = function(id) {
+    const item = allRejectedItems.find(i=>i.id===id);
+    if (!item) return;
+    if (!confirm(`Permanently delete "${item.name}"? This cannot be undone.`)) return;
+    
+    deleteDoc(doc(db, 'rejected_inventory', id))
+      .then(async () => { 
+        await logAudit('perm_delete', `Permanently deleted rejected item: ${item.name}`); 
+        showToast('Permanently deleted!', 'success'); 
+      })
+      .catch(e => showToast('Failed: ' + e.message, 'error'));
+  };
+
+  // ========== HISTORY ==========
   window.viewHistory = async function(id) {
     const item = allItems.find(i => i.id === id); if (!item) return;
     const soldQty = getItemSoldQty(item);
@@ -907,11 +1123,6 @@
       html += '<button class="btn btn-primary" onclick="hideModal()" style="margin-top:16px;width:100%;">Close</button>';
       showModal('History', html);
     } catch (e) { showToast('Error', 'error'); }
-  };
-
-  window.deleteItem = async function(id) {
-    if (!confirm('Delete permanently?')) return;
-    try { const item = allItems.find(i=>i.id===id); await deleteDoc(doc(db,'stock_items',id)); await logAudit('delete_item',`Deleted: ${item?.name||id}`); showToast('Deleted','success'); } catch(e) { showToast('Failed','error'); }
   };
 
   // ========== EXPORT & REFRESH ==========
