@@ -122,7 +122,13 @@
     .guide-section { margin-bottom:24px; } .guide-section h4 { font-size:1rem; margin-bottom:8px; color:var(--dark); }
     .guide-section p, .guide-section li { font-size:0.85rem; line-height:1.6; color:var(--gray); }
     .guide-section ul { padding-left:20px; margin-top:8px; }
-    .debug-panel { position:fixed; bottom:80px; right:20px; background:#1a1a2e; color:#fff; padding:10px 14px; border-radius:12px; font-size:0.75rem; max-width:250px; z-index:5000; display:none; }
+    /* DEBUG PANEL – always visible on error, bottom center */
+    .debug-panel {
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+      background:#1a1a2e; color:#fff; padding:12px 18px; border-radius:20px;
+      font-size:0.8rem; z-index:5000; display:none; max-width:90vw;
+      box-shadow:0 5px 20px rgba(0,0,0,0.3);
+    }
     @media (max-width:1400px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:768px) { .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; } .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); } .sidebar-header .close-sidebar { display:flex !important; } .menu-toggle { display:flex !important; } .main-content { margin-left:0 !important; width:100% !important; } .content-wrapper { padding:16px 12px; } .top-bar { padding:0 16px; } .page-title { font-size:1.1rem; } .current-date { display:none; } .stats-grid { grid-template-columns:1fr 1fr; gap:10px; } .stat-card { padding:14px 12px; } .stat-value { font-size:1.4rem; } .panel { padding:16px 12px; border-radius:18px; } .data-table { min-width:1200px; } .data-table th, .data-table td { padding:10px 6px; font-size:0.75rem; } .modal { padding:20px; border-radius:20px; } .form-row, .form-row-3 { grid-template-columns:1fr; } .restock-options { grid-template-columns:1fr; } }
     @media (max-width:480px) { .stats-grid { grid-template-columns:1fr; } .content-wrapper { padding:12px 8px; } }
@@ -165,6 +171,12 @@
       <button class="tab" data-tab="rejected"><i class="fas fa-ban"></i> Rejected <span class="count" id="rejectedCount">0</span></button>
     </div>
 
+    <!-- Alert to switch to Rejected tab if there are rejected items but on All tab -->
+    <div id="rejectedAlert" style="display:none; background:rgba(239,68,68,0.1); border-left:4px solid var(--danger); padding:12px 18px; border-radius:14px; margin-bottom:20px;">
+      <i class="fas fa-ban" style="color:var(--danger);"></i>
+      <span>You have rejected items. <a href="#" onclick="switchToRejectedTab()" style="color:var(--danger); font-weight:600;">Switch to Rejected tab</a> to view them.</span>
+    </div>
+
     <div class="filter-bar">
       <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search items..."></div>
       <select class="filter-select" id="categoryFilter"><option value="all">All Categories</option></select>
@@ -200,7 +212,7 @@
 <!-- Modal overlay -->
 <div class="modal-overlay" id="modalOverlay"><div class="modal"><div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="hideModal()">&times;</button></div><div id="modalContent"></div></div></div>
 <div class="toast-container" id="toastContainer"></div>
-<!-- Debug panel (hidden by default, shows last error) -->
+<!-- DEBUG PANEL (bottom center) -->
 <div class="debug-panel" id="debugPanel"></div>
 
 <script type="module">
@@ -222,7 +234,7 @@
     const panel = document.getElementById('debugPanel');
     if (!panel) return;
     panel.style.display = 'block';
-    panel.innerHTML = '<strong>🐞 Debug:</strong> ' + msg;
+    panel.innerHTML = '🐞 ' + msg;
     clearTimeout(panel._timeout);
     panel._timeout = setTimeout(() => { panel.style.display = 'none'; }, 8000);
   }
@@ -299,6 +311,16 @@
   function getTotalAvailable(item) { return (item.unitQty||0)+(item.halfQty||0)+(item.quarterQty||0); }
   function getItemStatus(item) { if(item.status==='pending_approval')return'pending_approval';if(item.status==='rejected')return'rejected';const qty=getTotalAvailable(item);const threshold=item.threshold||10;if(qty===0)return'out_of_stock';if(qty<=threshold)return'low';return'available'; }
 
+  // Switch to rejected tab programmatically
+  window.switchToRejectedTab = function() {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    const rejectedTab = document.querySelector('.tab[data-tab="rejected"]');
+    if (rejectedTab) rejectedTab.classList.add('active');
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    document.getElementById('rejectedPanel').classList.add('active');
+    currentTab = 'rejected';
+  };
+
   function renderInventory() {
     const search=(document.getElementById('searchInput')?.value||'').toLowerCase();
     const catFilter=document.getElementById('categoryFilter')?.value||'all';
@@ -317,6 +339,16 @@
     document.getElementById('rejectedCount').textContent=rejected.length;
     document.getElementById('productCount').textContent=`${available.length} items`;
     updateRevenueDisplay();
+
+    // Show alert if there are rejected items but we're on All/Low tabs
+    const rejectedAlert = document.getElementById('rejectedAlert');
+    if (rejected.length > 0 && (currentTab === 'all' || currentTab === 'low')) {
+      rejectedAlert.style.display = 'flex';
+      rejectedAlert.style.alignItems = 'center';
+      rejectedAlert.style.gap = '10px';
+    } else {
+      rejectedAlert.style.display = 'none';
+    }
 
     const banner=document.getElementById('lowStockBanner'),msg=document.getElementById('lowStockMsg');
     const lowCount=allItems.filter(i=>['low','out_of_stock'].includes(getItemStatus(i))).length;
@@ -354,7 +386,7 @@
     unsubscribes.push(onSnapshot(collection(db,'wholesale_sales'),snap=>{const ws=snap.docs.map(d=>({id:d.id,...d.data()}));allSales=[...allSales.filter(s=>!ws.find(w=>w.id===s.id)),...ws];renderInventory();}));
   }
 
-  // ===================== ADD ITEM (with clear labels) =====================
+  // ===================== ADD ITEM =====================
   function getAddForm() {
     return `<div class="item-type-toggle">
       <button class="item-type-btn active" data-type="general" onclick="switchAddType('general')"><i class="fas fa-cube"></i> General<br><small>Soldering iron, glue</small></button>
@@ -423,7 +455,7 @@
     addDoc(collection(db,'stock_items'),data).then(async()=>{await logAudit('add_item',`Added: ${name}`);showToast(isAdmin()?'Item added':'Submitted','success');hideModal();}).catch(e=>{showToast('Failed: '+e.message,'error');showDebug('Add item failed: '+e.message);});
   };
 
-  // ===================== EDIT ITEM (with name guard) =====================
+  // ===================== EDIT ITEM (simple, no guard) =====================
   window.openEditItem = function(id) {
     const item=allItems.find(i=>i.id===id);if(!item)return;
     pendingEditId=id;
@@ -438,28 +470,16 @@
     }else if(type==='measured'){
       form+=`<div class="form-group"><label>Measure Unit</label><input class="form-control" value="${item.measureUnit||'yard'}" readonly></div><div class="form-group"><label>Unit Qty (yards/meters)</label><input type="number" class="form-control" id="editUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="editUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Bundle Size</label><input type="number" class="form-control" id="editBundleSize" value="${item.bundleSize||50}" min="1"></div><div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="editBundlePrice" value="${item.bundlePrice||0}" step="0.01" min="0"></div></div>`;
     }
-    form+=`<div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||10}" min="1"></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" id="saveEditBtn" onclick="saveEdit()"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
+    form+=`<div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||10}" min="1"></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEdit()"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
     showModal(`Edit: ${item.name}`,form);
-    
-    // Enable/disable Save button based on name field
-    const nameInput = document.getElementById('editName');
-    const saveBtn = document.getElementById('saveEditBtn');
-    if (nameInput && saveBtn) {
-      const toggleSave = () => {
-        saveBtn.disabled = (nameInput.value.trim() === '');
-        saveBtn.style.opacity = saveBtn.disabled ? '0.5' : '1';
-      };
-      nameInput.addEventListener('input', toggleSave);
-      toggleSave(); // initial check
-    }
   };
 
   window.saveEdit = function() {
     const nameEl = document.getElementById('editName');
     const name = nameEl?.value?.trim();
     if (!name) {
-      showToast('Please enter an item name','error');
-      showDebug('Save blocked: name empty');
+      showToast('Item name is required to save','error');
+      showDebug('Edit save blocked: name field is empty or contains only spaces.');
       return;
     }
     if(isAdmin()) { performSaveEdit(); }
@@ -509,7 +529,7 @@
   window.deleteItem = function(id) { const item=allItems.find(i=>i.id===id);if(!item)return;const confirmDel=()=>{if(!confirm(`Delete "${item.name}"?`))return;deleteDoc(doc(db,'stock_items',id)).then(async()=>{await logAudit('delete_item',`Deleted: ${item.name}`);showToast('Deleted!','success');}).catch(e=>{showToast('Failed: '+e.message,'error');showDebug('Delete failed: '+e.message);});};if(isAdmin()){confirmDel();}else{requireAttendantPin('delete this item',confirmDel);} };
   window.deleteAllInventory = function() { if(!confirm('DELETE ALL INVENTORY? This cannot be undone!'))return; requireAttendantPin('delete all inventory',async()=>{try{const snap=await getDocs(collection(db,'stock_items'));const batch=writeBatch(db);snap.forEach(d=>batch.delete(d.ref));await batch.commit();await logAudit('delete_all','All inventory deleted');showToast('All items deleted','success');}catch(e){showToast('Failed: '+e.message,'error');showDebug('Delete all failed: '+e.message);}}); };
 
-  // ===================== REJECT (with debug) =====================
+  // ===================== REJECT =====================
   window.rejectItem = function(id) { if(!isAdmin()){showToast('Only admin can reject','error');}const item=allItems.find(i=>i.id===id);if(!item)return;showModal('Reject Item',`<p style="margin-bottom:12px;">Reject <strong>${item.name}</strong>?</p><div class="form-group"><label>Reason *</label><textarea class="form-control" id="rejectionReason" rows="3" placeholder="Why?"></textarea></div><div style="display:flex;gap:10px;"><button class="btn btn-warning" onclick="confirmRejectItem('${id}')"><i class="fas fa-ban"></i> Reject</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`); };
   window.confirmRejectItem = async function(id) { const reason=document.getElementById('rejectionReason')?.value?.trim();if(!reason){showToast('Reason required','error');return;}const item=allItems.find(i=>i.id===id);if(!item)return;try{await addDoc(collection(db,'rejected_inventory'),{...item,originalId:id,rejectionReason:reason,rejectedBy:currentUser?.uid,rejectedByName:userData?.fullName||'Admin',rejectedAt:serverTimestamp()});await deleteDoc(doc(db,'stock_items',id));await logAudit('reject_item',`Rejected: ${item.name} - ${reason}`);showToast('Rejected!','success');hideModal();}catch(e){showToast('Reject failed: '+e.message,'error');showDebug('Reject error: '+e.message);} };
   window.restoreItem = function(id) { const item=allRejectedItems.find(i=>i.id===id);if(!item)return;const restore=async()=>{try{const{originalId,rejectionReason,rejectedBy,rejectedByName,rejectedAt,...rest}=item;await addDoc(collection(db,'stock_items'),{...rest,restoredFromRejected:true,restoredBy:currentUser?.uid,restoredByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});await deleteDoc(doc(db,'rejected_inventory',id));await logAudit('restore_item',`Restored: ${item.name}`);showToast('Restored!','success');}catch(e){showToast('Restore failed: '+e.message,'error');showDebug('Restore error: '+e.message);}};if(isAdmin()){restore();}else{requireAttendantPin('restore this item',restore);} };
