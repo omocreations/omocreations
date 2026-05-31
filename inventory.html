@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
+    /* (all previous CSS remains exactly the same) */
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
       --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
@@ -123,6 +124,9 @@
     .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); } .toast i { font-size:1.1rem; }
     .csv-template-link { color:var(--primary); text-decoration:underline; cursor:pointer; }
     .help-text { font-size:0.75rem; color:var(--gray); margin-top:4px; display:block; }
+    .guide-section { margin-bottom:24px; } .guide-section h4 { font-size:1rem; margin-bottom:8px; color:var(--dark); }
+    .guide-section p, .guide-section li { font-size:0.85rem; line-height:1.6; color:var(--gray); }
+    .guide-section ul { padding-left:20px; margin-top:8px; }
     @media (max-width:1400px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:768px) { .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; } .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); } .sidebar-header .close-sidebar { display:flex !important; } .menu-toggle { display:flex !important; } .main-content { margin-left:0 !important; width:100% !important; } .content-wrapper { padding:16px 12px; } .top-bar { padding:0 16px; } .page-title { font-size:1.1rem; } .current-date { display:none; } .stats-grid { grid-template-columns:1fr 1fr; gap:10px; } .stat-card { padding:14px 12px; } .stat-value { font-size:1.4rem; } .panel { padding:16px 12px; border-radius:18px; } .data-table { min-width:1200px; } .data-table th, .data-table td { padding:10px 6px; font-size:0.75rem; } .modal { padding:20px; border-radius:20px; } .form-row, .form-row-3 { grid-template-columns:1fr; } .restock-options { grid-template-columns:1fr; } }
     @media (max-width:480px) { .stats-grid { grid-template-columns:1fr; } .content-wrapper { padding:12px 8px; } }
@@ -138,7 +142,16 @@
 </aside>
 
 <main class="main-content">
-  <header class="top-bar"><div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">Inventory Management</h1></div><span class="current-date" id="currentDate"></span></header>
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+      <h1 class="page-title">Inventory Management</h1>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button class="btn btn-outline btn-sm" onclick="openHelpGuide()" title="How to use"><i class="fas fa-question-circle"></i> Help</button>
+      <span class="current-date" id="currentDate"></span>
+    </div>
+  </header>
   <div class="content-wrapper">
 
     <div class="stats-grid">
@@ -177,7 +190,6 @@
       <div class="panel"><div class="panel-header"><h3><i class="fas fa-exclamation-triangle"></i> Low & Out of Stock</h3></div>
         <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item Name</th><th>Category</th><th>Type</th><th>Units</th><th>Halves</th><th>Quarters</th><th>Sold</th><th>Avail</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody id="lowTable"><tr><td colspan="11"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
-      </div>
     </div>
 
     <div id="rejectedPanel" class="page-view">
@@ -189,10 +201,12 @@
   </div>
 </main>
 
+<!-- Modal overlay (used for forms, help, etc.) -->
 <div class="modal-overlay" id="modalOverlay"><div class="modal"><div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="hideModal()">&times;</button></div><div id="modalContent"></div></div></div>
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
+  // ===================== FIREBASE SETUP =====================
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, deleteDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -205,8 +219,9 @@
   let currentTab = 'all', revenueRevealed = false;
   let addItemType = 'general';
   let pendingEditId = null;
-  let adminPinCache = null; // cached admin PIN
+  let adminPinCache = null;
 
+  // ===================== UTILITY FUNCTIONS =====================
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
   function navigateTo(url) { window.location.href = url; }
@@ -225,7 +240,6 @@
 
   function isAdmin() { return userData?.role==='admin'||userData?.role==='super_admin'; }
 
-  // Fetch admin PIN from Firestore settings
   async function getAdminPin() {
     if (adminPinCache) return adminPinCache;
     try {
@@ -238,7 +252,6 @@
     return '1234'; // fallback
   }
 
-  // Require admin PIN (for attendant edits)
   function requireAdminPin(action, callback) {
     if (isAdmin()) { callback(); return; }
     showModal('Admin PIN Required', `<p style="text-align:center;margin-bottom:20px;">Enter the <strong>admin PIN</strong> to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`);
@@ -247,16 +260,11 @@
     document.getElementById('verifyPinBtn').onclick = async ()=>{
       const pin = ['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');
       const correctPin = await getAdminPin();
-      if (pin === correctPin) {
-        hideModal();
-        callback();
-      } else {
-        showToast('Invalid admin PIN','error');
-      }
+      if (pin === correctPin) { hideModal(); callback(); }
+      else { showToast('Invalid admin PIN','error'); }
     };
   }
 
-  // Original PIN (for revenue unlock etc.) – remains attendant's own PIN
   function requireAttendantPin(action, callback) {
     if (isAdmin()) { callback(); return; }
     showModal('PIN Required', `<p style="text-align:center;margin-bottom:20px;">Enter your 4-digit PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`);
@@ -264,17 +272,14 @@
     document.querySelectorAll('#modalOverlay .pin-input').forEach((inp,i,arr)=>{ inp.addEventListener('input',(e)=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();}); });
     document.getElementById('verifyPinBtn').onclick = ()=>{
       const pin = ['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');
-      if (pin === (userData?.attendantPin || '1234')) {
-        hideModal();
-        callback();
-      } else {
-        showToast('Invalid PIN','error');
-      }
+      if (pin === (userData?.attendantPin || '1234')) { hideModal(); callback(); }
+      else { showToast('Invalid PIN','error'); }
     };
   }
 
   window.revealTotalRevenue = function() { if(revenueRevealed)return; requireAttendantPin('view total revenue',()=>{revenueRevealed=true;updateRevenueDisplay();logAudit('reveal_revenue','Revenue revealed');showToast('Revenue unlocked','success');}); };
 
+  // ===================== REVENUE & STATUS LOGIC =====================
   function calculateRevenueFromSales() { const revenueMap={}, soldQtyMap={}; allSales.forEach(sale=>{if(sale.status==='returned')return;if(!sale.items||!Array.isArray(sale.items))return; sale.items.forEach(item=>{const itemId=item.id;if(!itemId)return;const qty=item.quantity||0;const price=item.unitPrice||0;const itemRevenue=qty*price;revenueMap[itemId]=(revenueMap[itemId]||0)+itemRevenue;soldQtyMap[itemId]=(soldQtyMap[itemId]||0)+qty;});}); return {revenueMap,soldQtyMap}; }
   function updateRevenueDisplay() { const card=document.getElementById('totalRevenueCard'); const valEl=document.getElementById('totalRevenue'); if(revenueRevealed||isAdmin()){card.classList.remove('value-locked');const{revenueMap}=calculateRevenueFromSales();const totalRev=allItems.reduce((s,item)=>s+(revenueMap[item.id]||item.totalSoldValue||0),0);valEl.textContent=formatCurrency(totalRev);valEl.style.filter='none';valEl.style.cursor='default';} }
   function getItemRevenue(item) { const{revenueMap}=calculateRevenueFromSales(); return revenueMap[item.id]||item.totalSoldValue||0; }
@@ -290,6 +295,7 @@
   function getTotalAvailable(item) { return (item.unitQty||0)+(item.halfQty||0)+(item.quarterQty||0); }
   function getItemStatus(item) { if(item.status==='pending_approval')return'pending_approval';if(item.status==='rejected')return'rejected';const qty=getTotalAvailable(item);const threshold=item.threshold||10;if(qty===0)return'out_of_stock';if(qty<=threshold)return'low';return'available'; }
 
+  // ===================== RENDER TABLE =====================
   function renderInventory() {
     const search=(document.getElementById('searchInput')?.value||'').toLowerCase();
     const catFilter=document.getElementById('categoryFilter')?.value||'all';
@@ -345,7 +351,7 @@
     unsubscribes.push(onSnapshot(collection(db,'wholesale_sales'),snap=>{const ws=snap.docs.map(d=>({id:d.id,...d.data()}));allSales=[...allSales.filter(s=>!ws.find(w=>w.id===s.id)),...ws];renderInventory();}));
   }
 
-  // ========== ADD ITEM (with clear labels) ==========
+  // ===================== ADD ITEM (with clear labels) =====================
   function getAddForm() {
     return `<div class="item-type-toggle">
       <button class="item-type-btn active" data-type="general" onclick="switchAddType('general')"><i class="fas fa-cube"></i> General<br><small>Soldering iron, glue</small></button>
@@ -355,7 +361,7 @@
     </div>
     <div class="form-row"><div class="form-group"><label>Item Name *</label><input class="form-control" id="itemName" placeholder="e.g., Rhinestone"></div><div class="form-group"><label>Category *</label><div style="display:flex;gap:8px;"><select class="form-control" id="itemCategory">${categories.map(c=>`<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div>
     <div id="qtySection"></div>
-    <div class="form-group"><label>Low Stock Threshold <small>(based on total smallest units)</small></label><input type="number" class="form-control" id="itemThreshold" value="10" min="1"></div>
+    <div class="form-group"><label>Low Stock Threshold <small>(total smallest units)</small></label><input type="number" class="form-control" id="itemThreshold" value="10" min="1"></div>
     <p style="font-size:0.75rem;color:var(--gray);">${isAdmin()?'Item available immediately.':'Item submitted for admin approval.'}</p>
     <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="submitAddItem()"><i class="fas fa-plus"></i> Add</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
   }
@@ -414,7 +420,7 @@
     addDoc(collection(db,'stock_items'),data).then(async()=>{await logAudit('add_item',`Added: ${name}`);showToast(isAdmin()?'Item added':'Submitted','success');hideModal();}).catch(e=>showToast('Failed: '+e.message,'error'));
   };
 
-  // ========== EDIT ITEM (attendant needs admin PIN) ==========
+  // ===================== EDIT ITEM (attendant needs admin PIN) =====================
   window.openEditItem = function(id) {
     const item=allItems.find(i=>i.id===id);if(!item)return;
     pendingEditId=id;
@@ -435,9 +441,7 @@
 
   window.saveEdit = function() {
     if(isAdmin()) { performSaveEdit(); }
-    else {
-      requireAdminPin('edit this item', () => { performSaveEdit(); });
-    }
+    else { requireAdminPin('edit this item', () => { performSaveEdit(); }); }
   };
 
   async function performSaveEdit() {
@@ -478,17 +482,17 @@
     try{await updateDoc(doc(db,'stock_items',id),updateData);await logAudit('edit_item',`Updated: ${name}`);showToast('Updated!','success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}
   }
 
-  // ========== DELETE ==========
+  // ===================== DELETE =====================
   window.deleteItem = function(id) { const item=allItems.find(i=>i.id===id);if(!item)return;const confirmDel=()=>{if(!confirm(`Delete "${item.name}"?`))return;deleteDoc(doc(db,'stock_items',id)).then(async()=>{await logAudit('delete_item',`Deleted: ${item.name}`);showToast('Deleted!','success');}).catch(e=>showToast('Failed: '+e.message,'error'));};if(isAdmin()){confirmDel();}else{requireAttendantPin('delete this item',confirmDel);} };
   window.deleteAllInventory = function() { if(!confirm('DELETE ALL INVENTORY? This cannot be undone!'))return; requireAttendantPin('delete all inventory',async()=>{try{const snap=await getDocs(collection(db,'stock_items'));const batch=writeBatch(db);snap.forEach(d=>batch.delete(d.ref));await batch.commit();await logAudit('delete_all','All inventory deleted');showToast('All items deleted','success');}catch(e){showToast('Failed: '+e.message,'error');}}); };
 
-  // ========== REJECT ==========
+  // ===================== REJECT =====================
   window.rejectItem = function(id) { if(!isAdmin()){showToast('Only admin can reject','error');}const item=allItems.find(i=>i.id===id);if(!item)return;showModal('Reject Item',`<p style="margin-bottom:12px;">Reject <strong>${item.name}</strong>?</p><div class="form-group"><label>Reason *</label><textarea class="form-control" id="rejectionReason" rows="3" placeholder="Why?"></textarea></div><div style="display:flex;gap:10px;"><button class="btn btn-warning" onclick="confirmRejectItem('${id}')"><i class="fas fa-ban"></i> Reject</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`); };
   window.confirmRejectItem = async function(id) { const reason=document.getElementById('rejectionReason')?.value?.trim();if(!reason){showToast('Reason required','error');return;}const item=allItems.find(i=>i.id===id);if(!item)return;try{await addDoc(collection(db,'rejected_inventory'),{...item,originalId:id,rejectionReason:reason,rejectedBy:currentUser?.uid,rejectedByName:userData?.fullName||'Admin',rejectedAt:serverTimestamp()});await deleteDoc(doc(db,'stock_items',id));await logAudit('reject_item',`Rejected: ${item.name} - ${reason}`);showToast('Rejected!','success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');} };
   window.restoreItem = function(id) { const item=allRejectedItems.find(i=>i.id===id);if(!item)return;const restore=async()=>{try{const{originalId,rejectionReason,rejectedBy,rejectedByName,rejectedAt,...rest}=item;await addDoc(collection(db,'stock_items'),{...rest,restoredFromRejected:true,restoredBy:currentUser?.uid,restoredByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});await deleteDoc(doc(db,'rejected_inventory',id));await logAudit('restore_item',`Restored: ${item.name}`);showToast('Restored!','success');}catch(e){showToast('Failed: '+e.message,'error');}};if(isAdmin()){restore();}else{requireAttendantPin('restore this item',restore);} };
   window.permanentlyDeleteItem = function(id) { const item=allRejectedItems.find(i=>i.id===id);if(!item)return;if(!confirm(`Permanently delete "${item.name}"?`))return;deleteDoc(doc(db,'rejected_inventory',id)).then(async()=>{await logAudit('perm_delete',`Deleted rejected: ${item.name}`);showToast('Deleted!','success');}).catch(e=>showToast('Failed: '+e.message,'error')); };
 
-  // ========== CSV (with full template) ==========
+  // ===================== CSV =====================
   window.openCsvUploadModal = function() {
     showModal('Import CSV',`<p style="margin-bottom:12px;">Upload a CSV file to add items in bulk.</p><p><span class="csv-template-link" onclick="downloadCsvTemplate()"><i class="fas fa-download"></i> Download CSV Template</span></p><div class="form-group"><label>CSV File *</label><input type="file" class="form-control" id="csvFile" accept=".csv"></div><button class="btn btn-primary" onclick="processCsvUpload()"><i class="fas fa-upload"></i> Upload & Add Items</button><button class="btn btn-outline" onclick="hideModal()" style="margin-top:8px;">Cancel</button>`);
   };
@@ -537,7 +541,7 @@
     showToast(`Imported ${added} items. ${errors} errors.`,'success');hideModal();
   };
 
-  // ========== RESTOCK & HISTORY ==========
+  // ===================== RESTOCK & HISTORY =====================
   window.openRestockOptions = function(id) { const item=allItems.find(i=>i.id===id);if(!item)return;showModal(`Restock: ${item.name}`,`<p>Current: ${getTotalAvailable(item)} | Threshold: ${item.threshold||10}</p><div class="restock-options"><div class="restock-option" onclick="restockFromStore('${id}')"><i class="fas fa-store"></i><div class="label">From Store</div><div class="sub">Buy from bulk stock</div></div><div class="restock-option" onclick="restockFromThirdParty('${id}')"><i class="fas fa-truck"></i><div class="label">Third Party</div><div class="sub">Purchase request</div></div></div><button class="btn btn-outline" onclick="hideModal()" style="width:100%;margin-top:12px;">Cancel</button>`); };
   window.restockFromStore = function(id) { hideModal(); navigateTo('store.html'); };
   window.restockFromThirdParty = function(id) { hideModal(); navigateTo('purchases.html'); };
@@ -546,6 +550,52 @@
   window.exportData = function(format) { const headers=['Name','Category','Type','Unit Qty','Half Qty','Quarter Qty','Pack/Bundle','Sold','Avail','Unit Price','Half Price','Quarter Price','Pack/Bundle Price','Revenue','Status'];const rows=allItems.map(i=>{const pack=i.packSize?`${i.packSize}/pk`:i.bundleSize?`${i.bundleSize}/bundle`:'';return[i.name||'',i.category||'',i.itemType||'general',i.unitQty||0,i.halfQty||0,i.quarterQty||0,pack,getItemSoldQty(i),getTotalAvailable(i),i.unitPrice||0,i.halfPrice||0,i.quarterPrice||0,i.packPrice||i.bundlePrice||0,getItemRevenue(i),getItemStatus(i)];});const csv=[headers.join(','),...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`inventory_${new Date().toISOString().split('T')[0]}.csv`;a.click();showToast('Exported','success'); };
   window.refreshInventory = function() { loadInventory(); showToast('Refreshed','success'); };
 
+  // ===================== HELP GUIDE =====================
+  window.openHelpGuide = function() {
+    const guide = `
+      <div class="guide-section">
+        <h4>📦 Item Types Explained</h4>
+        <ul>
+          <li><strong>General</strong> – Sold only as whole units (e.g., soldering iron, glue). Just enter quantity and unit price.</li>
+          <li><strong>Fashion</strong> – Sold by unit (1), half (½), or quarter (¼). Perfect for rhinestones, beads. Enter quantities and prices for each variant.</li>
+          <li><strong>Pack/Bundle</strong> – Sold individually OR in packs (dozen, carton). <br>Example: T‑shirts at ₦5,000 each; a pack of 12 costs ₦48,000. You only track the total number of pieces (unit quantity). The system will show the pack size and pack price.</li>
+          <li><strong>Measured</strong> – Sold by yard/meter or in bundles. <br>Example: Paper sheet – bundle of 50 yards at ₦5,000, but customers can buy 1 yard, 2 yards, etc. Track total yards/meters; the bundle info is optional.</li>
+        </ul>
+      </div>
+      <div class="guide-section">
+        <h4>📊 Low Stock Threshold</h4>
+        <p>This is the minimum <strong>total of the smallest sellable units</strong> before an item shows as “low”.<br>
+        For pack/bundle items, it's the number of individual pieces. For measured, it's the total yards/meters. The system automatically calculates the total from unit, half, and quarter quantities.</p>
+      </div>
+      <div class="guide-section">
+        <h4>✏️ Editing Items</h4>
+        <ul>
+          <li><strong>Admin</strong> can edit any item without a PIN.</li>
+          <li><strong>Attendants</strong> need the <strong>admin PIN</strong> to edit an item (to prevent unauthorised changes).</li>
+        </ul>
+      </div>
+      <div class="guide-section">
+        <h4>🗑️ Delete & Restore</h4>
+        <p>You can delete a single item or <strong>Delete All</strong> (with confirmation). Rejected items stay in the “Rejected” tab until you either restore them or permanently delete them.</p>
+      </div>
+      <div class="guide-section">
+        <h4>📁 CSV Import/Export</h4>
+        <p>Use the “Import CSV” button to bulk‑add items. First download the template – it contains all possible columns and example rows for each item type. Fill it carefully, then upload.</p>
+      </div>
+      <div class="guide-section">
+        <h4>🔐 Revenue View</h4>
+        <p>Total revenue is hidden by default. Click the lock icon and enter <strong>your PIN</strong> (attendant) to reveal. Admins see revenue automatically.</p>
+      </div>
+      <div class="guide-section">
+        <h4>🔄 Restock Options</h4>
+        <p>When an item is low, click the restock icon. You can choose “From Store” (existing bulk stock) or “Third Party” (external purchase request).</p>
+      </div>
+      <button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close Guide</button>
+    `;
+    showModal('📖 How to Use Inventory', guide);
+  };
+
+  // ===================== EVENT LISTENERS & AUTH =====================
   document.getElementById('searchInput').addEventListener('input',renderInventory);
   document.getElementById('categoryFilter').addEventListener('change',renderInventory);
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){currentTab=this.dataset.tab;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));this.classList.add('active');document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active'));document.getElementById(currentTab+'Panel').classList.add('active');renderInventory();}));
