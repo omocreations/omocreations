@@ -56,12 +56,7 @@
     .content-wrapper { padding:28px; max-width:1600px; }
 
     /* UPDATED stats grid – now 5 columns */
-    .stats-grid {
-      display:grid;
-      grid-template-columns:repeat(5,1fr);
-      gap:16px;
-      margin-bottom:24px;
-    }
+    .stats-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:24px; }
     .stat-card { background:white; padding:18px 16px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(255,77,166,0.1); transition:all 0.3s; animation:fadeInUp 0.5s ease forwards; opacity:0; }
     .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}.stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}.stat-card:nth-child(5){animation-delay:0.25s}
     .stat-card:hover { transform:translateY(-5px); box-shadow:0 12px 24px rgba(255,77,166,0.15); }
@@ -433,12 +428,12 @@
           <td>${item.category||'-'}</td>
           <td>${item.unitQty||0}</td>
           <td>${item.rejectedByName||'-'}</td>
-          <td>${item.rejectionReason||'-'}</td>
+          <td><strong style="color:var(--danger);">${item.rejectionReason||'-'}</strong></td>
           <td>${formatDate(item.rejectedAt)}</td>
           <td>
             <div style="display:flex;gap:4px;">
-              <button class="btn btn-sm btn-outline" onclick="editRejectedItem('${item.id}')" title="Edit & resubmit"><i class="fas fa-edit"></i> Edit</button>
-              <button class="btn btn-sm btn-danger" onclick="permanentlyDeleteItem('${item.id}')" title="Delete permanently"><i class="fas fa-trash"></i></button>
+              <button class="btn btn-sm btn-primary" onclick="openEditRejectedItem('${item.id}')" title="Edit & Resubmit"><i class="fas fa-edit"></i> Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="permanentlyDeleteItem('${item.id}')" title="Delete"><i class="fas fa-trash"></i> Delete</button>
             </div>
           </td>
         </tr>
@@ -455,7 +450,7 @@
     unsubscribes.push(onSnapshot(collection(db,'wholesale_sales'),snap=>{const ws=snap.docs.map(d=>({id:d.id,...d.data()}));allSales=[...allSales.filter(s=>!ws.find(w=>w.id===s.id)),...ws];renderInventory();}));
   }
 
-  // ===================== ADD ITEM (unchanged) =====================
+  // ===================== ADD ITEM =====================
   function getAddForm() {
     return `<div class="item-type-toggle">
       <button class="item-type-btn active" data-type="general" onclick="switchAddType('general')"><i class="fas fa-cube"></i> General<br><small>Soldering iron, glue</small></button>
@@ -469,121 +464,187 @@
     <p style="font-size:0.75rem;color:var(--gray);">${isAdmin()?'Item available immediately.':'Item submitted for admin approval.'}</p>
     <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="submitAddItem()"><i class="fas fa-plus"></i> Add</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
   }
+
   window.openAddItemModal = function() { addItemType='general'; showModal('Add New Item', getAddForm()); renderQtySection(); };
   window.switchAddType = function(type) { addItemType=type; document.querySelectorAll('.item-type-btn').forEach(b=>b.classList.remove('active')); document.querySelector(`[data-type="${type}"]`)?.classList.add('active'); renderQtySection(); };
-  function renderQtySection() { /* ... same as before ... */ }
-  window.submitAddItem = function() { /* ... same as before ... */ };
+
+  function renderQtySection() {
+    const sec=document.getElementById('qtySection'); if(!sec)return;
+    if(addItemType==='general'){
+      sec.innerHTML=`<div class="form-group"><label>Unit Quantity (pieces) *</label><input type="number" class="form-control" id="unitQty" value="0" min="0"></div><div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="unitPrice" value="0" step="0.01" min="0"></div>`;
+    }else if(addItemType==='fashion'){
+      sec.innerHTML=`<p class="help-text">Rhinestones, beads: sold by unit, half, quarter.</p>
+      <div class="form-row-3"><div class="form-group"><label>Unit Qty (1) *</label><input type="number" class="form-control" id="unitQty" value="0" min="0"></div><div class="form-group"><label>Half Qty (½)</label><input type="number" class="form-control" id="halfQty" value="0" min="0"></div><div class="form-group"><label>Quarter Qty (¼)</label><input type="number" class="form-control" id="quarterQty" value="0" min="0"></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price (1) ₦ *</label><input type="number" class="form-control" id="unitPrice" value="0" step="0.01" min="0"></div><div class="form-group"><label>Half Price (½) ₦</label><input type="number" class="form-control" id="halfPrice" value="0" step="0.01" min="0"></div><div class="form-group"><label>Quarter Price (¼) ₦</label><input type="number" class="form-control" id="quarterPrice" value="0" step="0.01" min="0"></div></div>`;
+    }else if(addItemType==='pack_bundle'){
+      sec.innerHTML=`<p class="help-text">T‑shirts, carton items: sold individually or in packs (dozen, box). Stock is tracked by individual piece.</p>
+      <div class="form-group"><label>Unit Quantity (individual pieces) *</label><input type="number" class="form-control" id="unitQty" value="0" min="0"></div><div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="unitPrice" value="0" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Pack Size (items per pack, e.g., 12)</label><input type="number" class="form-control" id="packSize" value="12" min="1"></div><div class="form-group"><label>Pack Price ₦</label><input type="number" class="form-control" id="packPrice" value="0" step="0.01" min="0"></div></div>`;
+    }else if(addItemType==='measured'){
+      sec.innerHTML=`<p class="help-text">Paper, fabric: sold by yard/meter or in bundles.</p>
+      <div class="form-group"><label>Measure Unit</label><select class="form-control" id="measureUnit"><option value="yard">Yard</option><option value="meter">Meter</option></select></div><div class="form-group"><label>Unit Quantity (yards/meters) *</label><input type="number" class="form-control" id="unitQty" value="0" min="0"></div><div class="form-group"><label>Unit Price (per yard/meter) ₦ *</label><input type="number" class="form-control" id="unitPrice" value="0" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Bundle Size (yards/meters)</label><input type="number" class="form-control" id="bundleSize" value="50" min="1"></div><div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="bundlePrice" value="0" step="0.01" min="0"></div></div>`;
+    }
+  }
+
+  window.submitAddItem = function() {
+    const name=document.getElementById('itemName')?.value?.trim();
+    const category=document.getElementById('itemCategory')?.value||'other';
+    const threshold=parseInt(document.getElementById('itemThreshold')?.value)||10;
+    if(!name){showToast('Item name required','error');showDebug('Add item: name empty');return;}
+    const data={name,category,threshold,itemType:addItemType,status:isAdmin()?'available':'pending_approval',createdBy:currentUser?.uid,createdByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp(),unitQty:0,unitPrice:0,halfQty:0,halfPrice:0,quarterQty:0,quarterPrice:0,packSize:0,packPrice:0,bundleSize:0,bundlePrice:0,measureUnit:'piece'};
+    if(addItemType==='general'||addItemType==='fashion'||addItemType==='pack_bundle'){
+      data.unitQty=parseInt(document.getElementById('unitQty')?.value)||0;
+      data.unitPrice=parseFloat(document.getElementById('unitPrice')?.value)||0;
+      if(data.unitPrice<=0){showToast('Unit price must be > 0','error');return;}
+    }
+    if(addItemType==='fashion'){
+      data.halfQty=parseInt(document.getElementById('halfQty')?.value)||0;
+      data.quarterQty=parseInt(document.getElementById('quarterQty')?.value)||0;
+      data.halfPrice=parseFloat(document.getElementById('halfPrice')?.value)||0;
+      data.quarterPrice=parseFloat(document.getElementById('quarterPrice')?.value)||0;
+    }
+    if(addItemType==='pack_bundle'){
+      data.packSize=parseInt(document.getElementById('packSize')?.value)||12;
+      data.packPrice=parseFloat(document.getElementById('packPrice')?.value)||0;
+    }
+    if(addItemType==='measured'){
+      data.measureUnit=document.getElementById('measureUnit')?.value||'yard';
+      data.unitQty=parseInt(document.getElementById('unitQty')?.value)||0;
+      data.unitPrice=parseFloat(document.getElementById('unitPrice')?.value)||0;
+      if(data.unitPrice<=0){showToast('Unit price must be > 0','error');return;}
+      data.bundleSize=parseInt(document.getElementById('bundleSize')?.value)||50;
+      data.bundlePrice=parseFloat(document.getElementById('bundlePrice')?.value)||0;
+    }
+    const totalQty=data.unitQty+data.halfQty+data.quarterQty;
+    if(!isAdmin()) data.status='pending_approval';
+    else data.status=totalQty===0?'out_of_stock':totalQty<=threshold?'low':'available';
+    addDoc(collection(db,'stock_items'),data).then(async()=>{await logAudit('add_item',`Added: ${name}`);showToast(isAdmin()?'Item added':'Submitted','success');hideModal();}).catch(e=>{showToast('Failed: '+e.message,'error');showDebug('Add item failed: '+e.message);});
+  };
 
   // ===================== EDIT ITEM (existing stock) =====================
-  window.openEditItem = function(id) { /* ... same as previous version ... */ };
-  window.saveEdit = function() { /* ... same as previous version with pre-extraction ... */ };
+  window.openEditItem = function(id) { /* ... same ... */ };
+  window.saveEdit = function() { /* ... same ... */ };
 
-  // ===================== DELETE (unchanged) =====================
+  // ===================== DELETE =====================
   window.deleteItem = function(id) { /* ... same ... */ };
   window.deleteAllInventory = function() { /* ... same ... */ };
 
-  // ===================== REJECT (unchanged) =====================
+  // ===================== REJECT =====================
   window.rejectItem = function(id) { /* ... same ... */ };
   window.confirmRejectItem = async function(id) { /* ... same ... */ };
 
-  // ===================== REJECTED ITEMS: EDIT & RESUBMIT =====================
-  window.editRejectedItem = function(id) {
+  // ===================== EDIT & RESUBMIT REJECTED ITEM =====================
+  let pendingRejectedEditId = null;
+
+  window.openEditRejectedItem = function(id) {
     const item = allRejectedItems.find(i => i.id === id);
     if (!item) return;
+    pendingRejectedEditId = id;
     const type = item.itemType || 'general';
-    // Build edit form identical to stock edit, but with rejected item values
-    let form = `<div class="form-group"><label>Item Name</label><input class="form-control" id="rejEditName" value="${item.name||''}"></div>
-      <div class="form-row"><div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="rejEditCategory">${categories.map(c=>`<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div><div class="form-group"><label>Type</label><input class="form-control" value="${getItemTypeLabel(item)}" readonly></div></div>`;
-    if (type === 'general') {
-      form += `<div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="rejEditUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="rejEditUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div>`;
-    } else if (type === 'fashion') {
-      form += `<div class="form-row-3"><div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="rejEditUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Half Qty</label><input type="number" class="form-control" id="rejEditHalfQty" value="${item.halfQty||0}" min="0"></div><div class="form-group"><label>Quarter Qty</label><input type="number" class="form-control" id="rejEditQuarterQty" value="${item.quarterQty||0}" min="0"></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="rejEditUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>Half Price ₦</label><input type="number" class="form-control" id="rejEditHalfPrice" value="${item.halfPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>Quarter Price ₦</label><input type="number" class="form-control" id="rejEditQuarterPrice" value="${item.quarterPrice||0}" step="0.01" min="0"></div></div>`;
-    } else if (type === 'pack_bundle') {
-      form += `<div class="form-group"><label>Unit Qty (pieces)</label><input type="number" class="form-control" id="rejEditUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="rejEditUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Pack Size</label><input type="number" class="form-control" id="rejEditPackSize" value="${item.packSize||12}" min="1"></div><div class="form-group"><label>Pack Price ₦</label><input type="number" class="form-control" id="rejEditPackPrice" value="${item.packPrice||0}" step="0.01" min="0"></div></div>`;
-    } else if (type === 'measured') {
-      form += `<div class="form-group"><label>Measure Unit</label><input class="form-control" value="${item.measureUnit||'yard'}" readonly></div><div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="rejEditUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="rejEditUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Bundle Size</label><input type="number" class="form-control" id="rejEditBundleSize" value="${item.bundleSize||50}" min="1"></div><div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="rejEditBundlePrice" value="${item.bundlePrice||0}" step="0.01" min="0"></div></div>`;
+
+    // Show the rejection reason at the top of the edit modal
+    let form = `<div style="background:rgba(239,68,68,0.1); border-left:4px solid var(--danger); padding:12px; margin-bottom:16px; border-radius:8px;">
+      <span style="font-size:0.8rem; color:var(--danger);"><strong>Reason for Rejection:</strong> ${item.rejectionReason || 'No reason provided'}</span>
+    </div>`;
+
+    form += `<div class="form-group"><label>Item Name</label><input class="form-control" id="rejEditName" value="${item.name||''}"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="rejEditCategory">${categories.map(c=>`<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div>
+      <div class="form-group"><label>Type</label><input class="form-control" value="${getItemTypeLabel(item)}" readonly></div>
+    </div>`;
+
+    if(type==='general'){
+      form+=`<div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="rejEditUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="rejEditUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div>`;
+    }else if(type==='fashion'){
+      form+=`<div class="form-row-3"><div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="rejEditUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Half Qty</label><input type="number" class="form-control" id="rejEditHalfQty" value="${item.halfQty||0}" min="0"></div><div class="form-group"><label>Quarter Qty</label><input type="number" class="form-control" id="rejEditQuarterQty" value="${item.quarterQty||0}" min="0"></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="rejEditUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>Half Price ₦</label><input type="number" class="form-control" id="rejEditHalfPrice" value="${item.halfPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>Quarter Price ₦</label><input type="number" class="form-control" id="rejEditQuarterPrice" value="${item.quarterPrice||0}" step="0.01" min="0"></div></div>`;
+    }else if(type==='pack_bundle'){
+      form+=`<div class="form-group"><label>Unit Qty (pieces)</label><input type="number" class="form-control" id="rejEditUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="rejEditUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Pack Size</label><input type="number" class="form-control" id="rejEditPackSize" value="${item.packSize||12}" min="1"></div><div class="form-group"><label>Pack Price ₦</label><input type="number" class="form-control" id="rejEditPackPrice" value="${item.packPrice||0}" step="0.01" min="0"></div></div>`;
+    }else if(type==='measured'){
+      form+=`<div class="form-group"><label>Measure Unit</label><input class="form-control" value="${item.measureUnit||'yard'}" readonly></div><div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="rejEditUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="rejEditUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Bundle Size</label><input type="number" class="form-control" id="rejEditBundleSize" value="${item.bundleSize||50}" min="1"></div><div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="rejEditBundlePrice" value="${item.bundlePrice||0}" step="0.01" min="0"></div></div>`;
     }
-    form += `<div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="rejEditThreshold" value="${item.threshold||10}" min="1"></div>
-      <p style="font-size:0.75rem;color:var(--gray);">This will resubmit the item for admin approval.</p>
-      <div style="display:flex;gap:10px;"><button class="btn btn-primary" id="rejSaveBtn" onclick="saveRejectedEdit('${id}')"><i class="fas fa-paper-plane"></i> Resubmit</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
-    showModal(`Edit Rejected: ${item.name}`, form);
+
+    form+=`<div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="rejEditThreshold" value="${item.threshold||10}" min="1"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="saveEditRejectedItem()"><i class="fas fa-paper-plane"></i> Resubmit to Admin</button>
+      <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
+    </div>`;
+
+    showModal(`Fix & Resubmit: ${item.name}`, form);
   };
 
-  window.saveRejectedEdit = function(id) {
-    const nameEl = document.getElementById('rejEditName');
-    const name = nameEl?.value?.trim();
-    if (!name) { showToast('Item name is required', 'error'); return; }
+  window.saveEditRejectedItem = async function() {
+    const id = pendingRejectedEditId;
+    if (!id) return;
+
     const item = allRejectedItems.find(i => i.id === id);
     if (!item) return;
+
+    const name = document.getElementById('rejEditName')?.value?.trim();
+    if (!name) { showToast('Item name required', 'error'); return; }
+
     const type = item.itemType || 'general';
-    
+
     let newData = {
       name,
       category: document.getElementById('rejEditCategory')?.value,
       threshold: parseInt(document.getElementById('rejEditThreshold')?.value) || 10,
       itemType: type,
-      unitQty: 0, unitPrice: 0, halfQty: 0, halfPrice: 0, quarterQty: 0, quarterPrice: 0,
-      packSize: 0, packPrice: 0, bundleSize: 0, bundlePrice: 0,
-      status: isAdmin() ? 'available' : 'pending_approval',
-      createdBy: currentUser?.uid,
-      createdByName: userData?.fullName || 'Staff',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      measureUnit: item.measureUnit || 'piece',
+      updatedAt: serverTimestamp(),
+      createdAt: item.createdAt || serverTimestamp(),
+      createdBy: item.createdBy,
+      createdByName: item.createdByName
     };
 
-    if (type === 'general') {
+    if(type === 'general'){
       newData.unitQty = parseInt(document.getElementById('rejEditUnitQty')?.value) || 0;
       newData.unitPrice = parseFloat(document.getElementById('rejEditUnitPrice')?.value) || 0;
-      if (newData.unitPrice <= 0) { showToast('Unit price must be > 0', 'error'); return; }
-    } else if (type === 'fashion') {
+    } else if(type === 'fashion'){
       newData.unitQty = parseInt(document.getElementById('rejEditUnitQty')?.value) || 0;
       newData.halfQty = parseInt(document.getElementById('rejEditHalfQty')?.value) || 0;
       newData.quarterQty = parseInt(document.getElementById('rejEditQuarterQty')?.value) || 0;
       newData.unitPrice = parseFloat(document.getElementById('rejEditUnitPrice')?.value) || 0;
       newData.halfPrice = parseFloat(document.getElementById('rejEditHalfPrice')?.value) || 0;
       newData.quarterPrice = parseFloat(document.getElementById('rejEditQuarterPrice')?.value) || 0;
-      if (newData.unitPrice <= 0) { showToast('Unit price must be > 0', 'error'); return; }
-    } else if (type === 'pack_bundle') {
+    } else if(type === 'pack_bundle'){
       newData.unitQty = parseInt(document.getElementById('rejEditUnitQty')?.value) || 0;
       newData.unitPrice = parseFloat(document.getElementById('rejEditUnitPrice')?.value) || 0;
       newData.packSize = parseInt(document.getElementById('rejEditPackSize')?.value) || 12;
       newData.packPrice = parseFloat(document.getElementById('rejEditPackPrice')?.value) || 0;
-      if (newData.unitPrice <= 0 && newData.packPrice <= 0) { showToast('Price required', 'error'); return; }
-    } else if (type === 'measured') {
+    } else if(type === 'measured'){
       newData.unitQty = parseInt(document.getElementById('rejEditUnitQty')?.value) || 0;
       newData.unitPrice = parseFloat(document.getElementById('rejEditUnitPrice')?.value) || 0;
       newData.bundleSize = parseInt(document.getElementById('rejEditBundleSize')?.value) || 50;
       newData.bundlePrice = parseFloat(document.getElementById('rejEditBundlePrice')?.value) || 0;
-      newData.measureUnit = item.measureUnit || 'yard';
-      if (newData.unitPrice <= 0) { showToast('Unit price must be > 0', 'error'); return; }
     }
 
-    // Execute resubmit: add to stock_items, delete from rejected
-    const resubmit = async () => {
-      try {
-        await addDoc(collection(db, 'stock_items'), newData);
-        await deleteDoc(doc(db, 'rejected_inventory', id));
-        await logAudit('resubmit_rejected', `Resubmitted: ${name}`);
-        showToast('Item resubmitted for approval', 'success');
-        hideModal();
-      } catch(e) {
-        showToast('Resubmit failed: ' + e.message, 'error');
-        showDebug('Resubmit error: ' + e.message);
-      }
-    };
-
+    // Assign appropriate status
     if (isAdmin()) {
-      resubmit();
+      const totalQty = (newData.unitQty || 0) + (newData.halfQty || 0) + (newData.quarterQty || 0);
+      newData.status = totalQty === 0 ? 'out_of_stock' : totalQty <= newData.threshold ? 'low' : 'available';
     } else {
-      requireAttendantPin('resubmit this item', resubmit);
+      newData.status = 'pending_approval';
+    }
+
+    try {
+      // Use the originalId if it exists to maintain history, otherwise a new doc
+      const targetId = item.originalId || id;
+      await setDoc(doc(db, 'stock_items', targetId), newData);
+      await deleteDoc(doc(db, 'rejected_inventory', id));
+      await logAudit('resubmit_item', `Edited & resubmitted rejected: ${name}`);
+      showToast('Item successfully resubmitted!', 'success');
+      hideModal();
+      // Switch to All Items tab to show the pending item
+      document.querySelector('.tab[data-tab="all"]').click();
+    } catch(e) {
+      showToast('Failed: ' + e.message, 'error');
+      showDebug('Resubmit failed: ' + e.message);
     }
   };
 
-  // ===================== PERMANENTLY DELETE REJECTED ITEM (unchanged) =====================
+  // ===================== PERMANENTLY DELETE REJECTED ITEM =====================
   window.permanentlyDeleteItem = function(id) {
     const item = allRejectedItems.find(i => i.id === id);
     if (!item) return;
-    if (!confirm(`Permanently delete "${item.name}"?`)) return;
+    if (!confirm(`Permanently delete "${item.name}"? This cannot be undone.`)) return;
     deleteDoc(doc(db, 'rejected_inventory', id))
       .then(async () => {
         await logAudit('perm_delete', `Deleted rejected: ${item.name}`);
@@ -593,7 +654,7 @@
   };
 
   // ===================== CSV, HISTORY, RESTOCK (unchanged) =====================
-  // ... (all other functions remain identical) ...
+  // ... (all other functions remain as before) ...
 
   // ===================== HELP GUIDE =====================
   window.openHelpGuide = function() { /* ... same ... */ };
