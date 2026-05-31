@@ -254,7 +254,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, addDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
   const app = initializeApp(firebaseConfig); 
@@ -330,9 +330,32 @@
     await logAudit('approve_item', 'Approved stock item'); showToast('Item approved', 'success'); 
   };
   
-  window.rejectItem = async (id) => { 
-    await updateDoc(doc(db, 'stock_items', id), { status: 'rejected' }); 
-    await logAudit('reject_item', 'Rejected stock item'); showToast('Item rejected', 'info'); 
+  // ✅ FIXED: Reject now moves item to rejected_inventory
+  window.rejectItem = async (id) => {
+    try {
+      const itemSnap = await getDoc(doc(db, 'stock_items', id));
+      if (!itemSnap.exists()) return;
+      const item = itemSnap.data();
+      
+      const reason = prompt('Rejection reason:') || 'No reason';
+      
+      await addDoc(collection(db, 'rejected_inventory'), {
+        ...item,
+        originalId: id,
+        rejectionReason: reason,
+        rejectedBy: currentUser.uid,
+        rejectedByName: userData.fullName,
+        rejectedAt: serverTimestamp()
+      });
+      
+      await deleteDoc(doc(db, 'stock_items', id));
+      
+      await logAudit('reject_item', `Rejected via approvals: ${item.name} - ${reason}`);
+      showToast('Item rejected and moved to Rejected tab', 'success');
+    } catch (e) {
+      showToast('Reject failed: ' + e.message, 'error');
+      console.error(e);
+    }
   };
 
   // ========== STORE TO INVENTORY ==========
