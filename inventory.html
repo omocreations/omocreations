@@ -14,7 +14,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    /* (all previous CSS remains exactly the same – omitted for brevity but unchanged) */
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
       --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
@@ -89,7 +88,6 @@
     .badge-success { background:rgba(16,185,129,0.1); color:var(--success); } .badge-warning { background:rgba(245,158,11,0.1); color:var(--warning); }
     .badge-danger { background:rgba(239,68,68,0.1); color:var(--danger); } .badge-info { background:rgba(59,130,246,0.1); color:var(--info); }
     .badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; }
-    .price-type-badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:0.6rem; font-weight:600; background:var(--primary-soft); color:var(--primary); margin-left:4px; }
     .btn { padding:8px 16px; border-radius:40px; font-weight:600; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; background:white; border:1px solid rgba(0,0,0,0.08); transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; }
     .btn:hover { transform:translateY(-2px); } .btn-primary { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; border:none; }
     .btn-outline { border:1.5px solid rgba(255,77,166,0.3); color:var(--primary); background:transparent; } .btn-sm { padding:6px 12px; font-size:0.7rem; }
@@ -116,9 +114,6 @@
     .pin-input-container { display:flex; gap:10px; justify-content:center; margin:20px 0; }
     .pin-input { width:55px; height:65px; text-align:center; font-size:1.8rem; font-weight:700; border:2px solid rgba(255,77,166,0.2); border-radius:14px; outline:none; font-family:'Poppins',sans-serif; } .pin-input:focus { border-color:var(--primary); }
     .empty-state { text-align:center; padding:40px 20px; color:var(--gray); } .empty-state i { font-size:2.5rem; color:var(--primary-light); margin-bottom:10px; display:block; }
-    .export-dropdown { position:relative; display:inline-block; }
-    .export-menu { position:absolute; top:100%; right:0; background:white; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); min-width:150px; display:none; z-index:50; overflow:hidden; }
-    .export-menu.show { display:block; } .export-item { padding:12px 16px; cursor:pointer; font-size:0.85rem; transition:background 0.2s; display:flex; align-items:center; gap:10px; } .export-item:hover { background:var(--primary-soft); }
     .toast-container { position:fixed; bottom:24px; right:24px; z-index:3000; display:flex; flex-direction:column; gap:10px; }
     .toast { background:white; color:var(--dark); padding:14px 20px; border-radius:50px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px; font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease; border-left:4px solid var(--primary); transition:all 0.3s ease; }
     .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); } .toast i { font-size:1.1rem; }
@@ -209,7 +204,6 @@
 <div class="debug-panel" id="debugPanel"></div>
 
 <script type="module">
-  // ===================== FIREBASE SETUP =====================
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, deleteDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -224,7 +218,6 @@
   let pendingEditId = null;
   let adminPinCache = null;
 
-  // Debug helper: show last error in a floating panel (visible for 8 seconds)
   function showDebug(msg) {
     const panel = document.getElementById('debugPanel');
     if (!panel) return;
@@ -234,7 +227,6 @@
     panel._timeout = setTimeout(() => { panel.style.display = 'none'; }, 8000);
   }
 
-  // ===================== UTILITY FUNCTIONS =====================
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
   function navigateTo(url) { window.location.href = url; }
@@ -262,7 +254,7 @@
         return adminPinCache;
       }
     } catch (e) { showDebug('Failed to fetch admin PIN: ' + e.message); }
-    return '1234'; // fallback
+    return '1234';
   }
 
   function requireAdminPin(action, callback) {
@@ -292,7 +284,6 @@
 
   window.revealTotalRevenue = function() { if(revenueRevealed)return; requireAttendantPin('view total revenue',()=>{revenueRevealed=true;updateRevenueDisplay();logAudit('reveal_revenue','Revenue revealed');showToast('Revenue unlocked','success');}); };
 
-  // ===================== REVENUE & STATUS LOGIC =====================
   function calculateRevenueFromSales() { const revenueMap={}, soldQtyMap={}; allSales.forEach(sale=>{if(sale.status==='returned')return;if(!sale.items||!Array.isArray(sale.items))return; sale.items.forEach(item=>{const itemId=item.id;if(!itemId)return;const qty=item.quantity||0;const price=item.unitPrice||0;const itemRevenue=qty*price;revenueMap[itemId]=(revenueMap[itemId]||0)+itemRevenue;soldQtyMap[itemId]=(soldQtyMap[itemId]||0)+qty;});}); return {revenueMap,soldQtyMap}; }
   function updateRevenueDisplay() { const card=document.getElementById('totalRevenueCard'); const valEl=document.getElementById('totalRevenue'); if(revenueRevealed||isAdmin()){card.classList.remove('value-locked');const{revenueMap}=calculateRevenueFromSales();const totalRev=allItems.reduce((s,item)=>s+(revenueMap[item.id]||item.totalSoldValue||0),0);valEl.textContent=formatCurrency(totalRev);valEl.style.filter='none';valEl.style.cursor='default';} }
   function getItemRevenue(item) { const{revenueMap}=calculateRevenueFromSales(); return revenueMap[item.id]||item.totalSoldValue||0; }
@@ -308,7 +299,6 @@
   function getTotalAvailable(item) { return (item.unitQty||0)+(item.halfQty||0)+(item.quarterQty||0); }
   function getItemStatus(item) { if(item.status==='pending_approval')return'pending_approval';if(item.status==='rejected')return'rejected';const qty=getTotalAvailable(item);const threshold=item.threshold||10;if(qty===0)return'out_of_stock';if(qty<=threshold)return'low';return'available'; }
 
-  // ===================== RENDER TABLE =====================
   function renderInventory() {
     const search=(document.getElementById('searchInput')?.value||'').toLowerCase();
     const catFilter=document.getElementById('categoryFilter')?.value||'all';
@@ -364,7 +354,7 @@
     unsubscribes.push(onSnapshot(collection(db,'wholesale_sales'),snap=>{const ws=snap.docs.map(d=>({id:d.id,...d.data()}));allSales=[...allSales.filter(s=>!ws.find(w=>w.id===s.id)),...ws];renderInventory();}));
   }
 
-  // ===================== ADD ITEM =====================
+  // ===================== ADD ITEM (with clear labels) =====================
   function getAddForm() {
     return `<div class="item-type-toggle">
       <button class="item-type-btn active" data-type="general" onclick="switchAddType('general')"><i class="fas fa-cube"></i> General<br><small>Soldering iron, glue</small></button>
@@ -433,7 +423,7 @@
     addDoc(collection(db,'stock_items'),data).then(async()=>{await logAudit('add_item',`Added: ${name}`);showToast(isAdmin()?'Item added':'Submitted','success');hideModal();}).catch(e=>{showToast('Failed: '+e.message,'error');showDebug('Add item failed: '+e.message);});
   };
 
-  // ===================== EDIT ITEM (with debug) =====================
+  // ===================== EDIT ITEM (with name guard) =====================
   window.openEditItem = function(id) {
     const item=allItems.find(i=>i.id===id);if(!item)return;
     pendingEditId=id;
@@ -448,11 +438,30 @@
     }else if(type==='measured'){
       form+=`<div class="form-group"><label>Measure Unit</label><input class="form-control" value="${item.measureUnit||'yard'}" readonly></div><div class="form-group"><label>Unit Qty (yards/meters)</label><input type="number" class="form-control" id="editUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="editUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Bundle Size</label><input type="number" class="form-control" id="editBundleSize" value="${item.bundleSize||50}" min="1"></div><div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="editBundlePrice" value="${item.bundlePrice||0}" step="0.01" min="0"></div></div>`;
     }
-    form+=`<div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||10}" min="1"></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEdit()"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
+    form+=`<div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||10}" min="1"></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" id="saveEditBtn" onclick="saveEdit()"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
     showModal(`Edit: ${item.name}`,form);
+    
+    // Enable/disable Save button based on name field
+    const nameInput = document.getElementById('editName');
+    const saveBtn = document.getElementById('saveEditBtn');
+    if (nameInput && saveBtn) {
+      const toggleSave = () => {
+        saveBtn.disabled = (nameInput.value.trim() === '');
+        saveBtn.style.opacity = saveBtn.disabled ? '0.5' : '1';
+      };
+      nameInput.addEventListener('input', toggleSave);
+      toggleSave(); // initial check
+    }
   };
 
   window.saveEdit = function() {
+    const nameEl = document.getElementById('editName');
+    const name = nameEl?.value?.trim();
+    if (!name) {
+      showToast('Please enter an item name','error');
+      showDebug('Save blocked: name empty');
+      return;
+    }
     if(isAdmin()) { performSaveEdit(); }
     else { requireAdminPin('edit this item', () => { performSaveEdit(); }); }
   };
@@ -461,12 +470,7 @@
     const id=pendingEditId; if(!id)return;
     const nameEl = document.getElementById('editName');
     const name = nameEl?.value?.trim();
-    if(!name){
-      const rawVal = nameEl?.value || '';
-      showToast(`Item name is empty (value: "${rawVal}")`,'error');
-      showDebug(`Edit save blocked: name field is "${rawVal}" (length ${rawVal.length})`);
-      return;
-    }
+    if(!name){ showToast('Item name is empty','error'); return; }
     const category=document.getElementById('editCategory')?.value;
     const threshold=parseInt(document.getElementById('editThreshold')?.value)||10;
     const item=allItems.find(i=>i.id===id); const type=item?.itemType||'general';
