@@ -299,9 +299,10 @@
     showPinModal('Confirm Add','add bulk item',async()=>{try{await addDoc(collection(db,'store_items'),{name,category,unitStock:bulkQty,halfStock:0,quarterStock:0,unitCost:costPrice,halfCost:0,quarterCost:0,threshold:th,status,createdBy:currentUser?.uid,createdByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});await logAudit('add_store_item',`Added bulk: ${name} x${bulkQty}`);showToast('Bulk item added','success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});
   };
 
-  // ========== SELL TO INVENTORY (FULL FORM PRESERVED) ==========
+  // ========== SELL TO INVENTORY (REDESIGNED – FULL SIZE ALLOCATION) ==========
   window.openSellToInventoryModal = function(storeItemId) {
-    const item = storeItems.find(i=>i.id===storeItemId); if(!item)return;
+    const item = storeItems.find(i => i.id === storeItemId);
+    if (!item) return;
     const totalAvail = getTotalQty(item);
     showModal(`Sell to Inventory: ${item.name}`, `
       <div style="background:var(--primary-soft);padding:12px;border-radius:12px;margin-bottom:16px;">
@@ -309,34 +310,159 @@
         <strong>Available Stock:</strong> ${item.unitStock||0}U / ${item.halfStock||0}H / ${item.quarterStock||0}Q (Total: ${totalAvail})<br>
         <strong>Cost per Unit:</strong> ${formatCurrency(item.unitCost)}
       </div>
-      <div class="form-group"><label>How many BULK packs to convert? *</label><input type="number" class="form-control" id="s2iBulkQty" value="1" min="1" max="${Math.max(1,totalAvail)}"><p style="font-size:0.7rem;color:var(--gray);">Select how many bulk packs to sell to inventory</p></div>
-      <div class="form-group"><label>How many UNITS can be derived from ONE bulk pack? *</label><input type="number" class="form-control" id="s2iUnitsPerBulk" value="1" min="1" placeholder="e.g., 6 units per bulk pack"><p style="font-size:0.7rem;color:var(--gray);">Total units = Bulk Qty × Units per Bulk</p></div>
-      <p style="font-weight:600;margin-top:15px;">Set Retail Prices for Inventory:</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Bulk Packs to Convert *</label>
+          <input type="number" class="form-control" id="s2iBulkQty" value="1" min="1" max="${Math.max(1, totalAvail)}">
+          <p style="font-size:0.7rem;color:var(--gray);">How many bulk packs to take from store</p>
+        </div>
+        <div class="form-group">
+          <label>Units per Bulk Pack *</label>
+          <input type="number" class="form-control" id="s2iUnitsPerBulk" value="1" min="1">
+          <p style="font-size:0.7rem;color:var(--gray);">How many unit‑pieces one bulk pack yields</p>
+        </div>
+      </div>
+      <div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-bottom:16px;text-align:center;">
+        <strong>Total Derived Units:</strong> <span id="s2iTotalUnits" style="font-size:1.2rem;">0</span>
+        <p style="font-size:0.7rem;color:var(--gray);">Allocate these units across sizes below</p>
+      </div>
+      <p style="font-weight:600;margin-bottom:12px;">Allocation & Pricing (must equal total derived units)</p>
       <div class="form-row-3">
-        <div class="form-group"><label>Unit Price (1) ₦ *</label><input type="number" class="form-control" id="s2iUnitPrice" value="${(item.unitCost||0)*1.5}" step="0.01" min="0" placeholder="Price per unit"></div>
-        <div class="form-group"><label>Half Price (½) ₦</label><input type="number" class="form-control" id="s2iHalfPrice" value="${((item.halfCost||0)||(item.unitCost||0)*0.6)}" step="0.01" min="0" placeholder="Price per half"></div>
-        <div class="form-group"><label>Quarter Price (¼) ₦</label><input type="number" class="form-control" id="s2iQuarterPrice" value="${((item.quarterCost||0)||(item.unitCost||0)*0.35)}" step="0.01" min="0" placeholder="Price per quarter"></div>
+        <div class="form-group">
+          <label>Units (1) Quantity *</label>
+          <input type="number" class="form-control" id="s2iUnitQty" value="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>½ Quantity</label>
+          <input type="number" class="form-control" id="s2iHalfQty" value="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>¼ Quantity</label>
+          <input type="number" class="form-control" id="s2iQuarterQty" value="0" min="0">
+        </div>
       </div>
-      <div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;">
-        <div style="display:flex;justify-content:space-between;"><span>Total Units to Inventory:</span><strong id="s2iTotalUnits">0</strong></div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Unit Price ₦ *</label>
+          <input type="number" class="form-control" id="s2iUnitPrice" value="${(item.unitCost||0)*1.5}" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label>½ Price ₦</label>
+          <input type="number" class="form-control" id="s2iHalfPrice" value="${((item.halfCost||0)||(item.unitCost||0)*0.6)}" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label>¼ Price ₦</label>
+          <input type="number" class="form-control" id="s2iQuarterPrice" value="${((item.quarterCost||0)||(item.unitCost||0)*0.35)}" step="0.01" min="0">
+        </div>
       </div>
+      <p id="s2iValidationMsg" style="color:var(--danger);font-size:0.8rem;text-align:center;display:none;">The sum of unit, half, and quarter quantities must equal the total derived units.</p>
       <p style="font-size:0.75rem;color:var(--warning);margin-top:12px;"><i class="fas fa-info-circle"></i> This will be submitted for admin approval before appearing in inventory.</p>
-      <div style="display:flex;gap:10px;margin-top:12px;"><button class="btn btn-primary" onclick="submitSellToInventory('${storeItemId}')"><i class="fas fa-paper-plane"></i> Submit for Approval</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
-    document.getElementById('s2iBulkQty').addEventListener('input', updateS2ITotal);
-    document.getElementById('s2iUnitsPerBulk').addEventListener('input', updateS2ITotal);
-    updateS2ITotal();
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="btn btn-primary" onclick="submitSellToInventory('${storeItemId}')"><i class="fas fa-paper-plane"></i> Submit for Approval</button>
+        <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
+      </div>
+    `);
+
+    // Wire up live calculation
+    const bulkEl = document.getElementById('s2iBulkQty');
+    const upbEl = document.getElementById('s2iUnitsPerBulk');
+    const totalEl = document.getElementById('s2iTotalUnits');
+    const unitQty = document.getElementById('s2iUnitQty');
+    const halfQty = document.getElementById('s2iHalfQty');
+    const quarterQty = document.getElementById('s2iQuarterQty');
+    const msgEl = document.getElementById('s2iValidationMsg');
+
+    function updateDerivedTotal() {
+      const bq = parseInt(bulkEl?.value) || 0;
+      const upb = parseInt(upbEl?.value) || 0;
+      totalEl.textContent = bq * upb;
+    }
+
+    function validateAllocation() {
+      const total = parseInt(totalEl.textContent) || 0;
+      const u = parseInt(unitQty?.value) || 0;
+      const h = parseInt(halfQty?.value) || 0;
+      const q = parseInt(quarterQty?.value) || 0;
+      if (u + h + q !== total) {
+        msgEl.style.display = 'block';
+      } else {
+        msgEl.style.display = 'none';
+      }
+    }
+
+    bulkEl?.addEventListener('input', updateDerivedTotal);
+    upbEl?.addEventListener('input', updateDerivedTotal);
+    unitQty?.addEventListener('input', validateAllocation);
+    halfQty?.addEventListener('input', validateAllocation);
+    quarterQty?.addEventListener('input', validateAllocation);
+
+    updateDerivedTotal();
+    validateAllocation();
   };
 
-  function updateS2ITotal() { const bq=parseInt(document.getElementById('s2iBulkQty')?.value)||0,upb=parseInt(document.getElementById('s2iUnitsPerBulk')?.value)||0; document.getElementById('s2iTotalUnits').textContent=bq*upb; }
-
   window.submitSellToInventory = function(storeItemId) {
-    const item=storeItems.find(i=>i.id===storeItemId);if(!item)return;
-    const bulkQty=parseInt(document.getElementById('s2iBulkQty')?.value)||0,unitsPerBulk=parseInt(document.getElementById('s2iUnitsPerBulk')?.value)||0,unitPrice=parseFloat(document.getElementById('s2iUnitPrice')?.value)||0,halfPrice=parseFloat(document.getElementById('s2iHalfPrice')?.value)||0,quarterPrice=parseFloat(document.getElementById('s2iQuarterPrice')?.value)||0,totalUnits=bulkQty*unitsPerBulk;
-    if(bulkQty<=0||unitsPerBulk<=0){showToast('Enter valid quantities','error');return;}
-    if(bulkQty>getTotalQty(item)){showToast(`Only ${getTotalQty(item)} available`,'error');return;}
-    if(unitPrice<=0){showToast('Unit price required','error');return;}
-    if(totalUnits<=0){showToast('Total units must be > 0','error');return;}
-    showPinModal('Submit for Approval','submit sell-to-inventory request',async()=>{try{await addDoc(collection(db,'store_to_inventory_requests'),{storeItemId,storeItemName:item.name,storeItemCategory:item.category,bulkQty,unitsPerBulk,totalUnits,unitPrice,halfPrice,quarterPrice,costPrice:item.unitCost,requestedBy:currentUser?.uid,requestedByName:userData?.fullName||'Staff',status:'pending_approval',createdAt:serverTimestamp()});await logAudit('store_to_inventory_request',`${item.name}: ${bulkQty} bulk → ${totalUnits} units`);showToast('Submitted for admin approval!','success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});
+    const item = storeItems.find(i => i.id === storeItemId);
+    if (!item) return;
+
+    const bulkQty = parseInt(document.getElementById('s2iBulkQty')?.value) || 0;
+    const unitsPerBulk = parseInt(document.getElementById('s2iUnitsPerBulk')?.value) || 0;
+    const totalDerived = bulkQty * unitsPerBulk;
+
+    const unitQty = parseInt(document.getElementById('s2iUnitQty')?.value) || 0;
+    const halfQty = parseInt(document.getElementById('s2iHalfQty')?.value) || 0;
+    const quarterQty = parseInt(document.getElementById('s2iQuarterQty')?.value) || 0;
+
+    const unitPrice = parseFloat(document.getElementById('s2iUnitPrice')?.value) || 0;
+    const halfPrice = parseFloat(document.getElementById('s2iHalfPrice')?.value) || 0;
+    const quarterPrice = parseFloat(document.getElementById('s2iQuarterPrice')?.value) || 0;
+
+    if (bulkQty <= 0 || unitsPerBulk <= 0) {
+      showToast('Enter valid bulk quantities', 'error'); return;
+    }
+    if (bulkQty > getTotalQty(item)) {
+      showToast(`Only ${getTotalQty(item)} bulk packs available`, 'error'); return;
+    }
+    if (totalDerived <= 0) {
+      showToast('Total derived units must be > 0', 'error'); return;
+    }
+    if (unitQty + halfQty + quarterQty !== totalDerived) {
+      showToast(`The allocated quantities (${unitQty}+${halfQty}+${quarterQty}) must equal total derived units (${totalDerived})`, 'error');
+      return;
+    }
+    if (unitPrice <= 0) {
+      showToast('Unit price is required', 'error'); return;
+    }
+
+    showPinModal('Submit for Approval', 'submit sell-to-inventory request', async () => {
+      try {
+        await addDoc(collection(db, 'store_to_inventory_requests'), {
+          storeItemId,
+          storeItemName: item.name,
+          storeItemCategory: item.category,
+          bulkQty,
+          unitsPerBulk,
+          totalUnits: totalDerived,
+          allocatedQuantities: {
+            unit: unitQty,
+            half: halfQty,
+            quarter: quarterQty
+          },
+          unitPrice,
+          halfPrice,
+          quarterPrice,
+          costPrice: item.unitCost,
+          requestedBy: currentUser?.uid,
+          requestedByName: userData?.fullName || 'Staff',
+          status: 'pending_approval',
+          createdAt: serverTimestamp()
+        });
+        await logAudit('store_to_inventory_request', `${item.name}: ${bulkQty} bulk → ${totalDerived} units allocated (U:${unitQty}, H:${halfQty}, Q:${quarterQty})`);
+        showToast('Submitted for admin approval!', 'success');
+        hideModal();
+      } catch (e) {
+        showToast('Failed: ' + e.message, 'error');
+      }
+    });
   };
 
   // ========== EDIT/DELETE ==========
@@ -473,7 +599,6 @@
       const size = parseFloat(sizeEl?.value) || 1;
       if (qty <= 0 || price <= 0) continue;
 
-      // Use getAttribute for rock‑solid data access
       const stockField = size === 0.5 ? 'hs' : size === 0.25 ? 'qs' : 'us';
       const maxStock = parseInt(opt.getAttribute(`data-${stockField}`)) || 0;
       if (qty > maxStock) {
