@@ -232,7 +232,15 @@
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
+  const firebaseConfig = {
+    apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
+    authDomain: "fashion-46e5d.firebaseapp.com",
+    projectId: "fashion-46e5d",
+    storageBucket: "fashion-46e5d.firebasestorage.app",
+    messagingSenderId: "408062284317",
+    appId: "1:408062284317:web:eb905bce68926c10a0ecf4"
+  };
+
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
@@ -241,7 +249,16 @@
   let allSales = [], allReturns = [], allCustomers = [], allStockItems = [];
   let selectedPayment = 'cash', customerType = 'existing';
   let statsRevealed = false, selectedReturnAction = 'refund';
-  let cart = [];
+
+  window._saleState = {
+    get customerType() { return customerType; },
+    set customerType(v) { customerType = v; },
+    get selectedPayment() { return selectedPayment; },
+    set selectedPayment(v) { selectedPayment = v; },
+    get allStockItems() { return allStockItems; },
+    get selectedReturnAction() { return selectedReturnAction; },
+    set selectedReturnAction(v) { selectedReturnAction = v; }
+  };
 
   function formatTime(d) { if(!d) return '-'; const date=d.toDate?d.toDate():new Date(d); return date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
   function formatCurrency(n) { return '₦'+(n||0).toLocaleString(); }
@@ -249,16 +266,37 @@
   window.navigateTo = navigateTo;
   function generateReceiptNumber() { return 'RCP-'+Date.now().toString().slice(-8)+'-'+Math.random().toString(36).substr(2,4).toUpperCase(); }
 
-  function showToast(msg, type='success') { const c=document.getElementById('toastContainer'); if(!c) return; const t=document.createElement('div'); t.className=`toast ${type}`; t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`; c.appendChild(t); setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500); }
-  async function logAudit(action, note) { try { await addDoc(collection(db,'audit_logs'),{actionType:action,performedBy:currentUser?.uid||'unknown',performedByName:userData?.fullName||'Staff',performedAt:serverTimestamp(),note:note||''}); } catch(e){} }
+  function showToast(msg, type='success') {
+    const c=document.getElementById('toastContainer'); if(!c) return;
+    const t=document.createElement('div'); t.className=`toast ${type}`;
+    t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
+    c.appendChild(t);
+    setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500);
+  }
+
+  async function logAudit(action, note) {
+    try { await addDoc(collection(db,'audit_logs'),{actionType:action,performedBy:currentUser?.uid||'unknown',performedByName:userData?.fullName||'Staff',performedAt:serverTimestamp(),note:note||''}); } catch(e){}
+  }
+
   function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
   window.hideModal = hideModal;
-  function showModal(title, content) { document.getElementById('modalTitle').textContent = title; document.getElementById('modalContent').innerHTML = content; document.getElementById('modalOverlay').classList.add('active'); }
+  function showModal(title, content) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalContent').innerHTML = content;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
   function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
   function isAdmin() { return userData?.role==='admin'||userData?.role==='super_admin'; }
 
-  window.toggleSidebar = function() { const s=document.getElementById('sidebar'),o=document.getElementById('sidebarOverlay'); if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';} };
-  window.closeSidebar = function() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow=''; };
+  window.toggleSidebar = function() {
+    const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay');
+    if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}
+    else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';}
+  };
+  window.closeSidebar = function() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow='';
+  };
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){hideModal();closeSidebar();}});
 
   function buildSidebar() {
@@ -301,13 +339,32 @@
     document.getElementById('verifyPinBtn').onclick=()=>{const pin=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');if(pin===(userData?.attendantPin||'1234')){hideModal();onSuccess();}else{showToast('Invalid PIN','error');}};
   }
 
-  window.revealStats = function() { if(statsRevealed)return;if(isAdmin()){statsRevealed=true;updateStatsDisplay();return;}showPinModal('Unlock Financial Stats','view sales figures',()=>{statsRevealed=true;updateStatsDisplay();logAudit('reveal_sales_stats','Sales figures revealed');showToast('Sales figures unlocked','success');}); };
-  function updateStatsDisplay() { if(!statsRevealed)return;['todayCard','weekCard','monthCard','yearCard'].forEach(id=>{const card=document.getElementById(id);if(card){card.classList.remove('value-locked');const valEl=card.querySelector('.stat-value');if(valEl){valEl.style.filter='none';valEl.style.cursor='default';}const hint=card.querySelector('.value-hint');if(hint)hint.style.display='none';}}); }
+  window.revealStats = function() {
+    if(statsRevealed) return;
+    if(isAdmin()){statsRevealed=true;updateStatsDisplay();return;}
+    showPinModal('Unlock Financial Stats','view sales figures',()=>{statsRevealed=true;updateStatsDisplay();logAudit('reveal_sales_stats','Sales figures revealed');showToast('Sales figures unlocked','success');});
+  };
+
+  function updateStatsDisplay() {
+    if(!statsRevealed) return;
+    ['todayCard','weekCard','monthCard','yearCard'].forEach(id=>{
+      const card=document.getElementById(id);
+      if(card){
+        card.classList.remove('value-locked');
+        const valEl=card.querySelector('.stat-value');
+        if(valEl){valEl.style.filter='none';valEl.style.cursor='default';}
+        const hint=card.querySelector('.value-hint');
+        if(hint)hint.style.display='none';
+      }
+    });
+  }
 
   function updateStats(){
-    const now=new Date();const today=now.toISOString().split('T')[0];
+    const now=new Date();
+    const today=now.toISOString().split('T')[0];
     const weekStart=new Date(now);weekStart.setDate(now.getDate()-now.getDay());
-    const monthStart=new Date(now.getFullYear(),now.getMonth(),1);const yearStart=new Date(now.getFullYear(),0,1);
+    const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+    const yearStart=new Date(now.getFullYear(),0,1);
     let todayTotal=0,weekTotal=0,monthTotal=0,yearTotal=0,todayCount=0,weekCount=0,monthCount=0,yearCount=0;
     allSales.forEach(s=>{if(s.status==='returned')return;const d=s.createdAt?.toDate();if(!d)return;const amt=parseFloat(s.totalAmount)||0;if(d.toISOString().split('T')[0]===today){todayTotal+=amt;todayCount++;}if(d>=weekStart){weekTotal+=amt;weekCount++;}if(d>=monthStart){monthTotal+=amt;monthCount++;}if(d>=yearStart){yearTotal+=amt;yearCount++;}});
     allReturns.forEach(r=>{if(r.returnAction!=='refund')return;const d=r.createdAt?.toDate();if(!d)return;const amt=parseFloat(r.totalRefund)||0;if(d.toISOString().split('T')[0]===today){todayTotal-=amt;todayCount--;}if(d>=weekStart){weekTotal-=amt;weekCount--;}if(d>=monthStart){monthTotal-=amt;monthCount--;}if(d>=yearStart){yearTotal-=amt;yearCount--;}});
@@ -322,11 +379,20 @@
   }
 
   function renderSales(){
-    const tbody=document.getElementById('salesTable');const search=(document.getElementById('salesSearchInput')?.value||'').toLowerCase();
-    let filtered=[...allSales];if(search)filtered=filtered.filter(s=>(s.customerName||'').toLowerCase().includes(search)||(s.customerPhone||'').toLowerCase().includes(search)||(s.receiptNumber||'').toLowerCase().includes(search));
-    tbody.innerHTML='';if(filtered.length===0){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-cash-register"></i><p>No sales found</p></div></td></tr>';updateStats();return;}
+    const tbody=document.getElementById('salesTable');
+    const search=(document.getElementById('salesSearchInput')?.value||'').toLowerCase();
+    let filtered=[...allSales];
+    if(search) filtered=filtered.filter(s=>(s.customerName||'').toLowerCase().includes(search)||(s.customerPhone||'').toLowerCase().includes(search)||(s.receiptNumber||'').toLowerCase().includes(search));
+    tbody.innerHTML='';
+    if(filtered.length===0){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-cash-register"></i><p>No sales found</p></div></td></tr>';updateStats();return;}
     filtered.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
-    filtered.forEach(s=>{const isReturned=s.status==='returned';const statusBadge=isReturned?`<span class="badge badge-danger">Returned</span>`:`<span class="badge badge-success">Completed</span>`;const returnInfo=isReturned?`<br><small style="color:var(--danger);">Action: ${s.returnAction?.replace(/_/g,' ')} | Refund: -${formatCurrency(s.totalRefund||0)}</small>`:'';tbody.innerHTML+=`<tr class="${isReturned?'returned-row':''}"><td>${formatTime(s.createdAt)}</td><td><span class="badge badge-info">${s.receiptNumber||'N/A'}</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;" onclick="navigateTo('history.html?customerId=${s.customerId||''}')">${s.customerName||'Walk-in'}</td><td>${s.customerPhone||'-'}</td><td>${s.items?.length||0} items</td><td><strong style="color:${isReturned?'var(--danger)':'inherit'};">${isReturned?'-':''}${formatCurrency(s.totalAmount)}</strong>${returnInfo}</td><td><span class="badge badge-success">${s.paymentMethod||'cash'}</span></td><td>${statusBadge}</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt('${s.id}')" title="View"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt('${s.id}')" title="Print"><i class="fas fa-print"></i></button>${!isReturned?`<button class="btn btn-sm btn-warning" onclick="openReturnModal('${s.id}')" title="Return"><i class="fas fa-undo"></i></button>`:''}</div></td></tr>`;});updateStats();
+    filtered.forEach(s=>{
+      const isReturned=s.status==='returned';
+      const statusBadge=isReturned?`<span class="badge badge-danger">Returned</span>`:`<span class="badge badge-success">Completed</span>`;
+      const returnInfo=isReturned?`<br><small style="color:var(--danger);">Action: ${s.returnAction?.replace(/_/g,' ')} | Refund: -${formatCurrency(s.totalRefund||0)}</small>`:'';
+      tbody.innerHTML+=`<tr class="${isReturned?'returned-row':''}"><td>${formatTime(s.createdAt)}</td><td><span class="badge badge-info">${s.receiptNumber||'N/A'}</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;" onclick="navigateTo('history.html?customerId=${s.customerId||''}')">${s.customerName||'Walk-in'}</td><td>${s.customerPhone||'-'}</td><td>${s.items?.length||0} items</td><td><strong style="color:${isReturned?'var(--danger)':'inherit'};">${isReturned?'-':''}${formatCurrency(s.totalAmount)}</strong>${returnInfo}</td><td><span class="badge badge-success">${s.paymentMethod||'cash'}</span></td><td>${statusBadge}</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt('${s.id}')" title="View"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt('${s.id}')" title="Print"><i class="fas fa-print"></i></button>${!isReturned?`<button class="btn btn-sm btn-warning" onclick="openReturnModal('${s.id}')" title="Return"><i class="fas fa-undo"></i></button>`:''}</div></td></tr>`;
+    });
+    updateStats();
   }
 
   function loadSales(){
