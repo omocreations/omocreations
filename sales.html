@@ -402,11 +402,14 @@
     unsubscribes.push(onSnapshot(query(collection(db,'returns'),orderBy('createdAt','desc')),snap=>{allReturns=snap.docs.map(d=>({id:d.id,...d.data()}));renderSales();},error=>{unsubscribes.push(onSnapshot(collection(db,'returns'),snap=>{allReturns=snap.docs.map(d=>({id:d.id,...d.data()}));allReturns.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));renderSales();}));}));
   }
 
+  // FIX 1: Inventory Fetching – removed strict status filters and unitQty > 0 filter
   async function loadCustomersAndStock(){
     try{
       const custSnap=await getDocs(query(collection(db,'customers'),where('status','==','approved')));
       allCustomers=custSnap.docs.map(d=>({id:d.id,...d.data()}));
-      const stockSnap=await getDocs(query(collection(db,'stock_items'),where('status','in',['available','low'])));
+
+      // FIX: Removed the strict status and > 0 filters so all inventory actually shows up
+      const stockSnap=await getDocs(collection(db,'stock_items'));
       allStockItems=stockSnap.docs.map(d=>{
         const data=d.data();
         return {
@@ -415,23 +418,43 @@
           unitPrice: parseFloat(data.unitPrice ?? 0),
           halfPrice: parseFloat(data.halfPrice ?? 0),
           quarterPrice: parseFloat(data.quarterPrice ?? 0),
-          packSize: parseInt(data.packSize ?? 0),
+          packSize: parseInt(data.packSize ?? 12),
           packPrice: parseFloat(data.packPrice ?? 0),
-          bundleSize: parseInt(data.bundleSize ?? 0),
+          bundleSize: parseInt(data.bundleSize ?? 50),
           bundlePrice: parseFloat(data.bundlePrice ?? 0),
           measureUnit: data.measureUnit ?? 'piece',
           itemType: data.itemType ?? 'general'
         };
-      }).filter(i=>i.unitQty>0);
+      }).filter(i=>i.status !== 'deleted'); // Only hide explicitly deleted items
     }catch(e){showToast('Error loading data','error');}
   }
 
   function getItemTypeLabel(type){ const labels={simple:'🔧',fashion:'👗',pack_bundle:'📦',measured:'📏',pack:'📦',general:'🔧'}; return labels[type]||'🔧'; }
-  function getSizeOptions(itemType, item){
-    if(itemType==='fashion') return [{value:'1',label:'1 (Unit)'},{value:'0.5',label:'½ (Half)'},{value:'0.25',label:'¼ (Quarter)'}];
-    if(itemType==='pack_bundle'||itemType==='pack') return [{value:'1',label:'1 (Unit)'},{value:'pack',label:`📦 Pack (${item.packSize||12}/pk)`}];
-    if(itemType==='measured') return [{value:'1',label:`1 ${item.measureUnit||'yard'}`},{value:'bundle',label:`📦 Bundle (${item.bundleSize||50} ${item.measureUnit||'yds'})`}];
-    return [{value:'1',label:'1 (Unit)'}];
+
+  // FIX 2: Dynamic Sizes – New helper + updated getSizeOptions based on actual prices
+  function getStockOptionsHtml() {
+    return allStockItems.map(i=>{
+      const it=i.itemType||'general'; const label=getItemTypeLabel(it);
+      const pp=i.packPrice?` | Pk:${formatCurrency(i.packPrice)}`:'';
+      const bp=i.bundlePrice?` | Bndl:${formatCurrency(i.bundlePrice)}`:'';
+      const hp=i.halfPrice?` | ½:${formatCurrency(i.halfPrice)}`:'';
+      const qp=i.quarterPrice?` | ¼:${formatCurrency(i.quarterPrice)}`:'';
+      const stock=parseFloat(i.unitQty||0);
+      return `<option value="${i.id}" data-name="${i.name||''}" data-price="${i.unitPrice||0}" data-halfprice="${i.halfPrice||0}" data-quarterprice="${i.quarterPrice||0}" data-packprice="${i.packPrice||0}" data-bundleprice="${i.bundlePrice||0}" data-packsize="${i.packSize||12}" data-bundlesize="${i.bundleSize||50}" data-stock="${stock}">${label} ${i.name||''} - ${formatCurrency(i.unitPrice||0)}${hp}${qp}${pp}${bp} (Qty: ${stock})</option>`;
+    }).join('');
+  }
+
+  // FIX: Detects item nature by checking if prices exist!
+  function getSizeOptions(item){
+    const opts = [];
+    if(parseFloat(item.unitPrice) > 0) opts.push({value:'1',label:'1 (Unit/Yard)'});
+    if(parseFloat(item.halfPrice) > 0) opts.push({value:'0.5',label:'½ (Half)'});
+    if(parseFloat(item.quarterPrice) > 0) opts.push({value:'0.25',label:'¼ (Quarter)'});
+    if(parseFloat(item.packPrice) > 0) opts.push({value:'pack',label:`📦 Pack (${item.packSize||12})`});
+    if(parseFloat(item.bundlePrice) > 0) opts.push({value:'bundle',label:`📦 Bundle (${item.bundleSize||50})`});
+
+    if(opts.length === 0) opts.push({value:'1',label:'1 (Unit)'});
+    return opts;
   }
 
   // ========== NEW SALE MODAL ==========
@@ -440,19 +463,10 @@
     if(allStockItems.length===0){showToast('No items available','error');return;}
 
     const custOptions=allCustomers.map(c=>`<option value="${c.id}" data-name="${c.fullName||''}" data-phone="${c.phone||''}" data-address="${c.address||c.location||''}">${c.fullName||''} - ${c.phone||'No phone'}</option>`).join('');
+    const stockOptions = getStockOptionsHtml();
 
-    const stockOptions=allStockItems.map(i=>{
-      const it=i.itemType||'general';const label=getItemTypeLabel(it);
-      const pp=it==='pack_bundle'&&i.packPrice?` | Pack:${formatCurrency(i.packPrice)}`:'';
-      const bp=it==='measured'&&i.bundlePrice?` | Bundle:${formatCurrency(i.bundlePrice)}`:'';
-      const hp=it==='fashion'&&i.halfPrice?` | ½:${formatCurrency(i.halfPrice)}`:'';
-      const qp=it==='fashion'&&i.quarterPrice?` | ¼:${formatCurrency(i.quarterPrice)}`:'';
-      const stock=parseFloat(i.unitQty||0);
-      return `<option value="${i.id}" data-name="${i.name||''}" data-price="${i.unitPrice||0}" data-halfprice="${i.halfPrice||0}" data-quarterprice="${i.quarterPrice||0}" data-packprice="${i.packPrice||0}" data-bundleprice="${i.bundlePrice||0}" data-packsize="${i.packSize||12}" data-bundlesize="${i.bundleSize||50}" data-itemtype="${it}" data-stock="${stock}">${label} ${i.name||''} - ${formatCurrency(i.unitPrice||0)}${hp}${qp}${pp}${bp} (${stock})</option>`;
-    }).join('');
-
-    const firstItem=allStockItems[0];const firstType=firstItem.itemType||'general';
-    const firstSizeOpts=getSizeOptions(firstType,firstItem).map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
+    const firstItem = allStockItems[0];
+    const firstSizeOpts = firstItem ? getSizeOptions(firstItem).map(o=>`<option value="${o.value}">${o.label}</option>`).join('') : '<option value="1">1 (Unit)</option>';
 
     showModal('New Sale',`
       <div class="customer-type-toggle"><button class="customer-type-btn active" data-type="existing" onclick="window._switchCustomerType('existing')"><i class="fas fa-users"></i> Existing</button><button class="customer-type-btn" data-type="new" onclick="window._switchCustomerType('new')"><i class="fas fa-user-plus"></i> New</button></div>
@@ -478,10 +492,20 @@
   window._updateSizeDropdown = function(selectEl){
     const row=selectEl.closest('.item-row');if(!row)return;
     const sizeEl=row.querySelector('.item-size');if(!sizeEl)return;
-    const opt=selectEl.options[selectEl.selectedIndex];if(!opt||!opt.value)return;
-    const itemType=opt.dataset.itemtype||'general';
-    const itemData={packSize:parseInt(opt.dataset.packsize)||12,bundleSize:parseInt(opt.dataset.bundlesize)||50,measureUnit:'yard'};
-    const options=getSizeOptions(itemType,itemData);
+    const opt=selectEl.options[selectEl.selectedIndex];
+    if(!opt||!opt.value) { sizeEl.innerHTML='<option value="1">1 (Unit)</option>'; return; }
+
+    const itemData={
+      unitPrice: parseFloat(opt.getAttribute('data-price'))||0,
+      halfPrice: parseFloat(opt.getAttribute('data-halfprice'))||0,
+      quarterPrice: parseFloat(opt.getAttribute('data-quarterprice'))||0,
+      packPrice: parseFloat(opt.getAttribute('data-packprice'))||0,
+      bundlePrice: parseFloat(opt.getAttribute('data-bundleprice'))||0,
+      packSize: parseInt(opt.getAttribute('data-packsize'))||12,
+      bundleSize: parseInt(opt.getAttribute('data-bundlesize'))||50
+    };
+
+    const options=getSizeOptions(itemData);
     sizeEl.innerHTML=options.map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
     window._updateSaleSummary();
   };
@@ -491,14 +515,7 @@
 
   window._addSaleItem = function() {
     const idx=document.querySelectorAll('.item-row').length;
-    const stockOptions=allStockItems.map(i=>{
-      const it=i.itemType||'general';const label=getItemTypeLabel(it);
-      const pp=it==='pack_bundle'&&i.packPrice?` | Pack:${formatCurrency(i.packPrice)}`:'';
-      const bp=it==='measured'&&i.bundlePrice?` | Bundle:${formatCurrency(i.bundlePrice)}`:'';
-      const hp=it==='fashion'&&i.halfPrice?` | ½:${formatCurrency(i.halfPrice)}`:'';const qp=it==='fashion'&&i.quarterPrice?` | ¼:${formatCurrency(i.quarterPrice)}`:'';
-      const stock=parseFloat(i.unitQty||0);
-      return `<option value="${i.id}" data-name="${i.name||''}" data-price="${i.unitPrice||0}" data-halfprice="${i.halfPrice||0}" data-quarterprice="${i.quarterPrice||0}" data-packprice="${i.packPrice||0}" data-bundleprice="${i.bundlePrice||0}" data-packsize="${i.packSize||12}" data-bundlesize="${i.bundleSize||50}" data-itemtype="${it}" data-stock="${stock}">${label} ${i.name||''} - ${formatCurrency(i.unitPrice||0)}${hp}${qp}${pp}${bp} (${stock})</option>`;
-    }).join('');
+    const stockOptions = getStockOptionsHtml();
     const div=document.createElement('div');div.className='item-row';
     div.innerHTML=`<select class="form-control item-select" style="width:100%;"><option value="">-- Search --</option>${stockOptions}</select><select class="form-control item-size" id="itemSize-${idx}"><option value="1">1 (Unit)</option></select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();"><i class="fas fa-times"></i></button>`;
     document.getElementById('saleItems').appendChild(div);
@@ -508,17 +525,20 @@
     window._updateSaleSummary();
   };
 
+  // FIX: Strictly reads the data-attributes using getAttribute
   window._updateSaleSummary = function() {
     let total=0,count=0;
     document.querySelectorAll('.item-row').forEach(row=>{
       const select=row.querySelector('.item-select');const qtyEl=row.querySelector('.item-qty');const sizeEl=row.querySelector('.item-size');
       if(select&&qtyEl&&select.value){
         const opt=select.options[select.selectedIndex];const qty=parseFloat(qtyEl.value)||1;const size=sizeEl?.value||'1';
-        let price=parseFloat(opt?.dataset.price)||0;
-        if(size==='0.5'&&parseFloat(opt?.dataset.halfprice)>0)price=parseFloat(opt.dataset.halfprice);
-        else if(size==='0.25'&&parseFloat(opt?.dataset.quarterprice)>0)price=parseFloat(opt.dataset.quarterprice);
-        else if(size==='pack'&&parseFloat(opt?.dataset.packprice)>0)price=parseFloat(opt.dataset.packprice);
-        else if(size==='bundle'&&parseFloat(opt?.dataset.bundleprice)>0)price=parseFloat(opt.dataset.bundleprice);
+        let price=parseFloat(opt?.getAttribute('data-price'))||0;
+
+        if(size==='0.5'&&parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));
+        else if(size==='0.25'&&parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));
+        else if(size==='pack'&&parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));
+        else if(size==='bundle'&&parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));
+
         total+=price*qty;count++;
       }
     });
@@ -529,17 +549,30 @@
     let customerId='',customerName='',customerPhone='',customerEmail='',customerAddress='';
     if(customerType==='existing'){const select=document.getElementById('existingCustomerSelect');if(!select||!select.value){showToast('Select a customer','error');return;}customerId=select.value;const opt=select.options[select.selectedIndex];customerName=opt.dataset.name;customerPhone=opt.dataset.phone;customerAddress=opt.dataset.address||'';}
     else{customerName=document.getElementById('newCustomerName')?.value?.trim();customerPhone=document.getElementById('newCustomerPhone')?.value?.trim();customerEmail=document.getElementById('newCustomerEmail')?.value?.trim();customerAddress=document.getElementById('newCustomerAddress')?.value?.trim();if(!customerName||!customerPhone||!customerAddress){showToast('Name, phone & address required','error');return;}}
+
     const items=[];let total=0;
     for(const row of document.querySelectorAll('.item-row')){
       const select=row.querySelector('.item-select');const qtyEl=row.querySelector('.item-qty');const sizeEl=row.querySelector('.item-size');
       if(select&&select.value&&qtyEl){
         const opt=select.options[select.selectedIndex];const qty=parseFloat(qtyEl.value)||1;const size=sizeEl?.value||'1';
-        const stockAvailable=parseFloat(opt?.dataset.stock)||0;
-        let deductQty=qty;let sizeLabel='1';let price=parseFloat(opt?.dataset.price)||0;
-        if(size==='0.5'){deductQty=qty*0.5;sizeLabel='½';if(parseFloat(opt?.dataset.halfprice)>0)price=parseFloat(opt.dataset.halfprice);}
-        else if(size==='0.25'){deductQty=qty*0.25;sizeLabel='¼';if(parseFloat(opt?.dataset.quarterprice)>0)price=parseFloat(opt.dataset.quarterprice);}
-        else if(size==='pack'){deductQty=qty*(parseInt(opt?.dataset.packsize)||12);sizeLabel='📦 Pack';if(parseFloat(opt?.dataset.packprice)>0)price=parseFloat(opt.dataset.packprice);}
-        else if(size==='bundle'){deductQty=qty*(parseInt(opt?.dataset.bundlesize)||50);sizeLabel='📦 Bundle';if(parseFloat(opt?.dataset.bundleprice)>0)price=parseFloat(opt.dataset.bundleprice);}
+        const stockAvailable=parseFloat(opt?.getAttribute('data-stock'))||0;
+
+        let deductQty=qty; let sizeLabel='1'; let price=parseFloat(opt?.getAttribute('data-price'))||0;
+
+        if(size==='0.5'){
+            deductQty=qty*0.5; sizeLabel='½';
+            if(parseFloat(opt?.getAttribute('data-halfprice'))>0) price=parseFloat(opt.getAttribute('data-halfprice'));
+        } else if(size==='0.25'){
+            deductQty=qty*0.25; sizeLabel='¼';
+            if(parseFloat(opt?.getAttribute('data-quarterprice'))>0) price=parseFloat(opt.getAttribute('data-quarterprice'));
+        } else if(size==='pack'){
+            deductQty=qty*(parseInt(opt?.getAttribute('data-packsize'))||12); sizeLabel='📦 Pack';
+            if(parseFloat(opt?.getAttribute('data-packprice'))>0) price=parseFloat(opt.getAttribute('data-packprice'));
+        } else if(size==='bundle'){
+            deductQty=qty*(parseInt(opt?.getAttribute('data-bundlesize'))||50); sizeLabel='📦 Bundle';
+            if(parseFloat(opt?.getAttribute('data-bundleprice'))>0) price=parseFloat(opt.getAttribute('data-bundleprice'));
+        }
+
         if(deductQty>stockAvailable){showToast(`Only ${stockAvailable} available for ${opt.dataset.name}`,'error');return;}
         items.push({id:select.value,name:opt.dataset.name,quantity:qty,size:size,sizeLabel,unitPrice:price,deductQty:deductQty});total+=price*qty;
       }
