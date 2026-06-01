@@ -83,7 +83,7 @@
     .panel-header h3 i { color:var(--primary); }
 
     .table-wrapper { overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:16px; }
-    .data-table { width:100%; border-collapse:collapse; min-width:1200px; }
+    .data-table { width:100%; border-collapse:collapse; min-width:1100px; }
     .data-table th { text-align:left; padding:14px 10px; font-size:0.7rem; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(--primary-soft); white-space:nowrap; background:white; }
     .data-table td { padding:14px 10px; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
     .data-table tbody tr { transition:background 0.2s; cursor:pointer; }
@@ -125,9 +125,9 @@
     .payment-method.selected { border-color:var(--primary); background:var(--primary-soft); }
 
     .item-row { display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-wrap:wrap; }
-    .item-row .item-select { flex:3; min-width:200px; }
-    .item-row .item-size { flex:0.8; min-width:100px; }
-    .item-row .item-qty { flex:0.6; min-width:70px; }
+    .item-row .item-select { flex:3; min-width:180px; }
+    .item-row .item-size { flex:1; min-width:100px; }
+    .item-row .item-qty { flex:0.5; min-width:60px; }
 
     .sale-summary { background:var(--gray-light); border-radius:14px; padding:16px; margin-top:20px; }
     .summary-row { display:flex; justify-content:space-between; padding:5px 0; }
@@ -156,12 +156,6 @@
     .toast { background:white; color:var(--dark); padding:14px 20px; border-radius:50px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px; font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease; border-left:4px solid var(--primary); transition:all 0.3s ease; }
     .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); } .toast i { font-size:1.1rem; }
 
-    .item-type-badge { font-size:0.6rem; padding:2px 6px; border-radius:10px; display:inline-block; margin-left:6px; }
-    .item-type-badge.fashion { background:rgba(255,77,166,0.1); color:var(--primary); }
-    .item-type-badge.pack { background:rgba(59,130,246,0.1); color:var(--info); }
-    .item-type-badge.measured { background:rgba(16,185,129,0.1); color:var(--success); }
-    .item-type-badge.general { background:rgba(107,114,128,0.1); color:var(--gray); }
-
     @media (max-width:1400px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:768px) {
       .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; } .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); }
@@ -169,7 +163,7 @@
       .main-content { margin-left:0 !important; width:100% !important; } .content-wrapper { padding:16px 12px; } .top-bar { padding:0 16px; }
       .page-title { font-size:1.1rem; } .current-date { display:none; } .stats-grid { grid-template-columns:1fr 1fr; gap:10px; }
       .stat-card { padding:14px 12px; } .stat-value { font-size:1.4rem; } .panel { padding:16px 12px; border-radius:18px; }
-      .data-table { min-width:1000px; } .data-table th, .data-table td { padding:10px 6px; font-size:0.75rem; } .modal { padding:20px; border-radius:20px; }
+      .data-table { min-width:900px; } .data-table th, .data-table td { padding:10px 6px; font-size:0.75rem; } .modal { padding:20px; border-radius:20px; }
     }
     @media (max-width:480px) { .stats-grid { grid-template-columns:1fr; } }
   </style>
@@ -238,15 +232,7 @@
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
-    authDomain: "fashion-46e5d.firebaseapp.com",
-    projectId: "fashion-46e5d",
-    storageBucket: "fashion-46e5d.firebasestorage.app",
-    messagingSenderId: "408062284317",
-    appId: "1:408062284317:web:eb905bce68926c10a0ecf4"
-  };
-
+  const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
@@ -255,54 +241,24 @@
   let allSales = [], allReturns = [], allCustomers = [], allStockItems = [];
   let selectedPayment = 'cash', customerType = 'existing';
   let statsRevealed = false, selectedReturnAction = 'refund';
-
-  window._saleState = {
-    get customerType() { return customerType; },
-    set customerType(v) { customerType = v; },
-    get selectedPayment() { return selectedPayment; },
-    set selectedPayment(v) { selectedPayment = v; },
-    get allStockItems() { return allStockItems; },
-    get selectedReturnAction() { return selectedReturnAction; },
-    set selectedReturnAction(v) { selectedReturnAction = v; }
-  };
+  let cart = [];
 
   function formatTime(d) { if(!d) return '-'; const date=d.toDate?d.toDate():new Date(d); return date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
-  function formatCurrency(n) { return '₦'+(n||0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}); }
+  function formatCurrency(n) { return '₦'+(n||0).toLocaleString(); }
   function navigateTo(url) { window.location.href=url; }
   window.navigateTo = navigateTo;
   function generateReceiptNumber() { return 'RCP-'+Date.now().toString().slice(-8)+'-'+Math.random().toString(36).substr(2,4).toUpperCase(); }
 
-  function showToast(msg, type='success') {
-    const c=document.getElementById('toastContainer'); if(!c) return;
-    const t=document.createElement('div'); t.className=`toast ${type}`;
-    t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
-    c.appendChild(t);
-    setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500);
-  }
-
-  async function logAudit(action, note) {
-    try { await addDoc(collection(db,'audit_logs'),{actionType:action,performedBy:currentUser?.uid||'unknown',performedByName:userData?.fullName||'Staff',performedAt:serverTimestamp(),note:note||''}); } catch(e){}
-  }
-
+  function showToast(msg, type='success') { const c=document.getElementById('toastContainer'); if(!c) return; const t=document.createElement('div'); t.className=`toast ${type}`; t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`; c.appendChild(t); setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500); }
+  async function logAudit(action, note) { try { await addDoc(collection(db,'audit_logs'),{actionType:action,performedBy:currentUser?.uid||'unknown',performedByName:userData?.fullName||'Staff',performedAt:serverTimestamp(),note:note||''}); } catch(e){} }
   function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
   window.hideModal = hideModal;
-  function showModal(title, content) {
-    document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalContent').innerHTML = content;
-    document.getElementById('modalOverlay').classList.add('active');
-  }
+  function showModal(title, content) { document.getElementById('modalTitle').textContent = title; document.getElementById('modalContent').innerHTML = content; document.getElementById('modalOverlay').classList.add('active'); }
   function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
   function isAdmin() { return userData?.role==='admin'||userData?.role==='super_admin'; }
 
-  window.toggleSidebar = function() {
-    const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay');
-    if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}
-    else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';}
-  };
-  window.closeSidebar = function() {
-    document.getElementById('sidebar').classList.remove('mobile-open');
-    document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow='';
-  };
+  window.toggleSidebar = function() { const s=document.getElementById('sidebar'),o=document.getElementById('sidebarOverlay'); if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';} };
+  window.closeSidebar = function() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow=''; };
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){hideModal();closeSidebar();}});
 
   function buildSidebar() {
@@ -345,37 +301,16 @@
     document.getElementById('verifyPinBtn').onclick=()=>{const pin=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');if(pin===(userData?.attendantPin||'1234')){hideModal();onSuccess();}else{showToast('Invalid PIN','error');}};
   }
 
-  window.revealStats = function() {
-    if(statsRevealed) return;
-    if(isAdmin()){statsRevealed=true;updateStatsDisplay();return;}
-    showPinModal('Unlock Financial Stats','view sales figures',()=>{statsRevealed=true;updateStatsDisplay();logAudit('reveal_sales_stats','Sales figures revealed');showToast('Sales figures unlocked','success');});
-  };
-
-  function updateStatsDisplay() {
-    if(!statsRevealed) return;
-    ['todayCard','weekCard','monthCard','yearCard'].forEach(id=>{
-      const card=document.getElementById(id);
-      if(card){
-        card.classList.remove('value-locked');
-        const valEl=card.querySelector('.stat-value');
-        if(valEl){valEl.style.filter='none';valEl.style.cursor='default';}
-        const hint=card.querySelector('.value-hint');
-        if(hint)hint.style.display='none';
-      }
-    });
-  }
+  window.revealStats = function() { if(statsRevealed)return;if(isAdmin()){statsRevealed=true;updateStatsDisplay();return;}showPinModal('Unlock Financial Stats','view sales figures',()=>{statsRevealed=true;updateStatsDisplay();logAudit('reveal_sales_stats','Sales figures revealed');showToast('Sales figures unlocked','success');}); };
+  function updateStatsDisplay() { if(!statsRevealed)return;['todayCard','weekCard','monthCard','yearCard'].forEach(id=>{const card=document.getElementById(id);if(card){card.classList.remove('value-locked');const valEl=card.querySelector('.stat-value');if(valEl){valEl.style.filter='none';valEl.style.cursor='default';}const hint=card.querySelector('.value-hint');if(hint)hint.style.display='none';}}); }
 
   function updateStats(){
-    const now=new Date();
-    const today=now.toISOString().split('T')[0];
+    const now=new Date();const today=now.toISOString().split('T')[0];
     const weekStart=new Date(now);weekStart.setDate(now.getDate()-now.getDay());
-    const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
-    const yearStart=new Date(now.getFullYear(),0,1);
+    const monthStart=new Date(now.getFullYear(),now.getMonth(),1);const yearStart=new Date(now.getFullYear(),0,1);
     let todayTotal=0,weekTotal=0,monthTotal=0,yearTotal=0,todayCount=0,weekCount=0,monthCount=0,yearCount=0;
-    
     allSales.forEach(s=>{if(s.status==='returned')return;const d=s.createdAt?.toDate();if(!d)return;const amt=parseFloat(s.totalAmount)||0;if(d.toISOString().split('T')[0]===today){todayTotal+=amt;todayCount++;}if(d>=weekStart){weekTotal+=amt;weekCount++;}if(d>=monthStart){monthTotal+=amt;monthCount++;}if(d>=yearStart){yearTotal+=amt;yearCount++;}});
     allReturns.forEach(r=>{if(r.returnAction!=='refund')return;const d=r.createdAt?.toDate();if(!d)return;const amt=parseFloat(r.totalRefund)||0;if(d.toISOString().split('T')[0]===today){todayTotal-=amt;todayCount--;}if(d>=weekStart){weekTotal-=amt;weekCount--;}if(d>=monthStart){monthTotal-=amt;monthCount--;}if(d>=yearStart){yearTotal-=amt;yearCount--;}});
-    
     document.getElementById('todaySales').textContent=formatCurrency(Math.max(0,todayTotal));
     document.getElementById('weekSales').textContent=formatCurrency(Math.max(0,weekTotal));
     document.getElementById('monthSales').textContent=formatCurrency(Math.max(0,monthTotal));
@@ -387,20 +322,11 @@
   }
 
   function renderSales(){
-    const tbody=document.getElementById('salesTable');
-    const search=(document.getElementById('salesSearchInput')?.value||'').toLowerCase();
-    let filtered=[...allSales];
-    if(search) filtered=filtered.filter(s=>(s.customerName||'').toLowerCase().includes(search)||(s.customerPhone||'').toLowerCase().includes(search)||(s.receiptNumber||'').toLowerCase().includes(search));
-    tbody.innerHTML='';
-    if(filtered.length===0){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-cash-register"></i><p>No sales found</p></div></td></tr>';updateStats();return;}
+    const tbody=document.getElementById('salesTable');const search=(document.getElementById('salesSearchInput')?.value||'').toLowerCase();
+    let filtered=[...allSales];if(search)filtered=filtered.filter(s=>(s.customerName||'').toLowerCase().includes(search)||(s.customerPhone||'').toLowerCase().includes(search)||(s.receiptNumber||'').toLowerCase().includes(search));
+    tbody.innerHTML='';if(filtered.length===0){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-cash-register"></i><p>No sales found</p></div></td></tr>';updateStats();return;}
     filtered.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
-    filtered.forEach(s=>{
-      const isReturned=s.status==='returned';
-      const statusBadge=isReturned?`<span class="badge badge-danger">Returned</span>`:`<span class="badge badge-success">Completed</span>`;
-      const returnInfo=isReturned?`<br><small style="color:var(--danger);">Action: ${s.returnAction?.replace(/_/g,' ')} | Refund: -${formatCurrency(s.totalRefund||0)}</small>`:'';
-      tbody.innerHTML+=`<tr class="${isReturned?'returned-row':''}"><td>${formatTime(s.createdAt)}</td><td><span class="badge badge-info">${s.receiptNumber||'N/A'}</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;" onclick="navigateTo('history.html?customerId=${s.customerId||''}')">${s.customerName||'Walk-in'}</td><td>${s.customerPhone||'-'}</td><td>${s.items?.length||0} items</td><td><strong style="color:${isReturned?'var(--danger)':'inherit'};">${isReturned?'-':''}${formatCurrency(s.totalAmount)}</strong>${returnInfo}</td><td><span class="badge badge-success">${s.paymentMethod||'cash'}</span></td><td>${statusBadge}</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt('${s.id}')" title="View"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt('${s.id}')" title="Print"><i class="fas fa-print"></i></button>${!isReturned?`<button class="btn btn-sm btn-warning" onclick="openReturnModal('${s.id}')" title="Return"><i class="fas fa-undo"></i></button>`:''}</div></td></tr>`;
-    });
-    updateStats();
+    filtered.forEach(s=>{const isReturned=s.status==='returned';const statusBadge=isReturned?`<span class="badge badge-danger">Returned</span>`:`<span class="badge badge-success">Completed</span>`;const returnInfo=isReturned?`<br><small style="color:var(--danger);">Action: ${s.returnAction?.replace(/_/g,' ')} | Refund: -${formatCurrency(s.totalRefund||0)}</small>`:'';tbody.innerHTML+=`<tr class="${isReturned?'returned-row':''}"><td>${formatTime(s.createdAt)}</td><td><span class="badge badge-info">${s.receiptNumber||'N/A'}</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;" onclick="navigateTo('history.html?customerId=${s.customerId||''}')">${s.customerName||'Walk-in'}</td><td>${s.customerPhone||'-'}</td><td>${s.items?.length||0} items</td><td><strong style="color:${isReturned?'var(--danger)':'inherit'};">${isReturned?'-':''}${formatCurrency(s.totalAmount)}</strong>${returnInfo}</td><td><span class="badge badge-success">${s.paymentMethod||'cash'}</span></td><td>${statusBadge}</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt('${s.id}')" title="View"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt('${s.id}')" title="Print"><i class="fas fa-print"></i></button>${!isReturned?`<button class="btn btn-sm btn-warning" onclick="openReturnModal('${s.id}')" title="Return"><i class="fas fa-undo"></i></button>`:''}</div></td></tr>`;});updateStats();
   }
 
   function loadSales(){
@@ -414,14 +340,12 @@
     try{
       const custSnap=await getDocs(query(collection(db,'customers'),where('status','==','approved')));
       allCustomers=custSnap.docs.map(d=>({id:d.id,...d.data()}));
-      
       const stockSnap=await getDocs(query(collection(db,'stock_items'),where('status','in',['available','low'])));
       allStockItems=stockSnap.docs.map(d=>{
         const data=d.data();
-        const baseQty = parseFloat(data.quantityAvailable ?? data.unitQty ?? data.initialStock ?? 0);
         return {
           id:d.id,...data,
-          unitQty: baseQty,
+          unitQty: parseFloat(data.unitQty ?? data.quantityAvailable ?? data.initialStock ?? 0),
           unitPrice: parseFloat(data.unitPrice ?? 0),
           halfPrice: parseFloat(data.halfPrice ?? 0),
           quarterPrice: parseFloat(data.quarterPrice ?? 0),
@@ -432,12 +356,11 @@
           measureUnit: data.measureUnit ?? 'piece',
           itemType: data.itemType ?? 'general'
         };
-      }).filter(i => i.unitQty > 0);
+      }).filter(i=>i.unitQty>0);
     }catch(e){showToast('Error loading data','error');}
   }
 
   function getItemTypeLabel(type){ const labels={simple:'🔧',fashion:'👗',pack_bundle:'📦',measured:'📏',pack:'📦',general:'🔧'}; return labels[type]||'🔧'; }
-  
   function getSizeOptions(itemType, item){
     if(itemType==='fashion') return [{value:'1',label:'1 (Unit)'},{value:'0.5',label:'½ (Half)'},{value:'0.25',label:'¼ (Quarter)'}];
     if(itemType==='pack_bundle'||itemType==='pack') return [{value:'1',label:'1 (Unit)'},{value:'pack',label:`📦 Pack (${item.packSize||12}/pk)`}];
@@ -448,22 +371,21 @@
   // ========== NEW SALE MODAL ==========
   window.openNewSaleModal = async function(){
     await loadCustomersAndStock();
-    if(allStockItems.length===0){showToast('No items available in stock','error');return;}
+    if(allStockItems.length===0){showToast('No items available','error');return;}
 
     const custOptions=allCustomers.map(c=>`<option value="${c.id}" data-name="${c.fullName||''}" data-phone="${c.phone||''}" data-address="${c.address||c.location||''}">${c.fullName||''} - ${c.phone||'No phone'}</option>`).join('');
 
     const stockOptions=allStockItems.map(i=>{
-      const it=i.itemType||'general';
-      const label=getItemTypeLabel(it);
+      const it=i.itemType||'general';const label=getItemTypeLabel(it);
       const pp=it==='pack_bundle'&&i.packPrice?` | Pack:${formatCurrency(i.packPrice)}`:'';
       const bp=it==='measured'&&i.bundlePrice?` | Bundle:${formatCurrency(i.bundlePrice)}`:'';
       const hp=it==='fashion'&&i.halfPrice?` | ½:${formatCurrency(i.halfPrice)}`:'';
       const qp=it==='fashion'&&i.quarterPrice?` | ¼:${formatCurrency(i.quarterPrice)}`:'';
       const stock=parseFloat(i.unitQty||0);
-      return `<option value="${i.id}" data-name="${i.name||''}" data-price="${i.unitPrice||0}" data-halfprice="${i.halfPrice||0}" data-quarterprice="${i.quarterPrice||0}" data-packprice="${i.packPrice||0}" data-bundleprice="${i.bundlePrice||0}" data-packsize="${i.packSize||12}" data-bundlesize="${i.bundleSize||50}" data-itemtype="${it}" data-stock="${stock}">${label} ${i.name||''} - ${formatCurrency(i.unitPrice||0)}${hp}${qp}${pp}${bp} (${stock} avail)</option>`;
+      return `<option value="${i.id}" data-name="${i.name||''}" data-price="${i.unitPrice||0}" data-halfprice="${i.halfPrice||0}" data-quarterprice="${i.quarterPrice||0}" data-packprice="${i.packPrice||0}" data-bundleprice="${i.bundlePrice||0}" data-packsize="${i.packSize||12}" data-bundlesize="${i.bundleSize||50}" data-itemtype="${it}" data-stock="${stock}">${label} ${i.name||''} - ${formatCurrency(i.unitPrice||0)}${hp}${qp}${pp}${bp} (${stock})</option>`;
     }).join('');
 
-    const firstItem=allStockItems[0]; const firstType=firstItem.itemType||'general';
+    const firstItem=allStockItems[0];const firstType=firstItem.itemType||'general';
     const firstSizeOpts=getSizeOptions(firstType,firstItem).map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
 
     showModal('New Sale',`
@@ -488,9 +410,9 @@
   };
 
   window._updateSizeDropdown = function(selectEl){
-    const row=selectEl.closest('.item-row'); if(!row)return;
-    const sizeEl=row.querySelector('.item-size'); if(!sizeEl)return;
-    const opt=selectEl.options[selectEl.selectedIndex]; if(!opt||!opt.value)return;
+    const row=selectEl.closest('.item-row');if(!row)return;
+    const sizeEl=row.querySelector('.item-size');if(!sizeEl)return;
+    const opt=selectEl.options[selectEl.selectedIndex];if(!opt||!opt.value)return;
     const itemType=opt.dataset.itemtype||'general';
     const itemData={packSize:parseInt(opt.dataset.packsize)||12,bundleSize:parseInt(opt.dataset.bundlesize)||50,measureUnit:'yard'};
     const options=getSizeOptions(itemType,itemData);
@@ -504,12 +426,12 @@
   window._addSaleItem = function() {
     const idx=document.querySelectorAll('.item-row').length;
     const stockOptions=allStockItems.map(i=>{
-      const it=i.itemType||'general'; const label=getItemTypeLabel(it);
+      const it=i.itemType||'general';const label=getItemTypeLabel(it);
       const pp=it==='pack_bundle'&&i.packPrice?` | Pack:${formatCurrency(i.packPrice)}`:'';
       const bp=it==='measured'&&i.bundlePrice?` | Bundle:${formatCurrency(i.bundlePrice)}`:'';
-      const hp=it==='fashion'&&i.halfPrice?` | ½:${formatCurrency(i.halfPrice)}`:''; const qp=it==='fashion'&&i.quarterPrice?` | ¼:${formatCurrency(i.quarterPrice)}`:'';
+      const hp=it==='fashion'&&i.halfPrice?` | ½:${formatCurrency(i.halfPrice)}`:'';const qp=it==='fashion'&&i.quarterPrice?` | ¼:${formatCurrency(i.quarterPrice)}`:'';
       const stock=parseFloat(i.unitQty||0);
-      return `<option value="${i.id}" data-name="${i.name||''}" data-price="${i.unitPrice||0}" data-halfprice="${i.halfPrice||0}" data-quarterprice="${i.quarterPrice||0}" data-packprice="${i.packPrice||0}" data-bundleprice="${i.bundlePrice||0}" data-packsize="${i.packSize||12}" data-bundlesize="${i.bundleSize||50}" data-itemtype="${it}" data-stock="${stock}">${label} ${i.name||''} - ${formatCurrency(i.unitPrice||0)}${hp}${qp}${pp}${bp} (${stock} avail)</option>`;
+      return `<option value="${i.id}" data-name="${i.name||''}" data-price="${i.unitPrice||0}" data-halfprice="${i.halfPrice||0}" data-quarterprice="${i.quarterPrice||0}" data-packprice="${i.packPrice||0}" data-bundleprice="${i.bundlePrice||0}" data-packsize="${i.packSize||12}" data-bundlesize="${i.bundleSize||50}" data-itemtype="${it}" data-stock="${stock}">${label} ${i.name||''} - ${formatCurrency(i.unitPrice||0)}${hp}${qp}${pp}${bp} (${stock})</option>`;
     }).join('');
     const div=document.createElement('div');div.className='item-row';
     div.innerHTML=`<select class="form-control item-select" style="width:100%;"><option value="">-- Search --</option>${stockOptions}</select><select class="form-control item-size" id="itemSize-${idx}"><option value="1">1 (Unit)</option></select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();"><i class="fas fa-times"></i></button>`;
@@ -523,50 +445,39 @@
   window._updateSaleSummary = function() {
     let total=0,count=0;
     document.querySelectorAll('.item-row').forEach(row=>{
-      const select=row.querySelector('.item-select'); const qtyEl=row.querySelector('.item-qty'); const sizeEl=row.querySelector('.item-size');
-      if(select&&qtyEl&&select.value){ 
-        const opt=select.options[select.selectedIndex]; const qty=parseFloat(qtyEl.value)||1; const size=sizeEl?.value||'1'; 
+      const select=row.querySelector('.item-select');const qtyEl=row.querySelector('.item-qty');const sizeEl=row.querySelector('.item-size');
+      if(select&&qtyEl&&select.value){
+        const opt=select.options[select.selectedIndex];const qty=parseFloat(qtyEl.value)||1;const size=sizeEl?.value||'1';
         let price=parseFloat(opt?.dataset.price)||0;
-        
         if(size==='0.5'&&parseFloat(opt?.dataset.halfprice)>0)price=parseFloat(opt.dataset.halfprice);
         else if(size==='0.25'&&parseFloat(opt?.dataset.quarterprice)>0)price=parseFloat(opt.dataset.quarterprice);
         else if(size==='pack'&&parseFloat(opt?.dataset.packprice)>0)price=parseFloat(opt.dataset.packprice);
         else if(size==='bundle'&&parseFloat(opt?.dataset.bundleprice)>0)price=parseFloat(opt.dataset.bundleprice);
-        
         total+=price*qty;count++;
       }
     });
-    document.getElementById('itemCount').textContent=count; document.getElementById('saleTotal').textContent=formatCurrency(total);
+    document.getElementById('itemCount').textContent=count;document.getElementById('saleTotal').textContent=formatCurrency(total);
   };
 
   window._processSale = function() {
     let customerId='',customerName='',customerPhone='',customerEmail='',customerAddress='';
-    if(customerType==='existing'){ const select=document.getElementById('existingCustomerSelect'); if(!select||!select.value){showToast('Select a customer','error');return;} customerId=select.value; const opt=select.options[select.selectedIndex]; customerName=opt.dataset.name;customerPhone=opt.dataset.phone;customerAddress=opt.dataset.address||''; }
-    else{ customerName=document.getElementById('newCustomerName')?.value?.trim();customerPhone=document.getElementById('newCustomerPhone')?.value?.trim();customerEmail=document.getElementById('newCustomerEmail')?.value?.trim();customerAddress=document.getElementById('newCustomerAddress')?.value?.trim(); if(!customerName||!customerPhone||!customerAddress){showToast('Name, phone & address required','error');return;} }
-    
+    if(customerType==='existing'){const select=document.getElementById('existingCustomerSelect');if(!select||!select.value){showToast('Select a customer','error');return;}customerId=select.value;const opt=select.options[select.selectedIndex];customerName=opt.dataset.name;customerPhone=opt.dataset.phone;customerAddress=opt.dataset.address||'';}
+    else{customerName=document.getElementById('newCustomerName')?.value?.trim();customerPhone=document.getElementById('newCustomerPhone')?.value?.trim();customerEmail=document.getElementById('newCustomerEmail')?.value?.trim();customerAddress=document.getElementById('newCustomerAddress')?.value?.trim();if(!customerName||!customerPhone||!customerAddress){showToast('Name, phone & address required','error');return;}}
     const items=[];let total=0;
     for(const row of document.querySelectorAll('.item-row')){
       const select=row.querySelector('.item-select');const qtyEl=row.querySelector('.item-qty');const sizeEl=row.querySelector('.item-size');
-      if(select&&select.value&&qtyEl){ 
-        const opt=select.options[select.selectedIndex];
-        const qty=parseFloat(qtyEl.value)||1;
-        const size=sizeEl?.value||'1';
+      if(select&&select.value&&qtyEl){
+        const opt=select.options[select.selectedIndex];const qty=parseFloat(qtyEl.value)||1;const size=sizeEl?.value||'1';
         const stockAvailable=parseFloat(opt?.dataset.stock)||0;
-        
-        let deductQty=qty; let sizeLabel='1'; let price=parseFloat(opt?.dataset.price)||0;
-        
+        let deductQty=qty;let sizeLabel='1';let price=parseFloat(opt?.dataset.price)||0;
         if(size==='0.5'){deductQty=qty*0.5;sizeLabel='½';if(parseFloat(opt?.dataset.halfprice)>0)price=parseFloat(opt.dataset.halfprice);}
         else if(size==='0.25'){deductQty=qty*0.25;sizeLabel='¼';if(parseFloat(opt?.dataset.quarterprice)>0)price=parseFloat(opt.dataset.quarterprice);}
         else if(size==='pack'){deductQty=qty*(parseInt(opt?.dataset.packsize)||12);sizeLabel='📦 Pack';if(parseFloat(opt?.dataset.packprice)>0)price=parseFloat(opt.dataset.packprice);}
         else if(size==='bundle'){deductQty=qty*(parseInt(opt?.dataset.bundlesize)||50);sizeLabel='📦 Bundle';if(parseFloat(opt?.dataset.bundleprice)>0)price=parseFloat(opt.dataset.bundleprice);}
-        
         if(deductQty>stockAvailable){showToast(`Only ${stockAvailable} available for ${opt.dataset.name}`,'error');return;}
-        
-        items.push({id:select.value,name:opt.dataset.name,quantity:qty,size:size,sizeLabel,unitPrice:price,deductQty:deductQty});
-        total+=price*qty;
+        items.push({id:select.value,name:opt.dataset.name,quantity:qty,size:size,sizeLabel,unitPrice:price,deductQty:deductQty});total+=price*qty;
       }
     }
-    
     if(items.length===0){showToast('Add at least one item','error');return;}
     const receiptNumber=generateReceiptNumber();
 
@@ -574,7 +485,6 @@
       try{
         const batch=writeBatch(db);
         if(customerType==='new'){const custRef=doc(collection(db,'customers'));batch.set(custRef,{fullName:customerName,phone:customerPhone,email:customerEmail,address:customerAddress,location:customerAddress,totalSpent:0,purchaseCount:0,status:'pending_approval',createdBy:currentUser.uid,createdByName:userData.fullName,createdAt:serverTimestamp()});customerId=custRef.id;}
-        
         for(const item of items){
           const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);
           if(snap.exists()){
@@ -584,10 +494,8 @@
             batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(item.deductQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});
           }
         }
-        
         const saleRef=doc(collection(db,'sales'));batch.set(saleRef,{receiptNumber,customerId,customerName,customerPhone,customerAddress,items,totalAmount:total,paymentMethod:selectedPayment,attendantId:currentUser.uid,attendantName:userData.fullName,status:'completed',createdAt:serverTimestamp()});
         if(customerId&&customerType==='existing'){batch.update(doc(db,'customers',customerId),{totalSpent:increment(total),purchaseCount:increment(1),lastPurchase:serverTimestamp()});}
-        
         await batch.commit();await logAudit('sale',`Sale ${receiptNumber}: ${formatCurrency(total)} to ${customerName}`);
         showToast(`Sale completed! #${receiptNumber}`,'success');
         showReceiptModal({id:saleRef.id,receiptNumber,customerName,customerPhone,customerAddress,items,totalAmount:total,paymentMethod:selectedPayment,attendantName:userData.fullName,createdAt:new Date()});hideModal();
@@ -597,22 +505,8 @@
 
   // ========== RETURN GOODS ==========
   window.openReturnModal = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;let itemsHtml=sale.items.map((item,idx)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--gray-light);border-radius:10px;"><span style="flex:1;"><strong>${item.name}</strong>${item.sizeLabel?` <small>(${item.sizeLabel})</small>`:''}<br><small>Sold: ${item.quantity} x ${formatCurrency(item.unitPrice)}</small></span><input type="number" step="0.25" id="return-qty-${idx}" value="0" min="0" max="${item.quantity}" style="width:70px;padding:8px;border-radius:8px;border:1px solid #ddd;text-align:center;"><span style="font-size:0.8rem;color:var(--gray);">/ ${item.quantity}</span></div>`).join('');showModal('Return Goods',`<p><strong>Receipt:</strong> ${sale.receiptNumber} | <strong>Customer:</strong> ${sale.customerName}</p><p style="color:var(--gray);">Select quantity to return:</p>${itemsHtml}<div class="form-group"><label>Reason</label><textarea class="form-control" id="returnReason" rows="2"></textarea></div><p style="font-weight:600;">Return Action:</p><div class="return-options"><div class="return-option selected" data-action="refund" onclick="window._selectReturnAction('refund')"><i class="fas fa-money-bill-wave"></i><div><strong>Full Refund</strong><br><small>Return money to customer</small></div></div><div class="return-option" data-action="exchange_same" onclick="window._selectReturnAction('exchange_same')"><i class="fas fa-exchange-alt"></i><div><strong>Exchange Same Price</strong><br><small>Swap for another item</small></div></div><div class="return-option" data-action="exchange_higher" onclick="window._selectReturnAction('exchange_higher')"><i class="fas fa-level-up-alt"></i><div><strong>Exchange + Add Money</strong><br><small>Upgrade to higher price</small></div></div><div class="return-option" data-action="store_credit" onclick="window._selectReturnAction('store_credit')"><i class="fas fa-piggy-bank"></i><div><strong>Store Credit</strong><br><small>Keep for later</small></div></div></div><button class="btn btn-primary" onclick="window._processReturn('${saleId}')" style="width:100%;margin-top:15px;"><i class="fas fa-check"></i> Process Return</button>`);};
-  
   window._selectReturnAction = (action)=>{selectedReturnAction=action;document.querySelectorAll('.return-option').forEach(o=>o.classList.remove('selected'));document.querySelector(`[data-action="${action}"]`)?.classList.add('selected');};
-  
-  window._processReturn = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;const returnedItems=[];let totalRefund=0;sale.items.forEach((item,idx)=>{const q=parseFloat(document.getElementById(`return-qty-${idx}`)?.value)||0;if(q>0){returnedItems.push({...item,returnedQty:q,refundAmount:q*item.unitPrice});totalRefund+=q*item.unitPrice;}});if(returnedItems.length===0){showToast('Select quantity to return','error');return;}const reason=document.getElementById('returnReason')?.value?.trim()||'No reason';showPinModal('Process Return',`process return of ${formatCurrency(totalRefund)}`,async()=>{try{const batch=writeBatch(db);
-    for(const item of returnedItems){
-      const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);
-      if(snap.exists()){
-        const cur=parseFloat(snap.data().quantityAvailable ?? snap.data().unitQty ?? 0);
-        const threshold=parseFloat(snap.data().threshold||10);
-        const addBackQty=item.returnedQty*(item.size==='pack'?(parseInt(snap.data().packSize)||12):item.size==='bundle'?(parseInt(snap.data().bundleSize)||50):parseFloat(item.size)||1);
-        const newQty=cur+addBackQty;
-        batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(-addBackQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});
-      }
-    }
-    batch.set(doc(collection(db,'returns')),{saleId,saleReceiptNumber:sale.receiptNumber,customerId:sale.customerId,customerName:sale.customerName,returnedItems,totalRefund,returnAction:selectedReturnAction,reason,processedBy:currentUser.uid,processedByName:userData.fullName,createdAt:serverTimestamp()});const saleUpdate={status:'returned',returnedAt:serverTimestamp(),returnedBy:currentUser.uid,returnedByName:userData.fullName,returnAction:selectedReturnAction,totalRefund};if(selectedReturnAction==='exchange_same')saleUpdate.exchangeNote='Exchanged for same price item';else if(selectedReturnAction==='exchange_higher')saleUpdate.exchangeNote='Exchanged for higher price + additional payment';else if(selectedReturnAction==='store_credit')saleUpdate.exchangeNote='Store credit held for later';batch.update(doc(db,'sales',saleId),saleUpdate);if(sale.customerId&&selectedReturnAction==='refund'){batch.update(doc(db,'customers',sale.customerId),{totalSpent:increment(-totalRefund),purchaseCount:increment(-1)});}await batch.commit();await logAudit('return_goods',`Return ${formatCurrency(totalRefund)} | Receipt ${sale.receiptNumber} | Action: ${selectedReturnAction}`);const labels={refund:`Refunded: -${formatCurrency(totalRefund)}`,exchange_same:`Exchanged: ${formatCurrency(totalRefund)}`,exchange_higher:`Upgrade exchange: ${formatCurrency(totalRefund)}`,store_credit:`Store credit: ${formatCurrency(totalRefund)}`};showToast(labels[selectedReturnAction],'success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});
-  };
+  window._processReturn = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;const returnedItems=[];let totalRefund=0;sale.items.forEach((item,idx)=>{const q=parseFloat(document.getElementById(`return-qty-${idx}`)?.value)||0;if(q>0){returnedItems.push({...item,returnedQty:q,refundAmount:q*item.unitPrice});totalRefund+=q*item.unitPrice;}});if(returnedItems.length===0){showToast('Select quantity to return','error');return;}const reason=document.getElementById('returnReason')?.value?.trim()||'No reason';showPinModal('Process Return',`process return of ${formatCurrency(totalRefund)}`,async()=>{try{const batch=writeBatch(db);for(const item of returnedItems){const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);if(snap.exists()){const cur=parseFloat(snap.data().quantityAvailable??snap.data().unitQty??0);const threshold=parseFloat(snap.data().threshold||10);const addBackQty=item.returnedQty*(item.size==='pack'?(parseInt(snap.data().packSize)||12):item.size==='bundle'?(parseInt(snap.data().bundleSize)||50):parseFloat(item.size)||1);const newQty=cur+addBackQty;batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(-addBackQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});}}batch.set(doc(collection(db,'returns')),{saleId,saleReceiptNumber:sale.receiptNumber,customerId:sale.customerId,customerName:sale.customerName,returnedItems,totalRefund,returnAction:selectedReturnAction,reason,processedBy:currentUser.uid,processedByName:userData.fullName,createdAt:serverTimestamp()});const saleUpdate={status:'returned',returnedAt:serverTimestamp(),returnedBy:currentUser.uid,returnedByName:userData.fullName,returnAction:selectedReturnAction,totalRefund};if(selectedReturnAction==='exchange_same')saleUpdate.exchangeNote='Exchanged for same price item';else if(selectedReturnAction==='exchange_higher')saleUpdate.exchangeNote='Exchanged for higher price + additional payment';else if(selectedReturnAction==='store_credit')saleUpdate.exchangeNote='Store credit held for later';batch.update(doc(db,'sales',saleId),saleUpdate);if(sale.customerId&&selectedReturnAction==='refund'){batch.update(doc(db,'customers',sale.customerId),{totalSpent:increment(-totalRefund),purchaseCount:increment(-1)});}await batch.commit();await logAudit('return_goods',`Return ${formatCurrency(totalRefund)} | Receipt ${sale.receiptNumber} | Action: ${selectedReturnAction}`);const labels={refund:`Refunded: -${formatCurrency(totalRefund)}`,exchange_same:`Exchanged: ${formatCurrency(totalRefund)}`,exchange_higher:`Upgrade exchange: ${formatCurrency(totalRefund)}`,store_credit:`Store credit: ${formatCurrency(totalRefund)}`};showToast(labels[selectedReturnAction],'success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});};
 
   window.showReceiptModal = (sale)=>{const dateStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});const timeStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});const itemsHtml=sale.items.map(i=>`<div class="receipt-item"><span>${i.quantity}x ${i.name}${i.sizeLabel?` (${i.sizeLabel})`:''}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('');showModal('Receipt',`<div class="receipt-container"><div class="receipt-header"><h2 style="color:var(--primary);">✨ OmoCreations ✨</h2><p>3 Oyebo Street, Abiola Way</p><p>Behind Laroy Suite, Abeokuta 111101</p><p>Ogun State, Nigeria</p><p>📞 0807 734 0294</p><p style="margin-top:6px;">#${sale.receiptNumber}</p><p>${dateStr} ${timeStr}</p></div><p><strong>Customer:</strong> ${sale.customerName}<br><strong>Served by:</strong> ${sale.attendantName}</p><div class="receipt-items">${itemsHtml}</div><div class="receipt-total"><span>Total:</span><span>${formatCurrency(sale.totalAmount)}</span></div><p style="text-align:center;margin-top:15px;font-style:italic;">Thank you for your patronage!</p></div><div style="display:flex;gap:10px;margin-top:20px;"><button class="btn btn-primary" onclick="printReceipt('${sale.id}')" style="flex:1;"><i class="fas fa-print"></i> Print</button><button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button></div>`);};
   window.viewReceipt = (id)=>{const s=allSales.find(x=>x.id===id);if(s)showReceiptModal(s);};
@@ -627,6 +521,5 @@
   onAuthStateChanged(auth,async(u)=>{if(!u){window.location.href='auth.html';return;}currentUser=u;try{const snap=await getDoc(doc(db,'users',u.uid));if(!snap.exists()||snap.data().status!=='active'){await signOut(auth);window.location.href='auth.html';return;}userData=snap.data();document.getElementById('userName').textContent=userData.fullName?.split(' ')[0]||'Staff';document.getElementById('userRole').textContent=userData.role?.replace('_',' ')||'Staff';document.getElementById('userAvatar').textContent=(userData.fullName||'A').charAt(0).toUpperCase();document.getElementById('currentDate').textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});buildSidebar();loadSales();if(isAdmin()){statsRevealed=true;updateStatsDisplay();}await logAudit('view_sales','Viewed sales');}catch(e){showToast('Error loading','error');}});
   window.addEventListener('beforeunload',cleanup);
 </script>
-
 </body>
 </html>
