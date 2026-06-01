@@ -15,7 +15,6 @@
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
   <style>
-    /* … all existing CSS (unchanged) … */
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root { --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9; --primary-soft:#fff0f6; --dark:#1a1a2e; --gray:#6b7280; --gray-light:#f3f4f6; --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --info:#3b82f6; --sidebar-width:280px; --header-height:70px; }
     html { font-size:16px; -webkit-text-size-adjust:100%; }
@@ -23,6 +22,7 @@
     @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
     @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
     @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
+
     .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); color:white; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000; border-right:1px solid rgba(255,77,166,0.2); }
     .sidebar::-webkit-scrollbar { width:4px; } .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); } .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
     .sidebar-header { padding:24px 18px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,77,166,0.2); position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); }
@@ -38,11 +38,13 @@
     .user-profile { display:flex; align-items:center; gap:12px; } .user-avatar { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); display:flex; align-items:center; justify-content:center; font-weight:700; color:white; flex-shrink:0; font-size:1.1rem; }
     .user-details { white-space:nowrap; } .user-details h4 { font-size:0.85rem; font-weight:600; } .user-details p { font-size:0.7rem; opacity:0.6; }
     .sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:999; display:none; } .sidebar-overlay.active { display:block; }
+
     .main-content { flex:1; margin-left:var(--sidebar-width); transition:margin-left 0.3s ease; min-height:100vh; width:calc(100% - var(--sidebar-width)); }
     .top-bar { height:var(--header-height); background:rgba(255,255,255,0.98); backdrop-filter:blur(12px); padding:0 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,77,166,0.15); position:sticky; top:0; z-index:50; }
     .top-bar-left { display:flex; align-items:center; gap:14px; } .menu-toggle { background:none; border:none; font-size:1.3rem; color:var(--gray); cursor:pointer; padding:10px; border-radius:10px; transition:all 0.2s; display:none; align-items:center; justify-content:center; } .menu-toggle:hover { background:var(--primary-soft); color:var(--primary); }
     .page-title { font-size:1.5rem; font-weight:700; color:var(--dark); font-family:'Playfair Display',serif; } .current-date { color:var(--gray); font-size:0.85rem; white-space:nowrap; }
     .content-wrapper { padding:28px; max-width:1600px; }
+
     .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
     .stat-card { background:white; padding:18px 16px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(255,77,166,0.1); transition:all 0.3s; animation:fadeInUp 0.5s ease forwards; opacity:0; }
     .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}.stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}
@@ -55,6 +57,7 @@
     .stat-card.value-locked .stat-value::after { content:'\f023'; font-family:'Font Awesome 6 Free'; font-weight:900; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--gray); filter:none; }
     .stat-card .value-hint { font-size:0.6rem; color:var(--primary); text-align:center; cursor:pointer; margin-top:2px; display:none; }
     .stat-card.value-locked .value-hint { display:block; }
+
     .lowstock-banner { background:rgba(245,158,11,0.1); border-left:4px solid var(--warning); padding:14px 18px; border-radius:14px; margin-bottom:20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
     .lowstock-banner i { color:var(--warning); font-size:1.3rem; }
     .filter-bar { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
@@ -63,6 +66,7 @@
     .search-input { width:100%; padding:12px 16px 12px 42px; border:1.5px solid rgba(0,0,0,0.08); border-radius:40px; font-size:0.85rem; outline:none; font-family:'Poppins',sans-serif; }
     .search-input:focus { border-color:var(--primary); }
     .filter-select { padding:12px 20px; border:1.5px solid rgba(0,0,0,0.08); border-radius:40px; font-size:0.85rem; background:white; cursor:pointer; outline:none; font-family:'Poppins',sans-serif; }
+
     .tabs-container { background:white; border-radius:20px; padding:6px; margin-bottom:24px; display:flex; gap:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02); flex-wrap:wrap; }
     .tab { padding:12px 20px; border-radius:16px; font-weight:600; font-size:0.85rem; cursor:pointer; border:none; background:none; color:var(--gray); display:flex; align-items:center; gap:8px; transition:all 0.2s; font-family:'Poppins',sans-serif; }
     .tab:hover { background:var(--primary-soft); color:var(--primary); } .tab.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; }
@@ -112,7 +116,10 @@
 <main class="main-content">
   <header class="top-bar">
     <div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">Store Management</h1></div>
-    <span class="current-date" id="currentDate"></span>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button class="btn btn-outline btn-sm" onclick="openHelpGuide()"><i class="fas fa-question-circle"></i> Help</button>
+      <span class="current-date" id="currentDate"></span>
+    </div>
   </header>
 
   <div class="content-wrapper">
@@ -312,9 +319,11 @@
   window.openSellToInventoryModal=async function(storeItemId){
     const item=storeItems.find(i=>i.id===storeItemId);
     if(!item)return;
+    // Fetch existing inventory items of same type for selection
     const invSnap=await getDocs(query(collection(db,'stock_items'),where('itemType','==',item.inventoryItemType)));
     const invItems=invSnap.docs.map(d=>({id:d.id,...d.data()}));
-    const invOptions=invItems.map(i=>`<option value="${i.id}">${i.name} (${i.unitQty||0} avail)</option>`).join('');
+    const invOptions=invItems.length ? invItems.map(i=>`<option value="${i.id}">${i.name} (${i.unitQty||0} avail)</option>`).join('')
+                                    : `<option value="" disabled>No existing items of this type</option>`;
 
     showModal(`Restock Inventory from: ${item.name}`,`
       <div style="background:var(--primary-soft);padding:12px;border-radius:12px;margin-bottom:16px;">
@@ -324,7 +333,10 @@
       </div>
       <div class="form-group"><label>Bulk Packs to Take *</label><input type="number" class="form-control" id="s2iBulkQty" value="1" min="1" max="${item.bulkStock||1}"></div>
       <div class="form-group"><label>Target Inventory Item</label>
-        <select class="form-control" id="s2iInventorySelect"><option value="new">+ Create New Inventory Item</option>${invOptions}</select>
+        <select class="form-control" id="s2iInventorySelect" style="width:100%;">
+          <option value="new">+ Create New Inventory Item</option>
+          ${invOptions}
+        </select>
       </div>
       <div id="s2iNewItemFields" style="display:none;">
         <div class="form-row"><div class="form-group"><label>New Item Name *</label><input class="form-control" id="s2iNewName"></div><div class="form-group"><label>Category</label><select class="form-control" id="s2iNewCategory">${categories.map(c=>`<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select></div></div>
@@ -349,7 +361,10 @@
     const selectEl=document.getElementById('s2iInventorySelect');
     const newFields=document.getElementById('s2iNewItemFields');
 
+    // Show/hide new item fields
     selectEl.addEventListener('change',()=>{newFields.style.display=selectEl.value==='new'?'block':'none';});
+    // Ensure the dropdown opens natively – no need for Select2
+    selectEl.addEventListener('click',(e)=>e.stopPropagation());
 
     function renderAllocationForm(type,totalPieces){
       let html='';
@@ -545,6 +560,37 @@
   };
 
   window.viewWholesaleReceipt=function(id){const s=wholesaleSales.find(x=>x.id===id);if(!s)return;const ih=s.items.map(i=>`<div class="receipt-item"><span>${i.quantity}× ${i.name}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('');showModal('Receipt',`<div class="receipt-container"><div class="receipt-header"><h2 style="color:var(--primary);">✨ OmoCreations ✨</h2><p>#${s.receiptNumber}</p></div><p><strong>Customer:</strong> ${s.customerName}<br><strong>Payment:</strong> ${s.paymentMethod}</p><div class="receipt-items">${ih}</div><div class="receipt-total"><span>Total:</span><span>${formatCurrency(s.totalAmount)}</span></div></div><button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:12px;">Close</button>`);};
+
+  // -------------------- Help Guide --------------------
+  window.openHelpGuide=function(){
+    showModal('📖 How to Use the Store',`
+      <div style="font-size:0.9rem; line-height:1.6;">
+        <h4>🏬 What is the Store?</h4>
+        <p>The Store holds <strong>bulk stock</strong> – large packs, cartons, rolls, etc. It does <u>not</u> sell individual pieces directly (except Wholesale). Instead, you <strong>restock the Inventory</strong> from here by converting bulk into sellable forms.</p>
+
+        <h4 style="margin-top:16px;">➕ Adding a Bulk Item</h4>
+        <p>Fill in the name, category, bulk quantity, cost per bulk pack, the type of Inventory item it will create, and how many sellable pieces one bulk yields.</p>
+
+        <h4 style="margin-top:16px;">🔄 Restock Inventory</h4>
+        <p>Click <strong>“Restock Inventory”</strong> on any bulk item. Choose how many bulk packs to take. Then either select an existing Inventory item of the same type or create a new one. Allocate the derived pieces to the appropriate forms (units, halves, packs, etc.). The request goes to an admin for approval.</p>
+
+        <h4 style="margin-top:16px;">🏷️ Inventory Types</h4>
+        <ul style="padding-left:20px;">
+          <li><strong>General</strong> – Only whole units (e.g., soldering iron)</li>
+          <li><strong>Fashion</strong> – Units, halves (½), quarters (¼)</li>
+          <li><strong>Pack/Bundle</strong> – Individual pieces + packs (dozen, carton)</li>
+          <li><strong>Measured</strong> – Yards/meters + bundles</li>
+        </ul>
+
+        <h4 style="margin-top:16px;">💰 Wholesale Sales</h4>
+        <p>Sell bulk packs directly to customers without converting to inventory. Useful for large‑quantity buyers.</p>
+
+        <h4 style="margin-top:16px;">🔑 Value Lock</h4>
+        <p>The total store value is hidden by default. Click the lock and enter your PIN to reveal it.</p>
+      </div>
+      <button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close Guide</button>
+    `);
+  };
 
   // -------------------- Export / Refresh --------------------
   window.exportData=function(format){const h=['Name','Category','Type','Bulk Stock','Bulk Cost','Status'];const rows=storeItems.map(i=>[i.name||'',i.category||'',i.inventoryItemType||'general',i.bulkStock||0,i.bulkCost||0,getBulkStatus(i)]);const csv=[h.join(','),...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');const b=new Blob([csv],{type:format==='csv'?'text/csv':'application/vnd.ms-excel'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`store_${new Date().toISOString().split('T')[0]}.${format}`;a.click();document.getElementById('exportMenu').classList.remove('show');showToast('Exported','success');};
