@@ -169,8 +169,8 @@
     .stats-grid-2 .stat-card:nth-child(1){animation-delay:0.25s}.stats-grid-2 .stat-card:nth-child(2){animation-delay:0.30s}
     .stats-grid-2 .stat-card:nth-child(3){animation-delay:0.35s}.stats-grid-2 .stat-card:nth-child(4){animation-delay:0.40s}
 
-    /* Quick Actions */
-    .quick-actions { display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px; margin-bottom: 28px; }
+    /* Quick Actions – now 9 columns */
+    .quick-actions { display: grid; grid-template-columns: repeat(9, 1fr); gap: 14px; margin-bottom: 28px; }
     .quick-action {
       background: white; padding: 16px 12px; border-radius: 18px; text-align: center;
       cursor: pointer; border: 1px solid rgba(255,77,166,0.1); transition: all 0.3s;
@@ -178,7 +178,9 @@
     }
     .quick-action:nth-child(1){animation-delay:0.10s}.quick-action:nth-child(2){animation-delay:0.15s}
     .quick-action:nth-child(3){animation-delay:0.20s}.quick-action:nth-child(4){animation-delay:0.25s}
-    .quick-action:nth-child(5){animation-delay:0.30s}.quick-action:nth-child(6){animation-delay:0.35s}.quick-action:nth-child(7){animation-delay:0.40s}
+    .quick-action:nth-child(5){animation-delay:0.30s}.quick-action:nth-child(6){animation-delay:0.35s}
+    .quick-action:nth-child(7){animation-delay:0.40s}.quick-action:nth-child(8){animation-delay:0.45s}
+    .quick-action:nth-child(9){animation-delay:0.50s}
     .quick-action:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(255,77,166,0.15); border-color: var(--primary); }
     .quick-action i { font-size: 1.6rem; color: var(--primary); margin-bottom: 8px; display: block; }
     .quick-action h4 { font-size: 0.75rem; color: var(--dark); font-weight: 600; }
@@ -263,8 +265,15 @@
     .toast.success { border-left-color: var(--success); } .toast.error { border-left-color: var(--danger); }
     .toast i { font-size: 1.1rem; }
 
-    @media (max-width: 1400px) { .stats-grid, .stats-grid-2 { grid-template-columns: repeat(3, 1fr); } .quick-actions { grid-template-columns: repeat(4, 1fr); } }
-    @media (max-width: 1100px) { .stats-grid, .stats-grid-2 { grid-template-columns: repeat(2, 1fr); } .grid-2col { grid-template-columns: 1fr; } }
+    @media (max-width: 1400px) {
+      .stats-grid, .stats-grid-2 { grid-template-columns: repeat(3, 1fr); }
+      .quick-actions { grid-template-columns: repeat(5, 1fr); }
+    }
+    @media (max-width: 1100px) {
+      .stats-grid, .stats-grid-2 { grid-template-columns: repeat(2, 1fr); }
+      .grid-2col { grid-template-columns: 1fr; }
+      .quick-actions { grid-template-columns: repeat(4, 1fr); }
+    }
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); width: 280px !important; min-width: 280px !important; }
       .sidebar.mobile-open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.3); }
@@ -280,6 +289,9 @@
       .quick-actions { grid-template-columns: repeat(3, 1fr); gap: 10px; }
       .panel { padding: 16px 12px; border-radius: 18px; margin-bottom: 20px; }
       .data-table th, .data-table td { padding: 10px 8px; font-size: 0.75rem; }
+    }
+    @media (max-width: 480px) {
+      .quick-actions { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -322,6 +334,8 @@
       <div class="quick-action" onclick="navigateTo('purchases.html')"><i class="fas fa-truck"></i><h4>Purchases</h4><span class="action-badge" id="purchasesPendingBadge">0</span></div>
       <div class="quick-action" onclick="navigateTo('tools-machines.html')"><i class="fas fa-tools"></i><h4>Tools & Machines</h4></div>
       <div class="quick-action" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><h4>Catalog</h4></div>
+      <div class="quick-action" onclick="navigateTo('make-admin.html')"><i class="fas fa-user-shield"></i><h4>Make Admin</h4></div>
+      <div class="quick-action" onclick="navigateTo('kiosk.html')"><i class="fas fa-desktop"></i><h4>Kiosk</h4></div>
     </div>
 
     <!-- Stats Grid Row 1 -->
@@ -427,33 +441,40 @@
 
   function isAdmin() { return userData?.role === 'admin' || userData?.role === 'super_admin'; }
 
+  // --- Updated Sidebar with Make Admin & Kiosk ---
   function buildSidebar() {
     const nav = document.getElementById('sidebarNav'); if (!nav) return;
-    nav.innerHTML = `<div class="nav-section"><div class="nav-section-title">MAIN</div>
-      <button class="nav-item active" onclick="navigateTo('admin-dashboard.html')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
-      <button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span><span class="nav-badge" id="navApprovalsBadge">0</span></button>
-      <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
-    </div>
-    <div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
-      <button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff</span><span class="nav-badge" id="navStaffBadge">0</span></button>
-      <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
-      <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit</span></button>
-    </div>
-    <div class="nav-section"><div class="nav-section-title">OPERATIONS</div>
-      <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
-      <button class="nav-item" onclick="navigateTo('store.html')"><i class="fas fa-store"></i><span>Store</span></button>
-      <button class="nav-item" onclick="navigateTo('tools-machines.html')"><i class="fas fa-tools"></i><span>Tools & Machines</span></button>
-      <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
-      <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
-      <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
-      <button class="nav-item" onclick="navigateTo('orders.html')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button>
-      <button class="nav-item" onclick="navigateTo('tasks.html')"><i class="fas fa-tasks"></i><span>Tasks</span></button>
-    </div>
-    <div class="nav-section"><div class="nav-section-title">SHOP</div>
-      <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
-      <button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><span>Catalog</span></button>
-    </div>
-    <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>`;
+    nav.innerHTML = `
+      <div class="nav-section"><div class="nav-section-title">MAIN</div>
+        <button class="nav-item active" onclick="navigateTo('admin-dashboard.html')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+        <button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span><span class="nav-badge" id="navApprovalsBadge">0</span></button>
+        <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
+      </div>
+      <div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
+        <button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff</span><span class="nav-badge" id="navStaffBadge">0</span></button>
+        <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
+        <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit</span></button>
+      </div>
+      <div class="nav-section"><div class="nav-section-title">OPERATIONS</div>
+        <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
+        <button class="nav-item" onclick="navigateTo('store.html')"><i class="fas fa-store"></i><span>Store</span></button>
+        <button class="nav-item" onclick="navigateTo('tools-machines.html')"><i class="fas fa-tools"></i><span>Tools & Machines</span></button>
+        <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
+        <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
+        <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
+        <button class="nav-item" onclick="navigateTo('orders.html')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button>
+        <button class="nav-item" onclick="navigateTo('tasks.html')"><i class="fas fa-tasks"></i><span>Tasks</span></button>
+      </div>
+      <div class="nav-section"><div class="nav-section-title">ADMIN TOOLS</div>
+        <button class="nav-item" onclick="navigateTo('make-admin.html')"><i class="fas fa-user-shield"></i><span>Make Admin</span></button>
+        <button class="nav-item" onclick="navigateTo('kiosk.html')"><i class="fas fa-desktop"></i><span>Kiosk</span></button>
+      </div>
+      <div class="nav-section"><div class="nav-section-title">SHOP</div>
+        <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
+        <button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><span>Catalog</span></button>
+      </div>
+      <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
+    `;
     document.getElementById('logoutBtn')?.addEventListener('click', async () => { await signOut(auth); window.location.href = 'auth.html'; });
   }
 
