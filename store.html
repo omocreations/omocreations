@@ -15,7 +15,6 @@
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
   <style>
-    /* … all existing CSS (unchanged) … */
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root { --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9; --primary-soft:#fff0f6; --dark:#1a1a2e; --gray:#6b7280; --gray-light:#f3f4f6; --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --info:#3b82f6; --sidebar-width:280px; --header-height:70px; }
     html { font-size:16px; -webkit-text-size-adjust:100%; }
@@ -174,6 +173,7 @@
   let currentUser = null, userData = null, unsubscribes = [];
   let storeItems = [], wholesaleSales = [], categories = [], allCustomers = [], storeToInventoryRequests = [];
   let currentTab = 'stock', storeValueRevealed = false;
+  let wholesaleCustomerType = 'existing', wholesalePayment = 'cash';
 
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
@@ -316,8 +316,7 @@
     if(!name){showToast('Item name required','error');return;}if(bulkQty<=0){showToast('Bulk quantity required','error');return;}if(costPrice<=0){showToast('Cost price required','error');return;}
     let linkedData = {};
     if(linkedId) { const invDoc = await getDoc(doc(db,'stock_items', linkedId)); if(invDoc.exists()) { linkedData = { linkedInventoryId: linkedId, linkedInventoryName: invDoc.data().name }; } }
-    const status=bulkQty<=th?'low':'available';
-    showPinModal('Confirm Add','add bulk item',async()=>{try{await addDoc(collection(db,'store_items'),{name,category,bulkStock:bulkQty,bulkCost:costPrice,inventoryItemType:invType,unitsPerBulk,threshold:th,status,...linkedData,createdBy:currentUser?.uid,createdByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});await logAudit('add_store_item',`Added bulk: ${name} x${bulkQty}`);showToast('Bulk item added','success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});
+    showPinModal('Confirm Add','add bulk item',async()=>{try{await addDoc(collection(db,'store_items'),{name,category,bulkStock:bulkQty,bulkCost:costPrice,inventoryItemType:invType,unitsPerBulk,threshold:th,status:bulkQty<=th?'low':'available',...linkedData,createdBy:currentUser?.uid,createdByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});await logAudit('add_store_item',`Added bulk: ${name} x${bulkQty}`);showToast('Bulk item added','success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});
   };
 
   // ==================== SELL TO INVENTORY (RESTOCK) ====================
@@ -343,7 +342,7 @@
       <div class="form-group"><label>Bulk Packs to Take *</label><input type="number" class="form-control" id="s2iBulkQty" value="1" min="1" max="${item.bulkStock||1}"></div>
       <div class="form-group"><label>Target Inventory Item</label>
         <select class="form-control" id="s2iInventorySelect" style="width:100%;">
-          <option value="new">+ Create New Inventory Item</option>
+          <option value="new" ${selectedId==='new'?'selected':''}>+ Create New Inventory Item</option>
           ${invOptions}
         </select>
       </div>
@@ -371,7 +370,6 @@
     const newFields=document.getElementById('s2iNewItemFields');
 
     selectEl.addEventListener('change',()=>{newFields.style.display=selectEl.value==='new'?'block':'none';});
-    selectEl.addEventListener('click',(e)=>e.stopPropagation());
 
     function renderAllocationForm(type,totalPieces){
       let html='';
@@ -387,7 +385,7 @@
               <div class="form-group"><label>Pack Size (items/pack)</label><input type="number" class="form-control" id="s2iPackSize" value="12" min="1"></div>`;
       }else if(type==='measured'){
         html=`<div class="form-row"><div class="form-group"><label>Yards/Meters</label><input type="number" class="form-control s2i-qty" data-form="unit" value="0" min="0"></div><div class="form-group"><label>Bundles</label><input type="number" class="form-control s2i-qty" data-form="bundle" value="0" min="0"></div></div>
-              <div class="form-row"><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="0" step="0.01"></div><div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="s2iBundlePrice" value="0" step="0.01"></div></div>
+              <div class="form-row"><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="0" step="0.01"></div><div class="form-row"><label>Bundle Price ₦</label><input type="number" class="form-control" id="s2iBundlePrice" value="0" step="0.01"></div></div>
               <div class="form-group"><label>Bundle Size (yards/bundle)</label><input type="number" class="form-control" id="s2iBundleSize" value="50" min="1"></div>`;
       }
       allocationDiv.innerHTML=html;
@@ -403,8 +401,8 @@
         const form=inp.dataset.form;
         if(form==='half') allocated+=qty*0.5;
         else if(form==='quarter') allocated+=qty*0.25;
-        else if(form==='pack') allocated+=qty*(parseInt(document.getElementById('s2iPackSize')?.value)||1);
-        else if(form==='bundle') allocated+=qty*(parseInt(document.getElementById('s2iBundleSize')?.value)||1);
+        else if(form==='pack') allocated+=qty*(parseInt(document.getElementById('s2iPackSize')?.value)||12);
+        else if(form==='bundle') allocated+=qty*(parseInt(document.getElementById('s2iBundleSize')?.value)||50);
         else allocated+=qty;
       });
       document.getElementById('s2iValidationMsg').style.display=Math.abs(allocated-totalPieces)>0.001?'block':'none';
@@ -486,22 +484,22 @@
     });
   };
 
-  // ==================== INVENTORY RESTOCK LIST (now based on linked items) ====================
+  // ==================== INVENTORY RESTOCK LIST (Fixed Item Linking) ====================
   window.openInventoryRestockList = async function() {
     const invSnap = await getDocs(collection(db, 'stock_items'));
     const inventoryItems = invSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     let listHTML = `
-      <div class="form-group" style="display:flex; gap:10px; align-items:center;">
-        <label style="white-space:nowrap;">Filter by Type:</label>
-        <select class="form-control" id="invTypeFilter" onchange="filterInventoryList()" style="width:auto;">
+      <div class="form-group" style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
+        <label style="white-space:nowrap; font-weight:600;">Filter by Type:</label>
+        <select class="form-control" id="invTypeFilter" onchange="filterInventoryList()" style="width:auto; padding:8px 12px; border-radius:20px;">
           <option value="all">All Types</option>
           <option value="general">General</option>
           <option value="fashion">Fashion</option>
           <option value="pack_bundle">Pack/Bundle</option>
           <option value="measured">Measured</option>
         </select>
-        <input type="text" class="form-control" id="invSearch" placeholder="Search name..." oninput="filterInventoryList()" style="width:200px;">
+        <input type="text" class="form-control" id="invSearch" placeholder="Search name..." oninput="filterInventoryList()" style="width:200px; padding:8px 16px; border-radius:20px;">
       </div>
       <div class="table-wrapper" style="max-height:60vh; overflow-y:auto;">
         <table class="data-table" id="invRestockTable"><thead><tr>
@@ -515,8 +513,12 @@
                      (totalStock === 0 ? 'out_of_stock' : (totalStock <= (invItem.threshold||10) ? 'low' : 'available'));
       const statusBadge = status === 'available' ? 'success' : (status === 'low' ? 'warning' : 'danger');
 
-      // ONLY count store items that are explicitly linked to this inventory item
-      const linkedStoreItems = storeItems.filter(si => si.linkedInventoryId === invItem.id && (si.bulkStock||0) > 0);
+      // FIXED MATCHING TECHNIQUE: Matches via absolute explicit linked ID or name fallback matching
+      const linkedStoreItems = storeItems.filter(si => 
+        (si.linkedInventoryId === invItem.id || (si.name && si.name.toLowerCase().trim() === invItem.name.toLowerCase().trim())) 
+        && (si.bulkStock || 0) > 0
+      );
+
       const storeAvail = linkedStoreItems.length > 0
         ? `<span class="badge badge-success">Yes (${linkedStoreItems.reduce((sum, si) => sum + (si.bulkStock||0), 0)} packs)</span>`
         : `<span class="badge badge-danger">None</span>`;
@@ -554,7 +556,7 @@
 
   window.restockFromInventoryList = function(inventoryId, storeItemId) {
     if (!storeItemId) {
-      showToast('No linked store item found. Please link a bulk store item to this inventory item first.', 'error');
+      showToast('No linked store item found. Please link a bulk store item or match name values to this inventory item first.', 'error');
       return;
     }
     hideModal();
@@ -596,7 +598,7 @@
 
   window._switchWSType=function(type){wholesaleCustomerType=type;document.querySelectorAll('.customer-type-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-type="${type}"]`)?.classList.add('active');document.getElementById('wsExistingSection').style.display=type==='existing'?'block':'none';document.getElementById('wsNewSection').style.display=type==='new'?'block':'none';};
   function bindWSEvents(){document.querySelectorAll('.ws-select,.ws-qty,.ws-price').forEach(el=>{el.addEventListener('change',updateWSTotal);el.addEventListener('input',updateWSTotal);});updateWSTotal();}
-  window.addWSItem=function(){const stockOptions=storeItems.filter(i=>(i.bulkStock||0)>0).map(i=>`<option value="${i.id}" data-name="${i.name||''}" data-stock="${i.bulkStock||0}" data-cost="${i.bulkCost||0}">${i.name} (${i.bulkStock||0} packs)</option>`).join('');const div=document.createElement('div');div.className='item-row';div.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:center;';div.innerHTML=`<select class="form-control ws-select" style="flex:2;"><option value="">-- Select --</option>${stockOptions}</select><input type="number" class="form-control ws-qty" value="1" min="1" style="flex:0.5;"><input type="number" class="form-control ws-price" placeholder="Sell Price per Pack ₦" step="0.01" style="flex:1;"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();updateWSTotal();"><i class="fas fa-times"></i></button>`;document.getElementById('wsItems').appendChild(div);div.querySelectorAll('.ws-select,.ws-qty,.ws-price').forEach(el=>{el.addEventListener('change',updateWSTotal);el.addEventListener('input',updateWSTotal);});updateWSTotal();};
+  window.addWSItem=function(){const stockOptions=storeItems.filter(i=>(i.bulkStock||0)>0).map(i=>`<option value="${i.id}" data-name="${i.name||''}" data-stock="${i.bulkStock||0}" data-cost="${i.bulkCost||0}">${i.name} (${i.bulkStock||0} packs)</option>`).join('');const div=document.createElement('div');div.className='item-row';div.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:center;';div.innerHTML=`<select class="form-control ws-select" style="flex:2;"><option value="">-- Select --</option>${stockOptions}</select><input type="number" class="form-control ws-qty" value="1" min="1" style="flex:0.5;"><input type="number" class="form-control ws-price" placeholder="Sell Price per Pack ₦" step="0.01" style="flex:1;"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();updateWSTotal();"><i class="fas fa-times"></i></button>`;document.getElementById('wsItems').appendChild(div);div.querySelectorAll('.ws-select,.ws-qty,.ws-price').forEach(el=>{el.addEventListener('change',updateWSTotal);el.addEventListener('input',updateWSTotal);});updateWSTotal();}
   function updateWSTotal(){let total=0;document.querySelectorAll('#wsItems .item-row').forEach(row=>{const qty=parseInt(row.querySelector('.ws-qty')?.value)||0;const price=parseFloat(row.querySelector('.ws-price')?.value)||0;total+=qty*price;});document.getElementById('wsTotal').textContent=formatCurrency(total);}
   window.selWS=function(m){wholesalePayment=m;document.querySelectorAll('.ws-pay').forEach(b=>b.classList.remove('selected'));document.querySelector(`.ws-pay[data-m="${m}"]`)?.classList.add('selected');};
   window.processWS=function(){
@@ -697,7 +699,6 @@
       await loadCategories();
       loadStore();
 
-      // Auto-open inventory restock list if coming from inventory page
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('showInventoryRestock') === 'true') {
         setTimeout(() => openInventoryRestockList(), 800);
