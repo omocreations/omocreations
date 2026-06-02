@@ -486,12 +486,11 @@
     });
   };
 
-  // ==================== INVENTORY RESTOCK LIST MODAL ====================
+  // ==================== INVENTORY RESTOCK LIST (now based on linked items) ====================
   window.openInventoryRestockList = async function() {
     const invSnap = await getDocs(collection(db, 'stock_items'));
     const inventoryItems = invSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    // Build the filter dropdown
     let listHTML = `
       <div class="form-group" style="display:flex; gap:10px; align-items:center;">
         <label style="white-space:nowrap;">Filter by Type:</label>
@@ -516,20 +515,21 @@
                      (totalStock === 0 ? 'out_of_stock' : (totalStock <= (invItem.threshold||10) ? 'low' : 'available'));
       const statusBadge = status === 'available' ? 'success' : (status === 'low' ? 'warning' : 'danger');
 
-      // Store availability
-      const storeMatches = storeItems.filter(si => si.inventoryItemType === itemType && (si.bulkStock||0) > 0);
-      const storeAvail = storeMatches.length > 0
-        ? `<span class="badge badge-success">Yes (${storeMatches.reduce((sum, si) => sum + (si.bulkStock||0), 0)} packs)</span>`
+      // ONLY count store items that are explicitly linked to this inventory item
+      const linkedStoreItems = storeItems.filter(si => si.linkedInventoryId === invItem.id && (si.bulkStock||0) > 0);
+      const storeAvail = linkedStoreItems.length > 0
+        ? `<span class="badge badge-success">Yes (${linkedStoreItems.reduce((sum, si) => sum + (si.bulkStock||0), 0)} packs)</span>`
         : `<span class="badge badge-danger">None</span>`;
 
-      const disabled = storeMatches.length === 0 ? 'disabled' : '';
+      const disabled = linkedStoreItems.length === 0 ? 'disabled' : '';
+      const storeItemId = linkedStoreItems.length > 0 ? linkedStoreItems[0].id : '';
 
       listHTML += `<tr data-type="${itemType}" data-name="${(invItem.name||'').toLowerCase()}">
         <td><strong>${invItem.name||'-'}</strong></td>
         <td><span class="badge badge-info">${itemType}</span></td>
         <td>${totalStock} <span class="badge badge-${statusBadge}">${status.replace(/_/g,' ')}</span></td>
         <td>${storeAvail}</td>
-        <td><button class="btn btn-sm btn-success" onclick="restockFromInventoryList('${invItem.id}', '${itemType}')" ${disabled}><i class="fas fa-boxes"></i> Restock</button></td>
+        <td><button class="btn btn-sm btn-success" onclick="restockFromInventoryList('${invItem.id}', '${storeItemId}')" ${disabled}><i class="fas fa-boxes"></i> Restock</button></td>
       </tr>`;
     }
     listHTML += `</tbody></table></div>`;
@@ -552,14 +552,13 @@
     });
   };
 
-  window.restockFromInventoryList = function(inventoryId, itemType) {
-    const matchingStoreItem = storeItems.find(si => si.inventoryItemType === itemType && (si.bulkStock||0) > 0);
-    if (!matchingStoreItem) {
-      showToast('No bulk stock available for this item type in the store.', 'error');
+  window.restockFromInventoryList = function(inventoryId, storeItemId) {
+    if (!storeItemId) {
+      showToast('No linked store item found. Please link a bulk store item to this inventory item first.', 'error');
       return;
     }
     hideModal();
-    openSellToInventoryModal(matchingStoreItem.id, inventoryId);
+    openSellToInventoryModal(storeItemId, inventoryId);
   };
 
   // ---------- Edit / Delete ----------
@@ -646,9 +645,9 @@
         <h4>🏬 What is the Store?</h4>
         <p>The Store holds <strong>bulk stock</strong> – large packs, cartons, rolls, etc. It does <u>not</u> sell individual pieces directly (except Wholesale). Instead, you <strong>restock the Inventory</strong> from here by converting bulk into sellable forms.</p>
         <h4 style="margin-top:16px;">➕ Adding a Bulk Item</h4>
-        <p>Fill in the name, category, bulk quantity, cost per bulk pack, the type of Inventory item it will create, and how many sellable pieces one bulk yields. You can optionally link it to an existing Inventory item.</p>
+        <p>Fill in the name, category, bulk quantity, cost per bulk pack, the type of Inventory item it will create, and how many sellable pieces one bulk yields. <strong>Always link it to the correct Inventory item</strong> using the "Linked Inventory Item" dropdown so restocking works accurately.</p>
         <h4 style="margin-top:16px;">🔄 Restock Inventory</h4>
-        <p>Click <strong>“Restock Inventory”</strong> (green button) to see all Inventory items, their current stock, and whether the Store has bulk available for that type. Click <strong>Restock</strong> on any row to open the correct form. The inventory is updated immediately after PIN confirmation.</p>
+        <p>Click <strong>“Restock Inventory”</strong> (green button) to see all Inventory items, their current stock, and whether the Store has bulk available for that item. Only items that are <strong>linked</strong> to a store bulk item will show stock. Click <strong>Restock</strong> to convert bulk stock and add it to the inventory.</p>
         <h4 style="margin-top:16px;">🏷️ Inventory Types</h4>
         <ul style="padding-left:20px;">
           <li><strong>General</strong> – Only whole units</li>
