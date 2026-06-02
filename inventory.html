@@ -749,7 +749,13 @@
 
   // ===================== RESTOCK & HISTORY =====================
   window.openRestockOptions = function(id) { const item=allItems.find(i=>i.id===id);if(!item)return;showModal(`Restock: ${item.name}`,`<p>Current: ${getTotalAvailable(item)} | Threshold: ${item.threshold||10}</p><div class="restock-options"><div class="restock-option" onclick="restockFromStore('${id}')"><i class="fas fa-store"></i><div class="label">From Store</div><div class="sub">Buy from bulk stock</div></div><div class="restock-option" onclick="restockFromThirdParty('${id}')"><i class="fas fa-truck"></i><div class="label">Third Party</div><div class="sub">Purchase request</div></div></div><button class="btn btn-outline" onclick="hideModal()" style="width:100%;margin-top:12px;">Cancel</button>`); };
-  window.restockFromStore = function(id) { hideModal(); navigateTo('store.html'); };
+  window.restockFromStore = function(id) {
+  const item = allItems.find(i => i.id === id);
+  if (!item) return;
+  // Pass the inventory item's ID and type to the store page
+  const url = `store.html?restockInventoryId=${encodeURIComponent(id)}&restockType=${encodeURIComponent(item.itemType || 'general')}`;
+  window.location.href = url;
+};
   window.restockFromThirdParty = function(id) { hideModal(); navigateTo('purchases.html'); };
   window.viewHistory = async function(id) { const item=allItems.find(i=>i.id===id);if(!item)return;try{const snap=await getDocs(query(collection(db,'audit_logs'),orderBy('performedAt','desc')));let html=`<h4>${item.name}</h4><p>Unit Qty: ${item.unitQty||0} | Total: ${getTotalAvailable(item)} | Sold: ${getItemSoldQty(item)} | Revenue: ${formatCurrency(getItemRevenue(item))}</p>`;const logs=snap.docs.map(d=>d.data()).filter(l=>l.note&&l.note.includes(item.name));if(logs.length===0)html+='<p>No history</p>';else{html+='<table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Action</th><th>By</th><th>Note</th></tr>';logs.forEach(l=>{html+=`<tr><td>${formatDate(l.performedAt)}</td><td>${l.actionType||'-'}</td><td>${l.performedByName||'-'}</td><td>${l.note||'-'}</td></tr>`;});html+='</table>';}html+='<button class="btn btn-primary" onclick="hideModal()" style="margin-top:16px;width:100%;">Close</button>';showModal('History',html);}catch(e){showToast('Error','error');showDebug('History error: '+e.message);} };
 
