@@ -169,8 +169,8 @@
     .stats-grid-2 .stat-card:nth-child(1){animation-delay:0.25s}.stats-grid-2 .stat-card:nth-child(2){animation-delay:0.30s}
     .stats-grid-2 .stat-card:nth-child(3){animation-delay:0.35s}.stats-grid-2 .stat-card:nth-child(4){animation-delay:0.40s}
 
-    /* Quick Actions – now 9 columns */
-    .quick-actions { display: grid; grid-template-columns: repeat(9, 1fr); gap: 14px; margin-bottom: 28px; }
+    /* Quick Actions – now 10 columns */
+    .quick-actions { display: grid; grid-template-columns: repeat(10, 1fr); gap: 14px; margin-bottom: 28px; }
     .quick-action {
       background: white; padding: 16px 12px; border-radius: 18px; text-align: center;
       cursor: pointer; border: 1px solid rgba(255,77,166,0.1); transition: all 0.3s;
@@ -180,7 +180,7 @@
     .quick-action:nth-child(3){animation-delay:0.20s}.quick-action:nth-child(4){animation-delay:0.25s}
     .quick-action:nth-child(5){animation-delay:0.30s}.quick-action:nth-child(6){animation-delay:0.35s}
     .quick-action:nth-child(7){animation-delay:0.40s}.quick-action:nth-child(8){animation-delay:0.45s}
-    .quick-action:nth-child(9){animation-delay:0.50s}
+    .quick-action:nth-child(9){animation-delay:0.50s}.quick-action:nth-child(10){animation-delay:0.55s}
     .quick-action:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(255,77,166,0.15); border-color: var(--primary); }
     .quick-action i { font-size: 1.6rem; color: var(--primary); margin-bottom: 8px; display: block; }
     .quick-action h4 { font-size: 0.75rem; color: var(--dark); font-weight: 600; }
@@ -325,7 +325,7 @@
 
   <div class="content-wrapper">
 
-    <!-- Quick Actions -->
+    <!-- Quick Actions (now 10 items) -->
     <div class="quick-actions">
       <div class="quick-action" onclick="navigateTo('staff-management.html')"><i class="fas fa-user-check"></i><h4>Staff Mgmt</h4><span class="action-badge" id="staffPendingBadge">0</span></div>
       <div class="quick-action" onclick="navigateTo('inventory.html')"><i class="fas fa-boxes"></i><h4>Inventory</h4></div>
@@ -336,6 +336,7 @@
       <div class="quick-action" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><h4>Catalog</h4></div>
       <div class="quick-action" onclick="navigateTo('make-admin.html')"><i class="fas fa-user-shield"></i><h4>Make Admin</h4></div>
       <div class="quick-action" onclick="navigateTo('kiosk.html')"><i class="fas fa-desktop"></i><h4>Kiosk</h4></div>
+      <div class="quick-action" onclick="navigateTo('kiosk-settings.html')"><i class="fas fa-cog"></i><h4>Kiosk Settings</h4></div>
     </div>
 
     <!-- Stats Grid Row 1 -->
@@ -441,7 +442,7 @@
 
   function isAdmin() { return userData?.role === 'admin' || userData?.role === 'super_admin'; }
 
-  // --- Updated Sidebar with Make Admin & Kiosk ---
+  // --- Updated Sidebar with Make Admin, Kiosk, and Kiosk Settings ---
   function buildSidebar() {
     const nav = document.getElementById('sidebarNav'); if (!nav) return;
     nav.innerHTML = `
@@ -468,6 +469,7 @@
       <div class="nav-section"><div class="nav-section-title">ADMIN TOOLS</div>
         <button class="nav-item" onclick="navigateTo('make-admin.html')"><i class="fas fa-user-shield"></i><span>Make Admin</span></button>
         <button class="nav-item" onclick="navigateTo('kiosk.html')"><i class="fas fa-desktop"></i><span>Kiosk</span></button>
+        <button class="nav-item" onclick="navigateTo('kiosk-settings.html')"><i class="fas fa-cog"></i><span>Kiosk Settings</span></button>
       </div>
       <div class="nav-section"><div class="nav-section-title">SHOP</div>
         <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
