@@ -129,6 +129,10 @@
     .item-row .item-size { flex:1; min-width:100px; }
     .item-row .item-qty { flex:0.5; min-width:60px; }
 
+    /* Non‑inventory toggle style */
+    .non-inv-toggle { display:flex; align-items:center; gap:4px; font-size:0.7rem; white-space:nowrap; margin-right:6px; }
+    .non-inv-toggle input { margin:0; }
+
     .sale-summary { background:var(--gray-light); border-radius:14px; padding:16px; margin-top:20px; }
     .summary-row { display:flex; justify-content:space-between; padding:5px 0; }
     .summary-row.total { font-weight:700; font-size:1.1rem; border-top:1px dashed rgba(0,0,0,0.1); margin-top:8px; padding-top:12px; }
@@ -462,21 +466,29 @@
     return opts;
   }
 
+  // ==================== NEW SALE MODAL (with non‑inventory toggle) ====================
   window.openNewSaleModal = async function(){
     await loadCustomersAndStock();
-    if(allStockItems.length===0){showToast('No items available','error');return;}
+    // Remove the old "No items available" check because we can now sell non‑inventory items
+    // if(allStockItems.length===0){showToast('No items available','error');return;}
 
     const custOptions=allCustomers.map(c=>`<option value="${c.id}" data-name="${c.fullName||''}" data-phone="${c.phone||''}" data-address="${c.address||c.location||''}">${c.fullName||''} - ${c.phone||'No phone'}</option>`).join('');
     const stockOptions = getStockOptionsHtml();
-
-    const firstItem = allStockItems[0];
-    const firstSizeOpts = firstItem ? getSizeOptions(firstItem).map(o=>`<option value="${o.value}">${o.label}</option>`).join('') : '<option value="1">1 (Unit)</option>';
 
     showModal('New Sale',`
       <div class="customer-type-toggle"><button class="customer-type-btn active" data-type="existing" onclick="window._switchCustomerType('existing')"><i class="fas fa-users"></i> Existing</button><button class="customer-type-btn" data-type="new" onclick="window._switchCustomerType('new')"><i class="fas fa-user-plus"></i> New</button></div>
       <div id="existingCustomerSection"><div class="form-group"><label>Search Customer</label><select class="form-control" id="existingCustomerSelect" style="width:100%;"><option value="">-- Search --</option>${custOptions}</select></div></div>
       <div id="newCustomerSection" style="display:none;"><div class="form-group"><label>Full Name *</label><input type="text" class="form-control" id="newCustomerName"></div><div class="form-group"><label>Phone *</label><input type="tel" class="form-control" id="newCustomerPhone"></div><div class="form-group"><label>Address *</label><textarea class="form-control" id="newCustomerAddress" rows="2"></textarea></div><div class="form-group"><label>Email</label><input type="email" class="form-control" id="newCustomerEmail"></div></div>
-      <div id="saleItems"><div class="item-row"><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>${stockOptions}</select><select class="form-control item-size" id="itemSize-0">${firstSizeOpts}</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;"></div></div>
+      <div id="saleItems">
+        <div class="item-row">
+          <div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this)"> <span>Non‑Inventory</span></div>
+          <select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>${stockOptions}</select>
+          <input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">
+          <select class="form-control item-size"><option value="1">1 (Unit)</option></select>
+          <input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">
+          <input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">
+        </div>
+      </div>
       <button type="button" class="btn btn-outline btn-sm" onclick="window._addSaleItem()"><i class="fas fa-plus"></i> Add Item</button>
       <div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods"><div class="payment-method selected" data-method="cash" onclick="window._selectPayment('cash')">💵 Cash</div><div class="payment-method" data-method="transfer" onclick="window._selectPayment('transfer')">🏦 Transfer</div><div class="payment-method" data-method="pos" onclick="window._selectPayment('pos')">💳 POS</div></div></div>
       <div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div>
@@ -485,69 +497,109 @@
 
     setTimeout(()=>{
       $('#existingCustomerSelect').select2({placeholder:'Search customer...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')});
-      const firstSelect=$('.item-select').first();
-      firstSelect.select2({placeholder:'Search product...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')}).on('change',function(){window._updateSizeDropdown(this);window._updateSaleSummary();});
+      // Initialize Select2 only for visible selects (the first row has inventory select visible)
+      const firstRow = document.querySelector('.item-row');
+      const invSelect = firstRow?.querySelector('.item-select');
+      if (invSelect && invSelect.style.display !== 'none') {
+        $(invSelect).select2({placeholder:'Search product...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')}).on('change',function(){window._updateSizeDropdown(this);window._updateSaleSummary();});
+      }
       $('.item-qty').on('input',window._updateSaleSummary);
       $('.item-size').on('change',window._updateSaleSummary);
       window._updateSaleSummary();
     },150);
   };
 
-  window._updateSizeDropdown = function(selectEl){
-    const row=selectEl.closest('.item-row');if(!row)return;
-    const sizeEl=row.querySelector('.item-size');if(!sizeEl)return;
-    const opt=selectEl.options[selectEl.selectedIndex];
-    if(!opt||!opt.value) { sizeEl.innerHTML='<option value="1">1 (Unit)</option>'; return; }
+  // Toggle non‑inventory mode for a row
+  window._toggleNonInventory = function(checkbox) {
+    const row = checkbox.closest('.item-row');
+    const select = row.querySelector('.item-select');
+    const customName = row.querySelector('.item-custom-name');
+    const customPrice = row.querySelector('.item-custom-price');
+    const sizeSelect = row.querySelector('.item-size');
+    const qtyInput = row.querySelector('.item-qty');
 
-    const itemData={
-      unitPrice: parseFloat(opt.getAttribute('data-price'))||0,
-      halfPrice: parseFloat(opt.getAttribute('data-halfprice'))||0,
-      quarterPrice: parseFloat(opt.getAttribute('data-quarterprice'))||0,
-      packPrice: parseFloat(opt.getAttribute('data-packprice'))||0,
-      bundlePrice: parseFloat(opt.getAttribute('data-bundleprice'))||0,
-      packSize: parseInt(opt.getAttribute('data-packsize'))||12,
-      bundleSize: parseInt(opt.getAttribute('data-bundlesize'))||50
-    };
-
-    const options=getSizeOptions(itemData);
-    sizeEl.innerHTML=options.map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
+    if (checkbox.checked) {
+      // Hide inventory select and size, show custom name and price
+      select.style.display = 'none';
+      sizeSelect.style.display = 'none';
+      customName.style.display = '';
+      customPrice.style.display = '';
+      // Destroy Select2 if present
+      if ($(select).data('select2')) $(select).select2('destroy');
+      select.value = '';
+    } else {
+      // Show inventory select and size, hide custom fields
+      select.style.display = '';
+      sizeSelect.style.display = '';
+      customName.style.display = 'none';
+      customPrice.style.display = 'none';
+      // Re‑initialize Select2
+      $(select).select2({placeholder:'Search product...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')}).on('change',function(){window._updateSizeDropdown(this);window._updateSaleSummary();});
+    }
     window._updateSaleSummary();
   };
 
-  window._switchCustomerType = function(type) { customerType=type;document.querySelectorAll('.customer-type-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-type="${type}"]`)?.classList.add('active');document.getElementById('existingCustomerSection').style.display=type==='existing'?'block':'none';document.getElementById('newCustomerSection').style.display=type==='new'?'block':'none'; };
-  window._selectPayment = function(method) { selectedPayment=method;document.querySelectorAll('.payment-method').forEach(m=>m.classList.remove('selected'));document.querySelector(`[data-method="${method}"]`)?.classList.add('selected'); };
-
-  window._addSaleItem = function() {
-    const idx=document.querySelectorAll('.item-row').length;
-    const stockOptions = getStockOptionsHtml();
-    const div=document.createElement('div');div.className='item-row';
-    div.innerHTML=`<select class="form-control item-select" style="width:100%;"><option value="">-- Search --</option>${stockOptions}</select><select class="form-control item-size" id="itemSize-${idx}"><option value="1">1 (Unit)</option></select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();"><i class="fas fa-times"></i></button>`;
-    document.getElementById('saleItems').appendChild(div);
-    $(div).find('.item-select').select2({placeholder:'Search product...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')}).on('change',function(){window._updateSizeDropdown(this);window._updateSaleSummary();});
-    $(div).find('.item-qty').on('input',window._updateSaleSummary);
-    $(div).find('.item-size').on('change',window._updateSaleSummary);
-    window._updateSaleSummary();
-  };
-
+  // Override _updateSaleSummary to handle custom items
   window._updateSaleSummary = function() {
-    let total=0,count=0;
-    document.querySelectorAll('.item-row').forEach(row=>{
-      const select=row.querySelector('.item-select');const qtyEl=row.querySelector('.item-qty');const sizeEl=row.querySelector('.item-size');
-      if(select&&qtyEl&&select.value){
-        const opt=select.options[select.selectedIndex];const qty=parseFloat(qtyEl.value)||1;const size=sizeEl?.value||'1';
-        let price=parseFloat(opt?.getAttribute('data-price'))||0;
-
-        if(size==='0.5'&&parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));
-        else if(size==='0.25'&&parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));
-        else if(size==='pack'&&parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));
-        else if(size==='bundle'&&parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));
-
-        total+=price*qty;count++;
+    let total = 0, count = 0;
+    document.querySelectorAll('.item-row').forEach(row => {
+      const checkbox = row.querySelector('.non-inv-check');
+      const qtyEl = row.querySelector('.item-qty');
+      const qty = parseFloat(qtyEl?.value) || 1;
+      if (checkbox && checkbox.checked) {
+        // Non‑inventory item
+        const priceEl = row.querySelector('.item-custom-price');
+        const price = parseFloat(priceEl?.value) || 0;
+        total += price * qty;
+        count++;
+      } else {
+        // Inventory item
+        const select = row.querySelector('.item-select');
+        const sizeEl = row.querySelector('.item-size');
+        if (select && select.value) {
+          const opt = select.options[select.selectedIndex];
+          const size = sizeEl?.value || '1';
+          let price = parseFloat(opt?.getAttribute('data-price')) || 0;
+          if (size === '0.5' && parseFloat(opt?.getAttribute('data-halfprice')) > 0) price = parseFloat(opt.getAttribute('data-halfprice'));
+          else if (size === '0.25' && parseFloat(opt?.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
+          else if (size === 'pack' && parseFloat(opt?.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
+          else if (size === 'bundle' && parseFloat(opt?.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
+          total += price * qty;
+          count++;
+        }
       }
     });
-    document.getElementById('itemCount').textContent=count;document.getElementById('saleTotal').textContent=formatCurrency(total);
+    document.getElementById('itemCount').textContent = count;
+    document.getElementById('saleTotal').textContent = formatCurrency(total);
   };
 
+  // Modify _addSaleItem to include the toggle
+  window._addSaleItem = function() {
+    const stockOptions = getStockOptionsHtml();
+    const div = document.createElement('div');
+    div.className = 'item-row';
+    div.innerHTML = `
+      <div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this)"> <span>Non‑Inventory</span></div>
+      <select class="form-control item-select" style="width:100%;"><option value="">-- Search --</option>${stockOptions}</select>
+      <input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">
+      <select class="form-control item-size"><option value="1">1 (Unit)</option></select>
+      <input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">
+      <input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">
+      <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();"><i class="fas fa-times"></i></button>
+    `;
+    document.getElementById('saleItems').appendChild(div);
+
+    const invSelect = div.querySelector('.item-select');
+    // Initialize Select2 for the new row (only if visible)
+    if (invSelect.style.display !== 'none') {
+      $(invSelect).select2({placeholder:'Search product...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')}).on('change',function(){window._updateSizeDropdown(this);window._updateSaleSummary();});
+    }
+    $(div).find('.item-qty').on('input', window._updateSaleSummary);
+    $(div).find('.item-size').on('change', window._updateSaleSummary);
+    window._updateSaleSummary();
+  };
+
+  // Modify _processSale to handle non‑inventory items
   window._processSale = function() {
     let customerId='',customerName='',customerPhone='',customerEmail='',customerAddress='';
     if(customerType==='existing'){const select=document.getElementById('existingCustomerSelect');if(!select||!select.value){showToast('Select a customer','error');return;}customerId=select.value;const opt=select.options[select.selectedIndex];customerName=opt.dataset.name;customerPhone=opt.dataset.phone;customerAddress=opt.dataset.address||'';}
@@ -555,29 +607,51 @@
 
     const items=[];let total=0;
     for(const row of document.querySelectorAll('.item-row')){
-      const select=row.querySelector('.item-select');const qtyEl=row.querySelector('.item-qty');const sizeEl=row.querySelector('.item-size');
-      if(select&&select.value&&qtyEl){
-        const opt=select.options[select.selectedIndex];const qty=parseFloat(qtyEl.value)||1;const size=sizeEl?.value||'1';
-        const stockAvailable=parseFloat(opt?.getAttribute('data-stock'))||0;
-
-        let deductQty=qty; let sizeLabel='1'; let price=parseFloat(opt?.getAttribute('data-price'))||0;
-
-        if(size==='0.5'){
-            deductQty=qty*0.5; sizeLabel='½';
-            if(parseFloat(opt?.getAttribute('data-halfprice'))>0) price=parseFloat(opt.getAttribute('data-halfprice'));
-        } else if(size==='0.25'){
-            deductQty=qty*0.25; sizeLabel='¼';
-            if(parseFloat(opt?.getAttribute('data-quarterprice'))>0) price=parseFloat(opt.getAttribute('data-quarterprice'));
-        } else if(size==='pack'){
-            deductQty=qty*(parseInt(opt?.getAttribute('data-packsize'))||12); sizeLabel='📦 Pack';
-            if(parseFloat(opt?.getAttribute('data-packprice'))>0) price=parseFloat(opt.getAttribute('data-packprice'));
-        } else if(size==='bundle'){
-            deductQty=qty*(parseInt(opt?.getAttribute('data-bundlesize'))||50); sizeLabel='📦 Bundle';
-            if(parseFloat(opt?.getAttribute('data-bundleprice'))>0) price=parseFloat(opt.getAttribute('data-bundleprice'));
+      const checkbox = row.querySelector('.non-inv-check');
+      const qtyEl = row.querySelector('.item-qty');
+      const qty = parseFloat(qtyEl?.value) || 1;
+      if (checkbox && checkbox.checked) {
+        // Non‑inventory item
+        const nameEl = row.querySelector('.item-custom-name');
+        const priceEl = row.querySelector('.item-custom-price');
+        const name = nameEl?.value?.trim();
+        const price = parseFloat(priceEl?.value) || 0;
+        if (!name || price <= 0) { showToast('Enter valid name and price for custom item', 'error'); return; }
+        items.push({
+          name,
+          quantity: qty,
+          unitPrice: price,
+          size: '1',
+          sizeLabel: '1',
+          isNonInventory: true
+        });
+        total += price * qty;
+      } else {
+        // Inventory item (unchanged)
+        const select=row.querySelector('.item-select');const sizeEl=row.querySelector('.item-size');
+        if(select&&select.value){
+          const opt=select.options[select.selectedIndex];
+          const stockAvailable=parseFloat(opt?.getAttribute('data-stock'))||0;
+          const size=sizeEl?.value||'1';
+          let price=parseFloat(opt?.getAttribute('data-price'))||0;
+          let deductQty=qty; let sizeLabel='1';
+          if(size==='0.5'){
+              deductQty=qty*0.5; sizeLabel='½';
+              if(parseFloat(opt?.getAttribute('data-halfprice'))>0) price=parseFloat(opt.getAttribute('data-halfprice'));
+          } else if(size==='0.25'){
+              deductQty=qty*0.25; sizeLabel='¼';
+              if(parseFloat(opt?.getAttribute('data-quarterprice'))>0) price=parseFloat(opt.getAttribute('data-quarterprice'));
+          } else if(size==='pack'){
+              deductQty=qty*(parseInt(opt?.getAttribute('data-packsize'))||12); sizeLabel='📦 Pack';
+              if(parseFloat(opt?.getAttribute('data-packprice'))>0) price=parseFloat(opt.getAttribute('data-packprice'));
+          } else if(size==='bundle'){
+              deductQty=qty*(parseInt(opt?.getAttribute('data-bundlesize'))||50); sizeLabel='📦 Bundle';
+              if(parseFloat(opt?.getAttribute('data-bundleprice'))>0) price=parseFloat(opt.getAttribute('data-bundleprice'));
+          }
+          if(deductQty>stockAvailable){showToast(`Only ${stockAvailable} available for ${opt.dataset.name}`,'error');return;}
+          items.push({id:select.value,name:opt.dataset.name,quantity:qty,size:size,sizeLabel,unitPrice:price,deductQty:deductQty});
+          total+=price*qty;
         }
-
-        if(deductQty>stockAvailable){showToast(`Only ${stockAvailable} available for ${opt.dataset.name}`,'error');return;}
-        items.push({id:select.value,name:opt.dataset.name,quantity:qty,size:size,sizeLabel,unitPrice:price,deductQty:deductQty});total+=price*qty;
       }
     }
     if(items.length===0){showToast('Add at least one item','error');return;}
@@ -588,12 +662,15 @@
         const batch=writeBatch(db);
         if(customerType==='new'){const custRef=doc(collection(db,'customers'));batch.set(custRef,{fullName:customerName,phone:customerPhone,email:customerEmail,address:customerAddress,location:customerAddress,totalSpent:0,purchaseCount:0,status:'pending_approval',createdBy:currentUser.uid,createdByName:userData.fullName,createdAt:serverTimestamp()});customerId=custRef.id;}
         for(const item of items){
-          const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);
-          if(snap.exists()){
-            const cur=parseFloat(snap.data().quantityAvailable ?? snap.data().unitQty ?? 0);
-            const threshold=parseFloat(snap.data().threshold||10);
-            const newQty=cur-item.deductQty;
-            batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(item.deductQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});
+          // Only deduct stock for inventory items
+          if (!item.isNonInventory && item.id) {
+            const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);
+            if(snap.exists()){
+              const cur=parseFloat(snap.data().quantityAvailable ?? snap.data().unitQty ?? 0);
+              const threshold=parseFloat(snap.data().threshold||10);
+              const newQty=cur-(item.deductQty||0);
+              batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(item.deductQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});
+            }
           }
         }
         const saleRef=doc(collection(db,'sales'));batch.set(saleRef,{receiptNumber,customerId,customerName,customerPhone,customerAddress,items,totalAmount:total,paymentMethod:selectedPayment,attendantId:currentUser.uid,attendantName:userData.fullName,status:'completed',createdAt:serverTimestamp()});
@@ -605,11 +682,12 @@
     });
   };
 
+  // ========== RETURN GOODS (unchanged) ==========
   window.openReturnModal = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;let itemsHtml=sale.items.map((item,idx)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--gray-light);border-radius:10px;"><span style="flex:1;"><strong>${item.name}</strong>${item.sizeLabel?` <small>(${item.sizeLabel})</small>`:''}<br><small>Sold: ${item.quantity} x ${formatCurrency(item.unitPrice)}</small></span><input type="number" step="0.25" id="return-qty-${idx}" value="0" min="0" max="${item.quantity}" style="width:70px;padding:8px;border-radius:8px;border:1px solid #ddd;text-align:center;"><span style="font-size:0.8rem;color:var(--gray);">/ ${item.quantity}</span></div>`).join('');showModal('Return Goods',`<p><strong>Receipt:</strong> ${sale.receiptNumber} | <strong>Customer:</strong> ${sale.customerName}</p><p style="color:var(--gray);">Select quantity to return:</p>${itemsHtml}<div class="form-group"><label>Reason</label><textarea class="form-control" id="returnReason" rows="2"></textarea></div><p style="font-weight:600;">Return Action:</p><div class="return-options"><div class="return-option selected" data-action="refund" onclick="window._selectReturnAction('refund')"><i class="fas fa-money-bill-wave"></i><div><strong>Full Refund</strong><br><small>Return money to customer</small></div></div><div class="return-option" data-action="exchange_same" onclick="window._selectReturnAction('exchange_same')"><i class="fas fa-exchange-alt"></i><div><strong>Exchange Same Price</strong><br><small>Swap for another item</small></div></div><div class="return-option" data-action="exchange_higher" onclick="window._selectReturnAction('exchange_higher')"><i class="fas fa-level-up-alt"></i><div><strong>Exchange + Add Money</strong><br><small>Upgrade to higher price</small></div></div><div class="return-option" data-action="store_credit" onclick="window._selectReturnAction('store_credit')"><i class="fas fa-piggy-bank"></i><div><strong>Store Credit</strong><br><small>Keep for later</small></div></div></div><button class="btn btn-primary" onclick="window._processReturn('${saleId}')" style="width:100%;margin-top:15px;"><i class="fas fa-check"></i> Process Return</button>`);};
   window._selectReturnAction = (action)=>{selectedReturnAction=action;document.querySelectorAll('.return-option').forEach(o=>o.classList.remove('selected'));document.querySelector(`[data-action="${action}"]`)?.classList.add('selected');};
-  window._processReturn = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;const returnedItems=[];let totalRefund=0;sale.items.forEach((item,idx)=>{const q=parseFloat(document.getElementById(`return-qty-${idx}`)?.value)||0;if(q>0){returnedItems.push({...item,returnedQty:q,refundAmount:q*item.unitPrice});totalRefund+=q*item.unitPrice;}});if(returnedItems.length===0){showToast('Select quantity to return','error');return;}const reason=document.getElementById('returnReason')?.value?.trim()||'No reason';showPinModal('Process Return',`process return of ${formatCurrency(totalRefund)}`,async()=>{try{const batch=writeBatch(db);for(const item of returnedItems){const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);if(snap.exists()){const cur=parseFloat(snap.data().quantityAvailable??snap.data().unitQty??0);const threshold=parseFloat(snap.data().threshold||10);const addBackQty=item.returnedQty*(item.size==='pack'?(parseInt(snap.data().packSize)||12):item.size==='bundle'?(parseInt(snap.data().bundleSize)||50):parseFloat(item.size)||1);const newQty=cur+addBackQty;batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(-addBackQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});}}batch.set(doc(collection(db,'returns')),{saleId,saleReceiptNumber:sale.receiptNumber,customerId:sale.customerId,customerName:sale.customerName,returnedItems,totalRefund,returnAction:selectedReturnAction,reason,processedBy:currentUser.uid,processedByName:userData.fullName,createdAt:serverTimestamp()});const saleUpdate={status:'returned',returnedAt:serverTimestamp(),returnedBy:currentUser.uid,returnedByName:userData.fullName,returnAction:selectedReturnAction,totalRefund};if(selectedReturnAction==='exchange_same')saleUpdate.exchangeNote='Exchanged for same price item';else if(selectedReturnAction==='exchange_higher')saleUpdate.exchangeNote='Exchanged for higher price + additional payment';else if(selectedReturnAction==='store_credit')saleUpdate.exchangeNote='Store credit held for later';batch.update(doc(db,'sales',saleId),saleUpdate);if(sale.customerId&&selectedReturnAction==='refund'){batch.update(doc(db,'customers',sale.customerId),{totalSpent:increment(-totalRefund),purchaseCount:increment(-1)});}await batch.commit();await logAudit('return_goods',`Return ${formatCurrency(totalRefund)} | Receipt ${sale.receiptNumber} | Action: ${selectedReturnAction}`);const labels={refund:`Refunded: -${formatCurrency(totalRefund)}`,exchange_same:`Exchanged: ${formatCurrency(totalRefund)}`,exchange_higher:`Upgrade exchange: ${formatCurrency(totalRefund)}`,store_credit:`Store credit: ${formatCurrency(totalRefund)}`};showToast(labels[selectedReturnAction],'success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});};
+  window._processReturn = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;const returnedItems=[];let totalRefund=0;sale.items.forEach((item,idx)=>{const q=parseFloat(document.getElementById(`return-qty-${idx}`)?.value)||0;if(q>0){returnedItems.push({...item,returnedQty:q,refundAmount:q*item.unitPrice});totalRefund+=q*item.unitPrice;}});if(returnedItems.length===0){showToast('Select quantity to return','error');return;}const reason=document.getElementById('returnReason')?.value?.trim()||'No reason';showPinModal('Process Return',`process return of ${formatCurrency(totalRefund)}`,async()=>{try{const batch=writeBatch(db);for(const item of returnedItems){if(item.id&&!item.isNonInventory){const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);if(snap.exists()){const cur=parseFloat(snap.data().quantityAvailable??snap.data().unitQty??0);const threshold=parseFloat(snap.data().threshold||10);const addBackQty=item.returnedQty*(item.size==='pack'?(parseInt(snap.data().packSize)||12):item.size==='bundle'?(parseInt(snap.data().bundleSize)||50):parseFloat(item.size)||1);const newQty=cur+addBackQty;batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(-addBackQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});}}}batch.set(doc(collection(db,'returns')),{saleId,saleReceiptNumber:sale.receiptNumber,customerId:sale.customerId,customerName:sale.customerName,returnedItems,totalRefund,returnAction:selectedReturnAction,reason,processedBy:currentUser.uid,processedByName:userData.fullName,createdAt:serverTimestamp()});const saleUpdate={status:'returned',returnedAt:serverTimestamp(),returnedBy:currentUser.uid,returnedByName:userData.fullName,returnAction:selectedReturnAction,totalRefund};if(selectedReturnAction==='exchange_same')saleUpdate.exchangeNote='Exchanged for same price item';else if(selectedReturnAction==='exchange_higher')saleUpdate.exchangeNote='Exchanged for higher price + additional payment';else if(selectedReturnAction==='store_credit')saleUpdate.exchangeNote='Store credit held for later';batch.update(doc(db,'sales',saleId),saleUpdate);if(sale.customerId&&selectedReturnAction==='refund'){batch.update(doc(db,'customers',sale.customerId),{totalSpent:increment(-totalRefund),purchaseCount:increment(-1)});}await batch.commit();await logAudit('return_goods',`Return ${formatCurrency(totalRefund)} | Receipt ${sale.receiptNumber} | Action: ${selectedReturnAction}`);const labels={refund:`Refunded: -${formatCurrency(totalRefund)}`,exchange_same:`Exchanged: ${formatCurrency(totalRefund)}`,exchange_higher:`Upgrade exchange: ${formatCurrency(totalRefund)}`,store_credit:`Store credit: ${formatCurrency(totalRefund)}`};showToast(labels[selectedReturnAction],'success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});};
 
-  // UPDATED RECEIPT MODAL & PRINT – clear font, bold only on header
+  // UPDATED RECEIPT MODAL & PRINT – clear font, bold only on header (unchanged)
   window.showReceiptModal = (sale)=>{
     const dateStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     const timeStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
@@ -638,7 +716,7 @@
   };
   window.viewReceipt = (id)=>{const s=allSales.find(x=>x.id===id);if(s)showReceiptModal(s);};
 
-  // UPDATED PRINT FUNCTION – same clean font, bold only on header
+  // UPDATED PRINT FUNCTION – same clean font, bold only on header (unchanged)
   window.printReceipt = (id) => {
     const s = allSales.find(x => x.id === id);
     if (!s) return;
