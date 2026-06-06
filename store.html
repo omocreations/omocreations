@@ -147,7 +147,7 @@
       </div>
     </div>
 
-    <!-- FIXED INCOMING PANEL -->
+    <!-- INCOMING INVENTORY PANEL -->
     <div id="incomingPanel" class="page-view">
       <div class="tabs-container" style="margin-bottom:16px;">
         <button class="tab active" data-incoming-tab="general"><i class="fas fa-cube"></i> General</button>
@@ -303,7 +303,7 @@
     }).join('');
   }
 
-  // ---------- FIXED: Render Incoming Inventory ----------
+  // ---------- Render Incoming Inventory ----------
   function renderIncomingInventory(){
     const pending = incomingItems.filter(i => i.status === 'pending');
     document.getElementById('pendingIncoming').textContent = pending.length;
@@ -416,18 +416,44 @@
     showPinModal('Confirm Add','add bulk item',async()=>{try{await addDoc(collection(db,'store_items'),{name,category,bulkStock:bulkQty,bulkCost:costPrice,inventoryItemType:invType,unitsPerBulk,threshold:th,status,...linkedData,createdBy:currentUser?.uid,createdByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});await logAudit('add_store_item',`Added bulk: ${name} x${bulkQty}`);showToast('Bulk item added','success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});
   };
 
-  // ==================== RESTOCK MODAL (saves to incoming_inventory) ====================
+  // ==================== RESTOCK MODAL (auto‑fill from inventory) ====================
   window.openRestockModal = async function(storeItemId, preselectedInventoryId = null) {
     const item=storeItems.find(i=>i.id===storeItemId);
     if(!item)return;
-    const invSnap=await getDocs(query(collection(db,'stock_items'),where('itemType','==',item.inventoryItemType)));
-    const invItems=invSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+    // Fetch the preselected inventory item if available
+    let preselectedInvData = null;
+    if (preselectedInventoryId) {
+      const invSnap = await getDoc(doc(db, 'stock_items', preselectedInventoryId));
+      if (invSnap.exists()) {
+        preselectedInvData = { id: preselectedInventoryId, ...invSnap.data() };
+      }
+    }
+
+    const invSnap = await getDocs(query(collection(db,'stock_items'), where('itemType','==', item.inventoryItemType)));
+    const invItems = invSnap.docs.map(d => ({id:d.id, ...d.data()}));
     const selectedId = preselectedInventoryId || item.linkedInventoryId || 'new';
     let invOptions = '';
-    if(invItems.length) {
-      invOptions = invItems.map(i=>`<option value="${i.id}" ${i.id===selectedId?'selected':''}>${i.name} (avail)</option>`).join('');
+    if (invItems.length) {
+      invOptions = invItems.map(i => `<option value="${i.id}" ${i.id===selectedId?'selected':''}>${i.name} (avail)</option>`).join('');
     } else {
       invOptions = `<option value="" disabled>No existing items of this type</option>`;
+    }
+
+    // Build the current inventory info section
+    let currentInvInfo = '';
+    if (preselectedInvData) {
+      const u = preselectedInvData.unitQty || preselectedInvData.quantityAvailable || preselectedInvData.initialStock || 0;
+      const h = preselectedInvData.halfQty || preselectedInvData.halfQuantityAvailable || 0;
+      const q = preselectedInvData.quarterQty || preselectedInvData.quarterQuantityAvailable || 0;
+      const total = u + h + q;
+      currentInvInfo = `
+        <div style="background:#e8f5e9; padding:10px; border-radius:8px; margin-bottom:12px; font-size:0.8rem;">
+          <strong>📦 Current Inventory: ${preselectedInvData.name}</strong><br>
+          Units: ${u} | Halves: ${h} | Quarters: ${q} | Total: ${total}
+          ${preselectedInvData.packSize ? ` | Pack Size: ${preselectedInvData.packSize}` : ''}
+          ${preselectedInvData.bundleSize ? ` | Bundle Size: ${preselectedInvData.bundleSize}` : ''}
+        </div>`;
     }
 
     showModal(`Restock Inventory from: ${item.name}`,`
@@ -436,6 +462,7 @@
         <strong>Available Bulk Stock:</strong> ${item.bulkStock||0}<br>
         <strong>1 Bulk = ${item.unitsPerBulk||1} sellable pieces</strong>
       </div>
+      ${currentInvInfo}
       <div class="form-group"><label>Bulk Packs to Take *</label><input type="number" class="form-control" id="s2iBulkQty" value="1" min="1" max="${item.bulkStock||1}"></div>
       <div class="form-group"><label>Target Inventory Item</label>
         <select class="form-control" id="s2iInventorySelect" style="width:100%;">
@@ -467,10 +494,40 @@
     const selectEl=document.getElementById('s2iInventorySelect');
     const newFields=document.getElementById('s2iNewItemFields');
 
-    selectEl.addEventListener('change',()=>{newFields.style.display=selectEl.value==='new'?'block':'none';});
-    selectEl.addEventListener('click',(e)=>e.stopPropagation());
+    // Load prices from selected inventory item
+    async function loadInventoryPrices(invId) {
+      if (!invId || invId === 'new') return;
+      const snap = await getDoc(doc(db, 'stock_items', invId));
+      if (!snap.exists()) return;
+      const data = snap.data();
+      const unitPrice = document.getElementById('s2iUnitPrice');
+      if (unitPrice) unitPrice.value = data.unitPrice || 0;
+      const halfPrice = document.getElementById('s2iHalfPrice');
+      if (halfPrice) halfPrice.value = data.halfPrice || 0;
+      const quarterPrice = document.getElementById('s2iQuarterPrice');
+      if (quarterPrice) quarterPrice.value = data.quarterPrice || 0;
+      const packPrice = document.getElementById('s2iPackPrice');
+      if (packPrice) packPrice.value = data.packPrice || 0;
+      const bundlePrice = document.getElementById('s2iBundlePrice');
+      if (bundlePrice) bundlePrice.value = data.bundlePrice || 0;
+      const packSize = document.getElementById('s2iPackSize');
+      if (packSize) packSize.value = data.packSize || 12;
+      const bundleSize = document.getElementById('s2iBundleSize');
+      if (bundleSize) bundleSize.value = data.bundleSize || 50;
+    }
 
-    function renderAllocationForm(type,totalPieces){
+    selectEl.addEventListener('change', () => {
+      newFields.style.display = selectEl.value === 'new' ? 'block' : 'none';
+      loadInventoryPrices(selectEl.value);
+    });
+    selectEl.addEventListener('click', (e) => e.stopPropagation());
+
+    if (selectedId !== 'new') {
+      loadInventoryPrices(selectedId);
+    }
+
+    // Allocation form rendering (same as before)
+    function renderAllocationForm(type, totalPieces) {
       let html='';
       if(type==='general'){
         html=`<div class="form-group"><label>Unit Quantity</label><input type="number" class="form-control s2i-qty" data-form="unit" value="${totalPieces}" min="0" readonly></div>
@@ -487,9 +544,11 @@
               <div class="form-row"><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="0" step="0.01"></div><div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="s2iBundlePrice" value="0" step="0.01"></div></div>
               <div class="form-group"><label>Bundle Size (yards/bundle)</label><input type="number" class="form-control" id="s2iBundleSize" value="50" min="1"></div>`;
       }
-      allocationDiv.innerHTML=html;
+      allocationDiv.innerHTML = html;
       document.querySelectorAll('.s2i-qty').forEach(inp=>inp.addEventListener('input',validateAllocation));
       validateAllocation();
+      // After rendering, load prices again for the current selection
+      if (selectEl.value !== 'new') loadInventoryPrices(selectEl.value);
     }
 
     function validateAllocation(){
@@ -517,7 +576,7 @@
     updateTotalPieces();
   };
 
-  // ==================== SUBMIT TO INCOMING INVENTORY ====================
+  // ==================== SUBMIT INCOMING (with detailed audit) ====================
   window.submitIncomingRestock = function(storeItemId) {
     const item=storeItems.find(i=>i.id===storeItemId);
     if(!item)return;
@@ -569,7 +628,8 @@
           status: 'pending',
           createdAt: serverTimestamp()
         });
-        await logAudit('incoming_inventory',`Incoming: ${item.name} → ${inventoryName} (${totalPieces} pieces)`);
+        const detail = `Incoming: ${item.name} → ${inventoryName} | ${bulkQty} bulk packs, ${totalPieces} pieces | Allocation: ${JSON.stringify(allocation)} | Prices: ${JSON.stringify(prices)}`;
+        await logAudit('incoming_inventory', detail);
         showToast('Sent to Incoming Inventory for review!','success');
         hideModal();
       }catch(e){showToast('Failed: '+e.message,'error');}
@@ -727,17 +787,15 @@
     document.getElementById(currentTab+'Panel').classList.add('active');
     if(currentTab==='stock')renderStoreStock();else if(currentTab==='incoming')renderIncomingInventory();else renderWholesaleSales();
   }));
-  // FIXED: Incoming sub-tabs – directly show/hide by ID
+  // Incoming sub-tabs
   document.querySelectorAll('[data-incoming-tab]').forEach(t=>t.addEventListener('click',function(){
     incomingTab=this.dataset.incomingTab;
     document.querySelectorAll('[data-incoming-tab]').forEach(x=>x.classList.remove('active'));
     this.classList.add('active');
-    // Hide all incoming panels
     ['incomingGeneralPanel','incomingFashionPanel','incomingPackBundlePanel','incomingMeasuredPanel'].forEach(id=>{
       const panel=document.getElementById(id);
       if(panel) panel.style.display='none';
     });
-    // Show the selected one
     const map={general:'incomingGeneralPanel',fashion:'incomingFashionPanel',pack_bundle:'incomingPackBundlePanel',measured:'incomingMeasuredPanel'};
     const targetPanel=document.getElementById(map[incomingTab]);
     if(targetPanel) targetPanel.style.display='block';
@@ -765,7 +823,6 @@
       if(urlParams.get('showIncoming')==='true'){
         const type=urlParams.get('type')||'general';
         setTimeout(()=>{
-          // Switch to Incoming tab
           document.querySelectorAll('.tabs-container .tab').forEach(x=>x.classList.remove('active'));
           const incomingTabBtn=document.querySelector('.tab[data-tab="incoming"]');
           if(incomingTabBtn)incomingTabBtn.classList.add('active');
@@ -774,10 +831,30 @@
           if(incPanel)incPanel.classList.add('active');
           currentTab='incoming';
           renderIncomingInventory();
-          // Click the correct sub-tab
           const subTab=document.querySelector(`[data-incoming-tab="${type}"]`);
           if(subTab)subTab.click();
         },600);
+      }
+
+      // Auto-open restock modal with preselected inventory item
+      const restockInventoryId = urlParams.get('restockInventoryId');
+      if (restockInventoryId) {
+        setTimeout(() => {
+          // Find a store item linked to this inventory item
+          const linkedStoreItem = storeItems.find(si => si.linkedInventoryId === restockInventoryId && (si.bulkStock||0) > 0);
+          if (linkedStoreItem) {
+            openRestockModal(linkedStoreItem.id, restockInventoryId);
+          } else {
+            // Fallback: find any store item with matching type
+            const invItemType = allInventoryItems?.find(ii => ii.id === restockInventoryId)?.itemType;
+            const matchingStoreItem = storeItems.find(si => si.inventoryItemType === invItemType && (si.bulkStock||0) > 0);
+            if (matchingStoreItem) {
+              openRestockModal(matchingStoreItem.id, restockInventoryId);
+            } else {
+              showToast('No bulk stock available for this item. Please add stock first.', 'error');
+            }
+          }
+        }, 800);
       }
 
       await logAudit('view_store','Viewed store');
