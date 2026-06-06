@@ -122,7 +122,7 @@
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-header"><span>Bulk Items</span><div class="stat-icon"><i class="fas fa-boxes"></i></div></div><div class="stat-value" id="totalStoreItems">0</div></div>
       <div class="stat-card"><div class="stat-header"><span>Total Bulk Stock</span><div class="stat-icon"><i class="fas fa-cubes"></i></div></div><div class="stat-value" id="totalUnits">0</div></div>
-      <div class="stat-card"><div class="stat-header"><span>Pending Approvals</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-value" id="pendingApprovals">0</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Incoming Pending</span><div class="stat-icon"><i class="fas fa-truck-loading"></i></div></div><div class="stat-value" id="pendingIncoming">0</div></div>
       <div class="stat-card value-locked" id="totalStoreValueCard"><div class="stat-header"><span>Store Value</span><div class="stat-icon"><i class="fas fa-naira-sign"></i></div></div><div class="stat-value" id="totalStoreValue">₦••••••</div><div class="value-hint" onclick="revealStoreValue()"><i class="fas fa-lock"></i> Tap to unlock with PIN</div></div>
     </div>
 
@@ -130,6 +130,7 @@
 
     <div class="tabs-container">
       <button class="tab active" data-tab="stock"><i class="fas fa-warehouse"></i> Bulk Stock</button>
+      <button class="tab" data-tab="incoming"><i class="fas fa-truck-loading"></i> Incoming Inventory</button>
       <button class="tab" data-tab="wholesale"><i class="fas fa-tags"></i> Wholesale Sales</button>
     </div>
 
@@ -139,11 +140,36 @@
         <select class="filter-select" id="categoryFilter"><option value="all">All Categories</option></select>
         <div class="export-dropdown"><button class="btn btn-outline" id="exportDropdownBtn"><i class="fas fa-download"></i> Export</button><div class="export-menu" id="exportMenu"><div class="export-item" onclick="exportData('csv')"><i class="fas fa-file-csv"></i> CSV</div><div class="export-item" onclick="exportData('excel')"><i class="fas fa-file-excel"></i> Excel</div></div></div>
         <button class="btn btn-primary" onclick="openAddStoreItemModal()"><i class="fas fa-plus"></i> Add Bulk Item</button>
-        <button class="btn btn-success" onclick="openInventoryRestockList()"><i class="fas fa-list"></i> Restock Inventory</button>
       </div>
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-warehouse"></i> Bulk Stock Items</h3><button class="btn btn-outline btn-sm" onclick="refreshStore()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
         <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item Name</th><th>Category</th><th>Inv. Type</th><th>Linked Inventory</th><th>Bulk Stock</th><th>Bulk Cost</th><th>Status</th><th>Actions</th></tr></thead><tbody id="storeTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- INCOMING INVENTORY PANEL -->
+    <div id="incomingPanel" class="page-view">
+      <div class="tabs-container" style="margin-bottom:16px;">
+        <button class="tab active" data-incoming-tab="general"><i class="fas fa-cube"></i> General</button>
+        <button class="tab" data-incoming-tab="fashion"><i class="fas fa-tshirt"></i> Fashion</button>
+        <button class="tab" data-incoming-tab="pack_bundle"><i class="fas fa-box"></i> Pack/Bundle</button>
+        <button class="tab" data-incoming-tab="measured"><i class="fas fa-ruler"></i> Measured</button>
+      </div>
+      <div id="incomingGeneralPanel" class="panel" style="display:block;">
+        <div class="panel-header"><h3><i class="fas fa-cube"></i> General – Pending Incoming</h3></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Store Item</th><th>Bulk Packs</th><th>Units to Add</th><th>Target Inventory</th><th>Price</th><th>Requested By</th><th>Action</th></tr></thead><tbody id="incomingGeneralTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-cube"></i><p>No pending general items</p></div></td></tr></tbody></table></div>
+      </div>
+      <div id="incomingFashionPanel" class="panel" style="display:none;">
+        <div class="panel-header"><h3><i class="fas fa-tshirt"></i> Fashion – Pending Incoming</h3></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Store Item</th><th>Bulk Packs</th><th>Units</th><th>½</th><th>¼</th><th>Target Inventory</th><th>Prices (U/½/¼)</th><th>Requested By</th><th>Action</th></tr></thead><tbody id="incomingFashionTable"><tr><td colspan="9"><div class="empty-state"><i class="fas fa-tshirt"></i><p>No pending fashion items</p></div></td></tr></tbody></table></div>
+      </div>
+      <div id="incomingPackBundlePanel" class="panel" style="display:none;">
+        <div class="panel-header"><h3><i class="fas fa-box"></i> Pack/Bundle – Pending Incoming</h3></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Store Item</th><th>Bulk Packs</th><th>Pieces</th><th>Packs</th><th>Pack Size</th><th>Target Inventory</th><th>Prices (Unit/Pack)</th><th>Requested By</th><th>Action</th></tr></thead><tbody id="incomingPackBundleTable"><tr><td colspan="9"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr></tbody></table></div>
+      </div>
+      <div id="incomingMeasuredPanel" class="panel" style="display:none;">
+        <div class="panel-header"><h3><i class="fas fa-ruler"></i> Measured – Pending Incoming</h3></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Store Item</th><th>Bulk Packs</th><th>Yards</th><th>Bundles</th><th>Bundle Size</th><th>Target Inventory</th><th>Prices (Yard/Bundle)</th><th>Requested By</th><th>Action</th></tr></thead><tbody id="incomingMeasuredTable"><tr><td colspan="9"><div class="empty-state"><i class="fas fa-ruler"></i><p>No pending measured items</p></div></td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -172,8 +198,8 @@
   const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
 
   let currentUser = null, userData = null, unsubscribes = [];
-  let storeItems = [], wholesaleSales = [], categories = [], allCustomers = [], storeToInventoryRequests = [];
-  let currentTab = 'stock', storeValueRevealed = false;
+  let storeItems = [], wholesaleSales = [], categories = [], allCustomers = [], incomingItems = [];
+  let currentTab = 'stock', incomingTab = 'general', storeValueRevealed = false;
 
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
@@ -256,7 +282,7 @@
     if(cat!=='all')filtered=filtered.filter(i=>(i.category||'').toLowerCase()===cat.toLowerCase());
     document.getElementById('totalStoreItems').textContent=storeItems.length;
     document.getElementById('totalUnits').textContent=storeItems.reduce((s,i)=>s+(i.bulkStock||0),0);
-    document.getElementById('pendingApprovals').textContent=storeToInventoryRequests.filter(r=>r.status==='pending_approval').length;
+    document.getElementById('pendingIncoming').textContent=incomingItems.filter(r=>r.status==='pending').length;
     updateStoreValueDisplay();
     const banner=document.getElementById('storeLowBanner'),lowCount=storeItems.filter(i=>['low','out_of_stock'].includes(getBulkStatus(i))).length;
     banner.style.display=lowCount>0?'flex':'none';if(lowCount>0)document.getElementById('storeLowMsg').textContent=`${lowCount} item(s) running low.`;
@@ -271,10 +297,69 @@
         <td style="font-weight:600;color:${st==='out_of_stock'?'var(--danger)':'inherit'};">${item.bulkStock||0}</td>
         <td>${formatCurrency(item.bulkCost||0)}</td><td><span class="badge badge-${sb}">${st.replace(/_/g,' ')}</span></td>
         <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
-          <button class="btn btn-sm btn-success" onclick="openSellToInventoryModal('${item.id}')"><i class="fas fa-boxes"></i> Restock</button>
+          <button class="btn btn-sm btn-success" onclick="openRestockModal('${item.id}')"><i class="fas fa-boxes"></i> Restock</button>
           <button class="btn btn-sm btn-outline" onclick="openEditStoreItem('${item.id}')"><i class="fas fa-edit"></i></button>
           ${isAdmin()?`<button class="btn btn-sm btn-danger" onclick="deleteStoreItem('${item.id}')"><i class="fas fa-trash"></i></button>`:''}</div></td></tr>`;
     }).join('');
+  }
+
+  // ---------- Render Incoming Inventory ----------
+  function renderIncomingInventory(){
+    const pending = incomingItems.filter(i => i.status === 'pending');
+    document.getElementById('pendingIncoming').textContent = pending.length;
+
+    const generalItems = pending.filter(i => i.inventoryItemType === 'general');
+    const fashionItems = pending.filter(i => i.inventoryItemType === 'fashion');
+    const packItems = pending.filter(i => i.inventoryItemType === 'pack_bundle');
+    const measuredItems = pending.filter(i => i.inventoryItemType === 'measured');
+
+    // General table
+    let tbody = document.getElementById('incomingGeneralTable');
+    if(!generalItems.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="fas fa-cube"></i><p>No pending general items</p></div></td></tr>';}
+    else { tbody.innerHTML = generalItems.map(i => `<tr>
+      <td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td>
+      <td>${i.allocation?.unit||0}</td>
+      <td>${i.targetInventoryName||'—'}</td>
+      <td>${formatCurrency(i.prices?.unit||0)}</td>
+      <td>${i.requestedByName||'-'}</td>
+      <td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td>
+    </tr>`).join('');}
+
+    // Fashion table
+    tbody = document.getElementById('incomingFashionTable');
+    if(!fashionItems.length){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-tshirt"></i><p>No pending fashion items</p></div></td></tr>';}
+    else { tbody.innerHTML = fashionItems.map(i => `<tr>
+      <td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td>
+      <td>${i.allocation?.unit||0}</td><td>${i.allocation?.half||0}</td><td>${i.allocation?.quarter||0}</td>
+      <td>${i.targetInventoryName||'—'}</td>
+      <td>${formatCurrency(i.prices?.unit||0)} / ${formatCurrency(i.prices?.half||0)} / ${formatCurrency(i.prices?.quarter||0)}</td>
+      <td>${i.requestedByName||'-'}</td>
+      <td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td>
+    </tr>`).join('');}
+
+    // Pack/Bundle table
+    tbody = document.getElementById('incomingPackBundleTable');
+    if(!packItems.length){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr>';}
+    else { tbody.innerHTML = packItems.map(i => `<tr>
+      <td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td>
+      <td>${i.allocation?.unit||0}</td><td>${i.allocation?.pack||0}</td><td>${i.packSize||12}</td>
+      <td>${i.targetInventoryName||'—'}</td>
+      <td>${formatCurrency(i.prices?.unit||0)} / ${formatCurrency(i.prices?.pack||0)}</td>
+      <td>${i.requestedByName||'-'}</td>
+      <td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td>
+    </tr>`).join('');}
+
+    // Measured table
+    tbody = document.getElementById('incomingMeasuredTable');
+    if(!measuredItems.length){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-ruler"></i><p>No pending measured items</p></div></td></tr>';}
+    else { tbody.innerHTML = measuredItems.map(i => `<tr>
+      <td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td>
+      <td>${i.allocation?.unit||0}</td><td>${i.allocation?.bundle||0}</td><td>${i.bundleSize||50}</td>
+      <td>${i.targetInventoryName||'—'}</td>
+      <td>${formatCurrency(i.prices?.unit||0)} / ${formatCurrency(i.prices?.bundle||0)}</td>
+      <td>${i.requestedByName||'-'}</td>
+      <td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td>
+    </tr>`).join('');}
   }
 
   function renderWholesaleSales(){
@@ -286,13 +371,13 @@
   function loadStore(){
     cleanup();
     unsubscribes.push(onSnapshot(collection(db,'store_items'),snap=>{storeItems=snap.docs.map(d=>({id:d.id,...d.data()}));storeItems.sort((a,b)=>(a.name||'').localeCompare(b.name||''));renderStoreStock();}));
+    unsubscribes.push(onSnapshot(collection(db,'incoming_inventory'),snap=>{incomingItems=snap.docs.map(d=>({id:d.id,...d.data()}));renderIncomingInventory();renderStoreStock();}));
     unsubscribes.push(onSnapshot(query(collection(db,'wholesale_sales'),orderBy('createdAt','desc')),snap=>{wholesaleSales=snap.docs.map(d=>({id:d.id,...d.data()}));renderWholesaleSales();}));
-    unsubscribes.push(onSnapshot(collection(db,'store_to_inventory_requests'),snap=>{storeToInventoryRequests=snap.docs.map(d=>({id:d.id,...d.data()}));renderStoreStock();}));
   }
 
   async function loadCustomers(){try{const snap=await getDocs(query(collection(db,'customers'),where('status','==','approved')));allCustomers=snap.docs.map(d=>({id:d.id,...d.data()}));}catch(e){allCustomers=[];}}
 
-  // ==================== ADD BULK ITEM ====================
+  // ==================== ADD BULK ITEM (unchanged) ====================
   window.openAddStoreItemModal = async function() {
     const invSnap = await getDocs(collection(db,'stock_items'));
     const invItems = invSnap.docs.map(d => ({id:d.id, ...d.data()}));
@@ -320,8 +405,8 @@
     showPinModal('Confirm Add','add bulk item',async()=>{try{await addDoc(collection(db,'store_items'),{name,category,bulkStock:bulkQty,bulkCost:costPrice,inventoryItemType:invType,unitsPerBulk,threshold:th,status,...linkedData,createdBy:currentUser?.uid,createdByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});await logAudit('add_store_item',`Added bulk: ${name} x${bulkQty}`);showToast('Bulk item added','success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});
   };
 
-  // ==================== SELL TO INVENTORY (RESTOCK) ====================
-  window.openSellToInventoryModal = async function(storeItemId, preselectedInventoryId = null) {
+  // ==================== RESTOCK MODAL (saves to incoming_inventory) ====================
+  window.openRestockModal = async function(storeItemId, preselectedInventoryId = null) {
     const item=storeItems.find(i=>i.id===storeItemId);
     if(!item)return;
     const invSnap=await getDocs(query(collection(db,'stock_items'),where('itemType','==',item.inventoryItemType)));
@@ -329,7 +414,7 @@
     const selectedId = preselectedInventoryId || item.linkedInventoryId || 'new';
     let invOptions = '';
     if(invItems.length) {
-      invOptions = invItems.map(i=>`<option value="${i.id}" ${i.id===selectedId?'selected':''}>${i.name} (${(i.unitQty||i.quantityAvailable||i.initialStock||0)+(i.halfQty||i.halfQuantityAvailable||0)+(i.quarterQty||i.quarterQuantityAvailable||0)} avail)</option>`).join('');
+      invOptions = invItems.map(i=>`<option value="${i.id}" ${i.id===selectedId?'selected':''}>${i.name} (avail)</option>`).join('');
     } else {
       invOptions = `<option value="" disabled>No existing items of this type</option>`;
     }
@@ -356,8 +441,9 @@
       </div>
       <div id="s2iAllocation"></div>
       <p id="s2iValidationMsg" style="color:var(--danger);font-size:0.8rem;text-align:center;display:none;margin-top:10px;">Allocated pieces must equal total derived pieces.</p>
+      <p style="font-size:0.75rem;color:var(--warning);margin-top:8px;"><i class="fas fa-info-circle"></i> This will be saved as <strong>Incoming Inventory</strong> for review before being added to live stock.</p>
       <div style="display:flex;gap:10px;margin-top:16px;">
-        <button class="btn btn-primary" onclick="submitRestockDirect('${storeItemId}')"><i class="fas fa-check-circle"></i> Restock Now</button>
+        <button class="btn btn-primary" onclick="submitIncomingRestock('${storeItemId}')"><i class="fas fa-paper-plane"></i> Send to Incoming</button>
         <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
       </div>
     `);
@@ -376,7 +462,7 @@
     function renderAllocationForm(type,totalPieces){
       let html='';
       if(type==='general'){
-        html=`<div class="form-group"><label>Unit Quantity</label><input type="number" class="form-control s2i-qty" data-form="unit" value="${totalPieces}" min="0"></div>
+        html=`<div class="form-group"><label>Unit Quantity (all pieces go to units)</label><input type="number" class="form-control s2i-qty" data-form="unit" value="${totalPieces}" min="0" readonly></div>
               <div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="0" step="0.01"></div>`;
       }else if(type==='fashion'){
         html=`<div class="form-row-3"><div class="form-group"><label>Unit Qty</label><input type="number" class="form-control s2i-qty" data-form="unit" value="0" min="0"></div><div class="form-group"><label>½ Qty (×0.5)</label><input type="number" class="form-control s2i-qty" data-form="half" value="0" min="0"></div><div class="form-group"><label>¼ Qty (×0.25)</label><input type="number" class="form-control s2i-qty" data-form="quarter" value="0" min="0"></div></div>
@@ -420,7 +506,8 @@
     updateTotalPieces();
   };
 
-  window.submitRestockDirect = function(storeItemId) {
+  // ==================== SUBMIT TO INCOMING INVENTORY ====================
+  window.submitIncomingRestock = function(storeItemId) {
     const item=storeItems.find(i=>i.id===storeItemId);
     if(!item)return;
     const bulkQty=parseInt(document.getElementById('s2iBulkQty')?.value)||0;
@@ -455,118 +542,73 @@
     }
     if(Math.abs(allocatedPieces-totalPieces)>0.001){showToast(`Allocated pieces (${allocatedPieces}) must equal ${totalPieces}`,'error');return;}
 
-    showPinModal('Confirm Restock','add stock to inventory',async()=>{
+    showPinModal('Send to Incoming Inventory','save for review',async()=>{
       try{
-        const batch=writeBatch(db);
-        batch.update(doc(db,'store_items',storeItemId),{bulkStock:increment(-bulkQty),updatedAt:serverTimestamp()});
-        const inventoryRef = inventoryId==='new' ? doc(collection(db,'stock_items')) : doc(db,'stock_items',inventoryId);
-        if(inventoryId==='new'){
-          const newCategory = document.getElementById('s2iNewCategory')?.value || 'other';
+        await addDoc(collection(db,'incoming_inventory'),{
+          storeItemId,storeItemName:item.name,storeItemCategory:item.category,
+          bulkQty,totalPieces,
+          targetInventoryId: inventoryId==='new'?null:inventoryId,
+          targetInventoryName: inventoryId==='new'?inventoryName:null,
+          newInventoryCategory: inventoryId==='new'?(document.getElementById('s2iNewCategory')?.value||'other'):null,
+          allocation,prices,packSize,bundleSize,
+          inventoryItemType: item.inventoryItemType,
+          unitsPerBulk: item.unitsPerBulk||1,
+          requestedBy: currentUser?.uid,
+          requestedByName: userData?.fullName||'Staff',
+          status: 'pending',
+          createdAt: serverTimestamp()
+        });
+        await logAudit('incoming_inventory',`Incoming: ${item.name} → ${inventoryName} (${totalPieces} pieces)`);
+        showToast('Sent to Incoming Inventory for review!','success');
+        hideModal();
+      }catch(e){showToast('Failed: '+e.message,'error');}
+    });
+  };
+
+  // ==================== CONFIRM INCOMING TRANSFER ====================
+  window.confirmIncomingTransfer = function(incomingId) {
+    const inc = incomingItems.find(i => i.id === incomingId);
+    if (!inc) return;
+    showPinModal('Confirm Transfer','add to live inventory', async () => {
+      try {
+        const batch = writeBatch(db);
+        // Decrement store bulk stock
+        batch.update(doc(db,'store_items',inc.storeItemId),{bulkStock:increment(-inc.bulkQty),updatedAt:serverTimestamp()});
+        // Delete incoming document
+        batch.delete(doc(db,'incoming_inventory',incomingId));
+
+        const inventoryRef = inc.targetInventoryId
+          ? doc(db,'stock_items',inc.targetInventoryId)
+          : doc(collection(db,'stock_items'));
+
+        if (!inc.targetInventoryId) {
+          // Create new inventory item
           batch.set(inventoryRef,{
-            name: inventoryName, category: newCategory, itemType: item.inventoryItemType,
-            unitQty: allocation.unit||0, halfQty: allocation.half||0, quarterQty: allocation.quarter||0,
-            unitPrice: prices.unit, halfPrice: prices.half, quarterPrice: prices.quarter,
-            packSize: packSize, packPrice: prices.pack, bundleSize: bundleSize, bundlePrice: prices.bundle,
-            measureUnit: item.measureUnit||'piece', threshold: item.threshold||10,
-            status: 'available', createdBy: currentUser?.uid, createdByName: userData?.fullName||'Staff',
+            name: inc.targetInventoryName, category: inc.newInventoryCategory||'other',
+            itemType: inc.inventoryItemType,
+            unitQty: inc.allocation?.unit||0, halfQty: inc.allocation?.half||0, quarterQty: inc.allocation?.quarter||0,
+            unitPrice: inc.prices?.unit||0, halfPrice: inc.prices?.half||0, quarterPrice: inc.prices?.quarter||0,
+            packSize: inc.packSize||12, packPrice: inc.prices?.pack||0,
+            bundleSize: inc.bundleSize||50, bundlePrice: inc.prices?.bundle||0,
+            threshold: 10, status: 'available',
+            createdBy: currentUser?.uid, createdByName: userData?.fullName||'Staff',
             createdAt: serverTimestamp(), updatedAt: serverTimestamp()
           });
         } else {
           const updates={updatedAt:serverTimestamp()};
-          if(allocation.unit) updates.unitQty=increment(allocation.unit);
-          if(allocation.half) updates.halfQty=increment(allocation.half);
-          if(allocation.quarter) updates.quarterQty=increment(allocation.quarter);
+          if(inc.allocation?.unit) updates.unitQty=increment(inc.allocation.unit);
+          if(inc.allocation?.half) updates.halfQty=increment(inc.allocation.half);
+          if(inc.allocation?.quarter) updates.quarterQty=increment(inc.allocation.quarter);
           batch.update(inventoryRef,updates);
         }
         await batch.commit();
-        await logAudit('store_restock',`Restocked ${inventoryName} with ${totalPieces} pieces from ${item.name}`);
-        showToast('Inventory restocked successfully!','success');
-        hideModal();
-      }catch(e){showToast('Restock failed: '+e.message,'error');}
+        await logAudit('confirm_incoming',`Confirmed incoming: ${inc.storeItemName} → ${inc.targetInventoryName||inc.storeItemName}`);
+        showToast('Inventory updated successfully!','success');
+      } catch(e) { showToast('Failed: '+e.message,'error'); }
     });
   };
 
-  // ==================== INVENTORY RESTOCK LIST (FIXED STOCK READING) ====================
-  window.openInventoryRestockList = async function() {
-    const invSnap = await getDocs(collection(db, 'stock_items'));
-    const inventoryItems = invSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    let listHTML = `
-      <div class="form-group" style="display:flex; gap:10px; align-items:center;">
-        <label style="white-space:nowrap;">Filter by Type:</label>
-        <select class="form-control" id="invTypeFilter" onchange="filterInventoryList()" style="width:auto;">
-          <option value="all">All Types</option>
-          <option value="general">General</option>
-          <option value="fashion">Fashion</option>
-          <option value="pack_bundle">Pack/Bundle</option>
-          <option value="measured">Measured</option>
-        </select>
-        <input type="text" class="form-control" id="invSearch" placeholder="Search name..." oninput="filterInventoryList()" style="width:200px;">
-      </div>
-      <div class="table-wrapper" style="max-height:60vh; overflow-y:auto;">
-        <table class="data-table" id="invRestockTable"><thead><tr>
-          <th>Item Name</th><th>Type</th><th>Available Inventory</th><th>Available in Store</th><th>Action</th>
-        </tr></thead><tbody>`;
-
-    for (const invItem of inventoryItems) {
-      const itemType = invItem.itemType || 'general';
-      // FIX: Use same fallbacks as inventory.html
-      const unitQty = invItem.unitQty || invItem.quantityAvailable || invItem.initialStock || 0;
-      const halfQty = invItem.halfQty || invItem.halfQuantityAvailable || invItem.initialHalfQty || 0;
-      const quarterQty = invItem.quarterQty || invItem.quarterQuantityAvailable || invItem.initialQuarterQty || 0;
-      const totalStock = unitQty + halfQty + quarterQty;
-
-      const status = invItem.status === 'pending_approval' ? 'pending' :
-                     (totalStock === 0 ? 'out_of_stock' : (totalStock <= (invItem.threshold||10) ? 'low' : 'available'));
-      const statusBadge = status === 'available' ? 'success' : (status === 'low' ? 'warning' : 'danger');
-
-      // ONLY count store items that are explicitly linked to this inventory item
-      const linkedStoreItems = storeItems.filter(si => si.linkedInventoryId === invItem.id && (si.bulkStock||0) > 0);
-      const storeAvail = linkedStoreItems.length > 0
-        ? `<span class="badge badge-success">Yes (${linkedStoreItems.reduce((sum, si) => sum + (si.bulkStock||0), 0)} packs)</span>`
-        : `<span class="badge badge-danger">None</span>`;
-
-      const disabled = linkedStoreItems.length === 0 ? 'disabled' : '';
-      const storeItemId = linkedStoreItems.length > 0 ? linkedStoreItems[0].id : '';
-
-      listHTML += `<tr data-type="${itemType}" data-name="${(invItem.name||'').toLowerCase()}">
-        <td><strong>${invItem.name||'-'}</strong></td>
-        <td><span class="badge badge-info">${itemType}</span></td>
-        <td>${totalStock} <span class="badge badge-${statusBadge}">${status.replace(/_/g,' ')}</span></td>
-        <td>${storeAvail}</td>
-        <td><button class="btn btn-sm btn-success" onclick="restockFromInventoryList('${invItem.id}', '${storeItemId}')" ${disabled}><i class="fas fa-boxes"></i> Restock</button></td>
-      </tr>`;
-    }
-    listHTML += `</tbody></table></div>`;
-
-    showModal('📋 Restock Inventory from Store', listHTML);
-  };
-
-  window.filterInventoryList = function() {
-    const type = document.getElementById('invTypeFilter')?.value || 'all';
-    const search = (document.getElementById('invSearch')?.value || '').toLowerCase();
-    const rows = document.querySelectorAll('#invRestockTable tbody tr');
-    rows.forEach(row => {
-      const rowType = row.dataset.type;
-      const rowName = row.dataset.name || '';
-      if ((type === 'all' || rowType === type) && (search === '' || rowName.includes(search))) {
-        row.style.display = '';
-      } else {
-        row.style.display = 'none';
-      }
-    });
-  };
-
-  window.restockFromInventoryList = function(inventoryId, storeItemId) {
-    if (!storeItemId) {
-      showToast('No linked store item found. Please link a bulk store item to this inventory item first.', 'error');
-      return;
-    }
-    hideModal();
-    openSellToInventoryModal(storeItemId, inventoryId);
-  };
-
-  // ---------- Edit / Delete ----------
+  // ---------- Edit / Delete (unchanged) ----------
   window.openEditStoreItem=function(id){const item=storeItems.find(i=>i.id===id);if(!item)return;showModal(`Edit: ${item.name}`,`
     <div class="form-group"><label>Item Name</label><input class="form-control" value="${item.name||''}" readonly></div>
     <div class="form-row"><div class="form-group"><label>Bulk Stock</label><input type="number" class="form-control" id="editBulkStock" value="${item.bulkStock||0}" min="0"></div><div class="form-group"><label>Bulk Cost ₦</label><input type="number" class="form-control" id="editBulkCost" value="${item.bulkCost||0}" step="0.01" min="0"></div></div>
@@ -576,13 +618,12 @@
   window.saveStoreEdit=async function(id){const bs=parseInt(document.getElementById('editBulkStock')?.value)||0,bc=parseFloat(document.getElementById('editBulkCost')?.value)||0,th=parseInt(document.getElementById('editThreshold')?.value)||5;showPinModal('Confirm Edit','save changes',async()=>{try{await updateDoc(doc(db,'store_items',id),{bulkStock:bs,bulkCost:bc,threshold:th,updatedAt:serverTimestamp()});showToast('Updated','success');hideModal();}catch(e){showToast('Failed','error');}});};
   window.deleteStoreItem=async function(id){if(!confirm('Delete this bulk item?'))return;showPinModal('Confirm Delete','delete',async()=>{try{await deleteDoc(doc(db,'store_items',id));showToast('Deleted','success');}catch(e){showToast('Failed','error');}});};
 
-  // ---------- Wholesale Sale ----------
+  // ---------- Wholesale Sale (unchanged) ----------
   window.openWholesaleSaleModal=async function(){
     await loadCustomers();
     if(!storeItems.filter(i=>(i.bulkStock||0)>0).length){showToast('No bulk stock to sell','error');return;}
     const custOptions=allCustomers.map(c=>`<option value="${c.id}" data-name="${c.fullName||''}" data-phone="${c.phone||''}">${c.fullName} - ${c.phone||'No phone'}</option>`).join('');
     const stockOptions=storeItems.filter(i=>(i.bulkStock||0)>0).map(i=>`<option value="${i.id}" data-name="${i.name||''}" data-stock="${i.bulkStock||0}" data-cost="${i.bulkCost||0}">${i.name} (${i.bulkStock||0} packs)</option>`).join('');
-
     showModal('New Wholesale Sale',`
       <div class="customer-type-toggle">
         <button class="customer-type-btn active" data-type="existing" onclick="window._switchWSType('existing')"><i class="fas fa-users"></i> Existing</button>
@@ -598,7 +639,6 @@
     `);
     setTimeout(()=>{$('#wsExistingCustomer').select2({placeholder:'Search customer...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')});bindWSEvents();},150);
   };
-
   window._switchWSType=function(type){wholesaleCustomerType=type;document.querySelectorAll('.customer-type-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-type="${type}"]`)?.classList.add('active');document.getElementById('wsExistingSection').style.display=type==='existing'?'block':'none';document.getElementById('wsNewSection').style.display=type==='new'?'block':'none';};
   function bindWSEvents(){document.querySelectorAll('.ws-select,.ws-qty,.ws-price').forEach(el=>{el.addEventListener('change',updateWSTotal);el.addEventListener('input',updateWSTotal);});updateWSTotal();}
   window.addWSItem=function(){const stockOptions=storeItems.filter(i=>(i.bulkStock||0)>0).map(i=>`<option value="${i.id}" data-name="${i.name||''}" data-stock="${i.bulkStock||0}" data-cost="${i.bulkCost||0}">${i.name} (${i.bulkStock||0} packs)</option>`).join('');const div=document.createElement('div');div.className='item-row';div.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:center;';div.innerHTML=`<select class="form-control ws-select" style="flex:2;"><option value="">-- Select --</option>${stockOptions}</select><input type="number" class="form-control ws-qty" value="1" min="1" style="flex:0.5;"><input type="number" class="form-control ws-price" placeholder="Sell Price per Pack ₦" step="0.01" style="flex:1;"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();updateWSTotal();"><i class="fas fa-times"></i></button>`;document.getElementById('wsItems').appendChild(div);div.querySelectorAll('.ws-select,.ws-qty,.ws-price').forEach(el=>{el.addEventListener('change',updateWSTotal);el.addEventListener('input',updateWSTotal);});updateWSTotal();};
@@ -606,40 +646,12 @@
   window.selWS=function(m){wholesalePayment=m;document.querySelectorAll('.ws-pay').forEach(b=>b.classList.remove('selected'));document.querySelector(`.ws-pay[data-m="${m}"]`)?.classList.add('selected');};
   window.processWS=function(){
     let customerId='',customerName='',customerPhone='';
-    if(wholesaleCustomerType==='existing'){
-      const select=document.getElementById('wsExistingCustomer');
-      if(!select||!select.value){showToast('Select a customer','error');return;}
-      customerId=select.value;const opt=select.options[select.selectedIndex];customerName=opt.getAttribute('data-name')||'';customerPhone=opt.getAttribute('data-phone')||'';
-    }else{
-      customerName=document.getElementById('wsNewName')?.value?.trim();customerPhone=document.getElementById('wsNewPhone')?.value?.trim();
-      if(!customerName||!customerPhone){showToast('Customer name & phone required','error');return;}
-    }
+    if(wholesaleCustomerType==='existing'){const select=document.getElementById('wsExistingCustomer');if(!select||!select.value){showToast('Select a customer','error');return;}customerId=select.value;const opt=select.options[select.selectedIndex];customerName=opt.getAttribute('data-name')||'';customerPhone=opt.getAttribute('data-phone')||'';}
+    else{customerName=document.getElementById('wsNewName')?.value?.trim();customerPhone=document.getElementById('wsNewPhone')?.value?.trim();if(!customerName||!customerPhone){showToast('Customer name & phone required','error');return;}}
     const items=[];let total=0;
-    for(const row of document.querySelectorAll('#wsItems .item-row')){
-      const sel=row.querySelector('.ws-select'),qtyEl=row.querySelector('.ws-qty'),priceEl=row.querySelector('.ws-price');
-      if(!sel?.value||!qtyEl)continue;
-      const opt=sel.options[sel.selectedIndex];
-      const qty=parseInt(qtyEl.value)||0;
-      const price=parseFloat(priceEl?.value)||0;
-      if(qty<=0||price<=0)continue;
-      const maxStock=parseInt(opt.getAttribute('data-stock'))||0;
-      if(qty>maxStock){showToast(`Only ${maxStock} packs available for ${opt.getAttribute('data-name')}`,'error');return;}
-      items.push({id:sel.value,name:opt.getAttribute('data-name'),quantity:qty,unitPrice:price});
-      total+=qty*price;
-    }
+    for(const row of document.querySelectorAll('#wsItems .item-row')){const sel=row.querySelector('.ws-select'),qtyEl=row.querySelector('.ws-qty'),priceEl=row.querySelector('.ws-price');if(!sel?.value||!qtyEl)continue;const opt=sel.options[sel.selectedIndex];const qty=parseInt(qtyEl.value)||0;const price=parseFloat(priceEl?.value)||0;if(qty<=0||price<=0)continue;const maxStock=parseInt(opt.getAttribute('data-stock'))||0;if(qty>maxStock){showToast(`Only ${maxStock} packs available for ${opt.getAttribute('data-name')}`,'error');return;}items.push({id:sel.value,name:opt.getAttribute('data-name'),quantity:qty,unitPrice:price});total+=qty*price;}
     if(!items.length){showToast('Add at least one item','error');return;}
-    showPinModal('Process Wholesale Sale',`sell for ${formatCurrency(total)}`,async()=>{
-      try{
-        const batch=writeBatch(db);const receiptNumber='WSL-'+Date.now().toString().slice(-8);
-        if(wholesaleCustomerType==='new'){const custRef=doc(collection(db,'customers'));batch.set(custRef,{fullName:customerName,phone:customerPhone,address:document.getElementById('wsNewAddress')?.value?.trim()||'',status:'pending_approval',createdBy:currentUser.uid,createdByName:userData.fullName,createdAt:serverTimestamp()});customerId=custRef.id;}
-        for(const item of items){batch.update(doc(db,'store_items',item.id),{bulkStock:increment(-item.quantity),updatedAt:serverTimestamp()});}
-        batch.set(doc(collection(db,'wholesale_sales')),{receiptNumber,customerId,customerName,customerPhone,items,totalAmount:total,paymentMethod:wholesalePayment,attendantId:currentUser?.uid,attendantName:userData?.fullName||'Staff',createdAt:serverTimestamp(),status:'completed'});
-        await batch.commit();
-        await logAudit('wholesale_sale',`Wholesale ${receiptNumber}: ${formatCurrency(total)}`);
-        showToast(`Sale completed! #${receiptNumber}`,'success');
-        hideModal();
-      }catch(e){showToast('Failed: '+e.message,'error');}
-    });
+    showPinModal('Process Wholesale Sale',`sell for ${formatCurrency(total)}`,async()=>{try{const batch=writeBatch(db);const receiptNumber='WSL-'+Date.now().toString().slice(-8);if(wholesaleCustomerType==='new'){const custRef=doc(collection(db,'customers'));batch.set(custRef,{fullName:customerName,phone:customerPhone,address:document.getElementById('wsNewAddress')?.value?.trim()||'',status:'pending_approval',createdBy:currentUser.uid,createdByName:userData.fullName,createdAt:serverTimestamp()});customerId=custRef.id;}for(const item of items){batch.update(doc(db,'store_items',item.id),{bulkStock:increment(-item.quantity),updatedAt:serverTimestamp()});}batch.set(doc(collection(db,'wholesale_sales')),{receiptNumber,customerId,customerName,customerPhone,items,totalAmount:total,paymentMethod:wholesalePayment,attendantId:currentUser?.uid,attendantName:userData?.fullName||'Staff',createdAt:serverTimestamp(),status:'completed'});await batch.commit();await logAudit('wholesale_sale',`Wholesale ${receiptNumber}: ${formatCurrency(total)}`);showToast(`Sale completed! #${receiptNumber}`,'success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});
   };
   window.viewWholesaleReceipt=function(id){const s=wholesaleSales.find(x=>x.id===id);if(!s)return;const ih=s.items.map(i=>`<div class="receipt-item"><span>${i.quantity}× ${i.name}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('');showModal('Receipt',`<div class="receipt-container"><div class="receipt-header"><h2 style="color:var(--primary);">✨ OmoCreations ✨</h2><p>#${s.receiptNumber}</p></div><p><strong>Customer:</strong> ${s.customerName}<br><strong>Payment:</strong> ${s.paymentMethod}</p><div class="receipt-items">${ih}</div><div class="receipt-total"><span>Total:</span><span>${formatCurrency(s.totalAmount)}</span></div></div><button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:12px;">Close</button>`);};
 
@@ -647,23 +659,9 @@
   window.openHelpGuide=function(){
     showModal('📖 How to Use the Store',`
       <div style="font-size:0.9rem; line-height:1.6;">
-        <h4>🏬 What is the Store?</h4>
-        <p>The Store holds <strong>bulk stock</strong> – large packs, cartons, rolls, etc. It does <u>not</u> sell individual pieces directly (except Wholesale). Instead, you <strong>restock the Inventory</strong> from here by converting bulk into sellable forms.</p>
-        <h4 style="margin-top:16px;">➕ Adding a Bulk Item</h4>
-        <p>Fill in the name, category, bulk quantity, cost per bulk pack, the type of Inventory item it will create, and how many sellable pieces one bulk yields. <strong>Always link it to the correct Inventory item</strong> using the "Linked Inventory Item" dropdown so restocking works accurately.</p>
-        <h4 style="margin-top:16px;">🔄 Restock Inventory</h4>
-        <p>Click <strong>“Restock Inventory”</strong> (green button) to see all Inventory items, their current stock, and whether the Store has bulk available for that item. Only items that are <strong>linked</strong> to a store bulk item will show stock. Click <strong>Restock</strong> to convert bulk stock and add it to the inventory.</p>
-        <h4 style="margin-top:16px;">🏷️ Inventory Types</h4>
-        <ul style="padding-left:20px;">
-          <li><strong>General</strong> – Only whole units</li>
-          <li><strong>Fashion</strong> – Units, halves (½), quarters (¼)</li>
-          <li><strong>Pack/Bundle</strong> – Individual pieces + packs</li>
-          <li><strong>Measured</strong> – Yards/meters + bundles</li>
-        </ul>
-        <h4 style="margin-top:16px;">💰 Wholesale Sales</h4>
-        <p>Sell bulk packs directly to customers without converting to inventory.</p>
-        <h4 style="margin-top:16px;">🔑 Value Lock</h4>
-        <p>The total store value is hidden by default. Click the lock and enter your PIN to reveal it.</p>
+        <h4>🏬 What is the Store?</h4><p>The Store holds <strong>bulk stock</strong>. Use <strong>Restock</strong> to send items to <strong>Incoming Inventory</strong> for review, then confirm them from the Incoming tab to add to live inventory.</p>
+        <h4 style="margin-top:16px;">🔄 Incoming Inventory</h4><p>After sending items from bulk stock, they appear in the <strong>Incoming Inventory</strong> tab grouped by type. An authorised person must <strong>Confirm</strong> each entry to add it to the live inventory.</p>
+        <h4 style="margin-top:16px;">🏷️ Types</h4><ul style="padding-left:20px;"><li><strong>General</strong> – Units only</li><li><strong>Fashion</strong> – Units, halves, quarters</li><li><strong>Pack/Bundle</strong> – Pieces + packs</li><li><strong>Measured</strong> – Yards + bundles</li></ul>
       </div>
       <button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close Guide</button>
     `);
@@ -676,13 +674,24 @@
   document.getElementById('categoryFilter').addEventListener('change',renderStoreStock);
   document.getElementById('exportDropdownBtn').addEventListener('click',(e)=>{e.stopPropagation();document.getElementById('exportMenu').classList.toggle('show');});
   document.addEventListener('click',()=>document.getElementById('exportMenu').classList.remove('show'));
-  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){
+  // Main tabs
+  document.querySelectorAll('.tabs-container .tab').forEach(t=>t.addEventListener('click',function(){
     currentTab=this.dataset.tab;
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tabs-container .tab').forEach(x=>x.classList.remove('active'));
     this.classList.add('active');
     document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active'));
     document.getElementById(currentTab+'Panel').classList.add('active');
-    if(currentTab==='stock')renderStoreStock();else renderWholesaleSales();
+    if(currentTab==='stock')renderStoreStock();else if(currentTab==='incoming')renderIncomingInventory();else renderWholesaleSales();
+  }));
+  // Incoming sub-tabs
+  document.querySelectorAll('[data-incoming-tab]').forEach(t=>t.addEventListener('click',function(){
+    incomingTab=this.dataset.incomingTab;
+    document.querySelectorAll('[data-incoming-tab]').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelectorAll('#incomingPanel > div[class*="panel"]').forEach(p=>p.style.display='none');
+    const map={general:'incomingGeneralPanel',fashion:'incomingFashionPanel',pack_bundle:'incomingPackBundlePanel',measured:'incomingMeasuredPanel'};
+    const panel=document.getElementById(map[incomingTab]);
+    if(panel)panel.style.display='block';
   }));
 
   // ---------- Auth ----------
@@ -702,10 +711,20 @@
       await loadCategories();
       loadStore();
 
-      // Auto-open inventory restock list if coming from inventory page
+      // Auto-open from inventory page
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('showInventoryRestock') === 'true') {
-        setTimeout(() => openInventoryRestockList(), 800);
+      if(urlParams.get('showIncoming')==='true'){
+        const type=urlParams.get('type')||'general';
+        setTimeout(()=>{
+          document.querySelectorAll('.tabs-container .tab').forEach(x=>x.classList.remove('active'));
+          const incomingTabBtn=document.querySelector('.tab[data-tab="incoming"]');
+          if(incomingTabBtn)incomingTabBtn.classList.add('active');
+          document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active'));
+          const incPanel=document.getElementById('incomingPanel');
+          if(incPanel)incPanel.classList.add('active');
+          const subTab=document.querySelector(`[data-incoming-tab="${type}"]`);
+          if(subTab)subTab.click();
+        },600);
       }
 
       await logAudit('view_store','Viewed store');
