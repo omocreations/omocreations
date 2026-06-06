@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    /* … all existing CSS (unchanged) … */
+    /* … all your original CSS (unchanged) … */
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
       --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
@@ -33,6 +33,7 @@
     @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
     @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
     @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
+
     .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); color:white; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000; border-right:1px solid rgba(255,77,166,0.2); }
     .sidebar::-webkit-scrollbar { width:4px; } .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); } .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
     .sidebar-header { padding:24px 18px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,77,166,0.2); position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); }
@@ -48,6 +49,7 @@
     .user-profile { display:flex; align-items:center; gap:12px; } .user-avatar { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); display:flex; align-items:center; justify-content:center; font-weight:700; color:white; flex-shrink:0; font-size:1.1rem; }
     .user-details { white-space:nowrap; } .user-details h4 { font-size:0.85rem; font-weight:600; } .user-details p { font-size:0.7rem; opacity:0.6; }
     .sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:999; display:none; } .sidebar-overlay.active { display:block; }
+
     .main-content { flex:1; margin-left:var(--sidebar-width); transition:margin-left 0.3s ease; min-height:100vh; width:calc(100% - var(--sidebar-width)); }
     .top-bar { height:var(--header-height); background:rgba(255,255,255,0.98); backdrop-filter:blur(12px); padding:0 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,77,166,0.15); position:sticky; top:0; z-index:50; }
     .top-bar-left { display:flex; align-items:center; gap:14px; } .menu-toggle { background:none; border:none; font-size:1.3rem; color:var(--gray); cursor:pointer; padding:10px; border-radius:10px; transition:all 0.2s; display:none; align-items:center; justify-content:center; } .menu-toggle:hover { background:var(--primary-soft); color:var(--primary); }
@@ -227,10 +229,31 @@
   let pendingRejectedEditId = null;
   let adminPinCache = null;
 
-  window.addEventListener('error', function(e) { showDebug('UNCAUGHT ERROR: ' + e.message + ' at ' + e.filename + ':' + e.lineno); });
+  window.addEventListener('error', function(e) {
+    showDebug('UNCAUGHT ERROR: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
+  });
 
-  function showDebug(msg) { const panel = document.getElementById('debugPanel'); if (!panel) return; panel.style.display = 'block'; const timestamp = new Date().toLocaleTimeString(); panel.innerHTML = `🕒 ${timestamp} – ${msg}`; clearTimeout(panel._timeout); panel._timeout = setTimeout(() => { if (panel.style.display === 'block') panel.style.display = 'none'; }, 8000); }
-  window.toggleDebugPanel = function() { const panel = document.getElementById('debugPanel'); if (!panel) return; if (panel.style.display === 'block') { panel.style.display = 'none'; } else { panel.style.display = 'block'; if (!panel.innerHTML) panel.innerHTML = '🐞 Debug panel active. Waiting for errors...'; clearTimeout(panel._timeout); } };
+  function showDebug(msg) {
+    const panel = document.getElementById('debugPanel');
+    if (!panel) return;
+    panel.style.display = 'block';
+    const timestamp = new Date().toLocaleTimeString();
+    panel.innerHTML = `🕒 ${timestamp} – ${msg}`;
+    clearTimeout(panel._timeout);
+    panel._timeout = setTimeout(() => { if (panel.style.display === 'block') panel.style.display = 'none'; }, 8000);
+  }
+
+  window.toggleDebugPanel = function() {
+    const panel = document.getElementById('debugPanel');
+    if (!panel) return;
+    if (panel.style.display === 'block') {
+      panel.style.display = 'none';
+    } else {
+      panel.style.display = 'block';
+      if (!panel.innerHTML) panel.innerHTML = '🐞 Debug panel active. Waiting for errors...';
+      clearTimeout(panel._timeout);
+    }
+  };
 
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
@@ -250,11 +273,42 @@
 
   function isAdmin() { return userData?.role==='admin'||userData?.role==='super_admin'; }
 
-  async function getAdminPin() { if (adminPinCache) return adminPinCache; try { const snap = await getDoc(doc(db, 'settings', 'adminConfig')); if (snap.exists() && snap.data().pin) { adminPinCache = snap.data().pin; return adminPinCache; } } catch (e) { showDebug('Failed to fetch admin PIN: ' + e.message); } return '1234'; }
+  async function getAdminPin() {
+    if (adminPinCache) return adminPinCache;
+    try {
+      const snap = await getDoc(doc(db, 'settings', 'adminConfig'));
+      if (snap.exists() && snap.data().pin) {
+        adminPinCache = snap.data().pin;
+        return adminPinCache;
+      }
+    } catch (e) { showDebug('Failed to fetch admin PIN: ' + e.message); }
+    return '1234';
+  }
 
-  function requireAdminPin(action, callback) { if (isAdmin()) { callback(); return; } showModal('Admin PIN Required', `<p style="text-align:center;margin-bottom:20px;">Enter the <strong>admin PIN</strong> to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`); document.getElementById('pin1').focus(); document.querySelectorAll('#modalOverlay .pin-input').forEach((inp,i,arr)=>{ inp.addEventListener('input',(e)=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();}); }); document.getElementById('verifyPinBtn').onclick = async ()=>{ const pin = ['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join(''); const correctPin = await getAdminPin(); if (pin === correctPin) { hideModal(); callback(); } else { showToast('Invalid admin PIN','error'); showDebug('Admin PIN mismatch. Entered: ' + pin); } }; }
+  function requireAdminPin(action, callback) {
+    if (isAdmin()) { callback(); return; }
+    showModal('Admin PIN Required', `<p style="text-align:center;margin-bottom:20px;">Enter the <strong>admin PIN</strong> to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`);
+    document.getElementById('pin1').focus();
+    document.querySelectorAll('#modalOverlay .pin-input').forEach((inp,i,arr)=>{ inp.addEventListener('input',(e)=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();}); });
+    document.getElementById('verifyPinBtn').onclick = async ()=>{
+      const pin = ['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');
+      const correctPin = await getAdminPin();
+      if (pin === correctPin) { hideModal(); callback(); }
+      else { showToast('Invalid admin PIN','error'); showDebug('Admin PIN mismatch. Entered: ' + pin); }
+    };
+  }
 
-  function requireAttendantPin(action, callback) { if (isAdmin()) { callback(); return; } showModal('PIN Required', `<p style="text-align:center;margin-bottom:20px;">Enter your 4-digit PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`); document.getElementById('pin1').focus(); document.querySelectorAll('#modalOverlay .pin-input').forEach((inp,i,arr)=>{ inp.addEventListener('input',(e)=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();}); }); document.getElementById('verifyPinBtn').onclick = ()=>{ const pin = ['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join(''); if (pin === (userData?.attendantPin || '1234')) { hideModal(); callback(); } else { showToast('Invalid PIN','error'); showDebug('Attendant PIN mismatch. Entered: ' + pin); } }; }
+  function requireAttendantPin(action, callback) {
+    if (isAdmin()) { callback(); return; }
+    showModal('PIN Required', `<p style="text-align:center;margin-bottom:20px;">Enter your 4-digit PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`);
+    document.getElementById('pin1').focus();
+    document.querySelectorAll('#modalOverlay .pin-input').forEach((inp,i,arr)=>{ inp.addEventListener('input',(e)=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();}); });
+    document.getElementById('verifyPinBtn').onclick = ()=>{
+      const pin = ['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');
+      if (pin === (userData?.attendantPin || '1234')) { hideModal(); callback(); }
+      else { showToast('Invalid PIN','error'); showDebug('Attendant PIN mismatch. Entered: ' + pin); }
+    };
+  }
 
   window.revealTotalRevenue = function() { if(revenueRevealed)return; requireAttendantPin('view total revenue',()=>{revenueRevealed=true;updateRevenueDisplay();logAudit('reveal_revenue','Revenue revealed');showToast('Revenue unlocked','success');}); };
 
@@ -265,6 +319,7 @@
 
   async function loadCategories() { try{const snap=await getDocs(collection(db,'categories'));if(!snap.empty){categories=snap.docs.map(d=>d.data().name);}else{categories=['rhinestones','beads','bridal','paperstones','other'];await Promise.all(categories.map(c=>setDoc(doc(db,'categories',c),{name:c,createdAt:serverTimestamp()})));}}catch(e){categories=['rhinestones','beads','bridal','paperstones','other'];} updateCategoryDropdowns(); }
   function updateCategoryDropdowns() { const filterEl=document.getElementById('categoryFilter'); if(filterEl)filterEl.innerHTML='<option value="all">All Categories</option>'+categories.map(c=>`<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join(''); ['itemCategory','editCategory','rejEditCategory'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=categories.map(c=>`<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('');}); }
+
   window.addCategoryFromModal = async function() { const name=document.getElementById('newCategoryInput')?.value?.trim().toLowerCase(); if(!name){showToast('Enter category name','error');return;} if(categories.includes(name)){showToast('Already exists','error');return;} try{await setDoc(doc(db,'categories',name),{name,createdAt:serverTimestamp()});categories.push(name);updateCategoryDropdowns();await logAudit('add_category',`Added: ${name}`);showToast(`Category "${name}" added`,'success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');showDebug('Add category failed: '+e.message);} };
   window.showAddCategoryModal = function() { showModal('Add New Category',`<div class="form-group"><label>Category Name *</label><input class="form-control" id="newCategoryInput" placeholder="e.g., Accessories"></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addCategoryFromModal()"><i class="fas fa-plus"></i> Add</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`); };
 
@@ -272,12 +327,405 @@
   function getTotalAvailable(item) { return (item.unitQty||0)+(item.halfQty||0)+(item.quarterQty||0); }
   function getItemStatus(item) { if(item.status==='pending_approval')return'pending_approval';if(item.status==='rejected')return'rejected';const qty=getTotalAvailable(item);const threshold=item.threshold||10;if(qty===0)return'out_of_stock';if(qty<=threshold)return'low';return'available'; }
 
-  window.switchToRejectedTab = function() { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); const rejectedTab = document.querySelector('.tab[data-tab="rejected"]'); if (rejectedTab) rejectedTab.classList.add('active'); document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active')); document.getElementById('rejectedPanel').classList.add('active'); currentTab = 'rejected'; renderInventory(); };
+  window.switchToRejectedTab = function() {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    const rejectedTab = document.querySelector('.tab[data-tab="rejected"]');
+    if (rejectedTab) rejectedTab.classList.add('active');
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    document.getElementById('rejectedPanel').classList.add('active');
+    currentTab = 'rejected';
+    renderInventory();
+  };
 
-  function renderInventory() { /* … unchanged full renderInventory … */ }
-  function loadInventory() { /* … unchanged … */ }
+  function renderInventory() {
+    const search=(document.getElementById('searchInput')?.value||'').toLowerCase();
+    const catFilter=document.getElementById('categoryFilter')?.value||'all';
+    let filtered=[...allItems];
+    if(search)filtered=filtered.filter(i=>(i.name||'').toLowerCase().includes(search));
+    if(catFilter!=='all')filtered=filtered.filter(i=>(i.category||'').toLowerCase()===catFilter.toLowerCase());
+    const available=filtered.filter(i=>i.status!=='pending_approval'&&i.status!=='rejected');
+    const lowAndOut=available.filter(i=>['low','out_of_stock'].includes(getItemStatus(i)));
+    const rejected=[...allRejectedItems];
 
-  // ===================== RESTOCK (UPDATED for Incoming Inventory) =====================
+    document.getElementById('totalItems').textContent=allItems.length;
+    document.getElementById('availableItems').textContent=allItems.filter(i=>getItemStatus(i)==='available').length;
+    document.getElementById('lowStock').textContent=allItems.filter(i=>getItemStatus(i)==='low').length;
+    document.getElementById('allCount').textContent=available.length;
+    document.getElementById('lowCount').textContent=lowAndOut.length;
+    document.getElementById('rejectedCount').textContent=rejected.length;
+    document.getElementById('productCount').textContent=`${available.length} items`;
+    updateRevenueDisplay();
+
+    const rejectedAlert = document.getElementById('rejectedAlert');
+    if (rejected.length > 0 && (currentTab === 'all' || currentTab === 'low')) {
+      rejectedAlert.style.display = 'flex';
+      rejectedAlert.style.alignItems = 'center';
+      rejectedAlert.style.gap = '10px';
+    } else {
+      rejectedAlert.style.display = 'none';
+    }
+
+    const banner=document.getElementById('lowStockBanner'),msg=document.getElementById('lowStockMsg');
+    const lowCount=allItems.filter(i=>['low','out_of_stock'].includes(getItemStatus(i))).length;
+    if(lowCount>0){banner.style.display='flex';msg.textContent=`${lowCount} item(s) need restocking.`;}else{banner.style.display='none';}
+
+    const tbody=document.getElementById('inventoryTable');
+    if(tbody){
+      if(available.length===0){tbody.innerHTML='<tr><td colspan="16"><div class="empty-state"><i class="fas fa-box"></i><p>No items found. Click "Add Item" to get started.</p></div></td></tr>';}
+      else{
+        tbody.innerHTML=available.map(item=>{
+          const st=getItemStatus(item),sb=st==='available'?'success':st==='low'?'warning':'danger';
+          const adminUser=isAdmin();
+          const unitQty=item.unitQty||0, halfQty=item.halfQty||0, quarterQty=item.quarterQty||0;
+          const packInfo=item.packSize?`${item.packSize}/pk`:(item.bundleSize?`${item.bundleSize}/bundle`:'—');
+          const packPrice=item.packPrice||item.bundlePrice||0;
+          const soldQty=getItemSoldQty(item), remainingQty=getTotalAvailable(item);
+          const itemRevenue=getItemRevenue(item);const showRevenue=revenueRevealed||adminUser;
+          return `<tr><td><strong>${item.name||'-'}</strong></td><td><span class="badge badge-purple">${item.category||'-'}</span></td><td>${getItemTypeLabel(item)}</td><td>${unitQty}</td><td>${halfQty||'—'}</td><td>${quarterQty||'—'}</td><td>${packInfo}${packPrice?' · '+formatCurrency(packPrice):''}</td><td>${soldQty}</td><td style="color:${remainingQty===0?'var(--danger)':st==='low'?'var(--warning)':'inherit'};font-weight:600;">${remainingQty}</td><td>${formatCurrency(item.unitPrice||0)}</td><td>${item.halfPrice?formatCurrency(item.halfPrice):'—'}</td><td>${item.quarterPrice?formatCurrency(item.quarterPrice):'—'}</td><td>${packPrice?formatCurrency(packPrice):'—'}</td><td style="font-weight:600;">${showRevenue?formatCurrency(itemRevenue):'₦••••'}</td><td><span class="badge badge-${sb}">${st.replace(/_/g,' ')}</span></td><td><div style="display:flex;gap:4px;flex-wrap:wrap;">${['low','out_of_stock'].includes(st)?`<button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')" title="Restock"><i class="fas fa-box-open"></i></button>`:''}<button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')" title="Edit"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline" onclick="viewHistory('${item.id}')" title="History"><i class="fas fa-history"></i></button><button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')" title="Delete"><i class="fas fa-trash"></i></button>${adminUser?`<button class="btn btn-sm btn-warning" onclick="rejectItem('${item.id}')" title="Reject"><i class="fas fa-ban"></i></button>`:''}</div></td></tr>`;
+        }).join('');
+      }
+    }
+
+    const lTbody=document.getElementById('lowTable');
+    if(lTbody){if(lowAndOut.length===0)lTbody.innerHTML='<tr><td colspan="11"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items well stocked</p></div></td></tr>';else lTbody.innerHTML=lowAndOut.map(item=>`<tr><td><strong>${item.name||'-'}</strong></td><td>${item.category||'-'}</td><td>${getItemTypeLabel(item)}</td><td>${item.unitQty||0}</td><td>${item.halfQty||0}</td><td>${item.quarterQty||0}</td><td>${getItemSoldQty(item)}</td><td style="color:var(--danger);font-weight:600;">${getTotalAvailable(item)}</td><td>${formatCurrency(item.unitPrice||0)}</td><td><span class="badge badge-${getItemStatus(item)==='out_of_stock'?'danger':'warning'}">${getItemStatus(item).replace(/_/g,' ')}</span></td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')"><i class="fas fa-box-open"></i></button><button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')"><i class="fas fa-edit"></i></button></div></td></tr>`).join('');}
+
+    const rTbody=document.getElementById('rejectedTable');
+    if(rTbody){
+      if(rejected.length===0) rTbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="fas fa-ban"></i><p>No rejected items</p></div></td></tr>';
+      else rTbody.innerHTML=rejected.map(item=>`<tr><td><strong>${item.name||'-'}</strong></td><td>${item.category||'-'}</td><td>${item.unitQty||0}</td><td>${item.rejectedByName||'-'}</td><td><strong style="color:var(--danger);">${item.rejectionReason||'-'}</strong></td><td>${formatDate(item.rejectedAt)}</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-primary" onclick="openEditRejectedItem('${item.id}')" title="Edit & Resubmit"><i class="fas fa-edit"></i> Edit</button><button class="btn btn-sm btn-danger" onclick="permanentlyDeleteItem('${item.id}')" title="Delete"><i class="fas fa-trash"></i> Delete</button></div></td></tr>`).join('');
+    }
+    showDebug(`Render: avail=${available.length} low=${lowAndOut.length} rej=${rejected.length}`);
+  }
+
+  function loadInventory() {
+    cleanup();
+    unsubscribes.push(onSnapshot(collection(db,'stock_items'),snap=>{allItems=snap.docs.map(d=>{const data=d.data();return{id:d.id,...data,unitQty:data.unitQty||data.quantityAvailable||data.initialStock||0,halfQty:data.halfQty||data.halfQuantityAvailable||0,quarterQty:data.quarterQty||data.quarterQuantityAvailable||0,unitPrice:data.unitPrice||0,halfPrice:data.halfPrice||0,quarterPrice:data.quarterPrice||0,packSize:data.packSize||0,packPrice:data.packPrice||0,bundleSize:data.bundleSize||0,bundlePrice:data.bundlePrice||0,threshold:data.threshold||10,status:data.status||'available',itemType:data.itemType||'general'};});allItems.sort((a,b)=>(a.name||'').localeCompare(b.name||''));renderInventory();}));
+    unsubscribes.push(onSnapshot(collection(db,'rejected_inventory'),snap=>{allRejectedItems=snap.docs.map(d=>{const data=d.data();return{id:d.id,...data};});allRejectedItems.sort((a,b)=>(b.rejectedAt?.seconds||0)-(a.rejectedAt?.seconds||0));renderInventory();}));
+    unsubscribes.push(onSnapshot(query(collection(db,'sales'),orderBy('createdAt','desc')),snap=>{allSales=snap.docs.map(d=>({id:d.id,...d.data()}));renderInventory();}));
+    unsubscribes.push(onSnapshot(collection(db,'wholesale_sales'),snap=>{const ws=snap.docs.map(d=>({id:d.id,...d.data()}));allSales=[...allSales.filter(s=>!ws.find(w=>w.id===s.id)),...ws];renderInventory();}));
+  }
+
+  // ===================== ADD ITEM =====================
+  function getAddForm() {
+    return `<div class="item-type-toggle">
+      <button class="item-type-btn active" data-type="general" onclick="switchAddType('general')"><i class="fas fa-cube"></i> General<br><small>Soldering iron, glue</small></button>
+      <button class="item-type-btn" data-type="fashion" onclick="switchAddType('fashion')"><i class="fas fa-tshirt"></i> Fashion<br><small>Rhinestone, beads</small></button>
+      <button class="item-type-btn" data-type="pack_bundle" onclick="switchAddType('pack_bundle')"><i class="fas fa-box"></i> Pack/Bundle<br><small>T‑shirts, carton</small></button>
+      <button class="item-type-btn" data-type="measured" onclick="switchAddType('measured')"><i class="fas fa-ruler"></i> Measured<br><small>Paper, fabric</small></button>
+    </div>
+    <div class="form-row"><div class="form-group"><label>Item Name *</label><input class="form-control" id="itemName" placeholder="e.g., Rhinestone"></div><div class="form-group"><label>Category *</label><div style="display:flex;gap:8px;"><select class="form-control" id="itemCategory">${categories.map(c=>`<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div>
+    <div id="qtySection"></div>
+    <div class="form-group"><label>Low Stock Threshold <small>(total smallest units)</small></label><input type="number" class="form-control" id="itemThreshold" value="10" min="1"></div>
+    <p style="font-size:0.75rem;color:var(--gray);">${isAdmin()?'Item available immediately.':'Item submitted for admin approval.'}</p>
+    <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="submitAddItem()"><i class="fas fa-plus"></i> Add</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
+  }
+
+  window.openAddItemModal = function() { addItemType='general'; showModal('Add New Item', getAddForm()); renderQtySection(); };
+  window.switchAddType = function(type) { addItemType=type; document.querySelectorAll('.item-type-btn').forEach(b=>b.classList.remove('active')); document.querySelector(`[data-type="${type}"]`)?.classList.add('active'); renderQtySection(); };
+
+  function renderQtySection() {
+    const sec=document.getElementById('qtySection'); if(!sec)return;
+    if(addItemType==='general'){
+      sec.innerHTML=`<div class="form-group"><label>Unit Quantity (pieces) *</label><input type="number" class="form-control" id="unitQty" value="0" min="0"></div><div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="unitPrice" value="0" step="0.01" min="0"></div>`;
+    }else if(addItemType==='fashion'){
+      sec.innerHTML=`<p class="help-text">Rhinestones, beads: sold by unit, half, quarter.</p>
+      <div class="form-row-3"><div class="form-group"><label>Unit Qty (1) *</label><input type="number" class="form-control" id="unitQty" value="0" min="0"></div><div class="form-group"><label>Half Qty (½)</label><input type="number" class="form-control" id="halfQty" value="0" min="0"></div><div class="form-group"><label>Quarter Qty (¼)</label><input type="number" class="form-control" id="quarterQty" value="0" min="0"></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price (1) ₦ *</label><input type="number" class="form-control" id="unitPrice" value="0" step="0.01" min="0"></div><div class="form-group"><label>Half Price (½) ₦</label><input type="number" class="form-control" id="halfPrice" value="0" step="0.01" min="0"></div><div class="form-group"><label>Quarter Price (¼) ₦</label><input type="number" class="form-control" id="quarterPrice" value="0" step="0.01" min="0"></div></div>`;
+    }else if(addItemType==='pack_bundle'){
+      sec.innerHTML=`<p class="help-text">T‑shirts, carton items: sold individually or in packs (dozen, box). Stock is tracked by individual piece.</p>
+      <div class="form-group"><label>Unit Quantity (individual pieces) *</label><input type="number" class="form-control" id="unitQty" value="0" min="0"></div><div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="unitPrice" value="0" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Pack Size (items per pack, e.g., 12)</label><input type="number" class="form-control" id="packSize" value="12" min="1"></div><div class="form-group"><label>Pack Price ₦</label><input type="number" class="form-control" id="packPrice" value="0" step="0.01" min="0"></div></div>`;
+    }else if(addItemType==='measured'){
+      sec.innerHTML=`<p class="help-text">Paper, fabric: sold by yard/meter or in bundles.</p>
+      <div class="form-group"><label>Measure Unit</label><select class="form-control" id="measureUnit"><option value="yard">Yard</option><option value="meter">Meter</option></select></div><div class="form-group"><label>Unit Quantity (yards/meters) *</label><input type="number" class="form-control" id="unitQty" value="0" min="0"></div><div class="form-group"><label>Unit Price (per yard/meter) ₦ *</label><input type="number" class="form-control" id="unitPrice" value="0" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Bundle Size (yards/meters)</label><input type="number" class="form-control" id="bundleSize" value="50" min="1"></div><div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="bundlePrice" value="0" step="0.01" min="0"></div></div>`;
+    }
+  }
+
+  window.submitAddItem = function() {
+    const name=document.getElementById('itemName')?.value?.trim();
+    const category=document.getElementById('itemCategory')?.value||'other';
+    const threshold=parseInt(document.getElementById('itemThreshold')?.value)||10;
+    if(!name){showToast('Item name required','error');showDebug('Add item: name empty');return;}
+    const data={name,category,threshold,itemType:addItemType,status:isAdmin()?'available':'pending_approval',createdBy:currentUser?.uid,createdByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp(),unitQty:0,unitPrice:0,halfQty:0,halfPrice:0,quarterQty:0,quarterPrice:0,packSize:0,packPrice:0,bundleSize:0,bundlePrice:0,measureUnit:'piece'};
+    if(addItemType==='general'||addItemType==='fashion'||addItemType==='pack_bundle'){
+      data.unitQty=parseInt(document.getElementById('unitQty')?.value)||0;
+      data.unitPrice=parseFloat(document.getElementById('unitPrice')?.value)||0;
+      if(data.unitPrice<=0){showToast('Unit price must be > 0','error');return;}
+    }
+    if(addItemType==='fashion'){
+      data.halfQty=parseInt(document.getElementById('halfQty')?.value)||0;
+      data.quarterQty=parseInt(document.getElementById('quarterQty')?.value)||0;
+      data.halfPrice=parseFloat(document.getElementById('halfPrice')?.value)||0;
+      data.quarterPrice=parseFloat(document.getElementById('quarterPrice')?.value)||0;
+    }
+    if(addItemType==='pack_bundle'){
+      data.packSize=parseInt(document.getElementById('packSize')?.value)||12;
+      data.packPrice=parseFloat(document.getElementById('packPrice')?.value)||0;
+    }
+    if(addItemType==='measured'){
+      data.measureUnit=document.getElementById('measureUnit')?.value||'yard';
+      data.unitQty=parseInt(document.getElementById('unitQty')?.value)||0;
+      data.unitPrice=parseFloat(document.getElementById('unitPrice')?.value)||0;
+      if(data.unitPrice<=0){showToast('Unit price must be > 0','error');return;}
+      data.bundleSize=parseInt(document.getElementById('bundleSize')?.value)||50;
+      data.bundlePrice=parseFloat(document.getElementById('bundlePrice')?.value)||0;
+    }
+    const totalQty=data.unitQty+data.halfQty+data.quarterQty;
+    if(!isAdmin()) data.status='pending_approval';
+    else data.status=totalQty===0?'out_of_stock':totalQty<=threshold?'low':'available';
+    addDoc(collection(db,'stock_items'),data).then(async()=>{await logAudit('add_item',`Added: ${name}`);showToast(isAdmin()?'Item added':'Submitted','success');hideModal();}).catch(e=>{showToast('Failed: '+e.message,'error');showDebug('Add item failed: '+e.message);});
+  };
+
+  // ===================== EDIT ITEM =====================
+  window.openEditItem = function(id) {
+    const item=allItems.find(i=>i.id===id);if(!item)return;
+    pendingEditId=id;
+    const type=item.itemType||'general';
+    let form=`<div class="form-group"><label>Item Name</label><input class="form-control" id="editName" value="${item.name||''}"></div><div class="form-row"><div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="editCategory">${categories.map(c=>`<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div><div class="form-group"><label>Type</label><input class="form-control" value="${getItemTypeLabel(item)}" readonly></div></div>`;
+    if(type==='general'){
+      form+=`<div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="editUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="editUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div>`;
+    }else if(type==='fashion'){
+      form+=`<div class="form-row-3"><div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="editUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Half Qty</label><input type="number" class="form-control" id="editHalfQty" value="${item.halfQty||0}" min="0"></div><div class="form-group"><label>Quarter Qty</label><input type="number" class="form-control" id="editQuarterQty" value="${item.quarterQty||0}" min="0"></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="editUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>Half Price ₦</label><input type="number" class="form-control" id="editHalfPrice" value="${item.halfPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>Quarter Price ₦</label><input type="number" class="form-control" id="editQuarterPrice" value="${item.quarterPrice||0}" step="0.01" min="0"></div></div>`;
+    }else if(type==='pack_bundle'){
+      form+=`<div class="form-group"><label>Unit Qty (individual pieces)</label><input type="number" class="form-control" id="editUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="editUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Pack Size</label><input type="number" class="form-control" id="editPackSize" value="${item.packSize||12}" min="1"></div><div class="form-group"><label>Pack Price ₦</label><input type="number" class="form-control" id="editPackPrice" value="${item.packPrice||0}" step="0.01" min="0"></div></div>`;
+    }else if(type==='measured'){
+      form+=`<div class="form-group"><label>Measure Unit</label><input class="form-control" value="${item.measureUnit||'yard'}" readonly></div><div class="form-group"><label>Unit Qty (yards/meters)</label><input type="number" class="form-control" id="editUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="editUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Bundle Size</label><input type="number" class="form-control" id="editBundleSize" value="${item.bundleSize||50}" min="1"></div><div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="editBundlePrice" value="${item.bundlePrice||0}" step="0.01" min="0"></div></div>`;
+    }
+    form+=`<div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||10}" min="1"></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" id="saveEditBtn" onclick="saveEdit()"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`;
+    showModal(`Edit: ${item.name}`,form);
+  };
+
+  window.saveEdit = function() {
+    const id = pendingEditId; 
+    if(!id) return;
+    
+    const nameEl = document.getElementById('editName');
+    const name = nameEl?.value?.trim();
+    
+    if (!name) { 
+      showToast('Item name is required to save', 'error'); 
+      showDebug('Edit blocked: name empty');
+      return; 
+    }
+
+    const item = allItems.find(i => i.id === id); 
+    const type = item?.itemType || 'general';
+    
+    let updateData = {
+      name,
+      category: document.getElementById('editCategory')?.value,
+      threshold: parseInt(document.getElementById('editThreshold')?.value) || 10,
+      updatedAt: serverTimestamp()
+    };
+
+    if(type === 'general'){
+      updateData.unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0;
+      updateData.unitPrice = parseFloat(document.getElementById('editUnitPrice')?.value) || 0;
+      if(updateData.unitPrice <= 0) { showToast('Unit price must be > 0', 'error'); return; }
+    } else if(type === 'fashion'){
+      updateData.unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0;
+      updateData.halfQty = parseInt(document.getElementById('editHalfQty')?.value) || 0;
+      updateData.quarterQty = parseInt(document.getElementById('editQuarterQty')?.value) || 0;
+      updateData.unitPrice = parseFloat(document.getElementById('editUnitPrice')?.value) || 0;
+      updateData.halfPrice = parseFloat(document.getElementById('editHalfPrice')?.value) || 0;
+      updateData.quarterPrice = parseFloat(document.getElementById('editQuarterPrice')?.value) || 0;
+      if(updateData.unitPrice <= 0) { showToast('Unit price must be > 0', 'error'); return; }
+    } else if(type === 'pack_bundle'){
+      updateData.unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0;
+      updateData.unitPrice = parseFloat(document.getElementById('editUnitPrice')?.value) || 0;
+      updateData.packSize = parseInt(document.getElementById('editPackSize')?.value) || 12;
+      updateData.packPrice = parseFloat(document.getElementById('editPackPrice')?.value) || 0;
+      if(updateData.unitPrice <= 0 && updateData.packPrice <= 0) { showToast('Price required', 'error'); return; }
+    } else if(type === 'measured'){
+      updateData.unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0;
+      updateData.unitPrice = parseFloat(document.getElementById('editUnitPrice')?.value) || 0;
+      updateData.bundleSize = parseInt(document.getElementById('editBundleSize')?.value) || 50;
+      updateData.bundlePrice = parseFloat(document.getElementById('editBundlePrice')?.value) || 0;
+      if(updateData.unitPrice <= 0) { showToast('Unit price must be > 0', 'error'); return; }
+    }
+
+    const executeSave = async () => {
+      const totalQty = (updateData.unitQty || 0) + (updateData.halfQty || 0) + (updateData.quarterQty || 0);
+      updateData.status = totalQty === 0 ? 'out_of_stock' : totalQty <= updateData.threshold ? 'low' : 'available';
+      try {
+        await updateDoc(doc(db, 'stock_items', id), updateData);
+        await logAudit('edit_item', `Updated: ${name}`);
+        showToast('Updated!', 'success');
+        hideModal();
+        showDebug('Edit saved: ' + name);
+      } catch(e) {
+        showToast('Failed: ' + e.message, 'error');
+        showDebug('Edit save failed: ' + e.message);
+      }
+    };
+
+    if(isAdmin()) { 
+      executeSave(); 
+    } else { 
+      requireAdminPin('edit this item', executeSave); 
+    }
+  };
+
+  // ===================== EDIT & RESUBMIT REJECTED ITEM =====================
+  window.openEditRejectedItem = function(id) {
+    const item = allRejectedItems.find(i => i.id === id);
+    if (!item) return;
+    pendingRejectedEditId = id;
+    const type = item.itemType || 'general';
+
+    let form = `<div style="background:rgba(239,68,68,0.1); border-left:4px solid var(--danger); padding:12px; margin-bottom:16px; border-radius:8px;">
+      <span style="font-size:0.8rem; color:var(--danger);"><strong>Reason for Rejection:</strong> ${item.rejectionReason || 'No reason provided'}</span>
+    </div>`;
+
+    form += `<div class="form-group"><label>Item Name</label><input class="form-control" id="rejEditName" value="${item.name||''}"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Category</label><div style="display:flex;gap:8px;"><select class="form-control" id="rejEditCategory">${categories.map(c=>`<option value="${c}" ${item.category===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div>
+      <div class="form-group"><label>Type</label><input class="form-control" value="${getItemTypeLabel(item)}" readonly></div>
+    </div>`;
+
+    if(type==='general'){
+      form+=`<div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="rejEditUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="rejEditUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div>`;
+    }else if(type==='fashion'){
+      form+=`<div class="form-row-3"><div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="rejEditUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Half Qty</label><input type="number" class="form-control" id="rejEditHalfQty" value="${item.halfQty||0}" min="0"></div><div class="form-group"><label>Quarter Qty</label><input type="number" class="form-control" id="rejEditQuarterQty" value="${item.quarterQty||0}" min="0"></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="rejEditUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>Half Price ₦</label><input type="number" class="form-control" id="rejEditHalfPrice" value="${item.halfPrice||0}" step="0.01" min="0"></div><div class="form-group"><label>Quarter Price ₦</label><input type="number" class="form-control" id="rejEditQuarterPrice" value="${item.quarterPrice||0}" step="0.01" min="0"></div></div>`;
+    }else if(type==='pack_bundle'){
+      form+=`<div class="form-group"><label>Unit Qty (individual pieces)</label><input type="number" class="form-control" id="rejEditUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="rejEditUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Pack Size</label><input type="number" class="form-control" id="rejEditPackSize" value="${item.packSize||12}" min="1"></div><div class="form-group"><label>Pack Price ₦</label><input type="number" class="form-control" id="rejEditPackPrice" value="${item.packPrice||0}" step="0.01" min="0"></div></div>`;
+    }else if(type==='measured'){
+      form+=`<div class="form-group"><label>Measure Unit</label><input class="form-control" value="${item.measureUnit||'yard'}" readonly></div><div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="rejEditUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="rejEditUnitPrice" value="${item.unitPrice||0}" step="0.01" min="0"></div><div class="form-row"><div class="form-group"><label>Bundle Size</label><input type="number" class="form-control" id="rejEditBundleSize" value="${item.bundleSize||50}" min="1"></div><div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="rejEditBundlePrice" value="${item.bundlePrice||0}" step="0.01" min="0"></div></div>`;
+    }
+
+    form+=`<div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="rejEditThreshold" value="${item.threshold||10}" min="1"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="saveEditRejectedItem()"><i class="fas fa-paper-plane"></i> Resubmit to Admin</button>
+      <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
+    </div>`;
+
+    showModal(`Fix & Resubmit: ${item.name}`, form);
+  };
+
+  window.saveEditRejectedItem = async function() {
+    const id = pendingRejectedEditId;
+    if (!id) return;
+
+    const item = allRejectedItems.find(i => i.id === id);
+    if (!item) return;
+
+    const name = document.getElementById('rejEditName')?.value?.trim();
+    if (!name) { showToast('Item name required', 'error'); return; }
+
+    const type = item.itemType || 'general';
+
+    let newData = {
+      name,
+      category: document.getElementById('rejEditCategory')?.value,
+      threshold: parseInt(document.getElementById('rejEditThreshold')?.value) || 10,
+      itemType: type,
+      measureUnit: item.measureUnit || 'piece',
+      updatedAt: serverTimestamp(),
+      createdAt: item.createdAt || serverTimestamp(),
+      createdBy: item.createdBy,
+      createdByName: item.createdByName
+    };
+
+    if(type === 'general'){
+      newData.unitQty = parseInt(document.getElementById('rejEditUnitQty')?.value) || 0;
+      newData.unitPrice = parseFloat(document.getElementById('rejEditUnitPrice')?.value) || 0;
+    } else if(type === 'fashion'){
+      newData.unitQty = parseInt(document.getElementById('rejEditUnitQty')?.value) || 0;
+      newData.halfQty = parseInt(document.getElementById('rejEditHalfQty')?.value) || 0;
+      newData.quarterQty = parseInt(document.getElementById('rejEditQuarterQty')?.value) || 0;
+      newData.unitPrice = parseFloat(document.getElementById('rejEditUnitPrice')?.value) || 0;
+      newData.halfPrice = parseFloat(document.getElementById('rejEditHalfPrice')?.value) || 0;
+      newData.quarterPrice = parseFloat(document.getElementById('rejEditQuarterPrice')?.value) || 0;
+    } else if(type === 'pack_bundle'){
+      newData.unitQty = parseInt(document.getElementById('rejEditUnitQty')?.value) || 0;
+      newData.unitPrice = parseFloat(document.getElementById('rejEditUnitPrice')?.value) || 0;
+      newData.packSize = parseInt(document.getElementById('rejEditPackSize')?.value) || 12;
+      newData.packPrice = parseFloat(document.getElementById('rejEditPackPrice')?.value) || 0;
+    } else if(type === 'measured'){
+      newData.unitQty = parseInt(document.getElementById('rejEditUnitQty')?.value) || 0;
+      newData.unitPrice = parseFloat(document.getElementById('rejEditUnitPrice')?.value) || 0;
+      newData.bundleSize = parseInt(document.getElementById('rejEditBundleSize')?.value) || 50;
+      newData.bundlePrice = parseFloat(document.getElementById('rejEditBundlePrice')?.value) || 0;
+    }
+
+    if (isAdmin()) {
+      const totalQty = (newData.unitQty || 0) + (newData.halfQty || 0) + (newData.quarterQty || 0);
+      newData.status = totalQty === 0 ? 'out_of_stock' : totalQty <= newData.threshold ? 'low' : 'available';
+    } else {
+      newData.status = 'pending_approval';
+    }
+
+    try {
+      const targetId = item.originalId || id;
+      await setDoc(doc(db, 'stock_items', targetId), newData);
+      await deleteDoc(doc(db, 'rejected_inventory', id));
+      await logAudit('resubmit_item', `Edited & resubmitted rejected item: ${name}`);
+      showToast('Item successfully resubmitted!', 'success');
+      hideModal();
+      document.querySelector('.tab[data-tab="all"]').click();
+    } catch(e) {
+      showToast('Failed to resubmit: ' + e.message, 'error');
+      showDebug('Resubmit failed: ' + e.message);
+    }
+  };
+
+  // ===================== DELETE =====================
+  window.deleteItem = function(id) { const item=allItems.find(i=>i.id===id);if(!item)return;const confirmDel=()=>{if(!confirm(`Delete "${item.name}"?`))return;deleteDoc(doc(db,'stock_items',id)).then(async()=>{await logAudit('delete_item',`Deleted: ${item.name}`);showToast('Deleted!','success');}).catch(e=>{showToast('Failed: '+e.message,'error');showDebug('Delete failed: '+e.message);});};if(isAdmin()){confirmDel();}else{requireAttendantPin('delete this item',confirmDel);} };
+  window.deleteAllInventory = function() { if(!confirm('DELETE ALL INVENTORY? This cannot be undone!'))return; requireAttendantPin('delete all inventory',async()=>{try{const snap=await getDocs(collection(db,'stock_items'));const batch=writeBatch(db);snap.forEach(d=>batch.delete(d.ref));await batch.commit();await logAudit('delete_all','All inventory deleted');showToast('All items deleted','success');}catch(e){showToast('Failed: '+e.message,'error');showDebug('Delete all failed: '+e.message);}}); };
+
+  // ===================== REJECT =====================
+  window.rejectItem = function(id) { if(!isAdmin()){showToast('Only admin can reject','error');}const item=allItems.find(i=>i.id===id);if(!item)return;showModal('Reject Item',`<p style="margin-bottom:12px;">Reject <strong>${item.name}</strong>?</p><div class="form-group"><label>Reason *</label><textarea class="form-control" id="rejectionReason" rows="3" placeholder="Why?"></textarea></div><div style="display:flex;gap:10px;"><button class="btn btn-warning" onclick="confirmRejectItem('${id}')"><i class="fas fa-ban"></i> Reject</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`); };
+  window.confirmRejectItem = async function(id) { const reason=document.getElementById('rejectionReason')?.value?.trim();if(!reason){showToast('Reason required','error');return;}const item=allItems.find(i=>i.id===id);if(!item)return;try{await addDoc(collection(db,'rejected_inventory'),{...item,originalId:id,rejectionReason:reason,rejectedBy:currentUser?.uid,rejectedByName:userData?.fullName||'Admin',rejectedAt:serverTimestamp()});await deleteDoc(doc(db,'stock_items',id));await logAudit('reject_item',`Rejected: ${item.name} - ${reason}`);showToast('Rejected!','success');hideModal();}catch(e){showToast('Reject failed: '+e.message,'error');showDebug('Reject error: '+e.message);} };
+  window.permanentlyDeleteItem = function(id) { const item=allRejectedItems.find(i=>i.id===id);if(!item)return;if(!confirm(`Permanently delete "${item.name}"?`))return;deleteDoc(doc(db,'rejected_inventory',id)).then(async()=>{await logAudit('perm_delete',`Deleted rejected: ${item.name}`);showToast('Deleted!','success');}).catch(e=>{showToast('Failed: '+e.message,'error');showDebug('Perm delete failed: '+e.message);}); };
+
+  // ===================== CSV =====================
+  window.openCsvUploadModal = function() {
+    showModal('Import CSV',`<p style="margin-bottom:12px;">Upload a CSV file to add items in bulk.</p><p><span class="csv-template-link" onclick="downloadCsvTemplate()"><i class="fas fa-download"></i> Download CSV Template</span></p><div class="form-group"><label>CSV File *</label><input type="file" class="form-control" id="csvFile" accept=".csv"></div><button class="btn btn-primary" onclick="processCsvUpload()"><i class="fas fa-upload"></i> Upload & Add Items</button><button class="btn btn-outline" onclick="hideModal()" style="margin-top:8px;">Cancel</button>`);
+  };
+
+  window.downloadCsvTemplate = function() {
+    const headers = 'name,category,itemType,unitQty,unitPrice,halfQty,halfPrice,quarterQty,quarterPrice,packSize,packPrice,bundleSize,bundlePrice,measureUnit,threshold';
+    const examples = [
+      'Soldering Iron,tools,general,15,8000,,,,,,,,,piece,3',
+      'Rhinestone,rhinestones,fashion,100,500,20,300,10,150,,,,,piece,10',
+      'T-Shirt,clothing,pack_bundle,50,5000,,,,,12,48000,,,piece,5',
+      'Paper,fabric,measured,200,200,,,,,,,50,5000,yard,10'
+    ].join('\n');
+    const csv = headers + '\n' + examples;
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'inventory_template.csv';
+    a.click();
+    showToast('Template downloaded','success');
+  };
+
+  window.processCsvUpload = async function() {
+    const file=document.getElementById('csvFile')?.files[0];if(!file){showToast('Select a CSV file','error');return;}
+    const text=await file.text();const lines=text.split('\n').filter(l=>l.trim());if(lines.length<2){showToast('CSV must have header + data','error');return;}
+    const headers=lines[0].split(',').map(h=>h.trim().toLowerCase());
+    const required=['name','category','itemtype','unitqty','unitprice'];
+    for(const r of required){if(!headers.includes(r)){showToast(`Missing column: ${r}`,'error');return;}}
+    let added=0,errors=0;
+    const batch=writeBatch(db);
+    for(let i=1;i<lines.length;i++){
+      const vals=lines[i].split(',').map(v=>v.trim());
+      if(vals.length<headers.length)continue;
+      const row={};headers.forEach((h,idx)=>{row[h]=vals[idx];});
+      const name=row.name;if(!name){errors++;continue;}
+      const itemType=row.itemtype||'general';
+      const unitQty=parseInt(row.unitqty)||0;
+      const unitPrice=parseFloat(row.unitprice)||0;
+      if(unitPrice<=0&&itemType!=='measured'){errors++;continue;}
+      const data={name,category:row.category||'other',itemType,unitQty,unitPrice,threshold:parseInt(row.threshold)||10,status:isAdmin()?'available':'pending_approval',createdBy:currentUser?.uid,createdByName:userData?.fullName||'Staff',createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
+      if(itemType==='fashion'){data.halfQty=parseInt(row.halfqty)||0;data.halfPrice=parseFloat(row.halfprice)||0;data.quarterQty=parseInt(row.quarterqty)||0;data.quarterPrice=parseFloat(row.quarterprice)||0;}
+      if(itemType==='pack_bundle'){data.packSize=parseInt(row.packsize)||12;data.packPrice=parseFloat(row.packprice)||0;}
+      if(itemType==='measured'){data.measureUnit=row.measureunit||'yard';data.bundleSize=parseInt(row.bundlesize)||50;data.bundlePrice=parseFloat(row.bundleprice)||0;}
+      const ref=doc(collection(db,'stock_items'));batch.set(ref,data);added++;
+    }
+    if(added>0){await batch.commit();await logAudit('csv_import',`Imported ${added} items via CSV`);}
+    showToast(`Imported ${added} items. ${errors} errors.`,'success');hideModal();
+  };
+
+  // ===================== RESTOCK & HISTORY =====================
   window.openRestockOptions = function(id) { const item=allItems.find(i=>i.id===id);if(!item)return;showModal(`Restock: ${item.name}`,`<p>Current: ${getTotalAvailable(item)} | Threshold: ${item.threshold||10}</p><div class="restock-options"><div class="restock-option" onclick="restockFromStore('${id}')"><i class="fas fa-store"></i><div class="label">From Store</div><div class="sub">Buy from bulk stock</div></div><div class="restock-option" onclick="restockFromThirdParty('${id}')"><i class="fas fa-truck"></i><div class="label">Third Party</div><div class="sub">Purchase request</div></div></div><button class="btn btn-outline" onclick="hideModal()" style="width:100%;margin-top:12px;">Cancel</button>`); };
 
   // ✅ UPDATED: Now navigates to the Incoming Inventory tab in the store
@@ -290,24 +738,92 @@
   };
 
   window.restockFromThirdParty = function(id) { hideModal(); navigateTo('purchases.html'); };
+  window.viewHistory = async function(id) { const item=allItems.find(i=>i.id===id);if(!item)return;try{const snap=await getDocs(query(collection(db,'audit_logs'),orderBy('performedAt','desc')));let html=`<h4>${item.name}</h4><p>Unit Qty: ${item.unitQty||0} | Total: ${getTotalAvailable(item)} | Sold: ${getItemSoldQty(item)} | Revenue: ${formatCurrency(getItemRevenue(item))}</p>`;const logs=snap.docs.map(d=>d.data()).filter(l=>l.note&&l.note.includes(item.name));if(logs.length===0)html+='<p>No history</p>';else{html+='<table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Action</th><th>By</th><th>Note</th></tr>';logs.forEach(l=>{html+=`<tr><td>${formatDate(l.performedAt)}</td><td>${l.actionType||'-'}</td><td>${l.performedByName||'-'}</td><td>${l.note||'-'}</td></tr>`;});html+='</table>';}html+='<button class="btn btn-primary" onclick="hideModal()" style="margin-top:16px;width:100%;">Close</button>';showModal('History',html);}catch(e){showToast('Error','error');showDebug('History error: '+e.message);} };
 
-  // … all other functions (addItem, editItem, deleteItem, rejectItem, CSV, help, etc.) remain unchanged …
-  // (I'm omitting them for brevity – they are identical to the original you provided)
-  // The full file includes everything from your original inventory.html, with only restockFromStore updated.
-
-  window.viewHistory = async function(id) { /* … unchanged … */ };
-  window.exportData = function(format) { /* … unchanged … */ };
+  window.exportData = function(format) { const headers=['Name','Category','Type','Unit Qty','Half Qty','Quarter Qty','Pack/Bundle','Sold','Avail','Unit Price','Half Price','Quarter Price','Pack/Bundle Price','Revenue','Status'];const rows=allItems.map(i=>{const pack=i.packSize?`${i.packSize}/pk`:i.bundleSize?`${i.bundleSize}/bundle`:'';return[i.name||'',i.category||'',i.itemType||'general',i.unitQty||0,i.halfQty||0,i.quarterQty||0,pack,getItemSoldQty(i),getTotalAvailable(i),i.unitPrice||0,i.halfPrice||0,i.quarterPrice||0,i.packPrice||i.bundlePrice||0,getItemRevenue(i),getItemStatus(i)];});const csv=[headers.join(','),...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`inventory_${new Date().toISOString().split('T')[0]}.csv`;a.click();showToast('Exported','success'); };
   window.refreshInventory = function() { loadInventory(); showToast('Refreshed','success'); };
-  window.openHelpGuide = function() { /* … unchanged … */ };
 
+  // ===================== HELP GUIDE =====================
+  window.openHelpGuide = function() {
+    const guide = `
+      <div class="guide-section">
+        <h4>📦 Item Types Explained</h4>
+        <ul>
+          <li><strong>General</strong> – Sold only as whole units (e.g., soldering iron, glue).</li>
+          <li><strong>Fashion</strong> – Sold by unit (1), half (½), or quarter (¼).</li>
+          <li><strong>Pack/Bundle</strong> – Sold individually OR in packs (dozen, carton). Track total pieces.</li>
+          <li><strong>Measured</strong> – Sold by yard/meter or in bundles (paper, fabric).</li>
+        </ul>
+      </div>
+      <div class="guide-section">
+        <h4>📊 Low Stock Threshold</h4>
+        <p>Minimum total of the smallest sellable units before an item shows “low”.</p>
+      </div>
+      <div class="guide-section">
+        <h4>✏️ Editing Items</h4>
+        <p>Admin can edit without PIN. Attendants need the <strong>admin PIN</strong>.</p>
+      </div>
+      <div class="guide-section">
+        <h4>🗑️ Delete & Restore</h4>
+        <p>Delete single items or all items (with confirmation). Rejected items can be edited and resubmitted or permanently deleted.</p>
+      </div>
+      <div class="guide-section">
+        <h4>📁 CSV Import/Export</h4>
+        <p>Download template, fill it, then upload. The system handles all item types.</p>
+      </div>
+      <div class="guide-section">
+        <h4>🔐 Revenue View</h4>
+        <p>Hidden by default. Click the lock and enter your PIN to reveal.</p>
+      </div>
+      <div class="guide-section">
+        <h4>🔄 Restock Options</h4>
+        <p>From Store (existing bulk) or Third Party (external purchase).</p>
+      </div>
+      <button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close Guide</button>
+    `;
+    showModal('📖 How to Use Inventory', guide);
+  };
+
+  // ===================== EVENT LISTENERS & AUTH =====================
   document.getElementById('searchInput').addEventListener('input',renderInventory);
   document.getElementById('categoryFilter').addEventListener('change',renderInventory);
-  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){ currentTab=this.dataset.tab; document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); this.classList.add('active'); document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active')); const targetPanel = document.getElementById(currentTab+'Panel'); if(targetPanel){ targetPanel.classList.add('active'); renderInventory(); } }));
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){
+    currentTab=this.dataset.tab;
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active'));
+    const targetPanel = document.getElementById(currentTab+'Panel');
+    if(targetPanel){
+      targetPanel.classList.add('active');
+      renderInventory();
+    }
+  }));
 
-  onAuthStateChanged(auth,async(u)=>{ /* … unchanged auth … */ });
+  onAuthStateChanged(auth,async(u)=>{
+    if(!u){window.location.href='auth.html';return;}
+    currentUser=u;
+    try{
+      const snap=await getDoc(doc(db,'users',u.uid));
+      if(!snap.exists()||snap.data().status!=='active'){await signOut(auth);window.location.href='auth.html';return;}
+      userData=snap.data();
+      if(isAdmin())revenueRevealed=true;
+      document.getElementById('userName').textContent=userData.fullName?.split(' ')[0]||'Staff';
+      document.getElementById('userRole').textContent=userData.role?.replace('_',' ')||'Staff';
+      document.getElementById('userAvatar').textContent=(userData.fullName||'A').charAt(0).toUpperCase();
+      document.getElementById('currentDate').textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+      buildSidebar();
+      await loadCategories();
+      loadInventory();
+      await logAudit('view_inventory','Viewed inventory');
+      showDebug('Auth OK: ' + userData.fullName + ' (' + userData.role + ')');
+    }catch(e){
+      showToast('Error','error');
+      showDebug('Auth error: '+e.message);
+    }
+  });
   window.addEventListener('beforeunload',cleanup);
 
-  function buildSidebar() { /* … unchanged sidebar … */ }
+  function buildSidebar() { const nav=document.getElementById('sidebarNav');if(!nav)return;const dashboardLink=isAdmin()?'admin-dashboard.html':'attendant-dashboard.html';const adminUser=isAdmin();let navHTML=`<div class="nav-section"><div class="nav-section-title">MAIN</div><button class="nav-item" onclick="navigateTo('${dashboardLink}')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button><button class="nav-item active"><i class="fas fa-box"></i><span>Inventory</span></button><button class="nav-item" onclick="navigateTo('store.html')"><i class="fas fa-store"></i><span>Store</span></button><button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button><button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button><button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button></div>`;if(adminUser){navHTML+=`<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div><button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff</span></button><button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button><button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button><button class="nav-item" onclick="navigateTo('orders-admin.html')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button><button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button><button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit</span></button></div><div class="nav-section"><div class="nav-section-title">SHOP</div><button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button><button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><span>Catalog</span></button></div>`;}else{navHTML+=`<div class="nav-section"><div class="nav-section-title">WORK</div><button class="nav-item" onclick="navigateTo('tasks.html')"><i class="fas fa-tasks"></i><span>Tasks</span></button><button class="nav-item" onclick="navigateTo('orders.html')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button><button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button><button class="nav-item" onclick="navigateTo('notifications.html')"><i class="fas fa-bell"></i><span>Notifications</span></button></div><div class="nav-section"><div class="nav-section-title">ACCOUNT</div><button class="nav-item" onclick="navigateTo('attendant-profile.html')"><i class="fas fa-user"></i><span>My Profile</span></button></div>`;}navHTML+=`<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>`;nav.innerHTML=navHTML;document.getElementById('logoutBtn')?.addEventListener('click',async()=>{try{await logAudit('logout','Logged out');}catch(e){}await signOut(auth);window.location.href='auth.html';});}
 </script>
 </body>
 </html>
