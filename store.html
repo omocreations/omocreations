@@ -147,7 +147,7 @@
       </div>
     </div>
 
-    <!-- INCOMING INVENTORY PANEL -->
+    <!-- FIXED INCOMING PANEL -->
     <div id="incomingPanel" class="page-view">
       <div class="tabs-container" style="margin-bottom:16px;">
         <button class="tab active" data-incoming-tab="general"><i class="fas fa-cube"></i> General</button>
@@ -303,63 +303,74 @@
     }).join('');
   }
 
-  // ---------- Render Incoming Inventory ----------
+  // ---------- FIXED: Render Incoming Inventory ----------
   function renderIncomingInventory(){
     const pending = incomingItems.filter(i => i.status === 'pending');
     document.getElementById('pendingIncoming').textContent = pending.length;
 
+    // General
     const generalItems = pending.filter(i => i.inventoryItemType === 'general');
-    const fashionItems = pending.filter(i => i.inventoryItemType === 'fashion');
-    const packItems = pending.filter(i => i.inventoryItemType === 'pack_bundle');
-    const measuredItems = pending.filter(i => i.inventoryItemType === 'measured');
-
-    // General table
     let tbody = document.getElementById('incomingGeneralTable');
-    if(!generalItems.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="fas fa-cube"></i><p>No pending general items</p></div></td></tr>';}
-    else { tbody.innerHTML = generalItems.map(i => `<tr>
-      <td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td>
-      <td>${i.allocation?.unit||0}</td>
-      <td>${i.targetInventoryName||'—'}</td>
-      <td>${formatCurrency(i.prices?.unit||0)}</td>
-      <td>${i.requestedByName||'-'}</td>
-      <td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td>
-    </tr>`).join('');}
+    if(!generalItems.length){
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-cube"></i><p>No pending general items</p></div></td></tr>';
+    } else {
+      tbody.innerHTML = generalItems.map(i => `<tr>
+        <td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td>
+        <td>${i.allocation?.unit||0}</td>
+        <td>${i.targetInventoryName||'—'}</td>
+        <td>${formatCurrency(i.prices?.unit||0)}</td>
+        <td>${i.requestedByName||'-'}</td>
+        <td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td>
+      </tr>`).join('');
+    }
 
-    // Fashion table
+    // Fashion
+    const fashionItems = pending.filter(i => i.inventoryItemType === 'fashion');
     tbody = document.getElementById('incomingFashionTable');
-    if(!fashionItems.length){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-tshirt"></i><p>No pending fashion items</p></div></td></tr>';}
-    else { tbody.innerHTML = fashionItems.map(i => `<tr>
-      <td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td>
-      <td>${i.allocation?.unit||0}</td><td>${i.allocation?.half||0}</td><td>${i.allocation?.quarter||0}</td>
-      <td>${i.targetInventoryName||'—'}</td>
-      <td>${formatCurrency(i.prices?.unit||0)} / ${formatCurrency(i.prices?.half||0)} / ${formatCurrency(i.prices?.quarter||0)}</td>
-      <td>${i.requestedByName||'-'}</td>
-      <td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td>
-    </tr>`).join('');}
+    if(!fashionItems.length){
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-tshirt"></i><p>No pending fashion items</p></div></td></tr>';
+    } else {
+      tbody.innerHTML = fashionItems.map(i => `<tr>
+        <td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td>
+        <td>${i.allocation?.unit||0}</td><td>${i.allocation?.half||0}</td><td>${i.allocation?.quarter||0}</td>
+        <td>${i.targetInventoryName||'—'}</td>
+        <td>${formatCurrency(i.prices?.unit||0)} / ${formatCurrency(i.prices?.half||0)} / ${formatCurrency(i.prices?.quarter||0)}</td>
+        <td>${i.requestedByName||'-'}</td>
+        <td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td>
+      </tr>`).join('');
+    }
 
-    // Pack/Bundle table
+    // Pack/Bundle
+    const packItems = pending.filter(i => i.inventoryItemType === 'pack_bundle');
     tbody = document.getElementById('incomingPackBundleTable');
-    if(!packItems.length){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr>';}
-    else { tbody.innerHTML = packItems.map(i => `<tr>
-      <td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td>
-      <td>${i.allocation?.unit||0}</td><td>${i.allocation?.pack||0}</td><td>${i.packSize||12}</td>
-      <td>${i.targetInventoryName||'—'}</td>
-      <td>${formatCurrency(i.prices?.unit||0)} / ${formatCurrency(i.prices?.pack||0)}</td>
-      <td>${i.requestedByName||'-'}</td>
-      <td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td>
-    </tr>`).join('');}
+    if(!packItems.length){
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr>';
+    } else {
+      tbody.innerHTML = packItems.map(i => `<tr>
+        <td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td>
+        <td>${i.allocation?.unit||0}</td><td>${i.allocation?.pack||0}</td><td>${i.packSize||12}</td>
+        <td>${i.targetInventoryName||'—'}</td>
+        <td>${formatCurrency(i.prices?.unit||0)} / ${formatCurrency(i.prices?.pack||0)}</td>
+        <td>${i.requestedByName||'-'}</td>
+        <td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td>
+      </tr>`).join('');
+    }
 
-    // Measured table
+    // Measured
+    const measuredItems = pending.filter(i => i.inventoryItemType === 'measured');
     tbody = document.getElementById('incomingMeasuredTable');
-    if(!measuredItems.length){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-ruler"></i><p>No pending measured items</p></div></td></tr>';}
-    else { tbody.innerHTML = measuredItems.map(i => `<tr>
-      <td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td>
-      <td>${i.allocation?.unit||0}</td><td>${i.allocation?.bundle||0}</td><td>${i.bundleSize||50}</td>
-      <td>${i.targetInventoryName||'—'}</td>
-      <td>${formatCurrency(i.prices?.unit||0)} / ${formatCurrency(i.prices?.bundle||0)}</td>
-      <td>${i.requestedByName||'-'}</td>
-      <td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td>
-    </tr>`).join('');}
+    if(!measuredItems.length){
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-ruler"></i><p>No pending measured items</p></div></td></tr>';
+    } else {
+      tbody.innerHTML = measuredItems.map(i => `<tr>
+        <td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td>
+        <td>${i.allocation?.unit||0}</td><td>${i.allocation?.bundle||0}</td><td>${i.bundleSize||50}</td>
+        <td>${i.targetInventoryName||'—'}</td>
+        <td>${formatCurrency(i.prices?.unit||0)} / ${formatCurrency(i.prices?.bundle||0)}</td>
+        <td>${i.requestedByName||'-'}</td>
+        <td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td>
+      </tr>`).join('');
+    }
   }
 
   function renderWholesaleSales(){
@@ -377,7 +388,7 @@
 
   async function loadCustomers(){try{const snap=await getDocs(query(collection(db,'customers'),where('status','==','approved')));allCustomers=snap.docs.map(d=>({id:d.id,...d.data()}));}catch(e){allCustomers=[];}}
 
-  // ==================== ADD BULK ITEM (unchanged) ====================
+  // ==================== ADD BULK ITEM ====================
   window.openAddStoreItemModal = async function() {
     const invSnap = await getDocs(collection(db,'stock_items'));
     const invItems = invSnap.docs.map(d => ({id:d.id, ...d.data()}));
@@ -462,7 +473,7 @@
     function renderAllocationForm(type,totalPieces){
       let html='';
       if(type==='general'){
-        html=`<div class="form-group"><label>Unit Quantity (all pieces go to units)</label><input type="number" class="form-control s2i-qty" data-form="unit" value="${totalPieces}" min="0" readonly></div>
+        html=`<div class="form-group"><label>Unit Quantity</label><input type="number" class="form-control s2i-qty" data-form="unit" value="${totalPieces}" min="0" readonly></div>
               <div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="0" step="0.01"></div>`;
       }else if(type==='fashion'){
         html=`<div class="form-row-3"><div class="form-group"><label>Unit Qty</label><input type="number" class="form-control s2i-qty" data-form="unit" value="0" min="0"></div><div class="form-group"><label>½ Qty (×0.5)</label><input type="number" class="form-control s2i-qty" data-form="half" value="0" min="0"></div><div class="form-group"><label>¼ Qty (×0.25)</label><input type="number" class="form-control s2i-qty" data-form="quarter" value="0" min="0"></div></div>
@@ -608,7 +619,7 @@
     });
   };
 
-  // ---------- Edit / Delete (unchanged) ----------
+  // ---------- Edit / Delete ----------
   window.openEditStoreItem=function(id){const item=storeItems.find(i=>i.id===id);if(!item)return;showModal(`Edit: ${item.name}`,`
     <div class="form-group"><label>Item Name</label><input class="form-control" value="${item.name||''}" readonly></div>
     <div class="form-row"><div class="form-group"><label>Bulk Stock</label><input type="number" class="form-control" id="editBulkStock" value="${item.bulkStock||0}" min="0"></div><div class="form-group"><label>Bulk Cost ₦</label><input type="number" class="form-control" id="editBulkCost" value="${item.bulkCost||0}" step="0.01" min="0"></div></div>
@@ -618,12 +629,13 @@
   window.saveStoreEdit=async function(id){const bs=parseInt(document.getElementById('editBulkStock')?.value)||0,bc=parseFloat(document.getElementById('editBulkCost')?.value)||0,th=parseInt(document.getElementById('editThreshold')?.value)||5;showPinModal('Confirm Edit','save changes',async()=>{try{await updateDoc(doc(db,'store_items',id),{bulkStock:bs,bulkCost:bc,threshold:th,updatedAt:serverTimestamp()});showToast('Updated','success');hideModal();}catch(e){showToast('Failed','error');}});};
   window.deleteStoreItem=async function(id){if(!confirm('Delete this bulk item?'))return;showPinModal('Confirm Delete','delete',async()=>{try{await deleteDoc(doc(db,'store_items',id));showToast('Deleted','success');}catch(e){showToast('Failed','error');}});};
 
-  // ---------- Wholesale Sale (unchanged) ----------
+  // ---------- Wholesale Sale ----------
   window.openWholesaleSaleModal=async function(){
     await loadCustomers();
     if(!storeItems.filter(i=>(i.bulkStock||0)>0).length){showToast('No bulk stock to sell','error');return;}
     const custOptions=allCustomers.map(c=>`<option value="${c.id}" data-name="${c.fullName||''}" data-phone="${c.phone||''}">${c.fullName} - ${c.phone||'No phone'}</option>`).join('');
     const stockOptions=storeItems.filter(i=>(i.bulkStock||0)>0).map(i=>`<option value="${i.id}" data-name="${i.name||''}" data-stock="${i.bulkStock||0}" data-cost="${i.bulkCost||0}">${i.name} (${i.bulkStock||0} packs)</option>`).join('');
+
     showModal('New Wholesale Sale',`
       <div class="customer-type-toggle">
         <button class="customer-type-btn active" data-type="existing" onclick="window._switchWSType('existing')"><i class="fas fa-users"></i> Existing</button>
@@ -639,6 +651,7 @@
     `);
     setTimeout(()=>{$('#wsExistingCustomer').select2({placeholder:'Search customer...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')});bindWSEvents();},150);
   };
+
   window._switchWSType=function(type){wholesaleCustomerType=type;document.querySelectorAll('.customer-type-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-type="${type}"]`)?.classList.add('active');document.getElementById('wsExistingSection').style.display=type==='existing'?'block':'none';document.getElementById('wsNewSection').style.display=type==='new'?'block':'none';};
   function bindWSEvents(){document.querySelectorAll('.ws-select,.ws-qty,.ws-price').forEach(el=>{el.addEventListener('change',updateWSTotal);el.addEventListener('input',updateWSTotal);});updateWSTotal();}
   window.addWSItem=function(){const stockOptions=storeItems.filter(i=>(i.bulkStock||0)>0).map(i=>`<option value="${i.id}" data-name="${i.name||''}" data-stock="${i.bulkStock||0}" data-cost="${i.bulkCost||0}">${i.name} (${i.bulkStock||0} packs)</option>`).join('');const div=document.createElement('div');div.className='item-row';div.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:center;';div.innerHTML=`<select class="form-control ws-select" style="flex:2;"><option value="">-- Select --</option>${stockOptions}</select><input type="number" class="form-control ws-qty" value="1" min="1" style="flex:0.5;"><input type="number" class="form-control ws-price" placeholder="Sell Price per Pack ₦" step="0.01" style="flex:1;"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();updateWSTotal();"><i class="fas fa-times"></i></button>`;document.getElementById('wsItems').appendChild(div);div.querySelectorAll('.ws-select,.ws-qty,.ws-price').forEach(el=>{el.addEventListener('change',updateWSTotal);el.addEventListener('input',updateWSTotal);});updateWSTotal();};
@@ -646,12 +659,40 @@
   window.selWS=function(m){wholesalePayment=m;document.querySelectorAll('.ws-pay').forEach(b=>b.classList.remove('selected'));document.querySelector(`.ws-pay[data-m="${m}"]`)?.classList.add('selected');};
   window.processWS=function(){
     let customerId='',customerName='',customerPhone='';
-    if(wholesaleCustomerType==='existing'){const select=document.getElementById('wsExistingCustomer');if(!select||!select.value){showToast('Select a customer','error');return;}customerId=select.value;const opt=select.options[select.selectedIndex];customerName=opt.getAttribute('data-name')||'';customerPhone=opt.getAttribute('data-phone')||'';}
-    else{customerName=document.getElementById('wsNewName')?.value?.trim();customerPhone=document.getElementById('wsNewPhone')?.value?.trim();if(!customerName||!customerPhone){showToast('Customer name & phone required','error');return;}}
+    if(wholesaleCustomerType==='existing'){
+      const select=document.getElementById('wsExistingCustomer');
+      if(!select||!select.value){showToast('Select a customer','error');return;}
+      customerId=select.value;const opt=select.options[select.selectedIndex];customerName=opt.getAttribute('data-name')||'';customerPhone=opt.getAttribute('data-phone')||'';
+    }else{
+      customerName=document.getElementById('wsNewName')?.value?.trim();customerPhone=document.getElementById('wsNewPhone')?.value?.trim();
+      if(!customerName||!customerPhone){showToast('Customer name & phone required','error');return;}
+    }
     const items=[];let total=0;
-    for(const row of document.querySelectorAll('#wsItems .item-row')){const sel=row.querySelector('.ws-select'),qtyEl=row.querySelector('.ws-qty'),priceEl=row.querySelector('.ws-price');if(!sel?.value||!qtyEl)continue;const opt=sel.options[sel.selectedIndex];const qty=parseInt(qtyEl.value)||0;const price=parseFloat(priceEl?.value)||0;if(qty<=0||price<=0)continue;const maxStock=parseInt(opt.getAttribute('data-stock'))||0;if(qty>maxStock){showToast(`Only ${maxStock} packs available for ${opt.getAttribute('data-name')}`,'error');return;}items.push({id:sel.value,name:opt.getAttribute('data-name'),quantity:qty,unitPrice:price});total+=qty*price;}
+    for(const row of document.querySelectorAll('#wsItems .item-row')){
+      const sel=row.querySelector('.ws-select'),qtyEl=row.querySelector('.ws-qty'),priceEl=row.querySelector('.ws-price');
+      if(!sel?.value||!qtyEl)continue;
+      const opt=sel.options[sel.selectedIndex];
+      const qty=parseInt(qtyEl.value)||0;
+      const price=parseFloat(priceEl?.value)||0;
+      if(qty<=0||price<=0)continue;
+      const maxStock=parseInt(opt.getAttribute('data-stock'))||0;
+      if(qty>maxStock){showToast(`Only ${maxStock} packs available for ${opt.getAttribute('data-name')}`,'error');return;}
+      items.push({id:sel.value,name:opt.getAttribute('data-name'),quantity:qty,unitPrice:price});
+      total+=qty*price;
+    }
     if(!items.length){showToast('Add at least one item','error');return;}
-    showPinModal('Process Wholesale Sale',`sell for ${formatCurrency(total)}`,async()=>{try{const batch=writeBatch(db);const receiptNumber='WSL-'+Date.now().toString().slice(-8);if(wholesaleCustomerType==='new'){const custRef=doc(collection(db,'customers'));batch.set(custRef,{fullName:customerName,phone:customerPhone,address:document.getElementById('wsNewAddress')?.value?.trim()||'',status:'pending_approval',createdBy:currentUser.uid,createdByName:userData.fullName,createdAt:serverTimestamp()});customerId=custRef.id;}for(const item of items){batch.update(doc(db,'store_items',item.id),{bulkStock:increment(-item.quantity),updatedAt:serverTimestamp()});}batch.set(doc(collection(db,'wholesale_sales')),{receiptNumber,customerId,customerName,customerPhone,items,totalAmount:total,paymentMethod:wholesalePayment,attendantId:currentUser?.uid,attendantName:userData?.fullName||'Staff',createdAt:serverTimestamp(),status:'completed'});await batch.commit();await logAudit('wholesale_sale',`Wholesale ${receiptNumber}: ${formatCurrency(total)}`);showToast(`Sale completed! #${receiptNumber}`,'success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});
+    showPinModal('Process Wholesale Sale',`sell for ${formatCurrency(total)}`,async()=>{
+      try{
+        const batch=writeBatch(db);const receiptNumber='WSL-'+Date.now().toString().slice(-8);
+        if(wholesaleCustomerType==='new'){const custRef=doc(collection(db,'customers'));batch.set(custRef,{fullName:customerName,phone:customerPhone,address:document.getElementById('wsNewAddress')?.value?.trim()||'',status:'pending_approval',createdBy:currentUser.uid,createdByName:userData.fullName,createdAt:serverTimestamp()});customerId=custRef.id;}
+        for(const item of items){batch.update(doc(db,'store_items',item.id),{bulkStock:increment(-item.quantity),updatedAt:serverTimestamp()});}
+        batch.set(doc(collection(db,'wholesale_sales')),{receiptNumber,customerId,customerName,customerPhone,items,totalAmount:total,paymentMethod:wholesalePayment,attendantId:currentUser?.uid,attendantName:userData?.fullName||'Staff',createdAt:serverTimestamp(),status:'completed'});
+        await batch.commit();
+        await logAudit('wholesale_sale',`Wholesale ${receiptNumber}: ${formatCurrency(total)}`);
+        showToast(`Sale completed! #${receiptNumber}`,'success');
+        hideModal();
+      }catch(e){showToast('Failed: '+e.message,'error');}
+    });
   };
   window.viewWholesaleReceipt=function(id){const s=wholesaleSales.find(x=>x.id===id);if(!s)return;const ih=s.items.map(i=>`<div class="receipt-item"><span>${i.quantity}× ${i.name}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('');showModal('Receipt',`<div class="receipt-container"><div class="receipt-header"><h2 style="color:var(--primary);">✨ OmoCreations ✨</h2><p>#${s.receiptNumber}</p></div><p><strong>Customer:</strong> ${s.customerName}<br><strong>Payment:</strong> ${s.paymentMethod}</p><div class="receipt-items">${ih}</div><div class="receipt-total"><span>Total:</span><span>${formatCurrency(s.totalAmount)}</span></div></div><button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:12px;">Close</button>`);};
 
@@ -659,9 +700,12 @@
   window.openHelpGuide=function(){
     showModal('📖 How to Use the Store',`
       <div style="font-size:0.9rem; line-height:1.6;">
-        <h4>🏬 What is the Store?</h4><p>The Store holds <strong>bulk stock</strong>. Use <strong>Restock</strong> to send items to <strong>Incoming Inventory</strong> for review, then confirm them from the Incoming tab to add to live inventory.</p>
-        <h4 style="margin-top:16px;">🔄 Incoming Inventory</h4><p>After sending items from bulk stock, they appear in the <strong>Incoming Inventory</strong> tab grouped by type. An authorised person must <strong>Confirm</strong> each entry to add it to the live inventory.</p>
-        <h4 style="margin-top:16px;">🏷️ Types</h4><ul style="padding-left:20px;"><li><strong>General</strong> – Units only</li><li><strong>Fashion</strong> – Units, halves, quarters</li><li><strong>Pack/Bundle</strong> – Pieces + packs</li><li><strong>Measured</strong> – Yards + bundles</li></ul>
+        <h4>🏬 What is the Store?</h4>
+        <p>The Store holds <strong>bulk stock</strong>. Use <strong>Restock</strong> to send items to <strong>Incoming Inventory</strong> for review, then confirm them from the Incoming tab to add to live inventory.</p>
+        <h4 style="margin-top:16px;">🔄 Incoming Inventory</h4>
+        <p>After sending items from bulk stock, they appear in the <strong>Incoming Inventory</strong> tab grouped by type. An authorised person must <strong>Confirm</strong> each entry to add it to the live inventory.</p>
+        <h4 style="margin-top:16px;">🏷️ Types</h4>
+        <ul style="padding-left:20px;"><li><strong>General</strong> – Units only</li><li><strong>Fashion</strong> – Units, halves, quarters</li><li><strong>Pack/Bundle</strong> – Pieces + packs</li><li><strong>Measured</strong> – Yards + bundles</li></ul>
       </div>
       <button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close Guide</button>
     `);
@@ -683,15 +727,20 @@
     document.getElementById(currentTab+'Panel').classList.add('active');
     if(currentTab==='stock')renderStoreStock();else if(currentTab==='incoming')renderIncomingInventory();else renderWholesaleSales();
   }));
-  // Incoming sub-tabs
+  // FIXED: Incoming sub-tabs – directly show/hide by ID
   document.querySelectorAll('[data-incoming-tab]').forEach(t=>t.addEventListener('click',function(){
     incomingTab=this.dataset.incomingTab;
     document.querySelectorAll('[data-incoming-tab]').forEach(x=>x.classList.remove('active'));
     this.classList.add('active');
-    document.querySelectorAll('#incomingPanel > div[class*="panel"]').forEach(p=>p.style.display='none');
+    // Hide all incoming panels
+    ['incomingGeneralPanel','incomingFashionPanel','incomingPackBundlePanel','incomingMeasuredPanel'].forEach(id=>{
+      const panel=document.getElementById(id);
+      if(panel) panel.style.display='none';
+    });
+    // Show the selected one
     const map={general:'incomingGeneralPanel',fashion:'incomingFashionPanel',pack_bundle:'incomingPackBundlePanel',measured:'incomingMeasuredPanel'};
-    const panel=document.getElementById(map[incomingTab]);
-    if(panel)panel.style.display='block';
+    const targetPanel=document.getElementById(map[incomingTab]);
+    if(targetPanel) targetPanel.style.display='block';
   }));
 
   // ---------- Auth ----------
@@ -716,12 +765,16 @@
       if(urlParams.get('showIncoming')==='true'){
         const type=urlParams.get('type')||'general';
         setTimeout(()=>{
+          // Switch to Incoming tab
           document.querySelectorAll('.tabs-container .tab').forEach(x=>x.classList.remove('active'));
           const incomingTabBtn=document.querySelector('.tab[data-tab="incoming"]');
           if(incomingTabBtn)incomingTabBtn.classList.add('active');
           document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active'));
           const incPanel=document.getElementById('incomingPanel');
           if(incPanel)incPanel.classList.add('active');
+          currentTab='incoming';
+          renderIncomingInventory();
+          // Click the correct sub-tab
           const subTab=document.querySelector(`[data-incoming-tab="${type}"]`);
           if(subTab)subTab.click();
         },600);
