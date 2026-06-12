@@ -263,7 +263,7 @@
   let allSales = [], allReturns = [], allCustomers = [], allStockItems = [];
   let selectedPayment = 'cash', customerType = 'existing';
   let statsRevealed = false, selectedReturnAction = 'refund';
-  let adminPins = new Set(); // cache of valid admin/attendant pins
+  let adminPins = new Set();
 
   function formatTime(d) { if(!d) return '-'; const date=d.toDate?d.toDate():new Date(d); return date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
   function formatCurrency(n) { return '₦'+(n||0).toLocaleString(); }
@@ -304,7 +304,6 @@
   };
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){hideModal();closeSidebar();}});
 
-  // Build sidebar (unchanged)
   function buildSidebar() {
     const nav=document.getElementById('sidebarNav'); if(!nav) return;
     const dashboardLink=isAdmin()?'admin-dashboard.html':'attendant-dashboard.html';
@@ -338,11 +337,9 @@
     document.getElementById('logoutBtn')?.addEventListener('click',async()=>{try{await logAudit('logout');}catch(e){}await signOut(auth);window.location.href='auth.html';});
   }
 
-  // Updated PIN verification: now accepts any admin/attendant pin or universal fallback
   async function verifySalePin(pin) {
-    if (pin === '1234') return true; // global fallback
+    if (pin === '1234') return true;
     if (adminPins.has(pin)) return true;
-    // Also check user's own attendant pin
     if (pin === (userData?.attendantPin || '1234')) return true;
     return false;
   }
@@ -445,12 +442,21 @@
         return {
           id:d.id,...data,
           unitQty: parseFloat(data.unitQty ?? data.quantityAvailable ?? data.initialStock ?? 0),
+          initialUnitQty: parseFloat(data.initialUnitQty ?? data.initialStock ?? data.unitQty ?? 0),
           unitPrice: parseFloat(data.unitPrice ?? 0),
+          halfQty: parseFloat(data.halfQty ?? data.halfQuantityAvailable ?? 0),
+          initialHalfQty: parseFloat(data.initialHalfQty ?? data.halfQty ?? 0),
           halfPrice: parseFloat(data.halfPrice ?? 0),
+          quarterQty: parseFloat(data.quarterQty ?? data.quarterQuantityAvailable ?? 0),
+          initialQuarterQty: parseFloat(data.initialQuarterQty ?? data.quarterQty ?? 0),
           quarterPrice: parseFloat(data.quarterPrice ?? 0),
           packSize: parseInt(data.packSize ?? 12),
+          packQty: parseFloat(data.packQty ?? 0),
+          initialPackQty: parseFloat(data.initialPackQty ?? data.packQty ?? 0),
           packPrice: parseFloat(data.packPrice ?? 0),
           bundleSize: parseInt(data.bundleSize ?? 50),
+          bundleQty: parseFloat(data.bundleQty ?? 0),
+          initialBundleQty: parseFloat(data.initialBundleQty ?? data.bundleQty ?? 0),
           bundlePrice: parseFloat(data.bundlePrice ?? 0),
           measureUnit: data.measureUnit ?? 'piece',
           itemType: data.itemType ?? 'general'
@@ -461,15 +467,36 @@
 
   function getItemTypeLabel(type){ const labels={simple:'🔧',fashion:'👗',pack_bundle:'📦',measured:'📏',pack:'📦',general:'🔧'}; return labels[type]||'🔧'; }
 
+  // Enhanced stock options with available/initial quantities for all forms
   function getStockOptionsHtml() {
     return allStockItems.map(i=>{
-      const it=i.itemType||'general'; const label=getItemTypeLabel(it);
-      const pp=i.packPrice?` | Pk:${formatCurrency(i.packPrice)}`:'';
-      const bp=i.bundlePrice?` | Bndl:${formatCurrency(i.bundlePrice)}`:'';
-      const hp=i.halfPrice?` | ½:${formatCurrency(i.halfPrice)}`:'';
-      const qp=i.quarterPrice?` | ¼:${formatCurrency(i.quarterPrice)}`:'';
-      const stock=parseFloat(i.unitQty||0);
-      return `<option value="${i.id}" data-name="${i.name||''}" data-price="${i.unitPrice||0}" data-halfprice="${i.halfPrice||0}" data-quarterprice="${i.quarterPrice||0}" data-packprice="${i.packPrice||0}" data-bundleprice="${i.bundlePrice||0}" data-packsize="${i.packSize||12}" data-bundlesize="${i.bundleSize||50}" data-stock="${stock}">${label} ${i.name||''} - ${formatCurrency(i.unitPrice||0)}${hp}${qp}${pp}${bp} (Qty: ${stock})</option>`;
+      const it=i.itemType||'general';
+      const label=getItemTypeLabel(it);
+      let stockInfo = '';
+      const up = i.unitPrice || 0;
+      if (it === 'fashion') {
+        const uAvail = i.unitQty || 0, uInit = i.initialUnitQty || uAvail;
+        const hAvail = i.halfQty || 0, hInit = i.initialHalfQty || hAvail;
+        const qAvail = i.quarterQty || 0, qInit = i.initialQuarterQty || qAvail;
+        stockInfo = `(U:${uAvail}/${uInit}, H:${hAvail}/${hInit}, Q:${qAvail}/${qInit})`;
+      } else if (it === 'pack_bundle') {
+        const uAvail = i.unitQty || 0, uInit = i.initialUnitQty || uAvail;
+        const pAvail = i.packQty || 0, pInit = i.initialPackQty || pAvail;
+        stockInfo = `(Unit:${uAvail}/${uInit}, Pack:${pAvail}/${pInit})`;
+      } else if (it === 'measured') {
+        const mst = i.measuredSubType || 'yard';
+        if (mst === 'yard') {
+          const yAvail = i.yardQty || i.unitQty || 0, yInit = i.initialUnitQty || yAvail;
+          stockInfo = `(Yard:${yAvail}/${yInit})`;
+        } else {
+          const bAvail = i.bundleQty || 0, bInit = i.initialBundleQty || bAvail;
+          stockInfo = `(Bundle:${bAvail}/${bInit})`;
+        }
+      } else {
+        const uAvail = i.unitQty || 0, uInit = i.initialUnitQty || uAvail;
+        stockInfo = `(Qty:${uAvail}/${uInit})`;
+      }
+      return `<option value="${i.id}" data-name="${i.name||''}" data-price="${i.unitPrice||0}" data-halfprice="${i.halfPrice||0}" data-quarterprice="${i.quarterPrice||0}" data-packprice="${i.packPrice||0}" data-bundleprice="${i.bundlePrice||0}" data-packsize="${i.packSize||12}" data-bundlesize="${i.bundleSize||50}" data-stock="${i.unitQty||0}">${label} ${i.name||''} - ${formatCurrency(up)} ${stockInfo}</option>`;
     }).join('');
   }
 
@@ -484,7 +511,6 @@
     return opts;
   }
 
-  // Stock validation per row
   window._validateRowStock = function(row) {
     const checkbox = row.querySelector('.non-inv-check');
     if (checkbox && checkbox.checked) {
@@ -522,7 +548,6 @@
     }
   };
 
-  // Update sale summary and validate all rows
   window._updateSaleSummary = function() {
     let total=0, count=0;
     let allValid = true;
@@ -553,7 +578,7 @@
     return allValid;
   };
 
-  // ==================== NORMAL SALE MODAL ====================
+  // --------------------- New Sale Modal ---------------------
   window.openNewSaleModal = async function(){
     await loadCustomersAndStock();
     if(allStockItems.length===0){showToast('No items available','error');return;}
@@ -665,10 +690,7 @@
     let customerId='',customerName='',customerPhone='',customerEmail='',customerAddress='';
     if(customerType==='existing'){const select=document.getElementById('existingCustomerSelect');if(!select||!select.value){showToast('Select a customer','error');return;}customerId=select.value;const opt=select.options[select.selectedIndex];customerName=opt.dataset.name;customerPhone=opt.dataset.phone;customerAddress=opt.dataset.address||'';}
     else{customerName=document.getElementById('newCustomerName')?.value?.trim();customerPhone=document.getElementById('newCustomerPhone')?.value?.trim();customerEmail=document.getElementById('newCustomerEmail')?.value?.trim();customerAddress=document.getElementById('newCustomerAddress')?.value?.trim();if(!customerName||!customerPhone||!customerAddress){showToast('Name, phone & address required','error');return;}}
-    // Check duplicate phone for new customer
-    if(customerType==='new' && allCustomers.some(c=>c.phone===customerPhone)){
-      showToast('Customer with this phone already exists. Please select from Existing tab.','error'); return;
-    }
+    if(customerType==='new' && allCustomers.some(c=>c.phone===customerPhone)){showToast('Customer with this phone already exists. Please select from Existing tab.','error'); return;}
 
     const items=[];let total=0;
     for(const row of document.querySelectorAll('.item-row')){
@@ -725,7 +747,7 @@
     });
   };
 
-  // ==================== COMPANY SALE MODAL ====================
+  // --------------------- Company Sale Modal ---------------------
   window.openCompanySaleModal = async function(){
     await loadCustomersAndStock();
     const stockOptions = getStockOptionsHtml();
@@ -892,6 +914,7 @@
     });
   };
 
+  // --------------------- Receipts & Printing ---------------------
   function showCompanyReceiptModal(sale) {
     const dateStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     const timeStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
@@ -932,12 +955,6 @@
     iframe.onload = ()=>setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();setTimeout(()=>iframe.remove(),1000)},300);
   };
 
-  // ==================== RETURN & EXISTING FUNCTIONS ====================
-  window.openReturnModal = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;let itemsHtml=sale.items.map((item,idx)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--gray-light);border-radius:10px;"><span style="flex:1;"><strong>${item.name}</strong>${item.sizeLabel?` <small>(${item.sizeLabel})</small>`:''}<br><small>Sold: ${item.quantity} x ${formatCurrency(item.unitPrice)}</small></span><input type="number" step="0.25" id="return-qty-${idx}" value="0" min="0" max="${item.quantity}" style="width:70px;padding:8px;border-radius:8px;border:1px solid #ddd;text-align:center;"><span style="font-size:0.8rem;color:var(--gray);">/ ${item.quantity}</span></div>`).join('');showModal('Return Goods',`<p><strong>Receipt:</strong> ${sale.receiptNumber} | <strong>Customer:</strong> ${sale.customerName}</p><p style="color:var(--gray);">Select quantity to return:</p>${itemsHtml}<div class="form-group"><label>Reason</label><textarea class="form-control" id="returnReason" rows="2"></textarea></div><p style="font-weight:600;">Return Action:</p><div class="return-options"><div class="return-option selected" data-action="refund" onclick="window._selectReturnAction('refund')"><i class="fas fa-money-bill-wave"></i><div><strong>Full Refund</strong><br><small>Return money to customer</small></div></div><div class="return-option" data-action="exchange_same" onclick="window._selectReturnAction('exchange_same')"><i class="fas fa-exchange-alt"></i><div><strong>Exchange Same Price</strong><br><small>Swap for another item</small></div></div><div class="return-option" data-action="exchange_higher" onclick="window._selectReturnAction('exchange_higher')"><i class="fas fa-level-up-alt"></i><div><strong>Exchange + Add Money</strong><br><small>Upgrade to higher price</small></div></div><div class="return-option" data-action="store_credit" onclick="window._selectReturnAction('store_credit')"><i class="fas fa-piggy-bank"></i><div><strong>Store Credit</strong><br><small>Keep for later</small></div></div></div><button class="btn btn-primary" onclick="window._processReturn('${saleId}')" style="width:100%;margin-top:15px;"><i class="fas fa-check"></i> Process Return</button>`);};
-  window._selectReturnAction = (action)=>{selectedReturnAction=action;document.querySelectorAll('.return-option').forEach(o=>o.classList.remove('selected'));document.querySelector(`[data-action="${action}"]`)?.classList.add('selected');};
-  window._processReturn = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;const returnedItems=[];let totalRefund=0;sale.items.forEach((item,idx)=>{const q=parseFloat(document.getElementById(`return-qty-${idx}`)?.value)||0;if(q>0){returnedItems.push({...item,returnedQty:q,refundAmount:q*item.unitPrice});totalRefund+=q*item.unitPrice;}});if(returnedItems.length===0){showToast('Select quantity to return','error');return;}const reason=document.getElementById('returnReason')?.value?.trim()||'No reason';showPinModal('Process Return',`process return of ${formatCurrency(totalRefund)}`,async()=>{try{const batch=writeBatch(db);for(const item of returnedItems){if(item.id && !item.isNonInventory){const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);if(snap.exists()){const cur=parseFloat(snap.data().quantityAvailable??snap.data().unitQty??0);const threshold=parseFloat(snap.data().threshold||10);const addBackQty=item.returnedQty*(item.size==='pack'?(parseInt(snap.data().packSize)||12):item.size==='bundle'?(parseInt(snap.data().bundleSize)||50):parseFloat(item.size)||1);const newQty=cur+addBackQty;batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(-addBackQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});}}}batch.set(doc(collection(db,'returns')),{saleId,saleReceiptNumber:sale.receiptNumber,customerId:sale.customerId,customerName:sale.customerName,returnedItems,totalRefund,returnAction:selectedReturnAction,reason,processedBy:currentUser.uid,processedByName:userData.fullName,createdAt:serverTimestamp()});const saleUpdate={status:'returned',returnedAt:serverTimestamp(),returnedBy:currentUser.uid,returnedByName:userData.fullName,returnAction:selectedReturnAction,totalRefund};if(selectedReturnAction==='exchange_same')saleUpdate.exchangeNote='Exchanged for same price item';else if(selectedReturnAction==='exchange_higher')saleUpdate.exchangeNote='Exchanged for higher price + additional payment';else if(selectedReturnAction==='store_credit')saleUpdate.exchangeNote='Store credit held for later';batch.update(doc(db,'sales',saleId),saleUpdate);if(sale.customerId&&selectedReturnAction==='refund'){batch.update(doc(db,'customers',sale.customerId),{totalSpent:increment(-totalRefund),purchaseCount:increment(-1)});}await batch.commit();await logAudit('return_goods',`Return ${formatCurrency(totalRefund)} | Receipt ${sale.receiptNumber} | Action: ${selectedReturnAction}`);const labels={refund:`Refunded: -${formatCurrency(totalRefund)}`,exchange_same:`Exchanged: ${formatCurrency(totalRefund)}`,exchange_higher:`Upgrade exchange: ${formatCurrency(totalRefund)}`,store_credit:`Store credit: ${formatCurrency(totalRefund)}`};showToast(labels[selectedReturnAction],'success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});};
-
-  // Common receipt display
   window.showReceiptModal = (sale)=>{
     const dateStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     const timeStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
@@ -979,6 +996,11 @@
     iframe.contentWindow.document.open(); iframe.contentWindow.document.write(receiptHTML); iframe.contentWindow.document.close();
     iframe.onload = ()=>setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();setTimeout(()=>iframe.remove(),1000)},300);
   };
+
+  // --------------------- Returns ---------------------
+  window.openReturnModal = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;let itemsHtml=sale.items.map((item,idx)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--gray-light);border-radius:10px;"><span style="flex:1;"><strong>${item.name}</strong>${item.sizeLabel?` <small>(${item.sizeLabel})</small>`:''}<br><small>Sold: ${item.quantity} x ${formatCurrency(item.unitPrice)}</small></span><input type="number" step="0.25" id="return-qty-${idx}" value="0" min="0" max="${item.quantity}" style="width:70px;padding:8px;border-radius:8px;border:1px solid #ddd;text-align:center;"><span style="font-size:0.8rem;color:var(--gray);">/ ${item.quantity}</span></div>`).join('');showModal('Return Goods',`<p><strong>Receipt:</strong> ${sale.receiptNumber} | <strong>Customer:</strong> ${sale.customerName}</p><p style="color:var(--gray);">Select quantity to return:</p>${itemsHtml}<div class="form-group"><label>Reason</label><textarea class="form-control" id="returnReason" rows="2"></textarea></div><p style="font-weight:600;">Return Action:</p><div class="return-options"><div class="return-option selected" data-action="refund" onclick="window._selectReturnAction('refund')"><i class="fas fa-money-bill-wave"></i><div><strong>Full Refund</strong><br><small>Return money to customer</small></div></div><div class="return-option" data-action="exchange_same" onclick="window._selectReturnAction('exchange_same')"><i class="fas fa-exchange-alt"></i><div><strong>Exchange Same Price</strong><br><small>Swap for another item</small></div></div><div class="return-option" data-action="exchange_higher" onclick="window._selectReturnAction('exchange_higher')"><i class="fas fa-level-up-alt"></i><div><strong>Exchange + Add Money</strong><br><small>Upgrade to higher price</small></div></div><div class="return-option" data-action="store_credit" onclick="window._selectReturnAction('store_credit')"><i class="fas fa-piggy-bank"></i><div><strong>Store Credit</strong><br><small>Keep for later</small></div></div></div><button class="btn btn-primary" onclick="window._processReturn('${saleId}')" style="width:100%;margin-top:15px;"><i class="fas fa-check"></i> Process Return</button>`);};
+  window._selectReturnAction = (action)=>{selectedReturnAction=action;document.querySelectorAll('.return-option').forEach(o=>o.classList.remove('selected'));document.querySelector(`[data-action="${action}"]`)?.classList.add('selected');};
+  window._processReturn = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;const returnedItems=[];let totalRefund=0;sale.items.forEach((item,idx)=>{const q=parseFloat(document.getElementById(`return-qty-${idx}`)?.value)||0;if(q>0){returnedItems.push({...item,returnedQty:q,refundAmount:q*item.unitPrice});totalRefund+=q*item.unitPrice;}});if(returnedItems.length===0){showToast('Select quantity to return','error');return;}const reason=document.getElementById('returnReason')?.value?.trim()||'No reason';showPinModal('Process Return',`process return of ${formatCurrency(totalRefund)}`,async()=>{try{const batch=writeBatch(db);for(const item of returnedItems){if(item.id && !item.isNonInventory){const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);if(snap.exists()){const cur=parseFloat(snap.data().quantityAvailable??snap.data().unitQty??0);const threshold=parseFloat(snap.data().threshold||10);const addBackQty=item.returnedQty*(item.size==='pack'?(parseInt(snap.data().packSize)||12):item.size==='bundle'?(parseInt(snap.data().bundleSize)||50):parseFloat(item.size)||1);const newQty=cur+addBackQty;batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(-addBackQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});}}}batch.set(doc(collection(db,'returns')),{saleId,saleReceiptNumber:sale.receiptNumber,customerId:sale.customerId,customerName:sale.customerName,returnedItems,totalRefund,returnAction:selectedReturnAction,reason,processedBy:currentUser.uid,processedByName:userData.fullName,createdAt:serverTimestamp()});const saleUpdate={status:'returned',returnedAt:serverTimestamp(),returnedBy:currentUser.uid,returnedByName:userData.fullName,returnAction:selectedReturnAction,totalRefund};if(selectedReturnAction==='exchange_same')saleUpdate.exchangeNote='Exchanged for same price item';else if(selectedReturnAction==='exchange_higher')saleUpdate.exchangeNote='Exchanged for higher price + additional payment';else if(selectedReturnAction==='store_credit')saleUpdate.exchangeNote='Store credit held for later';batch.update(doc(db,'sales',saleId),saleUpdate);if(sale.customerId&&selectedReturnAction==='refund'){batch.update(doc(db,'customers',sale.customerId),{totalSpent:increment(-totalRefund),purchaseCount:increment(-1)});}await batch.commit();await logAudit('return_goods',`Return ${formatCurrency(totalRefund)} | Receipt ${sale.receiptNumber} | Action: ${selectedReturnAction}`);const labels={refund:`Refunded: -${formatCurrency(totalRefund)}`,exchange_same:`Exchanged: ${formatCurrency(totalRefund)}`,exchange_higher:`Upgrade exchange: ${formatCurrency(totalRefund)}`,store_credit:`Store credit: ${formatCurrency(totalRefund)}`};showToast(labels[selectedReturnAction],'success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});};
 
   window.exportSalesData = ()=>{const headers=['Receipt #','Date','Customer','Phone','Items','Total','Payment','Status'];const rows=allSales.map(s=>[s.receiptNumber||'',s.createdAt?.toDate().toLocaleString()||'',s.customerName||'',s.customerPhone||'',s.items?.length||0,s.totalAmount||0,s.paymentMethod||'',s.status||'completed']);const csv=[headers.join(','),...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');const b=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`sales_${new Date().toISOString().split('T')[0]}.csv`;a.click();showToast('Exported','success');};
   window.refreshData = ()=>{loadSales();showToast('Refreshed','success');};
