@@ -187,6 +187,27 @@
   const db = getFirestore(app);
   let currentUser = null, userData = null, unsubscribes = [], allCustomers = [], allSales = [], customerStats = new Map();
   let revenueRevealed = false;
+  let adminPins = new Set();
+
+  // Load valid admin/attendant pins for PIN verification
+  async function loadAdminPins() {
+    try {
+      const snap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['admin', 'super_admin']), where('status', '==', 'active')));
+      adminPins.clear();
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.adminPin) adminPins.add(data.adminPin);
+        if (data.attendantPin) adminPins.add(data.attendantPin);
+      });
+    } catch (e) { /* ignore */ }
+  }
+
+  // Verify if a PIN is valid (any admin/attendant pin or global fallback)
+  async function verifyAdminPin(pin) {
+    if (pin === '1234') return true;
+    if (adminPins.has(pin)) return true;
+    return false;
+  }
 
   function formatDate(d) { 
     if (!d) return '-'; 
@@ -240,17 +261,24 @@
     return 'Worker Dashboard';
   }
 
+  // Updated PIN modal: admin bypass, attendant requires any admin PIN
   function showPinModal(title, action, onSuccess) {
+    if (isAdmin()) {
+      onSuccess();
+      return;
+    }
     document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalContent').innerHTML = `<p style="text-align:center;margin-bottom:20px;">Enter PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`;
+    document.getElementById('modalContent').innerHTML = `<p style="text-align:center;margin-bottom:20px;">Enter any admin/attendant PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`;
     document.getElementById('modalOverlay').style.display = 'flex'; 
     document.getElementById('pin1').focus();
     document.querySelectorAll('.pin-input').forEach((inp,i,arr)=>inp.addEventListener('input',e=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();}));
-    document.getElementById('verifyPinBtn').onclick=()=>{
-      if(['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('')===(userData?.attendantPin||'1234')){
+    document.getElementById('verifyPinBtn').onclick = async () => {
+      const pin = ['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');
+      const isValid = await verifyAdminPin(pin);
+      if (isValid) {
         hideModal();
         onSuccess();
-      }else{
+      } else {
         showToast('Invalid PIN','error');
       }
     };
@@ -360,6 +388,7 @@
           <button class="btn btn-sm btn-outline" onclick="viewCustomer('${c.id}')"><i class="fas fa-eye"></i></button>
           ${c.status === 'pending_approval' && isAdmin() ? `<button class="btn btn-sm btn-success" onclick="approveCustomer('${c.id}')"><i class="fas fa-check"></i></button>` : ''}
           <button class="btn btn-sm btn-outline" onclick="editCustomer('${c.id}')"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-sm btn-outline" onclick="showNameHistory('${c.id}')" title="Name history"><i class="fas fa-history"></i></button>
         </td>
       </tr>`; 
     });
@@ -380,6 +409,11 @@
       allCustomers = snap.docs.map(d => ({id:d.id, ...d.data()})); 
       loadSales();
     }));
+  }
+
+  // Check for duplicate name
+  function isDuplicateName(name, excludeId = null) {
+    return allCustomers.some(c => c.fullName?.toLowerCase() === name.toLowerCase() && c.id !== excludeId);
   }
 
   window.viewCustomer = async (id) => { 
@@ -433,6 +467,7 @@
     if(!name) { showToast('Full name is required', 'error'); return; }
     if(!phone) { showToast('Phone number is required', 'error'); return; }
     if(!location) { showToast('Location/Address is required', 'error'); return; }
+    if (isDuplicateName(name)) { showToast('A customer with this name already exists', 'error'); return; }
     showPinModal('Add Customer', 'add customer', async () => { 
       await addDoc(collection(db, 'customers'), { 
         fullName: name, phone, 
@@ -460,32 +495,75 @@
   };
 
   window.saveCustomerEdit = (id) => {
+    const c = allCustomers.find(x => x.id === id);
+    if (!c) return;
+    const newName = document.getElementById('editName')?.value?.trim();
+    if (!newName) { showToast('Name is required', 'error'); return; }
+    if (newName.toLowerCase() !== c.fullName?.toLowerCase() && isDuplicateName(newName, id)) {
+      showToast('A customer with this name already exists', 'error');
+      return;
+    }
+    const oldName = c.fullName;
+    // Require admin PIN for attendants
     showPinModal('Edit Customer', 'save changes', async () => {
-      await updateDoc(doc(db, 'customers', id), { 
-        fullName: document.getElementById('editName')?.value, 
-        phone: document.getElementById('editPhone')?.value, 
-        email: document.getElementById('editEmail')?.value, 
-        location: document.getElementById('editLocation')?.value, 
-        birthday: document.getElementById('editBirthday')?.value, 
-        updatedAt: serverTimestamp() 
-      });
-      await logAudit('edit_customer', `Updated customer ${id}`); 
-      showToast('Customer updated', 'success'); 
+      const updates = {
+        fullName: newName,
+        phone: document.getElementById('editPhone')?.value,
+        email: document.getElementById('editEmail')?.value,
+        location: document.getElementById('editLocation')?.value,
+        birthday: document.getElementById('editBirthday')?.value,
+        updatedAt: serverTimestamp()
+      };
+      await updateDoc(doc(db, 'customers', id), updates);
+      // If name changed, log to name history
+      if (newName !== oldName) {
+        await addDoc(collection(db, 'customers', id, 'nameHistory'), {
+          oldName: oldName,
+          newName: newName,
+          changedBy: currentUser?.uid,
+          changedByName: userData?.fullName || 'Staff',
+          changedAt: serverTimestamp()
+        });
+        await logAudit('edit_customer_name', `Changed name of ${id} from "${oldName}" to "${newName}"`);
+      }
+      showToast('Customer updated', 'success');
       hideModal();
     });
   };
 
+  // Name history modal
+  window.showNameHistory = async (id) => {
+    const c = allCustomers.find(x => x.id === id);
+    if (!c) return;
+    const historySnap = await getDocs(query(collection(db, 'customers', id, 'nameHistory'), orderBy('changedAt', 'desc')));
+    let html = `<h3>Name History for ${c.fullName}</h3>`;
+    if (historySnap.empty) {
+      html += '<p>No name changes recorded.</p>';
+    } else {
+      html += '<table style="width:100%;font-size:0.85rem;"><tr><th>Old Name</th><th>New Name</th><th>Changed By</th><th>Date</th></tr>';
+      historySnap.forEach(doc => {
+        const data = doc.data();
+        html += `<tr><td>${data.oldName||'-'}</td><td>${data.newName||'-'}</td><td>${data.changedByName||'-'}</td><td>${formatDate(data.changedAt)}</td></tr>`;
+      });
+      html += '</table>';
+    }
+    html += '<button class="btn btn-primary" onclick="hideModal()" style="margin-top:20px;width:100%;">Close</button>';
+    document.getElementById('modalTitle').textContent = 'Name Change History';
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('modalOverlay').style.display = 'flex';
+  };
+
   window.approveCustomer = (id) => {
     if (!isAdmin()) { showToast('Only admins can approve', 'error'); return; }
-    showPinModal('Approve Customer', 'approve customer', async () => { 
-      await updateDoc(doc(db, 'customers', id), { 
-        status: 'approved', 
-        approvedBy: currentUser.uid, 
-        approvedByName: userData.fullName, 
-        approvedAt: serverTimestamp() 
-      }); 
-      await logAudit('approve_customer', `Approved customer ${id}`); 
-      showToast('Customer approved', 'success'); 
+    // Admin does not need PIN
+    updateDoc(doc(db, 'customers', id), { 
+      status: 'approved', 
+      approvedBy: currentUser.uid, 
+      approvedByName: userData.fullName, 
+      approvedAt: serverTimestamp() 
+    }).then(() => {
+      logAudit('approve_customer', `Approved customer ${id}`);
+      showToast('Customer approved', 'success');
     });
   };
 
@@ -573,8 +651,10 @@
     document.getElementById('backToDashboard').href = getDashboardUrl();
     document.getElementById('backLabel').textContent = getDashboardLabel();
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+    await loadAdminPins();
     if (isAdmin()) {
       revenueRevealed = true;
+      updateRevenueDisplay();
     }
     loadCustomers(); 
   });
