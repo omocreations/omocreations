@@ -14,190 +14,163 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
+    /* Same CSS as provided in the prompt, no changes needed */
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
-      --primary: #ff4da6; --primary-dark: #e6398c; --primary-light: #ffb3d9;
-      --primary-soft: #fff0f6; --dark: #1a1a2e; --gray: #6b7280;
-      --gray-light: #f3f4f6; --success: #10b981; --warning: #f59e0b;
-      --danger: #ef4444; --info: #3b82f6;
-      --sidebar-width: 280px; --header-height: 70px;
+      --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
+      --primary-soft:#fff0f6; --dark:#1a1a2e; --gray:#6b7280;
+      --gray-light:#f3f4f6; --success:#10b981; --warning:#f59e0b;
+      --danger:#ef4444; --info:#3b82f6;
+      --sidebar-width:280px; --header-height:70px;
     }
-
-    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
-
+    html { font-size:16px; -webkit-text-size-adjust:100%; }
     body {
-      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #f9fafb 0%, #fff0f6 100%);
-      display: flex; min-height: 100vh; overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
+      font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      background:linear-gradient(135deg,#f9fafb 0%,#fff0f6 100%);
+      display:flex; min-height:100vh; overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;
     }
-
+    /* keyframes and other styles remain the same */
     @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
     @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
     @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
-    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.5} }
 
-    .sidebar {
-      width: var(--sidebar-width); min-width: var(--sidebar-width);
-      background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
-      color: white; position: fixed; top: 0; left: 0; height: 100vh;
-      overflow-y: auto; overflow-x: hidden;
-      transition: transform 0.3s ease; z-index: 1000;
-      border-right: 1px solid rgba(255,77,166,0.2);
-    }
-    .sidebar::-webkit-scrollbar { width: 4px; }
-    .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-    .sidebar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+    .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); color:white; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000; border-right:1px solid rgba(255,77,166,0.2); }
+    .sidebar::-webkit-scrollbar { width:4px; } .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); } .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
+    .sidebar-header { padding:24px 18px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,77,166,0.2); position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); }
+    .sidebar-header .close-sidebar { display:none; background:rgba(255,255,255,0.1); border:none; color:white; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1.2rem; margin-left:auto; align-items:center; justify-content:center; }
+    .logo-icon { width:42px; height:42px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:700; flex-shrink:0; animation:flameRing 2s ease-in-out infinite; }
+    .logo-text { font-size:1.25rem; font-weight:800; font-family:'Playfair Display',serif; white-space:nowrap; } .logo-text span { color:var(--primary); }
+    .sidebar-nav { padding:20px 12px; display:flex; flex-direction:column; } .nav-section { margin-bottom:20px; }
+    .nav-section-title { font-size:0.65rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.4); padding:8px 14px 6px; font-weight:600; white-space:nowrap; }
+    .nav-item { display:flex; align-items:center; gap:14px; padding:12px 14px; border-radius:12px; color:rgba(255,255,255,0.7); cursor:pointer; border:none; background:none; width:100%; font-size:0.9rem; font-weight:500; text-align:left; margin-bottom:3px; transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; text-decoration:none; }
+    .nav-item i { width:22px; font-size:1.1rem; text-align:center; flex-shrink:0; } .nav-item:hover { background:rgba(255,77,166,0.15); color:white; transform:translateX(5px); }
+    .nav-item.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; box-shadow:0 5px 15px rgba(255,77,166,0.3); } .nav-item.logout { color:rgba(239,68,68,0.7); margin-top:auto; } .nav-item.logout:hover { background:rgba(239,68,68,0.15); color:#ef4444; }
+    .sidebar-footer { padding:20px; border-top:1px solid rgba(255,77,166,0.2); position:sticky; bottom:0; background:linear-gradient(0deg,#0f0f1a 0%,transparent 100%); }
+    .user-profile { display:flex; align-items:center; gap:12px; } .user-avatar { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); display:flex; align-items:center; justify-content:center; font-weight:700; color:white; flex-shrink:0; font-size:1.1rem; }
+    .user-details { white-space:nowrap; } .user-details h4 { font-size:0.85rem; font-weight:600; } .user-details p { font-size:0.7rem; opacity:0.6; }
+    .sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:999; display:none; } .sidebar-overlay.active { display:block; }
 
-    .sidebar-header { padding: 24px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,77,166,0.2); position: sticky; top: 0; z-index: 10; background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%); }
-    .sidebar-header .close-sidebar { display: none; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; margin-left: auto; align-items: center; justify-content: center; }
-    .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; flex-shrink: 0; animation: flameRing 2s ease-in-out infinite; }
-    .logo-text { font-size: 1.25rem; font-weight: 800; font-family: 'Playfair Display', serif; white-space: nowrap; } .logo-text span { color: var(--primary); }
+    .main-content { flex:1; margin-left:var(--sidebar-width); transition:margin-left 0.3s ease; min-height:100vh; width:calc(100% - var(--sidebar-width)); }
+    .top-bar { height:var(--header-height); background:rgba(255,255,255,0.98); backdrop-filter:blur(12px); padding:0 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,77,166,0.15); position:sticky; top:0; z-index:50; }
+    .top-bar-left { display:flex; align-items:center; gap:14px; } .menu-toggle { background:none; border:none; font-size:1.3rem; color:var(--gray); cursor:pointer; padding:10px; border-radius:10px; transition:all 0.2s; display:none; align-items:center; justify-content:center; } .menu-toggle:hover { background:var(--primary-soft); color:var(--primary); }
+    .page-title { font-size:1.5rem; font-weight:700; color:var(--dark); font-family:'Playfair Display',serif; } .current-date { color:var(--gray); font-size:0.85rem; white-space:nowrap; }
+    .content-wrapper { padding:28px; max-width:1600px; }
 
-    .sidebar-nav { padding: 20px 12px; display: flex; flex-direction: column; }
-    .nav-section { margin-bottom: 20px; }
-    .nav-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.4); padding: 8px 14px 6px; font-weight: 600; white-space: nowrap; }
-    .nav-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; color: rgba(255,255,255,0.7); cursor: pointer; border: none; background: none; width: 100%; font-size: 0.9rem; font-weight: 500; text-align: left; margin-bottom: 3px; transition: all 0.2s; font-family: 'Poppins', sans-serif; white-space: nowrap; text-decoration: none; }
-    .nav-item i { width: 22px; font-size: 1.1rem; text-align: center; flex-shrink: 0; }
-    .nav-item:hover { background: rgba(255,77,166,0.15); color: white; transform: translateX(5px); }
-    .nav-item.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 5px 15px rgba(255,77,166,0.3); }
-    .nav-item.logout { color: rgba(239,68,68,0.7); margin-top: auto; }
-    .nav-item.logout:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
-
-    .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,77,166,0.2); position: sticky; bottom: 0; background: linear-gradient(0deg, #0f0f1a 0%, transparent 100%); }
-    .user-profile { display: flex; align-items: center; gap: 12px; }
-    .user-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; flex-shrink: 0; font-size: 1.1rem; }
-    .user-details { white-space: nowrap; } .user-details h4 { font-size: 0.85rem; font-weight: 600; } .user-details p { font-size: 0.7rem; opacity: 0.6; }
-
-    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 999; display: none; }
-    .sidebar-overlay.active { display: block; }
-
-    .main-content { flex: 1; margin-left: var(--sidebar-width); transition: margin-left 0.3s ease; min-height: 100vh; width: calc(100% - var(--sidebar-width)); }
-
-    .top-bar { height: var(--header-height); background: rgba(255,255,255,0.98); backdrop-filter: blur(12px); padding: 0 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,77,166,0.15); position: sticky; top: 0; z-index: 50; }
-    .top-bar-left { display: flex; align-items: center; gap: 14px; }
-    .menu-toggle { background: none; border: none; font-size: 1.3rem; color: var(--gray); cursor: pointer; padding: 10px; border-radius: 10px; transition: all 0.2s; display: none; align-items: center; justify-content: center; }
-    .menu-toggle:hover { background: var(--primary-soft); color: var(--primary); }
-    .page-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
-    .current-date { color: var(--gray); font-size: 0.85rem; white-space: nowrap; }
-
-    .content-wrapper { padding: 28px; max-width: 1600px; }
-
-    .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: white; padding: 18px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(255,77,166,0.1); transition: all 0.3s; position: relative; overflow: hidden; animation: fadeInUp 0.5s ease forwards; opacity: 0; }
+    .stats-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:24px; }
+    .stat-card { background:white; padding:18px 16px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(255,77,166,0.1); transition:all 0.3s; position:relative; overflow:hidden; animation:fadeInUp 0.5s ease forwards; opacity:0; }
     .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}.stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}.stat-card:nth-child(5){animation-delay:0.25s}
-    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(255,77,166,0.15); }
-    .stat-header { display: flex; justify-content: space-between; margin-bottom: 12px; }
-    .stat-header span { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
-    .stat-icon { width: 36px; height: 36px; border-radius: 12px; background: var(--primary-soft); display: flex; align-items: center; justify-content: center; color: var(--primary); }
-    .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--dark); font-family: 'Playfair Display', serif; line-height: 1; }
+    .stat-card:hover { transform:translateY(-5px); box-shadow:0 12px 24px rgba(255,77,166,0.15); }
+    .stat-header { display:flex; justify-content:space-between; margin-bottom:12px; }
+    .stat-header span { font-size:0.65rem; color:var(--gray); text-transform:uppercase; font-weight:600; letter-spacing:1px; }
+    .stat-icon { width:36px; height:36px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; color:var(--primary); }
+    .stat-value { font-size:1.8rem; font-weight:800; color:var(--dark); font-family:'Playfair Display',serif; line-height:1; }
 
-    .settings-card { background: linear-gradient(135deg, var(--primary-soft), white); border-radius: 20px; padding: 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; border: 1px solid rgba(255,77,166,0.15); }
-    .settings-card h3 { font-size: 1rem; display: flex; align-items: center; gap: 10px; }
-    .point-value-input { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
-    .point-value-input input { width: 150px; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px; font-size: 1rem; font-weight: 600; text-align: center; outline: none; font-family: 'Poppins', sans-serif; }
-    .point-value-input input:focus { border-color: var(--primary); }
+    .settings-card { background:linear-gradient(135deg,var(--primary-soft),white); border-radius:20px; padding:24px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; border:1px solid rgba(255,77,166,0.15); }
+    .settings-card h3 { font-size:1rem; display:flex; align-items:center; gap:10px; }
+    .point-value-input { display:flex; align-items:center; gap:15px; flex-wrap:wrap; }
+    .point-value-input input { width:150px; padding:12px 16px; border:1.5px solid rgba(0,0,0,0.08); border-radius:40px; font-size:1rem; font-weight:600; text-align:center; outline:none; font-family:'Poppins',sans-serif; }
+    .point-value-input input:focus { border-color:var(--primary); }
 
-    .bulk-actions-bar { background: white; border-radius: 16px; padding: 12px 20px; margin-bottom: 16px; display: none; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--primary-soft); }
-    .bulk-actions-bar.show { display: flex; }
-    .bulk-actions-bar span { font-weight: 600; font-size: 0.85rem; }
-    .bulk-actions-bar .btn { font-size: 0.7rem; }
+    .bulk-actions-bar { background:white; border-radius:16px; padding:12px 20px; margin-bottom:16px; display:none; align-items:center; gap:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border:1px solid var(--primary-soft); }
+    .bulk-actions-bar.show { display:flex; }
+    .bulk-actions-bar span { font-weight:600; font-size:0.85rem; }
+    .bulk-actions-bar .btn { font-size:0.7rem; }
 
-    .tabs-container { background: white; border-radius: 20px; padding: 6px; margin-bottom: 24px; display: flex; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap; }
-    .tab { padding: 12px 20px; border-radius: 16px; font-weight: 600; font-size: 0.85rem; cursor: pointer; border: none; background: none; color: var(--gray); display: flex; align-items: center; gap: 8px; transition: all 0.2s; font-family: 'Poppins', sans-serif; }
-    .tab:hover { background: var(--primary-soft); color: var(--primary); }
-    .tab.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
-    .tab .count { background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 30px; font-size: 0.7rem; font-weight: 700; min-width: 24px; text-align: center; }
+    .tabs-container { background:white; border-radius:20px; padding:6px; margin-bottom:24px; display:flex; gap:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02); flex-wrap:wrap; }
+    .tab { padding:12px 20px; border-radius:16px; font-weight:600; font-size:0.85rem; cursor:pointer; border:none; background:none; color:var(--gray); display:flex; align-items:center; gap:8px; transition:all 0.2s; font-family:'Poppins',sans-serif; }
+    .tab:hover { background:var(--primary-soft); color:var(--primary); }
+    .tab.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; }
+    .tab .count { background:rgba(255,255,255,0.25); padding:2px 10px; border-radius:30px; font-size:0.7rem; font-weight:700; min-width:24px; text-align:center; }
 
-    .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
-    .search-wrapper { flex: 1; min-width: 200px; position: relative; }
-    .search-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray); }
-    .search-input { width: 100%; padding: 12px 16px 12px 42px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px; font-size: 0.85rem; outline: none; font-family: 'Poppins', sans-serif; }
-    .search-input:focus { border-color: var(--primary); }
-    .filter-select { padding: 12px 20px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px; font-size: 0.85rem; background: white; cursor: pointer; outline: none; font-family: 'Poppins', sans-serif; }
+    .filter-bar { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
+    .search-wrapper { flex:1; min-width:200px; position:relative; }
+    .search-wrapper i { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--gray); }
+    .search-input { width:100%; padding:12px 16px 12px 42px; border:1.5px solid rgba(0,0,0,0.08); border-radius:40px; font-size:0.85rem; outline:none; font-family:'Poppins',sans-serif; }
+    .search-input:focus { border-color:var(--primary); }
+    .filter-select { padding:12px 20px; border:1.5px solid rgba(0,0,0,0.08); border-radius:40px; font-size:0.85rem; background:white; cursor:pointer; outline:none; font-family:'Poppins',sans-serif; }
 
-    .panel { background: white; border-radius: 24px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(255,77,166,0.08); }
-    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-    .panel-header h3 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-    .panel-header h3 i { color: var(--primary); }
+    .panel { background:white; border-radius:24px; padding:24px; margin-bottom:24px; box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(255,77,166,0.08); }
+    .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
+    .panel-header h3 { font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:10px; }
+    .panel-header h3 i { color:var(--primary); }
 
-    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; }
-    .data-table { width: 100%; border-collapse: collapse; min-width: 1200px; }
-    .data-table th { text-align: left; padding: 14px 10px; font-size: 0.7rem; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--primary-soft); white-space: nowrap; background: white; }
-    .data-table td { padding: 14px 10px; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 0.85rem; }
-    .data-table tbody tr { transition: background 0.2s; } .data-table tbody tr:hover { background: var(--primary-soft); }
-    .data-table tbody tr.selected { background: rgba(255,77,166,0.08); }
-    .data-table .clickable { cursor: pointer; color: var(--primary); font-weight: 600; }
-    .data-table .clickable:hover { text-decoration: underline; }
+    .table-wrapper { overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:12px; }
+    .data-table { width:100%; border-collapse:collapse; min-width:1200px; }
+    .data-table th { text-align:left; padding:14px 10px; font-size:0.7rem; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(--primary-soft); white-space:nowrap; background:white; }
+    .data-table td { padding:14px 10px; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
+    .data-table tbody tr { transition:background 0.2s; } .data-table tbody tr:hover { background:var(--primary-soft); }
+    .data-table tbody tr.selected { background:rgba(255,77,166,0.08); }
+    .data-table .clickable { cursor:pointer; color:var(--primary); font-weight:600; }
+    .data-table .clickable:hover { text-decoration:underline; }
 
-    .badge { padding: 5px 12px; border-radius: 40px; font-size: 0.7rem; font-weight: 600; display: inline-block; white-space: nowrap; }
-    .badge-success { background: rgba(16,185,129,0.1); color: var(--success); } .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
-    .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); } .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
-    .badge-purple { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+    .badge { padding:5px 12px; border-radius:40px; font-size:0.7rem; font-weight:600; display:inline-block; white-space:nowrap; }
+    .badge-success { background:rgba(16,185,129,0.1); color:var(--success); } .badge-warning { background:rgba(245,158,11,0.1); color:var(--warning); }
+    .badge-danger { background:rgba(239,68,68,0.1); color:var(--danger); } .badge-info { background:rgba(59,130,246,0.1); color:var(--info); }
+    .badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; }
 
-    .points-positive { color: var(--success); font-weight: 700; } .points-negative { color: var(--danger); font-weight: 700; } .points-zero { color: var(--gray); }
+    .points-positive { color:var(--success); font-weight:700; } .points-negative { color:var(--danger); font-weight:700; } .points-zero { color:var(--gray); }
 
-    .btn { padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background: white; border: 1px solid rgba(0,0,0,0.08); transition: all 0.2s; font-family: 'Poppins', sans-serif; white-space: nowrap; }
-    .btn:hover { transform: translateY(-2px); }
-    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; }
-    .btn-outline { border: 1.5px solid rgba(255,77,166,0.3); color: var(--primary); background: transparent; }
-    .btn-sm { padding: 6px 12px; font-size: 0.7rem; }
-    .btn-success { background: var(--success); color: white; border: none; } .btn-danger { background: var(--danger); color: white; border: none; } .btn-warning { background: var(--warning); color: white; border: none; }
+    .btn { padding:8px 16px; border-radius:40px; font-weight:600; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; background:white; border:1px solid rgba(0,0,0,0.08); transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; }
+    .btn:hover { transform:translateY(-2px); }
+    .btn-primary { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; border:none; }
+    .btn-outline { border:1.5px solid rgba(255,77,166,0.3); color:var(--primary); background:transparent; }
+    .btn-sm { padding:6px 12px; font-size:0.7rem; }
+    .btn-success { background:var(--success); color:white; border:none; } .btn-danger { background:var(--danger); color:white; border:none; } .btn-warning { background:var(--warning); color:white; border:none; }
 
-    .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+    .action-btns { display:flex; gap:5px; flex-wrap:wrap; }
 
     /* Staff Profile */
-    .profile-header { display: flex; gap: 24px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
-    .profile-avatar { width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: white; flex-shrink: 0; }
-    .profile-info h2 { font-size: 1.3rem; font-weight: 700; }
-    .profile-info p { color: var(--gray); font-size: 0.85rem; }
-    .profile-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-    .profile-stat { background: var(--gray-light); padding: 14px; border-radius: 14px; text-align: center; }
-    .profile-stat .val { font-size: 1.3rem; font-weight: 700; color: var(--dark); }
-    .profile-stat .lbl { font-size: 0.7rem; color: var(--gray); margin-top: 2px; }
+    .profile-header { display:flex; gap:24px; align-items:center; margin-bottom:24px; flex-wrap:wrap; }
+    .profile-avatar { width:80px; height:80px; border-radius:20px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:700; color:white; flex-shrink:0; }
+    .profile-info h2 { font-size:1.3rem; font-weight:700; }
+    .profile-info p { color:var(--gray); font-size:0.85rem; }
+    .profile-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+    .profile-stat { background:var(--gray-light); padding:14px; border-radius:14px; text-align:center; }
+    .profile-stat .val { font-size:1.3rem; font-weight:700; color:var(--dark); }
+    .profile-stat .lbl { font-size:0.7rem; color:var(--gray); margin-top:2px; }
 
-    .empty-state { text-align: center; padding: 40px 20px; color: var(--gray); }
-    .empty-state i { font-size: 2.5rem; color: var(--primary-light); margin-bottom: 10px; display: block; }
+    .empty-state { text-align:center; padding:40px 20px; color:var(--gray); }
+    .empty-state i { font-size:2.5rem; color:var(--primary-light); margin-bottom:10px; display:block; }
 
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
-    .modal-overlay.active { display: flex; }
-    .modal { background: white; border-radius: 28px; padding: 28px; max-width: 750px; width: 100%; max-height: 85vh; overflow-y: auto; animation: fadeInUp 0.3s ease; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
-    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray); padding: 5px; transition: all 0.2s; }
-    .modal-close:hover { color: var(--danger); transform: rotate(90deg); }
-    .form-group { margin-bottom: 18px; }
-    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
-    .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 14px; font-size: 0.9rem; outline: none; background: white; font-family: 'Poppins', sans-serif; transition: border 0.2s; }
-    .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,77,166,0.1); }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:2000; padding:16px; }
+    .modal-overlay.active { display:flex; }
+    .modal { background:white; border-radius:28px; padding:28px; max-width:750px; width:100%; max-height:85vh; overflow-y:auto; animation:fadeInUp 0.3s ease; }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .modal-header h3 { font-size:1.2rem; font-weight:700; }
+    .modal-close { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--gray); padding:5px; transition:all 0.2s; }
+    .modal-close:hover { color:var(--danger); transform:rotate(90deg); }
+    .form-group { margin-bottom:18px; }
+    .form-group label { display:block; font-size:0.8rem; font-weight:600; color:var(--dark); margin-bottom:6px; }
+    .form-control { width:100%; padding:12px 16px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; font-size:0.9rem; outline:none; background:white; font-family:'Poppins',sans-serif; transition:border 0.2s; }
+    .form-control:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(255,77,166,0.1); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 
-    .page-view { display: none; } .page-view.active { display: block; }
+    .page-view { display:none; } .page-view.active { display:block; }
 
-    .export-dropdown { position: relative; display: inline-block; }
-    .export-menu { position: absolute; top: 100%; right: 0; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-width: 150px; display: none; z-index: 50; overflow: hidden; }
-    .export-menu.show { display: block; }
-    .export-item { padding: 12px 16px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s; display: flex; align-items: center; gap: 10px; }
-    .export-item:hover { background: var(--primary-soft); }
+    .export-dropdown { position:relative; display:inline-block; }
+    .export-menu { position:absolute; top:100%; right:0; background:white; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); min-width:150px; display:none; z-index:50; overflow:hidden; }
+    .export-menu.show { display:block; }
+    .export-item { padding:12px 16px; cursor:pointer; font-size:0.85rem; transition:background 0.2s; display:flex; align-items:center; gap:10px; }
+    .export-item:hover { background:var(--primary-soft); }
 
-    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; }
-    .toast { background: white; color: var(--dark); padding: 14px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 0.85rem; animation: slideIn 0.3s ease; border-left: 4px solid var(--primary); transition: all 0.3s ease; }
-    .toast.success { border-left-color: var(--success); } .toast.error { border-left-color: var(--danger); }
+    .toast-container { position:fixed; bottom:24px; right:24px; z-index:3000; display:flex; flex-direction:column; gap:10px; }
+    .toast { background:white; color:var(--dark); padding:14px 20px; border-radius:50px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px; font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease; border-left:4px solid var(--primary); transition:all 0.3s ease; }
+    .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); }
 
-    .checkbox-cell { width: 40px; text-align: center; }
-    .checkbox-cell input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+    .checkbox-cell { width:40px; text-align:center; }
+    .checkbox-cell input { width:16px; height:16px; cursor:pointer; accent-color:var(--primary); }
 
-    @media (max-width: 1400px) { .stats-grid, .profile-stats { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 1100px) { .stats-grid, .profile-stats { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); width: 280px !important; min-width: 280px !important; }
-      .sidebar.mobile-open { transform: translateX(0); }
-      .sidebar-header .close-sidebar { display: flex !important; } .menu-toggle { display: flex !important; }
-      .main-content { margin-left: 0 !important; width: 100% !important; } .content-wrapper { padding: 16px 12px; }
-      .stats-grid { grid-template-columns: 1fr 1fr; } .stat-value { font-size: 1.4rem; }
-      .panel { padding: 16px 12px; } .data-table { min-width: 900px; }
-      .modal { padding: 20px; border-radius: 20px; } .form-row { grid-template-columns: 1fr; }
+    @media (max-width:1400px) { .stats-grid, .profile-stats { grid-template-columns:repeat(3,1fr); } }
+    @media (max-width:1100px) { .stats-grid, .profile-stats { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:768px) {
+      .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; }
+      .sidebar.mobile-open { transform:translateX(0); }
+      .sidebar-header .close-sidebar { display:flex !important; } .menu-toggle { display:flex !important; }
+      .main-content { margin-left:0 !important; width:100% !important; } .content-wrapper { padding:16px 12px; }
+      .stats-grid { grid-template-columns:1fr 1fr; } .stat-value { font-size:1.4rem; }
+      .panel { padding:16px 12px; } .data-table { min-width:900px; }
+      .modal { padding:20px; border-radius:20px; } .form-row { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -206,6 +179,7 @@
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
+  <!-- Sidebar identical to original, keep it -->
   <div class="sidebar-header">
     <div class="logo-icon">✨</div>
     <div class="logo-text"><span>Omo</span>Creations</div>
@@ -351,13 +325,9 @@
   function getPointBonus(staff) { return (staff.totalPoints || 0) * ((staff.pointValueNaira || globalPointValue || 500) / 5); }
   function getTotalSalary(staff) { return (staff.baseSalary || 0) + getPointBonus(staff); }
 
-  // ========== PERFORMANCE CALCULATIONS ==========
-  function getStaffSales(uid) {
-    return allSales.filter(s => s.attendantId === uid && s.status === 'completed').reduce((sum, s) => sum + (s.totalAmount || 0), 0);
-  }
-  function getStaffSalesCount(uid) {
-    return allSales.filter(s => s.attendantId === uid && s.status === 'completed').length;
-  }
+  // Performance calculations
+  function getStaffSales(uid) { return allSales.filter(s => s.attendantId === uid && s.status === 'completed').reduce((sum, s) => sum + (s.totalAmount || 0), 0); }
+  function getStaffSalesCount(uid) { return allSales.filter(s => s.attendantId === uid && s.status === 'completed').length; }
   function getStaffAttendance(uid) {
     const records = allAttendance.filter(a => a.userId === uid);
     if (!records.length) return { rate: 0, early: 0, late: 0, absent: 0 };
@@ -370,6 +340,12 @@
   function getLastLogin(uid) {
     const logs = allAuditLogs.filter(l => l.performedBy === uid && l.actionType === 'login');
     return logs.length > 0 ? logs[logs.length - 1].performedAt : null;
+  }
+
+  // Detailed points history for a user (from audit logs that affect points)
+  function getPointsHistory(uid) {
+    const pointActions = ['attendance_marked', 'points_deducted', 'points_awarded', 'task_completed', 'points_forgiven'];
+    return allAuditLogs.filter(l => l.performedBy === uid && pointActions.includes(l.actionType)).sort((a,b) => (b.performedAt?.seconds||0) - (a.performedAt?.seconds||0));
   }
 
   function loadAllData() {
@@ -406,13 +382,13 @@
     const roleFilter = document.getElementById('roleFilter')?.value || 'all';
     function applyFilters(list) { let f = [...list]; if(search) f = f.filter(u=>(u.fullName||'').toLowerCase().includes(search)||(u.email||'').toLowerCase().includes(search)||(u.phone||'').includes(search)); if(roleFilter!=='all') f = f.filter(u=>u.role===roleFilter); return f; }
 
-    // Workers table with checkboxes, performance metrics, last login
+    // Workers table with forgive button
     const wTbody = document.getElementById('workersTable');
     const wf = applyFilters(activeWorkers).sort((a,b)=>(b.baseSalary||0)-(a.baseSalary||0));
     if (wf.length===0) { wTbody.innerHTML = '<tr><td colspan="14"><div class="empty-state"><i class="fas fa-hard-hat"></i><p>No workers found</p></div></td></tr>'; }
     else {
       wTbody.innerHTML = wf.map(u => {
-        const bonus = getPointBonus(u), total = getTotalSalary(u), pv = u.pointValueNaira || globalPointValue || 500;
+        const bonus = getPointBonus(u), total = getTotalSalary(u);
         const salesAmt = getStaffSales(u.uid), salesCount = getStaffSalesCount(u.uid);
         const att = getStaffAttendance(u.uid);
         const lastLogin = getLastLogin(u.uid);
@@ -430,7 +406,12 @@
           <td>${u.tasksCompleted||0}</td>
           <td><span class="badge badge-${att.rate>=80?'success':att.rate>=50?'warning':'danger'}">${att.rate}%</span></td>
           <td style="font-size:0.75rem;color:var(--gray);">${formatDateTime(lastLogin)}</td>
-          <td><div class="action-btns"><button class="btn btn-sm btn-outline" onclick="openEditStaff('${u.uid}')"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-warning" onclick="suspendStaff('${u.uid}')"><i class="fas fa-pause"></i></button><button class="btn btn-sm btn-danger" onclick="terminateStaff('${u.uid}')"><i class="fas fa-ban"></i></button></div></td>
+          <td><div class="action-btns">
+            <button class="btn btn-sm btn-outline" onclick="openEditStaff('${u.uid}')"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-success" onclick="forgivePoints('${u.uid}')" title="Forgive Points"><i class="fas fa-hand-holding-heart"></i></button>
+            <button class="btn btn-sm btn-warning" onclick="suspendStaff('${u.uid}')"><i class="fas fa-pause"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="terminateStaff('${u.uid}')"><i class="fas fa-ban"></i></button>
+          </div></td>
         </tr>`;
       }).join('');
     }
@@ -457,6 +438,47 @@
 
     updateBulkBar();
   }
+
+  // ========== POINTS FORGIVENESS ==========
+  window.forgivePoints = function(uid) {
+    const staff = allUsers.find(u => u.uid === uid);
+    if (!staff) return;
+    const currentPoints = staff.totalPoints || 0;
+    const negativePoints = currentPoints < 0 ? Math.abs(currentPoints) : 0;
+    const forgivenessMax = negativePoints > 0 ? negativePoints : 100; // allow up to 100 if no negatives
+
+    showModal(`Forgive Points: ${staff.fullName}`, `
+      <div class="form-group"><label>Current Points</label><input class="form-control" value="${currentPoints}" readonly></div>
+      <div class="form-group"><label>Defaulted Points (negative)</label><input class="form-control" value="${negativePoints}" readonly></div>
+      <div class="form-group"><label>Points to Forgive (max ${forgivenessMax})</label><input type="number" class="form-control" id="forgiveAmount" min="1" max="${forgivenessMax}" value="${forgivenessMax}" step="1"></div>
+      <div class="form-group"><label>Reason (optional)</label><input class="form-control" id="forgiveReason" placeholder="e.g., Waiver for good conduct"></div>
+      <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="submitForgiveness('${uid}')"><i class="fas fa-check"></i> Forgive</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
+    `);
+  };
+
+  window.submitForgiveness = async function(uid) {
+    const amount = parseInt(document.getElementById('forgiveAmount')?.value) || 0;
+    const reason = document.getElementById('forgiveReason')?.value?.trim() || 'No reason';
+    if (amount <= 0) { showToast('Enter a positive amount', 'error'); return; }
+    const staff = allUsers.find(u => u.uid === uid);
+    if (!staff) return;
+    const currentPoints = staff.totalPoints || 0;
+    const maxForgive = currentPoints < 0 ? Math.abs(currentPoints) : 100;
+    if (amount > maxForgive) { showToast(`Maximum forgiveness is ${maxForgive}`, 'error'); return; }
+    try {
+      const newPoints = currentPoints + amount;
+      await updateDoc(doc(db, 'users', uid), { totalPoints: newPoints });
+      await addDoc(collection(db, 'audit_logs'), {
+        actionType: 'points_forgiven',
+        performedBy: currentUser?.uid,
+        performedByName: userData?.fullName || 'Admin',
+        performedAt: serverTimestamp(),
+        note: `Forgave ${amount} points (was ${currentPoints}, now ${newPoints}). Reason: ${reason}`
+      });
+      showToast(`${amount} points forgiven. New balance: ${newPoints}`, 'success');
+      hideModal();
+    } catch (e) { showToast('Failed: ' + e.message, 'error'); }
+  };
 
   // ========== BULK ACTIONS ==========
   window.toggleUserSelection = function(uid, checkbox) { if(checkbox.checked) selectedUsers.add(uid); else selectedUsers.delete(uid); updateBulkBar(); };
@@ -506,15 +528,14 @@
     try { await batch.commit(); selectedUsers.clear(); updateBulkBar(); showToast('Deleted', 'success'); } catch(e) { showToast('Failed', 'error'); }
   };
 
-  // ========== STAFF PROFILE VIEW ==========
+  // ========== STAFF PROFILE VIEW (with detailed points history and forgive button) ==========
   window.viewStaffProfile = function(uid) {
     const u = allUsers.find(x => x.uid === uid); if (!u) return;
     const bonus = getPointBonus(u), total = getTotalSalary(u);
     const salesAmt = getStaffSales(uid), salesCount = getStaffSalesCount(uid);
     const att = getStaffAttendance(uid);
+    const pointsHistory = getPointsHistory(uid);
     const staffLogs = allAuditLogs.filter(l => l.performedBy === uid).slice(0, 30);
-    const pointHistory = staffLogs.filter(l => l.actionType === 'attendance_marked' || l.actionType === 'points_adjusted');
-    const salaryHistory = staffLogs.filter(l => l.actionType === 'salary_changed' || l.actionType === 'approve_user' || l.actionType === 'edit_staff');
 
     showModal(`Staff Profile: ${u.fullName||'Staff'}`, `
       <div class="profile-header">
@@ -537,23 +558,25 @@
         <div class="profile-stat"><div class="val" style="color:var(--gray);">${att.absent}</div><div class="lbl">Absent</div></div>
         <div class="profile-stat"><div class="val">${formatCurrency(getPointBonus(u))}</div><div class="lbl">Point Bonus</div></div>
       </div>
-      <h4 style="margin-bottom:8px;"><i class="fas fa-star" style="color:#f59e0b;"></i> Points History</h4>
-      <div style="max-height:150px;overflow-y:auto;margin-bottom:16px;">
-        ${pointHistory.length===0?'<p style="color:var(--gray);font-size:0.8rem;">No points history</p>':pointHistory.map(l=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.8rem;border-bottom:1px solid rgba(0,0,0,0.03);"><span>${l.note||l.actionType}</span><span style="color:var(--gray);">${formatDateTime(l.performedAt)}</span></div>`).join('')}
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h4 style="margin:0;"><i class="fas fa-star" style="color:#f59e0b;"></i> Points History</h4>
+        <button class="btn btn-sm btn-success" onclick="forgivePoints('${uid}')"><i class="fas fa-hand-holding-heart"></i> Forgive Points</button>
       </div>
-      <h4 style="margin-bottom:8px;"><i class="fas fa-money-bill-wave" style="color:var(--success);"></i> Salary History</h4>
-      <div style="max-height:150px;overflow-y:auto;margin-bottom:16px;">
-        ${salaryHistory.length===0?'<p style="color:var(--gray);font-size:0.8rem;">No salary changes</p>':salaryHistory.map(l=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.8rem;border-bottom:1px solid rgba(0,0,0,0.03);"><span>${l.note||l.actionType}</span><span style="color:var(--gray);">${formatDateTime(l.performedAt)}</span></div>`).join('')}
+      <div style="max-height:200px;overflow-y:auto;margin-bottom:16px;">
+        <table class="data-table" style="min-width:600px;font-size:0.8rem;">
+          <thead><tr><th>Date</th><th>Action</th><th>Note</th><th>By</th></tr></thead>
+          <tbody>${pointsHistory.length===0?'<tr><td colspan="4" style="text-align:center;color:var(--gray);">No points history</td></tr>':pointsHistory.map(l=>`<tr><td>${formatDateTime(l.performedAt)}</td><td>${l.actionType?.replace(/_/g,' ')}</td><td>${l.note||'-'}</td><td>${l.performedByName||'System'}</td></tr>`).join('')}</tbody>
+        </table>
       </div>
       <h4 style="margin-bottom:8px;"><i class="fas fa-history" style="color:var(--info);"></i> Recent Activity</h4>
-      <div style="max-height:200px;overflow-y:auto;">
+      <div style="max-height:150px;overflow-y:auto;">
         ${staffLogs.length===0?'<p style="color:var(--gray);font-size:0.8rem;">No activity</p>':staffLogs.map(l=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.8rem;border-bottom:1px solid rgba(0,0,0,0.03);"><span>${l.actionType||'-'}: ${l.note||''}</span><span style="color:var(--gray);">${formatDateTime(l.performedAt)}</span></div>`).join('')}
       </div>
       <div style="display:flex;gap:10px;margin-top:16px;"><button class="btn btn-outline" onclick="openEditStaff('${uid}')"><i class="fas fa-edit"></i> Edit</button><button class="btn btn-outline" onclick="hideModal()">Close</button></div>
     `);
   };
 
-  // ========== APPROVE / REJECT ==========
+  // ========== APPROVE / REJECT / SUSPEND / TERMINATE / REINSTATE ==========
   window.approveUser = async function(uid) {
     const role = document.getElementById(`role-${uid}`)?.value || 'staff';
     const salary = parseFloat(document.getElementById(`salary-${uid}`)?.value) || 50000;
@@ -570,33 +593,29 @@
     try { await updateDoc(doc(db, 'users', uid), { status: 'rejected', rejectedBy: currentUser?.uid, rejectedByName: userData?.fullName||'Admin', rejectedAt: serverTimestamp(), rejectionReason: reason }); try { await addDoc(collection(db, 'notifications'), { userId: uid, type: 'rejected', title: 'Account Rejected', message: `Reason: ${reason}`, isRead: false, createdAt: serverTimestamp() }); } catch(e){} showToast('User rejected', 'info'); } catch(e) { showToast('Failed', 'error'); }
   };
 
-  window.suspendStaff = async function(uid) { const s=allUsers.find(u=>u.uid===uid);const r=prompt(`Suspension reason:`)||'No reason';if(!r)return;try{await updateDoc(doc(db,'users',uid),{status:'suspended',suspendedBy:currentUser?.uid,suspendedByName:userData?.fullName||'Admin',suspendedAt:serverTimestamp(),suspensionReason:r});try{await addDoc(collection(db,'notifications'),{userId:uid,type:'suspended',title:'Account Suspended',message:`Reason: ${r}`,isRead:false,createdAt:serverTimestamp()});}catch(e){}showToast('Suspended','warning');}catch(e){showToast('Failed','error');} };
-  window.reinstateStaff = async function(uid) { try{await updateDoc(doc(db,'users',uid),{status:'active',reinstatedBy:currentUser?.uid,reinstatedByName:userData?.fullName||'Admin',reinstatedAt:serverTimestamp(),suspensionReason:null,suspendedAt:null});try{await addDoc(collection(db,'notifications'),{userId:uid,type:'reinstated',title:'Account Reinstated',message:'Your account has been reinstated.',isRead:false,createdAt:serverTimestamp()});}catch(e){}showToast('Reinstated','success');}catch(e){showToast('Failed','error');} };
-  window.terminateStaff = async function(uid) { const s=allUsers.find(u=>u.uid===uid);if(!s)return;const r=prompt(`Termination reason:`)||'No reason';if(!r||!confirm(`TERMINATE ${s.fullName||'staff'}?`))return;try{await updateDoc(doc(db,'users',uid),{status:'terminated',terminatedBy:currentUser?.uid,terminatedByName:userData?.fullName||'Admin',terminatedAt:serverTimestamp(),terminationReason:r});try{await addDoc(collection(db,'notifications'),{userId:uid,type:'terminated',title:'Employment Terminated',message:`Reason: ${r}`,isRead:false,createdAt:serverTimestamp()});}catch(e){}showToast('Terminated','info');}catch(e){showToast('Failed','error');} };
+  window.suspendStaff = async function(uid) { const r=prompt(`Suspension reason:`)||'No reason';try{await updateDoc(doc(db,'users',uid),{status:'suspended',suspendedBy:currentUser?.uid,suspendedByName:userData?.fullName||'Admin',suspendedAt:serverTimestamp(),suspensionReason:r});showToast('Suspended','warning');}catch(e){showToast('Failed','error');} };
+  window.reinstateStaff = async function(uid) { try{await updateDoc(doc(db,'users',uid),{status:'active',reinstatedBy:currentUser?.uid,reinstatedByName:userData?.fullName||'Admin',reinstatedAt:serverTimestamp(),suspensionReason:null,suspendedAt:null});showToast('Reinstated','success');}catch(e){showToast('Failed','error');} };
+  window.terminateStaff = async function(uid) { const s=allUsers.find(u=>u.uid===uid);const r=prompt(`Termination reason:`)||'No reason';if(!s||!confirm(`TERMINATE ${s.fullName||'staff'}?`))return;try{await updateDoc(doc(db,'users',uid),{status:'terminated',terminatedBy:currentUser?.uid,terminatedByName:userData?.fullName||'Admin',terminatedAt:serverTimestamp(),terminationReason:r});showToast('Terminated','info');}catch(e){showToast('Failed','error');} };
   window.reinstateTerminated = async function(uid) { const s=allUsers.find(u=>u.uid===uid);if(!s||!confirm(`Reinstate ${s.fullName||'staff'}?`))return;try{await updateDoc(doc(db,'users',uid),{status:'active',reinstatedBy:currentUser?.uid,reinstatedByName:userData?.fullName||'Admin',reinstatedAt:serverTimestamp(),terminatedAt:null,terminationReason:null});showToast('Reinstated','success');}catch(e){showToast('Failed','error');} };
 
   // ========== EDIT & ADD STAFF ==========
   window.openEditStaff = function(uid) {
     const u = allUsers.find(x=>x.uid===uid); if(!u)return;
     const pv = u.pointValueNaira || globalPointValue || 500;
-    showModal('Edit Staff',`<div class="form-row"><div class="form-group"><label>Full Name</label><input class="form-control" id="editName" value="${u.fullName||''}"></div><div class="form-group"><label>Email</label><input class="form-control" id="editEmail" value="${u.email||''}"></div></div><div class="form-row"><div class="form-group"><label>Phone</label><input class="form-control" id="editPhone" value="${u.phone||''}"></div><div class="form-group"><label>Role</label><select class="form-control" id="editRole"><option value="staff" ${u.role==='staff'?'selected':''}>Staff</option><option value="attendant" ${u.role==='attendant'?'selected':''}>Attendant</option><option value="attendant_chief" ${u.role==='attendant_chief'?'selected':''}>Chief Attendant</option></select></div></div><div class="form-row"><div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="editSalary" value="${u.baseSalary||0}"></div><div class="form-group"><label>Point Value (₦/5pts)</label><input type="number" class="form-control" id="editPointValue" value="${pv}"></div></div><div class="form-row"><div class="form-group"><label>Total Points</label><input type="number" class="form-control" id="editPoints" value="${u.totalPoints||0}"></div><div class="form-group"><label>Tasks Completed</label><input type="number" class="form-control" id="editTasks" value="${u.tasksCompleted||0}"></div></div><div class="form-row"><div class="form-group"><label>Leave Days</label><input type="number" class="form-control" id="editLeave" value="${u.leaveDaysRemaining??2}"></div>${u.role?.includes('attendant')?`<div class="form-group"><label>Reset PIN</label><button class="btn btn-warning btn-sm" onclick="resetAttendantPin('${uid}')"><i class="fas fa-key"></i> Reset PIN</button></div>`:'<div class="form-group"></div>'}</div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEdit('${uid}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
+    showModal('Edit Staff',`<div class="form-row"><div class="form-group"><label>Full Name</label><input class="form-control" id="editName" value="${u.fullName||''}"></div><div class="form-group"><label>Email</label><input class="form-control" id="editEmail" value="${u.email||''}"></div></div><div class="form-row"><div class="form-group"><label>Phone</label><input class="form-control" id="editPhone" value="${u.phone||''}"></div><div class="form-group"><label>Role</label><select class="form-control" id="editRole"><option value="staff" ${u.role==='staff'?'selected':''}>Staff</option><option value="attendant" ${u.role==='attendant'?'selected':''}>Attendant</option><option value="attendant_chief" ${u.role==='attendant_chief'?'selected':''}>Chief Attendant</option></select></div></div><div class="form-row"><div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="editSalary" value="${u.baseSalary||0}"></div><div class="form-group"><label>Point Value (₦/5pts)</label><input type="number" class="form-control" id="editPointValue" value="${pv}"></div></div><div class="form-row"><div class="form-group"><label>Total Points</label><input type="number" class="form-control" id="editPoints" value="${u.totalPoints||0}"></div><div class="form-group"><label>Tasks Completed</label><input type="number" class="form-control" id="editTasks" value="${u.tasksCompleted||0}"></div></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEdit('${uid}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
   };
 
   window.saveEdit = async function(uid) {
     const name = document.getElementById('editName')?.value?.trim(); if(!name){showToast('Name required','error');return;}
-    const oldData = allUsers.find(u=>u.uid===uid);
     const newSalary = parseFloat(document.getElementById('editSalary')?.value)||0;
     try {
-      await updateDoc(doc(db,'users',uid),{fullName:name,email:document.getElementById('editEmail')?.value?.trim()||'',phone:document.getElementById('editPhone')?.value?.trim()||'',role:document.getElementById('editRole')?.value||'staff',baseSalary:newSalary,pointValueNaira:parseFloat(document.getElementById('editPointValue')?.value)||globalPointValue,totalPoints:parseInt(document.getElementById('editPoints')?.value)||0,tasksCompleted:parseInt(document.getElementById('editTasks')?.value)||0,leaveDaysRemaining:parseInt(document.getElementById('editLeave')?.value)??2});
-      if (oldData && oldData.baseSalary !== newSalary) await logAudit('salary_changed', `Salary changed for ${name}: ${formatCurrency(oldData.baseSalary)} → ${formatCurrency(newSalary)}`);
+      await updateDoc(doc(db,'users',uid),{fullName:name,email:document.getElementById('editEmail')?.value?.trim()||'',phone:document.getElementById('editPhone')?.value?.trim()||'',role:document.getElementById('editRole')?.value||'staff',baseSalary:newSalary,pointValueNaira:parseFloat(document.getElementById('editPointValue')?.value)||globalPointValue,totalPoints:parseInt(document.getElementById('editPoints')?.value)||0,tasksCompleted:parseInt(document.getElementById('editTasks')?.value)||0});
       showToast('Updated','success'); hideModal();
     } catch(e) { showToast('Failed','error'); }
   };
 
-  window.resetAttendantPin = async function(uid) { try{await updateDoc(doc(db,'users',uid),{attendantPin:null,pinResetRequired:true});showToast('PIN reset.','success');}catch(e){showToast('Failed','error');} };
-
   window.openAddStaffModal = function() {
-    showModal('Add New Staff',`<div class="form-row"><div class="form-group"><label>Full Name *</label><input class="form-control" id="newName" placeholder="John Doe"></div><div class="form-group"><label>Email *</label><input type="email" class="form-control" id="newEmail" placeholder="staff@example.com"></div></div><div class="form-row"><div class="form-group"><label>Phone *</label><input class="form-control" id="newPhone" placeholder="08012345678"></div><div class="form-group"><label>Role *</label><select class="form-control" id="newRole"><option value="staff">Staff</option><option value="attendant">Attendant</option><option value="attendant_chief">Chief Attendant</option></select></div></div><div class="form-row"><div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="newSalary" value="50000"></div><div class="form-group"><label>Leave Days</label><input type="number" class="form-control" id="newLeave" value="2"></div></div><div class="form-row"><div class="form-group"><label>Initial PIN (4 digits)</label><input type="text" class="form-control" id="newPin" value="1234" maxlength="4"></div><div class="form-group"></div></div><p style="font-size:0.75rem;color:var(--gray);background:var(--primary-soft);padding:12px;border-radius:10px;"><i class="fas fa-info-circle"></i> Staff must sign up at the login page using the <strong>same email</strong>. Then approve from the <strong>Pending</strong> tab.</p><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addStaff()"><i class="fas fa-user-plus"></i> Add Staff</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
+    showModal('Add New Staff',`<div class="form-row"><div class="form-group"><label>Full Name *</label><input class="form-control" id="newName" placeholder="John Doe"></div><div class="form-group"><label>Email *</label><input type="email" class="form-control" id="newEmail" placeholder="staff@example.com"></div></div><div class="form-row"><div class="form-group"><label>Phone *</label><input class="form-control" id="newPhone" placeholder="08012345678"></div><div class="form-group"><label>Role *</label><select class="form-control" id="newRole"><option value="staff">Staff</option><option value="attendant">Attendant</option><option value="attendant_chief">Chief Attendant</option></select></div></div><div class="form-row"><div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="newSalary" value="50000"></div><div class="form-group"><label>Initial PIN (4 digits)</label><input type="text" class="form-control" id="newPin" value="1234" maxlength="4"></div></div><p style="font-size:0.75rem;color:var(--gray);background:var(--primary-soft);padding:12px;border-radius:10px;"><i class="fas fa-info-circle"></i> Staff must sign up using the <strong>same email</strong> at the login page. Then approve from <strong>Pending</strong> tab.</p><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addStaff()"><i class="fas fa-user-plus"></i> Add Staff</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
   };
 
   window.addStaff = async function() {
@@ -605,23 +624,21 @@
     const phone = document.getElementById('newPhone')?.value?.trim();
     const role = document.getElementById('newRole')?.value || 'staff';
     const salary = parseFloat(document.getElementById('newSalary')?.value) || 50000;
-    const leaveDays = parseInt(document.getElementById('newLeave')?.value) || 2;
     const pin = document.getElementById('newPin')?.value?.trim() || '1234';
     if(!name||!email||!phone){showToast('All fields required','error');return;}
     const existingSnap = await getDocs(query(collection(db,'users'),where('email','==',email)));
     if(!existingSnap.empty){showToast('Email already registered','error');return;}
     try {
       const emailKey = email.replace(/\./g,'_').replace(/@/g,'_at_');
-      await setDoc(doc(db,'users',emailKey),{uid:emailKey,fullName:name,email,phone,role,baseSalary:salary,leaveDaysRemaining:leaveDays,pointValueNaira:globalPointValue,status:'pending_approval',totalPoints:0,tasksCompleted:0,attendantPin:pin,createdBy:currentUser?.uid,createdByName:userData?.fullName||'Admin',createdAt:serverTimestamp()});
-      await logAudit('add_staff',`Added: ${name} (${email})`);
-      showToast(`Staff added! They should sign up with email: ${email}`, 'success'); hideModal();
+      await setDoc(doc(db,'users',emailKey),{uid:emailKey,fullName:name,email,phone,role,baseSalary:salary,pointValueNaira:globalPointValue,status:'pending_approval',totalPoints:0,tasksCompleted:0,attendantPin:pin,createdBy:currentUser?.uid,createdByName:userData?.fullName||'Admin',createdAt:serverTimestamp()});
+      showToast(`Staff added! Sign up with email: ${email}`, 'success'); hideModal();
     } catch(e) { showToast('Failed: '+e.message,'error'); }
   };
 
   window.exportData = function(format) {
     const all = [...allUsers.filter(u=>['staff','attendant','attendant_chief'].includes(u.role)),...allUsers.filter(u=>['admin','super_admin'].includes(u.role))];
-    const h=['Name','Email','Phone','Role','Status','Base Salary','Points','Point Value','Total Salary','Tasks','Leave','Sales','Attendance'];
-    const rows=all.map(u=>{const t=u.role==='admin'||u.role==='super_admin'?(u.baseSalary||0):getTotalSalary(u);return[u.fullName||'',u.email||'',u.phone||'',u.role,u.status,u.baseSalary||0,u.totalPoints||0,u.pointValueNaira||globalPointValue,t,u.tasksCompleted||0,u.leaveDaysRemaining??2,formatCurrency(getStaffSales(u.uid)),getStaffAttendance(u.uid).rate+'%'];});
+    const h=['Name','Email','Phone','Role','Status','Base Salary','Points','Point Value','Total Salary','Tasks','Sales','Attendance'];
+    const rows=all.map(u=>{const t=u.role==='admin'||u.role==='super_admin'?(u.baseSalary||0):getTotalSalary(u);return[u.fullName||'',u.email||'',u.phone||'',u.role,u.status,u.baseSalary||0,u.totalPoints||0,u.pointValueNaira||globalPointValue,t,u.tasksCompleted||0,formatCurrency(getStaffSales(u.uid)),getStaffAttendance(u.uid).rate+'%'];});
     const csv=[h.join(','),...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');
     const b=new Blob([csv],{type:format==='csv'?'text/csv':'application/vnd.ms-excel'});
     const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`staff_${new Date().toISOString().split('T')[0]}.${format}`;a.click();
