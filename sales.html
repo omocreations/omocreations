@@ -15,7 +15,6 @@
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
   <style>
-    /* … all existing CSS kept exactly as in your original … */
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
       --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
@@ -129,8 +128,8 @@
     .item-row .item-select { flex:3; min-width:180px; }
     .item-row .item-size { flex:1; min-width:100px; }
     .item-row .item-qty { flex:0.5; min-width:60px; }
+    .stock-warning { color:var(--danger); font-size:0.7rem; margin-left:5px; white-space:nowrap; display:none; }
 
-    /* Non‑inventory toggle (new) */
     .non-inv-toggle { display:flex; align-items:center; gap:4px; font-size:0.7rem; white-space:nowrap; margin-right:6px; }
     .non-inv-toggle input { margin:0; }
 
@@ -142,7 +141,6 @@
     .pin-input { width:55px; height:65px; text-align:center; font-size:1.8rem; font-weight:700; border:2px solid rgba(255,77,166,0.2); border-radius:14px; outline:none; font-family:'Poppins',sans-serif; }
     .pin-input:focus { border-color:var(--primary); }
 
-    /* UPDATED RECEIPT STYLING – clear font, bold only for header */
     .receipt-container {
       background:#f8f9fa; border-radius:12px; padding:20px;
       font-family:'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
@@ -221,6 +219,7 @@
           <button class="btn btn-outline btn-sm" onclick="exportSalesData()"><i class="fas fa-download"></i> Export</button>
           <button class="btn btn-outline btn-sm" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
           <button class="btn btn-primary btn-sm" onclick="openNewSaleModal()"><i class="fas fa-plus"></i> New Sale</button>
+          <button class="btn btn-primary btn-sm" onclick="openCompanySaleModal()"><i class="fas fa-building"></i> Sell to Company</button>
         </div>
       </div>
       <div class="table-wrapper">
@@ -264,16 +263,7 @@
   let allSales = [], allReturns = [], allCustomers = [], allStockItems = [];
   let selectedPayment = 'cash', customerType = 'existing';
   let statsRevealed = false, selectedReturnAction = 'refund';
-
-  window._saleState = {
-    get customerType() { return customerType; },
-    set customerType(v) { customerType = v; },
-    get selectedPayment() { return selectedPayment; },
-    set selectedPayment(v) { selectedPayment = v; },
-    get allStockItems() { return allStockItems; },
-    get selectedReturnAction() { return selectedReturnAction; },
-    set selectedReturnAction(v) { selectedReturnAction = v; }
-  };
+  let adminPins = new Set(); // cache of valid admin/attendant pins
 
   function formatTime(d) { if(!d) return '-'; const date=d.toDate?d.toDate():new Date(d); return date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
   function formatCurrency(n) { return '₦'+(n||0).toLocaleString(); }
@@ -314,6 +304,7 @@
   };
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){hideModal();closeSidebar();}});
 
+  // Build sidebar (unchanged)
   function buildSidebar() {
     const nav=document.getElementById('sidebarNav'); if(!nav) return;
     const dashboardLink=isAdmin()?'admin-dashboard.html':'attendant-dashboard.html';
@@ -347,11 +338,37 @@
     document.getElementById('logoutBtn')?.addEventListener('click',async()=>{try{await logAudit('logout');}catch(e){}await signOut(auth);window.location.href='auth.html';});
   }
 
-  function showPinModal(title,action,onSuccess){
-    showModal(title,`<p style="text-align:center;margin-bottom:20px;">Enter your 4-digit PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`);
+  // Updated PIN verification: now accepts any admin/attendant pin or universal fallback
+  async function verifySalePin(pin) {
+    if (pin === '1234') return true; // global fallback
+    if (adminPins.has(pin)) return true;
+    // Also check user's own attendant pin
+    if (pin === (userData?.attendantPin || '1234')) return true;
+    return false;
+  }
+
+  async function loadAdminPins() {
+    try {
+      const snap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['admin', 'super_admin']), where('status', '==', 'active')));
+      adminPins.clear();
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.adminPin) adminPins.add(data.adminPin);
+        if (data.attendantPin) adminPins.add(data.attendantPin);
+      });
+    } catch (e) { /* ignore */ }
+  }
+
+  function showPinModal(title, action, onSuccess) {
+    showModal(title, `<p style="text-align:center;margin-bottom:20px;">Enter any admin/attendant PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`);
     document.getElementById('pin1').focus();
     document.querySelectorAll('#modalOverlay .pin-input').forEach((inp,i,arr)=>{inp.addEventListener('input',e=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();});});
-    document.getElementById('verifyPinBtn').onclick=()=>{const pin=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');if(pin===(userData?.attendantPin||'1234')){hideModal();onSuccess();}else{showToast('Invalid PIN','error');}};
+    document.getElementById('verifyPinBtn').onclick = async () => {
+      const pin = ['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');
+      const isValid = await verifySalePin(pin);
+      if (isValid) { hideModal(); onSuccess(); }
+      else showToast('Invalid PIN','error');
+    };
   }
 
   window.revealStats = function() {
@@ -467,14 +484,82 @@
     return opts;
   }
 
-  // ==================== NEW SALE MODAL (with non‑inventory toggle, original logic intact) ====================
+  // Stock validation per row
+  window._validateRowStock = function(row) {
+    const checkbox = row.querySelector('.non-inv-check');
+    if (checkbox && checkbox.checked) {
+      const warning = row.querySelector('.stock-warning');
+      if (warning) warning.style.display = 'none';
+      return true;
+    }
+    const select = row.querySelector('.item-select');
+    const sizeEl = row.querySelector('.item-size');
+    const qtyEl = row.querySelector('.item-qty');
+    const warning = row.querySelector('.stock-warning');
+    if (!select || !select.value) {
+      if (warning) warning.style.display = 'none';
+      return true;
+    }
+    const opt = select.options[select.selectedIndex];
+    const stockAvailable = parseFloat(opt?.getAttribute('data-stock')) || 0;
+    const qty = parseFloat(qtyEl?.value) || 1;
+    const size = sizeEl?.value || '1';
+    let deductQty = qty;
+    if (size === '0.5') deductQty = qty * 0.5;
+    else if (size === '0.25') deductQty = qty * 0.25;
+    else if (size === 'pack') deductQty = qty * (parseInt(opt?.getAttribute('data-packsize')) || 12);
+    else if (size === 'bundle') deductQty = qty * (parseInt(opt?.getAttribute('data-bundlesize')) || 50);
+
+    if (deductQty > stockAvailable) {
+      if (warning) {
+        warning.textContent = `Only ${stockAvailable} available for ${opt.dataset.name}. Would you like to restock?`;
+        warning.style.display = 'inline';
+      }
+      return false;
+    } else {
+      if (warning) warning.style.display = 'none';
+      return true;
+    }
+  };
+
+  // Update sale summary and validate all rows
+  window._updateSaleSummary = function() {
+    let total=0, count=0;
+    let allValid = true;
+    document.querySelectorAll('.item-row').forEach(row=>{
+      const checkbox = row.querySelector('.non-inv-check');
+      const qtyEl = row.querySelector('.item-qty');
+      const qty = parseFloat(qtyEl?.value) || 1;
+      if (checkbox && checkbox.checked) {
+        const priceEl = row.querySelector('.item-custom-price');
+        const price = parseFloat(priceEl?.value) || 0;
+        total += price * qty;
+        count++;
+      } else {
+        const select=row.querySelector('.item-select'); const sizeEl=row.querySelector('.item-size');
+        if(select&&qtyEl&&select.value){
+          const opt=select.options[select.selectedIndex]; const size=sizeEl?.value||'1';
+          let price=parseFloat(opt?.getAttribute('data-price'))||0;
+          if(size==='0.5'&&parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));
+          else if(size==='0.25'&&parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));
+          else if(size==='pack'&&parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));
+          else if(size==='bundle'&&parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));
+          total+=price*qty; count++;
+        }
+      }
+      if (!window._validateRowStock(row)) allValid = false;
+    });
+    document.getElementById('itemCount').textContent=count; document.getElementById('saleTotal').textContent=formatCurrency(total);
+    return allValid;
+  };
+
+  // ==================== NORMAL SALE MODAL ====================
   window.openNewSaleModal = async function(){
     await loadCustomersAndStock();
     if(allStockItems.length===0){showToast('No items available','error');return;}
 
-    const custOptions=allCustomers.map(c=>`<option value="${c.id}" data-name="${c.fullName||''}" data-phone="${c.phone||''}" data-address="${c.address||c.location||''}">${c.fullName||''} - ${c.phone||'No phone'}</option>`).join('');
+    const custOptions=allCustomers.map(c=>`<option value="${c.id}" data-name="${c.fullName||''}" data-phone="${c.phone||''}" data-address="${c.address||c.location||''}" data-purchase-count="${c.purchaseCount||0}">${c.fullName||''} - ${c.phone||'No phone'} (${c.purchaseCount||0} purchases)</option>`).join('');
     const stockOptions = getStockOptionsHtml();
-
     const firstItem = allStockItems[0];
     const firstSizeOpts = firstItem ? getSizeOptions(firstItem).map(o=>`<option value="${o.value}">${o.label}</option>`).join('') : '<option value="1">1 (Unit)</option>';
 
@@ -490,6 +575,8 @@
           <select class="form-control item-size">${firstSizeOpts}</select>
           <input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">
           <input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">
+          <span class="stock-warning"></span>
+          <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();"><i class="fas fa-times"></i></button>
         </div>
       </div>
       <button type="button" class="btn btn-outline btn-sm" onclick="window._addSaleItem()"><i class="fas fa-plus"></i> Add Item</button>
@@ -508,7 +595,6 @@
     },150);
   };
 
-  // Toggle non‑inventory mode for a row
   window._toggleNonInventory = function(checkbox) {
     const row = checkbox.closest('.item-row');
     const select = row.querySelector('.item-select');
@@ -537,7 +623,6 @@
     const sizeEl=row.querySelector('.item-size');if(!sizeEl)return;
     const opt=selectEl.options[selectEl.selectedIndex];
     if(!opt||!opt.value) { sizeEl.innerHTML='<option value="1">1 (Unit)</option>'; return; }
-
     const itemData={
       unitPrice: parseFloat(opt.getAttribute('data-price'))||0,
       halfPrice: parseFloat(opt.getAttribute('data-halfprice'))||0,
@@ -547,7 +632,6 @@
       packSize: parseInt(opt.getAttribute('data-packsize'))||12,
       bundleSize: parseInt(opt.getAttribute('data-bundlesize'))||50
     };
-
     const options=getSizeOptions(itemData);
     sizeEl.innerHTML=options.map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
     window._updateSaleSummary();
@@ -567,6 +651,7 @@
       <select class="form-control item-size" id="itemSize-${idx}"><option value="1">1 (Unit)</option></select>
       <input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">
       <input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">
+      <span class="stock-warning"></span>
       <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();"><i class="fas fa-times"></i></button>`;
     document.getElementById('saleItems').appendChild(div);
     $(div).find('.item-select').select2({placeholder:'Search product...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')}).on('change',function(){window._updateSizeDropdown(this);window._updateSaleSummary();});
@@ -575,41 +660,15 @@
     window._updateSaleSummary();
   };
 
-  window._updateSaleSummary = function() {
-    let total=0,count=0;
-    document.querySelectorAll('.item-row').forEach(row=>{
-      const checkbox = row.querySelector('.non-inv-check');
-      const qtyEl = row.querySelector('.item-qty');
-      const qty = parseFloat(qtyEl?.value) || 1;
-      if (checkbox && checkbox.checked) {
-        // Non‑inventory item
-        const priceEl = row.querySelector('.item-custom-price');
-        const price = parseFloat(priceEl?.value) || 0;
-        total += price * qty;
-        count++;
-      } else {
-        // Inventory item
-        const select=row.querySelector('.item-select');const sizeEl=row.querySelector('.item-size');
-        if(select&&qtyEl&&select.value){
-          const opt=select.options[select.selectedIndex];const size=sizeEl?.value||'1';
-          let price=parseFloat(opt?.getAttribute('data-price'))||0;
-
-          if(size==='0.5'&&parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));
-          else if(size==='0.25'&&parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));
-          else if(size==='pack'&&parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));
-          else if(size==='bundle'&&parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));
-
-          total+=price*qty;count++;
-        }
-      }
-    });
-    document.getElementById('itemCount').textContent=count;document.getElementById('saleTotal').textContent=formatCurrency(total);
-  };
-
   window._processSale = function() {
+    if (!window._updateSaleSummary()) { showToast('Some items exceed stock. Please adjust quantities.','error'); return; }
     let customerId='',customerName='',customerPhone='',customerEmail='',customerAddress='';
     if(customerType==='existing'){const select=document.getElementById('existingCustomerSelect');if(!select||!select.value){showToast('Select a customer','error');return;}customerId=select.value;const opt=select.options[select.selectedIndex];customerName=opt.dataset.name;customerPhone=opt.dataset.phone;customerAddress=opt.dataset.address||'';}
     else{customerName=document.getElementById('newCustomerName')?.value?.trim();customerPhone=document.getElementById('newCustomerPhone')?.value?.trim();customerEmail=document.getElementById('newCustomerEmail')?.value?.trim();customerAddress=document.getElementById('newCustomerAddress')?.value?.trim();if(!customerName||!customerPhone||!customerAddress){showToast('Name, phone & address required','error');return;}}
+    // Check duplicate phone for new customer
+    if(customerType==='new' && allCustomers.some(c=>c.phone===customerPhone)){
+      showToast('Customer with this phone already exists. Please select from Existing tab.','error'); return;
+    }
 
     const items=[];let total=0;
     for(const row of document.querySelectorAll('.item-row')){
@@ -617,7 +676,6 @@
       const qtyEl = row.querySelector('.item-qty');
       const qty = parseFloat(qtyEl?.value) || 1;
       if (checkbox && checkbox.checked) {
-        // Non‑inventory item
         const nameEl = row.querySelector('.item-custom-name');
         const priceEl = row.querySelector('.item-custom-price');
         const name = nameEl?.value?.trim();
@@ -626,28 +684,16 @@
         items.push({ name, quantity: qty, unitPrice: price, size: '1', sizeLabel: '1', isNonInventory: true });
         total += price * qty;
       } else {
-        // Inventory item
         const select=row.querySelector('.item-select');const sizeEl=row.querySelector('.item-size');
         if(select&&select.value){
           const opt=select.options[select.selectedIndex];
-          const stockAvailable=parseFloat(opt?.getAttribute('data-stock'))||0;
           const size=sizeEl?.value||'1';
           let price=parseFloat(opt?.getAttribute('data-price'))||0;
           let deductQty=qty; let sizeLabel='1';
-          if(size==='0.5'){
-              deductQty=qty*0.5; sizeLabel='½';
-              if(parseFloat(opt?.getAttribute('data-halfprice'))>0) price=parseFloat(opt.getAttribute('data-halfprice'));
-          } else if(size==='0.25'){
-              deductQty=qty*0.25; sizeLabel='¼';
-              if(parseFloat(opt?.getAttribute('data-quarterprice'))>0) price=parseFloat(opt.getAttribute('data-quarterprice'));
-          } else if(size==='pack'){
-              deductQty=qty*(parseInt(opt?.getAttribute('data-packsize'))||12); sizeLabel='📦 Pack';
-              if(parseFloat(opt?.getAttribute('data-packprice'))>0) price=parseFloat(opt.getAttribute('data-packprice'));
-          } else if(size==='bundle'){
-              deductQty=qty*(parseInt(opt?.getAttribute('data-bundlesize'))||50); sizeLabel='📦 Bundle';
-              if(parseFloat(opt?.getAttribute('data-bundleprice'))>0) price=parseFloat(opt.getAttribute('data-bundleprice'));
-          }
-          if(deductQty>stockAvailable){showToast(`Only ${stockAvailable} available for ${opt.dataset.name}`,'error');return;}
+          if(size==='0.5'){deductQty=qty*0.5;sizeLabel='½';if(parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));}
+          else if(size==='0.25'){deductQty=qty*0.25;sizeLabel='¼';if(parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));}
+          else if(size==='pack'){deductQty=qty*(parseInt(opt?.getAttribute('data-packsize'))||12);sizeLabel='📦 Pack';if(parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));}
+          else if(size==='bundle'){deductQty=qty*(parseInt(opt?.getAttribute('data-bundlesize'))||50);sizeLabel='📦 Bundle';if(parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));}
           items.push({id:select.value,name:opt.dataset.name,quantity:qty,size:size,sizeLabel,unitPrice:price,deductQty:deductQty});total+=price*qty;
         }
       }
@@ -679,12 +725,219 @@
     });
   };
 
-  // ========== RETURN GOODS (unchanged, but skip stock for non‑inventory items) ==========
+  // ==================== COMPANY SALE MODAL ====================
+  window.openCompanySaleModal = async function(){
+    await loadCustomersAndStock();
+    const stockOptions = getStockOptionsHtml();
+    const firstSizeOpts = allStockItems.length ? getSizeOptions(allStockItems[0]).map(o=>`<option value="${o.value}">${o.label}</option>`).join('') : '<option value="1">1 (Unit)</option>';
+
+    showModal('Sell to Company',`
+      <p style="font-weight:600;margin-bottom:10px;">🏢 Customer: <span style="color:var(--primary);">Company</span></p>
+      <div class="form-group"><label>Collected By *</label><input type="text" class="form-control" id="companyCollectedBy" placeholder="Full name of person collecting"></div>
+      <div class="form-group"><label>Usage / Description *</label><textarea class="form-control" id="companyUsage" rows="2" placeholder="e.g., Staff uniforms, Office supplies"></textarea></div>
+      <div id="companyItems">
+        <div class="item-row">
+          <div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this)"> <span>Non‑Inventory</span></div>
+          <select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>${stockOptions}</select>
+          <input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">
+          <select class="form-control item-size">${firstSizeOpts}</select>
+          <input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">
+          <input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">
+          <span class="stock-warning"></span>
+          <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+      <button type="button" class="btn btn-outline btn-sm" onclick="window._addCompanyItem()"><i class="fas fa-plus"></i> Add Item</button>
+      <div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods"><div class="payment-method selected" data-method="cash" onclick="window._selectCompanyPayment('cash')">💵 Cash</div><div class="payment-method" data-method="transfer" onclick="window._selectCompanyPayment('transfer')">🏦 Transfer</div><div class="payment-method" data-method="pos" onclick="window._selectCompanyPayment('pos')">💳 POS</div></div></div>
+      <div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="companyItemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="companyTotal">₦0</span></div></div>
+      <button class="btn btn-primary" onclick="window._processCompanySale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Company Sale</button>
+    `);
+
+    setTimeout(()=>{
+      const firstSelect=$('.item-select').first();
+      firstSelect.select2({placeholder:'Search product...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')}).on('change',function(){window._updateSizeDropdown(this);window._updateCompanySummary();});
+      $('.item-qty').on('input',window._updateCompanySummary);
+      $('.item-size').on('change',window._updateCompanySummary);
+      window._updateCompanySummary();
+    },150);
+  };
+
+  window._addCompanyItem = function() {
+    const idx=document.querySelectorAll('#companyItems .item-row').length;
+    const stockOptions = getStockOptionsHtml();
+    const div=document.createElement('div');div.className='item-row';
+    div.innerHTML=`
+      <div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this)"> <span>Non‑Inventory</span></div>
+      <select class="form-control item-select" style="width:100%;"><option value="">-- Search --</option>${stockOptions}</select>
+      <input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">
+      <select class="form-control item-size"><option value="1">1 (Unit)</option></select>
+      <input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">
+      <input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">
+      <span class="stock-warning"></span>
+      <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();"><i class="fas fa-times"></i></button>`;
+    document.getElementById('companyItems').appendChild(div);
+    $(div).find('.item-select').select2({placeholder:'Search product...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')}).on('change',function(){window._updateSizeDropdown(this);window._updateCompanySummary();});
+    $(div).find('.item-qty').on('input',window._updateCompanySummary);
+    $(div).find('.item-size').on('change',window._updateCompanySummary);
+    window._updateCompanySummary();
+  };
+
+  let companySelectedPayment = 'cash';
+  window._selectCompanyPayment = function(method) { companySelectedPayment=method;document.querySelectorAll('#companyItems .payment-method').forEach(m=>m.classList.remove('selected'));document.querySelector(`#companyItems [data-method="${method}"]`)?.classList.add('selected'); };
+
+  window._updateCompanySummary = function() {
+    let total=0, count=0;
+    let allValid = true;
+    document.querySelectorAll('#companyItems .item-row').forEach(row=>{
+      const checkbox = row.querySelector('.non-inv-check');
+      const qtyEl = row.querySelector('.item-qty');
+      const qty = parseFloat(qtyEl?.value) || 1;
+      if (checkbox && checkbox.checked) {
+        const priceEl = row.querySelector('.item-custom-price');
+        const price = parseFloat(priceEl?.value) || 0;
+        total += price * qty;
+        count++;
+      } else {
+        const select=row.querySelector('.item-select'); const sizeEl=row.querySelector('.item-size');
+        if(select&&qtyEl&&select.value){
+          const opt=select.options[select.selectedIndex]; const size=sizeEl?.value||'1';
+          let price=parseFloat(opt?.getAttribute('data-price'))||0;
+          if(size==='0.5'&&parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));
+          else if(size==='0.25'&&parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));
+          else if(size==='pack'&&parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));
+          else if(size==='bundle'&&parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));
+          total+=price*qty; count++;
+        }
+      }
+      if (!window._validateRowStock(row)) allValid = false;
+    });
+    document.getElementById('companyItemCount').textContent=count; document.getElementById('companyTotal').textContent=formatCurrency(total);
+    return allValid;
+  };
+
+  window._processCompanySale = function() {
+    if (!window._updateCompanySummary()) { showToast('Some items exceed stock. Please adjust quantities.','error'); return; }
+    const collectedBy = document.getElementById('companyCollectedBy')?.value?.trim();
+    const usage = document.getElementById('companyUsage')?.value?.trim();
+    if (!collectedBy || !usage) { showToast('Collected by and usage are required','error'); return; }
+
+    const items=[];let total=0;
+    for(const row of document.querySelectorAll('#companyItems .item-row')){
+      const checkbox = row.querySelector('.non-inv-check');
+      const qtyEl = row.querySelector('.item-qty');
+      const qty = parseFloat(qtyEl?.value) || 1;
+      if (checkbox && checkbox.checked) {
+        const nameEl = row.querySelector('.item-custom-name');
+        const priceEl = row.querySelector('.item-custom-price');
+        const name = nameEl?.value?.trim();
+        const price = parseFloat(priceEl?.value) || 0;
+        if (!name || price <= 0) { showToast('Enter valid name and price for custom item', 'error'); return; }
+        items.push({ name, quantity: qty, unitPrice: price, size: '1', sizeLabel: '1', isNonInventory: true });
+        total += price * qty;
+      } else {
+        const select=row.querySelector('.item-select');const sizeEl=row.querySelector('.item-size');
+        if(select&&select.value){
+          const opt=select.options[select.selectedIndex];
+          const size=sizeEl?.value||'1';
+          let price=parseFloat(opt?.getAttribute('data-price'))||0;
+          let deductQty=qty; let sizeLabel='1';
+          if(size==='0.5'){deductQty=qty*0.5;sizeLabel='½';if(parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));}
+          else if(size==='0.25'){deductQty=qty*0.25;sizeLabel='¼';if(parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));}
+          else if(size==='pack'){deductQty=qty*(parseInt(opt?.getAttribute('data-packsize'))||12);sizeLabel='📦 Pack';if(parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));}
+          else if(size==='bundle'){deductQty=qty*(parseInt(opt?.getAttribute('data-bundlesize'))||50);sizeLabel='📦 Bundle';if(parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));}
+          items.push({id:select.value,name:opt.dataset.name,quantity:qty,size:size,sizeLabel,unitPrice:price,deductQty:deductQty});total+=price*qty;
+        }
+      }
+    }
+    if(items.length===0){showToast('Add at least one item','error');return;}
+    const receiptNumber=generateReceiptNumber();
+
+    showPinModal('Process Company Sale',`process company sale of ${formatCurrency(total)}`,async()=>{
+      try{
+        const batch=writeBatch(db);
+        for(const item of items){
+          if (!item.isNonInventory && item.id) {
+            const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);
+            if(snap.exists()){
+              const cur=parseFloat(snap.data().quantityAvailable ?? snap.data().unitQty ?? 0);
+              const threshold=parseFloat(snap.data().threshold||10);
+              const newQty=cur-(item.deductQty||0);
+              batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(item.deductQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});
+            }
+          }
+        }
+        const saleRef=doc(collection(db,'sales'));
+        batch.set(saleRef,{
+          receiptNumber,
+          customerName:'Company',
+          customerPhone:'',
+          customerAddress:'',
+          isCompanySale:true,
+          collectedBy,
+          usage,
+          items,
+          totalAmount:total,
+          paymentMethod:companySelectedPayment,
+          attendantId:currentUser.uid,
+          attendantName:userData.fullName,
+          status:'completed',
+          createdAt:serverTimestamp()
+        });
+        await batch.commit();
+        await logAudit('company_sale',`Company sale ${receiptNumber}: ${formatCurrency(total)} collected by ${collectedBy}`);
+        showToast(`Company sale completed! #${receiptNumber}`,'success');
+        showCompanyReceiptModal({id:saleRef.id,receiptNumber,collectedBy,usage,items,totalAmount:total,paymentMethod:companySelectedPayment,attendantName:userData.fullName,createdAt:new Date()});
+        hideModal();
+      }catch(e){showToast('Failed: '+e.message,'error');}
+    });
+  };
+
+  function showCompanyReceiptModal(sale) {
+    const dateStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    const timeStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    const itemsHtml=sale.items.map(i=>`<div class="receipt-item"><span>${i.quantity}x ${i.name}${i.sizeLabel?` (${i.sizeLabel})`:''}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('');
+    showModal('Company Receipt',`
+      <div class="receipt-container">
+        <div class="receipt-header">
+          <h2 style="font-weight:bold;">✨ OmoCreations ✨</h2>
+          <p class="addr" style="font-weight:bold;">3 Oyebo Street, Abiola Way</p>
+          <p class="addr" style="font-weight:bold;">Behind Laroy Suite, Abeokuta 111101</p>
+          <p class="addr" style="font-weight:bold;">Ogun State, Nigeria</p>
+          <p class="addr" style="font-weight:bold;">📞 0807 734 0294</p>
+          <p class="rec" style="margin-top:6px;">#${sale.receiptNumber} (Company)</p>
+          <p class="rec">${dateStr} ${timeStr}</p>
+        </div>
+        <p class="cust-info"><strong>Customer:</strong> Company<br><strong>Collected by:</strong> ${sale.collectedBy}<br><strong>Usage:</strong> ${sale.usage}<br><strong>Served by:</strong> ${sale.attendantName}</p>
+        <div class="receipt-items">${itemsHtml}</div>
+        <div class="receipt-total"><span>Total:</span><span>${formatCurrency(sale.totalAmount)}</span></div>
+        <p class="thanks">Thank you for your patronage!</p>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button class="btn btn-primary" onclick="printCompanyReceipt('${sale.id}')" style="flex:1;"><i class="fas fa-print"></i> Print</button>
+        <button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>
+      </div>
+    `);
+  }
+
+  window.printCompanyReceipt = (id) => {
+    const s = allSales.find(x => x.id === id);
+    if (!s || !s.isCompanySale) { showToast('Receipt not found','error'); return; }
+    const dateStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '';
+    const timeStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
+    const receiptHTML = `<html><head><title>Receipt #${s.receiptNumber}</title><style>@page{margin:0;size:80mm auto}*{margin:0;padding:0}body{font-family:'Segoe UI',Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:8pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1}.item span:last-child{text-align:right;min-width:60px}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style></head><body><div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#${s.receiptNumber} (Company)</p><p class="rec">${dateStr} ${timeStr}</p></div><p class="cust">Customer: Company<br>Collected by: ${s.collectedBy}<br>Usage: ${s.usage}<br>Served by: ${s.attendantName}</p><div class="items">${s.items.map(i=>`<div class="item"><span>${i.quantity}x ${i.name}${i.sizeLabel?` (${i.sizeLabel})`:''}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('')}</div><div class="total">Total: ${formatCurrency(s.totalAmount)}</div><p class="thanks">Thank you for your patronage!</p></body></html>`;
+    const oldFrame = document.getElementById('printIframe');
+    if (oldFrame) oldFrame.remove();
+    const iframe = document.createElement('iframe'); iframe.id='printIframe'; iframe.style.display='none'; document.body.appendChild(iframe);
+    iframe.contentWindow.document.open(); iframe.contentWindow.document.write(receiptHTML); iframe.contentWindow.document.close();
+    iframe.onload = ()=>setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();setTimeout(()=>iframe.remove(),1000)},300);
+  };
+
+  // ==================== RETURN & EXISTING FUNCTIONS ====================
   window.openReturnModal = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;let itemsHtml=sale.items.map((item,idx)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--gray-light);border-radius:10px;"><span style="flex:1;"><strong>${item.name}</strong>${item.sizeLabel?` <small>(${item.sizeLabel})</small>`:''}<br><small>Sold: ${item.quantity} x ${formatCurrency(item.unitPrice)}</small></span><input type="number" step="0.25" id="return-qty-${idx}" value="0" min="0" max="${item.quantity}" style="width:70px;padding:8px;border-radius:8px;border:1px solid #ddd;text-align:center;"><span style="font-size:0.8rem;color:var(--gray);">/ ${item.quantity}</span></div>`).join('');showModal('Return Goods',`<p><strong>Receipt:</strong> ${sale.receiptNumber} | <strong>Customer:</strong> ${sale.customerName}</p><p style="color:var(--gray);">Select quantity to return:</p>${itemsHtml}<div class="form-group"><label>Reason</label><textarea class="form-control" id="returnReason" rows="2"></textarea></div><p style="font-weight:600;">Return Action:</p><div class="return-options"><div class="return-option selected" data-action="refund" onclick="window._selectReturnAction('refund')"><i class="fas fa-money-bill-wave"></i><div><strong>Full Refund</strong><br><small>Return money to customer</small></div></div><div class="return-option" data-action="exchange_same" onclick="window._selectReturnAction('exchange_same')"><i class="fas fa-exchange-alt"></i><div><strong>Exchange Same Price</strong><br><small>Swap for another item</small></div></div><div class="return-option" data-action="exchange_higher" onclick="window._selectReturnAction('exchange_higher')"><i class="fas fa-level-up-alt"></i><div><strong>Exchange + Add Money</strong><br><small>Upgrade to higher price</small></div></div><div class="return-option" data-action="store_credit" onclick="window._selectReturnAction('store_credit')"><i class="fas fa-piggy-bank"></i><div><strong>Store Credit</strong><br><small>Keep for later</small></div></div></div><button class="btn btn-primary" onclick="window._processReturn('${saleId}')" style="width:100%;margin-top:15px;"><i class="fas fa-check"></i> Process Return</button>`);};
   window._selectReturnAction = (action)=>{selectedReturnAction=action;document.querySelectorAll('.return-option').forEach(o=>o.classList.remove('selected'));document.querySelector(`[data-action="${action}"]`)?.classList.add('selected');};
   window._processReturn = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;const returnedItems=[];let totalRefund=0;sale.items.forEach((item,idx)=>{const q=parseFloat(document.getElementById(`return-qty-${idx}`)?.value)||0;if(q>0){returnedItems.push({...item,returnedQty:q,refundAmount:q*item.unitPrice});totalRefund+=q*item.unitPrice;}});if(returnedItems.length===0){showToast('Select quantity to return','error');return;}const reason=document.getElementById('returnReason')?.value?.trim()||'No reason';showPinModal('Process Return',`process return of ${formatCurrency(totalRefund)}`,async()=>{try{const batch=writeBatch(db);for(const item of returnedItems){if(item.id && !item.isNonInventory){const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);if(snap.exists()){const cur=parseFloat(snap.data().quantityAvailable??snap.data().unitQty??0);const threshold=parseFloat(snap.data().threshold||10);const addBackQty=item.returnedQty*(item.size==='pack'?(parseInt(snap.data().packSize)||12):item.size==='bundle'?(parseInt(snap.data().bundleSize)||50):parseFloat(item.size)||1);const newQty=cur+addBackQty;batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(-addBackQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});}}}batch.set(doc(collection(db,'returns')),{saleId,saleReceiptNumber:sale.receiptNumber,customerId:sale.customerId,customerName:sale.customerName,returnedItems,totalRefund,returnAction:selectedReturnAction,reason,processedBy:currentUser.uid,processedByName:userData.fullName,createdAt:serverTimestamp()});const saleUpdate={status:'returned',returnedAt:serverTimestamp(),returnedBy:currentUser.uid,returnedByName:userData.fullName,returnAction:selectedReturnAction,totalRefund};if(selectedReturnAction==='exchange_same')saleUpdate.exchangeNote='Exchanged for same price item';else if(selectedReturnAction==='exchange_higher')saleUpdate.exchangeNote='Exchanged for higher price + additional payment';else if(selectedReturnAction==='store_credit')saleUpdate.exchangeNote='Store credit held for later';batch.update(doc(db,'sales',saleId),saleUpdate);if(sale.customerId&&selectedReturnAction==='refund'){batch.update(doc(db,'customers',sale.customerId),{totalSpent:increment(-totalRefund),purchaseCount:increment(-1)});}await batch.commit();await logAudit('return_goods',`Return ${formatCurrency(totalRefund)} | Receipt ${sale.receiptNumber} | Action: ${selectedReturnAction}`);const labels={refund:`Refunded: -${formatCurrency(totalRefund)}`,exchange_same:`Exchanged: ${formatCurrency(totalRefund)}`,exchange_higher:`Upgrade exchange: ${formatCurrency(totalRefund)}`,store_credit:`Store credit: ${formatCurrency(totalRefund)}`};showToast(labels[selectedReturnAction],'success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});};
 
-  // UPDATED RECEIPT MODAL & PRINT – clear font, bold only on header
+  // Common receipt display
   window.showReceiptModal = (sale)=>{
     const dateStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     const timeStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
@@ -711,105 +964,20 @@
       </div>
     `);
   };
-  window.viewReceipt = (id)=>{const s=allSales.find(x=>x.id===id);if(s)showReceiptModal(s);};
+  window.viewReceipt = (id)=>{const s=allSales.find(x=>x.id===id);if(s) s.isCompanySale ? showCompanyReceiptModal(s) : showReceiptModal(s);};
 
-  // UPDATED PRINT FUNCTION – same clean font, bold only on header
   window.printReceipt = (id) => {
     const s = allSales.find(x => x.id === id);
     if (!s) return;
-
-    const dateStr = s.createdAt
-      ? new Date(s.createdAt.toDate ? s.createdAt.toDate() : s.createdAt)
-          .toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
-      : new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
-    const timeStr = s.createdAt
-      ? new Date(s.createdAt.toDate ? s.createdAt.toDate() : s.createdAt)
-          .toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })
-      : new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
-
-    const receiptHTML = `
-      <html>
-        <head>
-          <title>Receipt #${s.receiptNumber}</title>
-          <style>
-            @page { margin: 0; size: 80mm auto; }
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-              font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-              font-weight: normal;
-              padding: 3mm 4mm;
-              max-width: 76mm;
-              margin: 0 auto;
-              font-size: 10pt;
-              line-height: 1.3;
-            }
-            .h { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 3px; margin-bottom: 4px; }
-            .h h2 { font-size: 12pt; margin: 0; font-weight: bold; }
-            .h .addr { font-size: 8pt; margin: 0; line-height: 1.2; font-weight: bold; }
-            .h .rec { font-size: 9pt; margin: 2px 0; font-weight: normal; }
-            .cust { font-size: 9pt; margin: 4px 0; line-height: 1.3; font-weight: normal; }
-            .items { margin: 4px 0; }
-            .item { display: flex; justify-content: space-between; font-size: 9pt; margin: 1px 0; padding: 0; line-height: 1.3; font-weight: normal; }
-            .item span:first-child { flex: 1; }
-            .item span:last-child { text-align: right; min-width: 60px; white-space: nowrap; }
-            .total { border-top: 1px dashed #000; padding-top: 3px; margin-top: 4px; font-weight: bold; font-size: 10pt; text-align: right; }
-            .thanks { text-align: center; font-size: 9pt; margin-top: 5px; font-style: italic; font-weight: normal; }
-          </style>
-        </head>
-        <body>
-          <div class="h">
-            <h2>✨ OmoCreations ✨</h2>
-            <p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p>
-            <p class="addr">Abeokuta 111101, Ogun State, Nigeria</p>
-            <p class="addr">📞 0807 734 0294</p>
-            <p class="rec">#${s.receiptNumber}</p>
-            <p class="rec">${dateStr} ${timeStr}</p>
-          </div>
-          <p class="cust">Customer: ${s.customerName}<br>Served by: ${s.attendantName}</p>
-          <div class="items">
-            ${s.items.map(i => `
-              <div class="item">
-                <span>${i.quantity}x ${i.name}${i.sizeLabel ? ` (${i.sizeLabel})` : ''}</span>
-                <span>${formatCurrency(i.quantity * i.unitPrice)}</span>
-              </div>
-            `).join('')}
-          </div>
-          <div class="total">Total: ${formatCurrency(s.totalAmount)}</div>
-          <p class="thanks">Thank you for your patronage!</p>
-        </body>
-      </html>
-    `;
-
+    if (s.isCompanySale) { printCompanyReceipt(id); return; }
+    const dateStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '';
+    const timeStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
+    const receiptHTML = `<html><head><title>Receipt #${s.receiptNumber}</title><style>@page{margin:0;size:80mm auto}*{margin:0;padding:0}body{font-family:'Segoe UI',Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:8pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1}.item span:last-child{text-align:right;min-width:60px}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style></head><body><div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#${s.receiptNumber}</p><p class="rec">${dateStr} ${timeStr}</p></div><p class="cust">Customer: ${s.customerName}<br>Served by: ${s.attendantName}</p><div class="items">${s.items.map(i=>`<div class="item"><span>${i.quantity}x ${i.name}${i.sizeLabel?` (${i.sizeLabel})`:''}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('')}</div><div class="total">Total: ${formatCurrency(s.totalAmount)}</div><p class="thanks">Thank you for your patronage!</p></body></html>`;
     const oldFrame = document.getElementById('printIframe');
     if (oldFrame) oldFrame.remove();
-
-    const iframe = document.createElement('iframe');
-    iframe.id = 'printIframe';
-    iframe.style.display = 'none';
-    iframe.style.position = 'absolute';
-    iframe.style.left = '-9999px';
-    iframe.style.top = '-9999px';
-    document.body.appendChild(iframe);
-
-    iframe.contentWindow.document.open();
-    iframe.contentWindow.document.write(receiptHTML);
-    iframe.contentWindow.document.close();
-
-    iframe.onload = () => {
-      setTimeout(() => {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-        setTimeout(() => iframe.remove(), 1000);
-      }, 300);
-    };
-
-    setTimeout(() => {
-      if (iframe.contentWindow.document.readyState === 'complete') {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-        setTimeout(() => iframe.remove(), 1000);
-      }
-    }, 500);
+    const iframe = document.createElement('iframe'); iframe.id='printIframe'; iframe.style.display='none'; document.body.appendChild(iframe);
+    iframe.contentWindow.document.open(); iframe.contentWindow.document.write(receiptHTML); iframe.contentWindow.document.close();
+    iframe.onload = ()=>setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();setTimeout(()=>iframe.remove(),1000)},300);
   };
 
   window.exportSalesData = ()=>{const headers=['Receipt #','Date','Customer','Phone','Items','Total','Payment','Status'];const rows=allSales.map(s=>[s.receiptNumber||'',s.createdAt?.toDate().toLocaleString()||'',s.customerName||'',s.customerPhone||'',s.items?.length||0,s.totalAmount||0,s.paymentMethod||'',s.status||'completed']);const csv=[headers.join(','),...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');const b=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`sales_${new Date().toISOString().split('T')[0]}.csv`;a.click();showToast('Exported','success');};
@@ -817,7 +985,7 @@
 
   document.getElementById('salesSearchInput').addEventListener('input',renderSales);
 
-  onAuthStateChanged(auth,async(u)=>{if(!u){window.location.href='auth.html';return;}currentUser=u;try{const snap=await getDoc(doc(db,'users',u.uid));if(!snap.exists()||snap.data().status!=='active'){await signOut(auth);window.location.href='auth.html';return;}userData=snap.data();document.getElementById('userName').textContent=userData.fullName?.split(' ')[0]||'Staff';document.getElementById('userRole').textContent=userData.role?.replace('_',' ')||'Staff';document.getElementById('userAvatar').textContent=(userData.fullName||'A').charAt(0).toUpperCase();document.getElementById('currentDate').textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});buildSidebar();loadSales();if(isAdmin()){statsRevealed=true;updateStatsDisplay();}await logAudit('view_sales','Viewed sales');}catch(e){showToast('Error loading','error');}});
+  onAuthStateChanged(auth,async(u)=>{if(!u){window.location.href='auth.html';return;}currentUser=u;try{const snap=await getDoc(doc(db,'users',u.uid));if(!snap.exists()||snap.data().status!=='active'){await signOut(auth);window.location.href='auth.html';return;}userData=snap.data();document.getElementById('userName').textContent=userData.fullName?.split(' ')[0]||'Staff';document.getElementById('userRole').textContent=userData.role?.replace('_',' ')||'Staff';document.getElementById('userAvatar').textContent=(userData.fullName||'A').charAt(0).toUpperCase();document.getElementById('currentDate').textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});await loadAdminPins();buildSidebar();loadSales();if(isAdmin()){statsRevealed=true;updateStatsDisplay();}await logAudit('view_sales','Viewed sales');}catch(e){showToast('Error loading','error');}});
   window.addEventListener('beforeunload',cleanup);
 </script>
 </body>
