@@ -10,7 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* Same CSS as provided – unchanged */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root { --primary: #ff4da6; --primary-dark: #e6398c; --dark: #0f0f1a; --gray: #6b7280; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; }
     body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%); min-height: 100vh; padding: 15px; }
@@ -241,7 +240,6 @@
 
       if(pointsDeducted > 0) {
         await updateDoc(doc(db, 'users', staff.id), { totalPoints: increment(-pointsDeducted) });
-        // Detailed audit log
         await addDoc(collection(db, 'audit_logs'), {
           actionType: 'points_deducted',
           performedBy: 'kiosk',
