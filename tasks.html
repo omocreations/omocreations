@@ -375,14 +375,14 @@
         totalPoints: increment(points), tasksCompleted: increment(1)
       });
 
-      // Detailed audit log for task completion
+      // *** CORRECTED: audit log now uses workerId as performedBy ***
       const note = points >= 0
         ? `Task '${taskTitle}' completed on time. +${points} points.`
         : `Task '${taskTitle}' completed late. ${points} points.`;
       await addDoc(collection(db, 'audit_logs'), {
         actionType: 'task_completed',
-        performedBy: currentUser?.uid,
-        performedByName: userData?.fullName || 'Staff',
+        performedBy: workerId,
+        performedByName: `Acknowledged by ${userData?.fullName || 'Staff'}`,
         performedAt: serverTimestamp(),
         note: note
       });
