@@ -104,23 +104,14 @@
     .form-group { margin-bottom:18px; } .form-group label { display:block; font-size:0.8rem; font-weight:600; color:var(--dark); margin-bottom:6px; }
     .form-control { width:100%; padding:12px 16px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; font-size:0.9rem; outline:none; background:white; font-family:'Poppins',sans-serif; transition:border 0.2s; }
     .form-control:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(255,77,166,0.1); }
-    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-    .form-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
-    .pin-input-container { display:flex; gap:10px; justify-content:center; margin:20px 0; }
-    .pin-input { width:55px; height:65px; text-align:center; font-size:1.8rem; font-weight:700; border:2px solid rgba(255,77,166,0.2); border-radius:14px; outline:none; font-family:'Poppins',sans-serif; }
-    .pin-input:focus { border-color:var(--primary); }
-    .customer-type-toggle { display:flex; gap:10px; margin-bottom:15px; }
-    .customer-type-btn { flex:1; padding:12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; background:white; cursor:pointer; font-weight:600; font-size:0.85rem; font-family:'Poppins',sans-serif; transition:all 0.2s; }
-    .customer-type-btn.active { border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; } .form-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+    .pin-input-container { display:flex; gap:10px; justify-content:center; margin:20px 0; } .pin-input { width:55px; height:65px; text-align:center; font-size:1.8rem; font-weight:700; border:2px solid rgba(255,77,166,0.2); border-radius:14px; outline:none; font-family:'Poppins',sans-serif; } .pin-input:focus { border-color:var(--primary); }
+    .customer-type-toggle { display:flex; gap:10px; margin-bottom:15px; } .customer-type-btn { flex:1; padding:12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; background:white; cursor:pointer; font-weight:600; font-size:0.85rem; font-family:'Poppins',sans-serif; transition:all 0.2s; } .customer-type-btn.active { border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
     .empty-state { text-align:center; padding:40px 20px; color:var(--gray); } .empty-state i { font-size:2.5rem; color:var(--primary-light); margin-bottom:10px; display:block; }
     .export-dropdown { position:relative; display:inline-block; } .export-menu { position:absolute; top:100%; right:0; background:white; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); min-width:150px; display:none; z-index:50; overflow:hidden; } .export-menu.show { display:block; } .export-item { padding:12px 16px; cursor:pointer; font-size:0.85rem; transition:background 0.2s; display:flex; align-items:center; gap:10px; } .export-item:hover { background:var(--primary-soft); }
-    .receipt-container { background:#f8f9fa; border-radius:12px; padding:20px; font-family:'Courier New',monospace; max-height:50vh; overflow-y:auto; }
-    .receipt-header { text-align:center; border-bottom:1px dashed #ccc; padding-bottom:10px; margin-bottom:10px; }
-    .receipt-items { margin:15px 0; } .receipt-item { display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px; }
-    .receipt-total { border-top:1px dashed #ccc; padding-top:10px; font-weight:bold; font-size:1.1rem; display:flex; justify-content:space-between; }
+    .receipt-container { background:#f8f9fa; border-radius:12px; padding:20px; font-family:'Courier New',monospace; max-height:50vh; overflow-y:auto; } .receipt-header { text-align:center; border-bottom:1px dashed #ccc; padding-bottom:10px; margin-bottom:10px; } .receipt-items { margin:15px 0; } .receipt-item { display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px; } .receipt-total { border-top:1px dashed #ccc; padding-top:10px; font-weight:bold; font-size:1.1rem; display:flex; justify-content:space-between; }
     .toast-container { position:fixed; bottom:24px; right:24px; z-index:3000; display:flex; flex-direction:column; gap:10px; }
     .toast { background:white; color:var(--dark); padding:14px 20px; border-radius:50px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px; font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease; border-left:4px solid var(--primary); transition:all 0.3s ease; } .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); } .toast i { font-size:1.1rem; }
-
     @media (max-width:1400px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:768px) { .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; } .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); } .sidebar-header .close-sidebar { display:flex !important; } .menu-toggle { display:flex !important; } .main-content { margin-left:0 !important; width:100% !important; } .content-wrapper { padding:16px 12px; } .top-bar { padding:0 16px; } .page-title { font-size:1.1rem; } .current-date { display:none; } .stats-grid { grid-template-columns:1fr 1fr; gap:10px; } .stat-card { padding:14px 12px; } .stat-value { font-size:1.4rem; } .panel { padding:16px 12px; border-radius:18px; } .data-table { min-width:800px; } .data-table th, .data-table td { padding:10px 6px; font-size:0.75rem; } .modal { padding:20px; border-radius:20px; } .form-row, .form-row-3 { grid-template-columns:1fr; } }
     @media (max-width:480px) { .stats-grid { grid-template-columns:1fr; } .content-wrapper { padding:12px 8px; } }
@@ -174,7 +165,7 @@
       </div>
     </div>
 
-    <!-- INCOMING INVENTORY PANEL (same as before) -->
+    <!-- INCOMING INVENTORY PANEL (same as original) -->
     <div id="incomingPanel" class="page-view">
       <div class="tabs-container" style="margin-bottom:16px;">
         <button class="tab active" data-incoming-tab="general"><i class="fas fa-cube"></i> General</button>
@@ -295,7 +286,6 @@
   window.addCategoryFromModal=async function(){const name=document.getElementById('newCategoryInput')?.value?.trim().toLowerCase();if(!name){showToast('Enter category name','error');return;}if(categories.includes(name)){showToast('Already exists','error');return;}try{await setDoc(doc(db,'categories',name),{name,createdAt:serverTimestamp()});categories.push(name);updateCategoryDropdowns();showToast(`"${name}" added`,'success');hideModal();}catch(e){showToast('Failed','error');}};
   window.showAddCategoryModal=function(){showModal('Add Category',`<div class="form-group"><label>Category Name *</label><input class="form-control" id="newCategoryInput" placeholder="e.g., Accessories"></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addCategoryFromModal()"><i class="fas fa-plus"></i> Add</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);};
 
-  // Get status based on unitQty threshold
   function getStoreItemStatus(item) {
     if (item.unitQty === 0) return 'out_of_stock';
     if (item.unitQty <= (item.threshold || 5)) return 'low';
@@ -334,10 +324,7 @@
     if(lowCount>0) document.getElementById('storeLowMsg').textContent=`${lowCount} item(s) running low.`;
 
     const tbody = document.getElementById('storeTable');
-    if(!filtered.length){
-      tbody.innerHTML='<tr><td colspan="10"><div class="empty-state"><i class="fas fa-store"></i><p>No bulk items. Buy from Purchases to stock up.</p></div></td></tr>';
-      return;
-    }
+    if(!filtered.length){tbody.innerHTML='<tr><td colspan="10"><div class="empty-state"><i class="fas fa-store"></i><p>No bulk items. Buy from Purchases to stock up.</p></div></td></tr>';return;}
     tbody.innerHTML = filtered.map(item => {
       const st = getStoreItemStatus(item);
       const sb = st==='available'?'success':st==='low'?'warning':'danger';
@@ -361,23 +348,80 @@
     }).join('');
   }
 
-  // ... incoming inventory rendering and confirmation functions unchanged ...
+  // ==================== INCOMING INVENTORY RENDERING ====================
+  function renderIncomingInventory() {
+    const pending = incomingItems.filter(i => i.status === 'pending');
+    document.getElementById('pendingIncoming').textContent = pending.length;
+
+    const generalItems = pending.filter(i => i.inventoryItemType === 'general');
+    const fashionItems = pending.filter(i => i.inventoryItemType === 'fashion');
+    const packItems = pending.filter(i => i.inventoryItemType === 'pack_bundle');
+    const measuredItems = pending.filter(i => i.inventoryItemType === 'measured');
+
+    document.getElementById('incomingGeneralTable').innerHTML = generalItems.length
+      ? generalItems.map(i => `<tr><td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td><td>${i.allocation?.unit||0}</td><td>${i.targetInventoryName||'—'}</td><td>${formatCurrency(i.prices?.unit||0)}</td><td>${i.requestedByName||'-'}</td><td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td></tr>`).join('')
+      : '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-cube"></i><p>No pending general items</p></div></td></tr>';
+
+    document.getElementById('incomingFashionTable').innerHTML = fashionItems.length
+      ? fashionItems.map(i => `<tr><td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td><td>${i.allocation?.unit||0}</td><td>${i.allocation?.half||0}</td><td>${i.allocation?.quarter||0}</td><td>${i.targetInventoryName||'—'}</td><td>${formatCurrency(i.prices?.unit||0)} / ${formatCurrency(i.prices?.half||0)} / ${formatCurrency(i.prices?.quarter||0)}</td><td>${i.requestedByName||'-'}</td><td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td></tr>`).join('')
+      : '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-tshirt"></i><p>No pending fashion items</p></div></td></tr>';
+
+    document.getElementById('incomingPackBundleTable').innerHTML = packItems.length
+      ? packItems.map(i => `<tr><td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td><td>${i.allocation?.unit||0}</td><td>${i.allocation?.pack||0}</td><td>${i.packSize||12}</td><td>${i.targetInventoryName||'—'}</td><td>${formatCurrency(i.prices?.unit||0)} / ${formatCurrency(i.prices?.pack||0)}</td><td>${i.requestedByName||'-'}</td><td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td></tr>`).join('')
+      : '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr>';
+
+    document.getElementById('incomingMeasuredTable').innerHTML = measuredItems.length
+      ? measuredItems.map(i => `<tr><td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td><td>${i.allocation?.unit||0}</td><td>${i.allocation?.bundle||0}</td><td>${i.bundleSize||50}</td><td>${i.targetInventoryName||'—'}</td><td>${formatCurrency(i.prices?.unit||0)} / ${formatCurrency(i.prices?.bundle||0)}</td><td>${i.requestedByName||'-'}</td><td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td></tr>`).join('')
+      : '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-ruler"></i><p>No pending measured items</p></div></td></tr>';
+  }
+
+  // ==================== CONFIRM INCOMING TRANSFER ====================
+  window.confirmIncomingTransfer = function(incomingId) {
+    const inc = incomingItems.find(i => i.id === incomingId);
+    if (!inc) return;
+    showPinModal('Confirm Transfer','add to live inventory', async () => {
+      try {
+        const batch = writeBatch(db);
+        // Deduct units from store
+        const unitsToDeduct = inc.bulkQty * (storeItems.find(s=>s.id===inc.storeItemId)?.bulkSize || 1);
+        batch.update(doc(db,'store_items',inc.storeItemId),{unitQty:increment(-unitsToDeduct),updatedAt:serverTimestamp()});
+        // Delete incoming document
+        batch.delete(doc(db,'incoming_inventory',incomingId));
+
+        const inventoryRef = inc.targetInventoryId
+          ? doc(db,'stock_items',inc.targetInventoryId)
+          : doc(collection(db,'stock_items'));
+
+        if (!inc.targetInventoryId) {
+          batch.set(inventoryRef,{
+            name: inc.targetInventoryName, category: inc.newInventoryCategory||'other',
+            itemType: inc.inventoryItemType,
+            unitQty: inc.allocation?.unit||0, halfQty: inc.allocation?.half||0, quarterQty: inc.allocation?.quarter||0,
+            unitPrice: inc.prices?.unit||0, halfPrice: inc.prices?.half||0, quarterPrice: inc.prices?.quarter||0,
+            packSize: inc.packSize||12, packPrice: inc.prices?.pack||0,
+            bundleSize: inc.bundleSize||50, bundlePrice: inc.prices?.bundle||0,
+            threshold: 10, status: 'available',
+            createdBy: currentUser?.uid, createdByName: userData?.fullName||'Staff',
+            createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+          });
+        } else {
+          const updates={updatedAt:serverTimestamp()};
+          if(inc.allocation?.unit) updates.unitQty=increment(inc.allocation.unit);
+          if(inc.allocation?.half) updates.halfQty=increment(inc.allocation.half);
+          if(inc.allocation?.quarter) updates.quarterQty=increment(inc.allocation.quarter);
+          batch.update(inventoryRef,updates);
+        }
+        await batch.commit();
+        await logAudit('confirm_incoming',`Confirmed incoming: ${inc.storeItemName} → ${inc.targetInventoryName||inc.storeItemName}`);
+        showToast('Inventory updated successfully!','success');
+      } catch(e) { showToast('Failed: '+e.message,'error'); }
+    });
+  };
 
   function renderWholesaleSales() {
     const tbody = document.getElementById('wholesaleTable');
-    if(!wholesaleSales.length){
-      tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="fas fa-tags"></i><p>No wholesale sales yet.</p></div></td></tr>';
-      return;
-    }
-    tbody.innerHTML = wholesaleSales.map(s => `<tr>
-      <td>${formatDate(s.createdAt)}</td>
-      <td><span class="badge badge-info">${s.receiptNumber||'N/A'}</span></td>
-      <td>${s.customerName||'Walk-in'}</td>
-      <td>${s.items?.length||0} items</td>
-      <td><strong>${formatCurrency(s.totalAmount)}</strong></td>
-      <td><span class="badge badge-success">${s.paymentMethod||'cash'}</span></td>
-      <td><button class="btn btn-sm btn-outline" onclick="viewWholesaleReceipt('${s.id}')"><i class="fas fa-receipt"></i></button></td>
-    </tr>`).join('');
+    if(!wholesaleSales.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="fas fa-tags"></i><p>No wholesale sales yet.</p></div></td></tr>';return;}
+    tbody.innerHTML = wholesaleSales.map(s => `<tr><td>${formatDate(s.createdAt)}</td><td><span class="badge badge-info">${s.receiptNumber||'N/A'}</span></td><td>${s.customerName||'Walk-in'}</td><td>${s.items?.length||0} items</td><td><strong>${formatCurrency(s.totalAmount)}</strong></td><td><span class="badge badge-success">${s.paymentMethod||'cash'}</span></td><td><button class="btn btn-sm btn-outline" onclick="viewWholesaleReceipt('${s.id}')"><i class="fas fa-receipt"></i></button></td></tr>`).join('');
   }
 
   function loadStore() {
@@ -400,7 +444,7 @@
 
   async function loadCustomers() { try { const snap = await getDocs(query(collection(db,'customers'), where('status','==','approved'))); allCustomers = snap.docs.map(d=>({id:d.id,...d.data()})); } catch(e) { allCustomers=[]; } }
 
-  // ==================== ADD BULK ITEM (REVAMPED FORM) ====================
+  // ==================== ADD BULK ITEM (UNIT-BASED) ====================
   window.openAddStoreItemModal = async function() {
     const invTypes = ['general','fashion','pack_bundle','measured'];
     const typeOptions = invTypes.map(t => `<option value="${t}">${t.replace(/_/g,' ')}</option>`).join('');
@@ -438,7 +482,7 @@
     if (!name) { showToast('Item name required', 'error'); return; }
     if (unitQty <= 0) { showToast('Unit quantity required', 'error'); return; }
     if (unitCost <= 0) { showToast('Unit cost required', 'error'); return; }
-    if (bulkCost <= 0) bulkCost = unitCost * bulkSize; // Auto-calculate
+    if (bulkCost <= 0) bulkCost = unitCost * bulkSize;
 
     const status = unitQty <= threshold ? 'low' : 'available';
     showPinModal('Confirm Add', 'add bulk item', async () => {
@@ -456,7 +500,7 @@
     });
   };
 
-  // ==================== RESTOCK MODAL (ADAPTED TO UNIT-BASED STORE) ====================
+  // ==================== RESTOCK MODAL (UNIT-BASED ALLOCATION) ====================
   window.openRestockModal = async function(storeItemId, preselectedInventoryId = null) {
     const item = storeItems.find(i => i.id === storeItemId);
     if (!item) return;
@@ -556,9 +600,100 @@
     updateTotalPieces();
   };
 
-  // submitIncomingRestock and confirmIncomingTransfer remain same as previous version (they already handle allocation per type)
+  // ==================== SUBMIT INCOMING RESTOCK ====================
+  window.submitIncomingRestock = function(storeItemId) {
+    const item=storeItems.find(i=>i.id===storeItemId);
+    if(!item)return;
+    const bulkQty=parseInt(document.getElementById('s2iBulkQty')?.value)||0;
+    if(bulkQty<=0||bulkQty>(item.bulkStock||0)){showToast('Invalid bulk quantity','error');return;}
+    const totalPieces=bulkQty*(item.bulkSize||1);
+    const inventoryId=document.getElementById('s2iInventorySelect')?.value;
+    let inventoryName=item.name;
+    if(inventoryId==='new'){
+      inventoryName=document.getElementById('s2iNewName')?.value?.trim();
+      if(!inventoryName){showToast('Name required for new item','error');return;}
+    }
 
-  // ==================== WHOLESALE SALE (UPDATED STOCK CHECK) ====================
+    const allocation={};
+    document.querySelectorAll('.s2i-qty').forEach(inp=>{allocation[inp.dataset.form]=parseInt(inp.value)||0;});
+    const prices={
+      unit: parseFloat(document.getElementById('s2iUnitPrice')?.value)||0,
+      half: parseFloat(document.getElementById('s2iHalfPrice')?.value)||0,
+      quarter: parseFloat(document.getElementById('s2iQuarterPrice')?.value)||0,
+      pack: parseFloat(document.getElementById('s2iPackPrice')?.value)||0,
+      bundle: parseFloat(document.getElementById('s2iBundlePrice')?.value)||0
+    };
+    const packSize=parseInt(document.getElementById('s2iPackSize')?.value)||12;
+    const bundleSize=parseInt(document.getElementById('s2iBundleSize')?.value)||50;
+
+    let allocatedPieces=0;
+    for(const[form,qty]of Object.entries(allocation)){
+      if(form==='half')allocatedPieces+=qty*0.5;
+      else if(form==='quarter')allocatedPieces+=qty*0.25;
+      else if(form==='pack')allocatedPieces+=qty*packSize;
+      else if(form==='bundle')allocatedPieces+=qty*bundleSize;
+      else allocatedPieces+=qty;
+    }
+    if(Math.abs(allocatedPieces-totalPieces)>0.001){showToast(`Allocated pieces (${allocatedPieces}) must equal ${totalPieces}`,'error');return;}
+
+    showPinModal('Send to Incoming Inventory','save for review',async()=>{
+      try{
+        await addDoc(collection(db,'incoming_inventory'),{
+          storeItemId,storeItemName:item.name,storeItemCategory:item.category,
+          bulkQty,totalPieces,
+          targetInventoryId: inventoryId==='new'?null:inventoryId,
+          targetInventoryName: inventoryId==='new'?inventoryName:null,
+          newInventoryCategory: inventoryId==='new'?(document.getElementById('s2iNewCategory')?.value||'other'):null,
+          allocation,prices,packSize,bundleSize,
+          inventoryItemType: item.inventoryItemType,
+          unitsPerBulk: item.bulkSize||1,
+          requestedBy: currentUser?.uid,
+          requestedByName: userData?.fullName||'Staff',
+          status: 'pending',
+          createdAt: serverTimestamp()
+        });
+        const detail = `Incoming: ${item.name} → ${inventoryName} | ${bulkQty} bulk packs, ${totalPieces} pieces | Allocation: ${JSON.stringify(allocation)} | Prices: ${JSON.stringify(prices)}`;
+        await logAudit('incoming_inventory', detail);
+        showToast('Sent to Incoming Inventory for review!','success');
+        hideModal();
+      }catch(e){showToast('Failed: '+e.message,'error');}
+    });
+  };
+
+  // ==================== EDIT / DELETE STORE ITEMS ====================
+  window.openEditStoreItem = function(id) {
+    const item = storeItems.find(i => i.id === id);
+    if (!item) return;
+    showModal(`Edit: ${item.name}`, `
+      <div class="form-group"><label>Item Name</label><input class="form-control" value="${item.name||''}" readonly></div>
+      <div class="form-row"><div class="form-group"><label>Unit Quantity</label><input type="number" class="form-control" id="editUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Cost ₦</label><input type="number" class="form-control" id="editUnitCost" value="${item.unitCost||0}" step="0.01" min="0"></div></div>
+      <div class="form-row"><div class="form-group"><label>Bulk Size</label><input type="number" class="form-control" id="editBulkSize" value="${item.bulkSize||1}" min="1"></div><div class="form-group"><label>Bulk Cost ₦</label><input type="number" class="form-control" id="editBulkCost" value="${item.bulkCost||0}" step="0.01" min="0"></div></div>
+      <div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||5}" min="1"></div>
+      <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveStoreEdit('${id}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
+    `);
+  };
+  window.saveStoreEdit = async function(id) {
+    const unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0;
+    const unitCost = parseFloat(document.getElementById('editUnitCost')?.value) || 0;
+    const bulkSize = parseInt(document.getElementById('editBulkSize')?.value) || 1;
+    const bulkCost = parseFloat(document.getElementById('editBulkCost')?.value) || 0;
+    const threshold = parseInt(document.getElementById('editThreshold')?.value) || 5;
+    showPinModal('Confirm Edit', 'save changes', async () => {
+      try {
+        await updateDoc(doc(db,'store_items', id), { unitQty, unitCost, bulkSize, bulkCost, threshold, updatedAt: serverTimestamp() });
+        showToast('Updated', 'success');
+        hideModal();
+      } catch(e) { showToast('Failed', 'error'); }
+    });
+  };
+  window.deleteStoreItem = async function(id) {
+    if (!confirm('Delete this bulk item?')) return;
+    showPinModal('Confirm Delete', 'delete', async () => {
+      try { await deleteDoc(doc(db,'store_items', id)); showToast('Deleted', 'success'); } catch(e) { showToast('Failed', 'error'); }
+    });
+  };
+
+  // ==================== WHOLESALE SALE (WITH STOCK CHECK) ====================
   window.openWholesaleSaleModal = async function() {
     await loadCustomers();
     const availableItems = storeItems.filter(i => Math.floor((i.unitQty||0)/(i.bulkSize||1)) > 0);
@@ -714,40 +849,7 @@
     `);
   };
 
-  // Edit / Delete unchanged (adapt to new fields)
-  window.openEditStoreItem = function(id) {
-    const item = storeItems.find(i => i.id === id);
-    if (!item) return;
-    showModal(`Edit: ${item.name}`, `
-      <div class="form-group"><label>Item Name</label><input class="form-control" value="${item.name||''}" readonly></div>
-      <div class="form-row"><div class="form-group"><label>Unit Quantity</label><input type="number" class="form-control" id="editUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Cost ₦</label><input type="number" class="form-control" id="editUnitCost" value="${item.unitCost||0}" step="0.01" min="0"></div></div>
-      <div class="form-row"><div class="form-group"><label>Bulk Size</label><input type="number" class="form-control" id="editBulkSize" value="${item.bulkSize||1}" min="1"></div><div class="form-group"><label>Bulk Cost ₦</label><input type="number" class="form-control" id="editBulkCost" value="${item.bulkCost||0}" step="0.01" min="0"></div></div>
-      <div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||5}" min="1"></div>
-      <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveStoreEdit('${id}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
-    `);
-  };
-  window.saveStoreEdit = async function(id) {
-    const unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0;
-    const unitCost = parseFloat(document.getElementById('editUnitCost')?.value) || 0;
-    const bulkSize = parseInt(document.getElementById('editBulkSize')?.value) || 1;
-    const bulkCost = parseFloat(document.getElementById('editBulkCost')?.value) || 0;
-    const threshold = parseInt(document.getElementById('editThreshold')?.value) || 5;
-    showPinModal('Confirm Edit', 'save changes', async () => {
-      try {
-        await updateDoc(doc(db,'store_items', id), { unitQty, unitCost, bulkSize, bulkCost, threshold, updatedAt: serverTimestamp() });
-        showToast('Updated', 'success');
-        hideModal();
-      } catch(e) { showToast('Failed', 'error'); }
-    });
-  };
-  window.deleteStoreItem = async function(id) {
-    if (!confirm('Delete this bulk item?')) return;
-    showPinModal('Confirm Delete', 'delete', async () => {
-      try { await deleteDoc(doc(db,'store_items', id)); showToast('Deleted', 'success'); } catch(e) { showToast('Failed', 'error'); }
-    });
-  };
-
-  // Help, Export, Refresh unchanged
+  // ==================== HELP, EXPORT, REFRESH ====================
   window.openHelpGuide = function() {
     showModal('📖 How to Use the Store', `
       <div style="font-size:0.9rem; line-height:1.6;">
@@ -773,8 +875,39 @@
   };
   window.refreshStore = function() { loadStore(); showToast('Refreshed', 'success'); };
 
-  // Event listeners same as before
+  // ==================== EVENT LISTENERS ====================
+  document.getElementById('searchInput').addEventListener('input', renderStoreStock);
+  document.getElementById('categoryFilter').addEventListener('change', renderStoreStock);
+  document.getElementById('exportDropdownBtn').addEventListener('click', (e)=>{e.stopPropagation();document.getElementById('exportMenu').classList.toggle('show');});
+  document.addEventListener('click', ()=>document.getElementById('exportMenu').classList.remove('show'));
 
+  // Main tabs
+  document.querySelectorAll('.tabs-container .tab').forEach(t => t.addEventListener('click', function() {
+    currentTab = this.dataset.tab;
+    document.querySelectorAll('.tabs-container .tab').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    document.getElementById(currentTab + 'Panel').classList.add('active');
+    if (currentTab === 'stock') renderStoreStock();
+    else if (currentTab === 'incoming') renderIncomingInventory();
+    else renderWholesaleSales();
+  }));
+
+  // Incoming sub-tabs
+  document.querySelectorAll('[data-incoming-tab]').forEach(t => t.addEventListener('click', function() {
+    incomingTab = this.dataset.incomingTab;
+    document.querySelectorAll('[data-incoming-tab]').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    ['incomingGeneralPanel','incomingFashionPanel','incomingPackBundlePanel','incomingMeasuredPanel'].forEach(id => {
+      const panel = document.getElementById(id);
+      if (panel) panel.style.display = 'none';
+    });
+    const map = {general:'incomingGeneralPanel', fashion:'incomingFashionPanel', pack_bundle:'incomingPackBundlePanel', measured:'incomingMeasuredPanel'};
+    const targetPanel = document.getElementById(map[incomingTab]);
+    if (targetPanel) targetPanel.style.display = 'block';
+  }));
+
+  // ==================== AUTH ====================
   onAuthStateChanged(auth, async (u) => {
     if (!u) { window.location.href='auth.html'; return; }
     currentUser = u;
