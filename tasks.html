@@ -14,7 +14,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    /* Same CSS as provided – unchanged */
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
       --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
@@ -164,8 +163,34 @@
       <button class="btn btn-primary btn-sm" onclick="openAssignTaskModal()"><i class="fas fa-plus"></i> Assign Task</button>
     </div>
 
-    <!-- Panels: all, pending, submitted, completed – same HTML as original, unchanged -->
-    <!-- Omitted for brevity but present in actual file -->
+    <!-- All Tasks Panel -->
+    <div id="allPanel" class="page-view active">
+      <div class="panel"><div class="panel-header"><h3><i class="fas fa-list"></i> All Tasks</h3></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Task</th><th>Worker</th><th>Assigned By</th><th>Deadline</th><th>Status</th><th>Points</th><th>Actions</th></tr></thead><tbody id="allTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- Pending Panel -->
+    <div id="pendingPanel" class="page-view">
+      <div class="panel"><div class="panel-header"><h3><i class="fas fa-clock"></i> Pending Tasks</h3></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Task</th><th>Worker</th><th>Deadline</th><th>Actions</th></tr></thead><tbody id="pendingTable"><tr><td colspan="4"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- Submitted Panel -->
+    <div id="submittedPanel" class="page-view">
+      <div class="panel"><div class="panel-header"><h3><i class="fas fa-paper-plane"></i> Submitted — Awaiting Acknowledgment</h3></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Task</th><th>Worker</th><th>Submitted</th><th>Deadline</th><th>Points</th><th>Actions</th></tr></thead><tbody id="submittedTable"><tr><td colspan="6"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- Completed Panel -->
+    <div id="completedPanel" class="page-view">
+      <div class="panel"><div class="panel-header"><h3><i class="fas fa-check-double"></i> Completed & Acknowledged</h3></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Task</th><th>Worker</th><th>Completed</th><th>Acknowledged By</th><th>Points</th></tr></thead><tbody id="completedTable"><tr><td colspan="5"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
+      </div>
+    </div>
+
   </div>
 </main>
 
@@ -201,8 +226,41 @@
   function isAdmin() { return userData?.role === 'admin' || userData?.role === 'super_admin'; }
   function isAttendant() { return userData?.role === 'attendant' || userData?.role === 'attendant_chief'; }
 
-  // Build sidebar (same logic)
-  function buildSidebar() { /* … */ }
+  function buildSidebar() {
+    const nav = document.getElementById('sidebarNav'); if (!nav) return;
+    const dashboardLink = isAdmin() ? 'admin-dashboard.html' : 'attendant-dashboard.html';
+    let navHTML = `<div class="nav-section"><div class="nav-section-title">MAIN</div>
+      <button class="nav-item" onclick="navigateTo('${dashboardLink}')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+      <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
+      <button class="nav-item" onclick="navigateTo('store.html')"><i class="fas fa-store"></i><span>Store</span></button>
+      <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
+      <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
+      <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button></div>`;
+    if (isAdmin()) {
+      navHTML += `<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
+        <button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff</span></button>
+        <button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>
+        <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
+        <button class="nav-item" onclick="navigateTo('orders.html')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button>
+        <button class="nav-item active"><i class="fas fa-tasks"></i><span>Tasks</span></button>
+        <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
+        <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit</span></button></div>
+      <div class="nav-section"><div class="nav-section-title">SHOP</div>
+        <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
+        <button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><span>Catalog</span></button></div>`;
+    } else {
+      navHTML += `<div class="nav-section"><div class="nav-section-title">WORK</div>
+        <button class="nav-item" onclick="navigateTo('orders.html')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button>
+        <button class="nav-item active"><i class="fas fa-tasks"></i><span>Tasks</span></button>
+        <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
+        <button class="nav-item" onclick="navigateTo('notifications.html')"><i class="fas fa-bell"></i><span>Notifications</span></button></div>
+      <div class="nav-section"><div class="nav-section-title">ACCOUNT</div>
+        <button class="nav-item" onclick="navigateTo('attendant-profile.html')"><i class="fas fa-user"></i><span>My Profile</span></button></div>`;
+    }
+    navHTML += `<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>`;
+    nav.innerHTML = navHTML;
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => { await signOut(auth); window.location.href = 'auth.html'; });
+  }
 
   function getWorkerName(uid) { const w = allWorkers.find(s => s.id === uid); return w?.fullName || 'Unknown'; }
 
@@ -225,9 +283,59 @@
     }));
   }
 
-  // renderAllTables – unchanged, uses the same panel structure
+  function renderAllTables() {
+    const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+    const workerFilter = document.getElementById('workerFilter')?.value || 'all';
+    let filtered = [...allTasks];
+    if (search) filtered = filtered.filter(t => (t.title || '').toLowerCase().includes(search) || getWorkerName(t.assignedTo).toLowerCase().includes(search));
+    if (workerFilter !== 'all') filtered = filtered.filter(t => t.assignedTo === workerFilter);
 
-  window.submitForWorker = async (taskId) => { /* unchanged */ };
+    const pending = filtered.filter(t => t.status === 'pending');
+    const submitted = filtered.filter(t => t.status === 'submitted');
+    const completed = filtered.filter(t => t.status === 'acknowledged');
+
+    document.getElementById('totalTasks').textContent = filtered.length;
+    document.getElementById('inProgress').textContent = filtered.filter(t => t.status === 'in_progress').length;
+    document.getElementById('submittedCount').textContent = submitted.length;
+    document.getElementById('completedCount').textContent = completed.length;
+    document.getElementById('allCount').textContent = filtered.length;
+    document.getElementById('pendingCount').textContent = pending.length;
+    document.getElementById('subCount').textContent = submitted.length;
+    document.getElementById('compCount').textContent = completed.length;
+
+    // All Tasks Table
+    const allTbody = document.getElementById('allTable');
+    allTbody.innerHTML = filtered.length === 0 ? '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-clipboard-list"></i><p>No tasks yet</p></div></td></tr>' : filtered.map(t => {
+      const stBadge = t.status === 'acknowledged' ? 'badge-success' : t.status === 'submitted' ? 'badge-warning' : t.status === 'in_progress' ? 'badge-info' : 'badge-pending';
+      const stLabel = t.status === 'acknowledged' ? 'Completed' : t.status === 'submitted' ? 'Submitted' : t.status === 'in_progress' ? 'In Progress' : 'Pending';
+      const actions = t.status === 'pending' ? `<button class="btn btn-sm btn-warning btn-pulse" onclick="submitForWorker('${t.id}')"><i class="fas fa-check"></i> Submit</button>` : t.status === 'submitted' ? `<button class="btn btn-sm btn-success btn-pulse" onclick="acknowledgeTask('${t.id}')"><i class="fas fa-check-double"></i> Acknowledge</button>` : '-';
+      return `<tr class="${t.status === 'submitted' ? 'row-submitted' : ''}"><td><strong>${t.title}</strong></td><td>${getWorkerName(t.assignedTo)}</td><td>${t.assignedByName || 'Attendant'}</td><td>${formatDateTime(t.deadline)}</td><td><span class="badge ${stBadge}">${stLabel}</span></td><td><span class="${(t.pointsEarned||0) > 0 ? 'badge-success' : (t.pointsEarned||0) < 0 ? 'badge-danger' : ''}">${t.pointsEarned ? (t.pointsEarned > 0 ? '+' : '') + t.pointsEarned : t.pointsValue + 'pts'}</span></td><td>${actions}</td></tr>`;
+    }).join('');
+
+    // Pending Table
+    const pTbody = document.getElementById('pendingTable');
+    pTbody.innerHTML = pending.length === 0 ? '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-clock"></i><p>No pending tasks</p></div></td></tr>' : pending.map(t => `<tr><td><strong>${t.title}</strong></td><td>${getWorkerName(t.assignedTo)}</td><td>${formatDateTime(t.deadline)}</td><td><button class="btn btn-sm btn-warning btn-pulse" onclick="submitForWorker('${t.id}')"><i class="fas fa-check"></i> Submit for Worker</button></td></tr>`).join('');
+
+    // Submitted Table
+    const sTbody = document.getElementById('submittedTable');
+    sTbody.innerHTML = submitted.length === 0 ? '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-paper-plane"></i><p>No submitted tasks</p></div></td></tr>' : submitted.map(t => {
+      const onTime = (t.submittedAt?.toDate() || new Date()) <= (t.deadline?.toDate() || new Date());
+      return `<tr class="row-submitted"><td><strong>${t.title}</strong></td><td>${getWorkerName(t.assignedTo)}</td><td>${formatDateTime(t.submittedAt)}</td><td>${formatDateTime(t.deadline)}</td><td><span class="badge badge-${onTime ? 'success' : 'danger'}">${onTime ? '+5' : '-5'} pts</span></td><td><button class="btn btn-sm btn-success btn-pulse" onclick="acknowledgeTask('${t.id}')"><i class="fas fa-check-double"></i> Acknowledge</button></td></tr>`;
+    }).join('');
+
+    // Completed Table
+    const cTbody = document.getElementById('completedTable');
+    cTbody.innerHTML = completed.length === 0 ? '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-check-double"></i><p>No completed tasks</p></div></td></tr>' : completed.map(t => `<tr><td><strong>${t.title}</strong></td><td>${getWorkerName(t.assignedTo)}</td><td>${formatDateTime(t.acknowledgedAt)}</td><td>${t.acknowledgedByName || 'Staff'}</td><td><span class="badge badge-${(t.pointsEarned||0) > 0 ? 'success' : 'danger'}">${(t.pointsEarned||0) > 0 ? '+' : ''}${t.pointsEarned||0} pts</span></td></tr>`).join('');
+  }
+
+  window.submitForWorker = async (taskId) => {
+    const task = allTasks.find(t => t.id === taskId);
+    if (!task) return;
+    try {
+      await updateDoc(doc(db, 'tasks', taskId), { status: 'submitted', submittedAt: serverTimestamp(), submittedBy: currentUser?.uid });
+      showToast(`Task submitted for ${getWorkerName(task.assignedTo)}! Awaiting acknowledgment.`, 'success');
+    } catch (e) { showToast('Failed', 'error'); }
+  };
 
   window.acknowledgeTask = async (taskId) => {
     const task = allTasks.find(t => t.id === taskId);
@@ -246,7 +354,9 @@
         <p style="margin-top:10px;font-weight:700;color:${isOnTime ? 'var(--success)' : 'var(--danger)'};font-size:1.1rem;">
           ${isOnTime ? '✅ On Time' : '❌ Late'} — <span>${points > 0 ? '+' : ''}${points} points</span>
         </p>
+        ${!isOnTime ? '<p style="font-size:0.75rem;color:var(--danger);">This will DEDUCT points from the worker.</p>' : '<p style="font-size:0.75rem;color:var(--success);">This will AWARD points to the worker.</p>'}
       </div>
+      <p style="font-size:0.8rem;color:var(--gray);margin-bottom:12px;">By clicking confirm, you verify this task was completed.</p>
       <div style="display:flex;gap:10px;">
         <button class="btn btn-success" onclick="confirmAcknowledge('${taskId}', '${workerId}', ${points}, '${task.title.replace(/'/g, "\\'")}')"><i class="fas fa-check-double"></i> Confirm</button>
         <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
@@ -277,7 +387,6 @@
         note: note
       });
 
-      // Keep old coin_transactions for backward compatibility
       await addDoc(collection(db, 'coin_transactions'), {
         userId: workerId, points,
         reason: `Task: ${taskTitle}`, createdAt: serverTimestamp()
@@ -288,11 +397,70 @@
     } catch (e) { showToast('Failed: ' + e.message, 'error'); }
   };
 
-  window.openAssignTaskModal = () => { /* unchanged */ };
-  window.createTask = async () => { /* unchanged */ };
+  window.openAssignTaskModal = () => {
+    if (allWorkers.length === 0) { showToast('No workers available', 'error'); return; }
+    let opts = ''; allWorkers.forEach(w => opts += `<option value="${w.id}">${w.fullName}</option>`);
+    showModal('Assign Task to Worker', `
+      <div class="form-group"><label>Task Title *</label><input class="form-control" id="taskTitle" placeholder="e.g., Restock shelves"></div>
+      <div class="form-group"><label>Description</label><textarea class="form-control" id="taskDesc" rows="2" placeholder="Details..."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Assign To (Worker) *</label><select class="form-control" id="taskAssignee">${opts}</select></div>
+        <div class="form-group"><label>Points Value</label><input type="number" class="form-control" id="taskPoints" value="5" min="1" max="20"></div>
+      </div>
+      <div class="form-group"><label>Deadline *</label><input type="datetime-local" class="form-control" id="taskDeadline"></div>
+      <button class="btn btn-primary" onclick="createTask()" style="width:100%;"><i class="fas fa-paper-plane"></i> Assign Task</button>
+    `);
+    const now = new Date(); now.setHours(18, 0, 0, 0);
+    document.getElementById('taskDeadline').value = now.toISOString().slice(0, 16);
+  };
+
+  window.createTask = async () => {
+    const title = document.getElementById('taskTitle')?.value?.trim();
+    const desc = document.getElementById('taskDesc')?.value?.trim();
+    const assignee = document.getElementById('taskAssignee')?.value;
+    const points = parseInt(document.getElementById('taskPoints')?.value) || 5;
+    const deadline = document.getElementById('taskDeadline')?.value;
+    if (!title || !assignee || !deadline) { showToast('Title, worker & deadline required', 'error'); return; }
+    try {
+      await addDoc(collection(db, 'tasks'), {
+        title, description: desc, assignedTo: assignee,
+        assignedBy: currentUser?.uid, assignedByName: userData?.fullName || 'Attendant',
+        deadline: new Date(deadline), pointsValue: points,
+        status: 'pending', createdAt: serverTimestamp()
+      });
+      try { await addDoc(collection(db, 'notifications'), { userId: assignee, type: 'task_assigned', title: 'New Task', message: `${title} (${points} pts)`, isRead: false, createdAt: serverTimestamp() }); } catch (e) {}
+      showToast('Task assigned!', 'success'); hideModal();
+    } catch (e) { showToast('Failed: ' + e.message, 'error'); }
+  };
+
   window.refreshData = () => { loadTasks(); showToast('Refreshed', 'success'); };
 
-  // Event listeners, auth, etc. (unchanged)
+  document.getElementById('searchInput').addEventListener('input', renderAllTables);
+  document.getElementById('workerFilter').addEventListener('change', renderAllTables);
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function () {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active')); this.classList.add('active');
+    currentTab = this.dataset.tab;
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    document.getElementById(currentTab + 'Panel').classList.add('active');
+    renderAllTables();
+  }));
+
+  onAuthStateChanged(auth, async (u) => {
+    if (!u) { window.location.href = 'auth.html'; return; }
+    currentUser = u;
+    try {
+      const snap = await getDoc(doc(db, 'users', u.uid));
+      if (!snap.exists() || snap.data().status !== 'active') { await signOut(auth); window.location.href = 'auth.html'; return; }
+      userData = snap.data();
+      document.getElementById('userName').textContent = userData.fullName?.split(' ')[0] || 'Staff';
+      document.getElementById('userRole').textContent = (userData.role || 'staff').replace('_', ' ');
+      document.getElementById('userAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
+      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      buildSidebar(); loadTasks();
+    } catch (e) { showToast('Error', 'error'); }
+  });
+
+  window.addEventListener('beforeunload', cleanup);
 </script>
 </body>
 </html>
