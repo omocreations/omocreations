@@ -15,6 +15,7 @@
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
   <style>
+    /* Full CSS as in original – unchanged */
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
       --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
@@ -165,7 +166,7 @@
       </div>
     </div>
 
-    <!-- INCOMING INVENTORY PANEL (same as original) -->
+    <!-- INCOMING INVENTORY PANEL -->
     <div id="incomingPanel" class="page-view">
       <div class="tabs-container" style="margin-bottom:16px;">
         <button class="tab active" data-incoming-tab="general"><i class="fas fa-cube"></i> General</button>
@@ -446,7 +447,6 @@
 
   // ==================== ADD BULK ITEM (WITH INVENTORY DROPDOWN) ====================
   window.openAddStoreItemModal = async function() {
-    // Get inventory items for the dropdown
     const invSnap = await getDocs(collection(db,'stock_items'));
     const invItems = invSnap.docs.map(d => ({id:d.id, ...d.data()}));
     const invOptions = invItems.length
@@ -535,8 +535,433 @@
     });
   };
 
-  // Rest of the code (restock, edit, delete, wholesale, incoming, etc.) remains unchanged from the previous full version.
-  // (It is included in the full file below.)
+  // ==================== RESTOCK MODAL (UNIT-BASED ALLOCATION) ====================
+  window.openRestockModal = async function(storeItemId, preselectedInventoryId = null) {
+    const item = storeItems.find(i => i.id === storeItemId);
+    if (!item) return;
+
+    const invSnap = await getDocs(query(collection(db,'stock_items'), where('itemType','==', item.inventoryItemType)));
+    const invItems = invSnap.docs.map(d => ({id:d.id, ...d.data()}));
+    const selectedId = preselectedInventoryId || 'new';
+    let invOptions = '';
+    if (invItems.length) {
+      invOptions = invItems.map(i => `<option value="${i.id}" ${i.id===selectedId?'selected':''}>${i.name} (avail)</option>`).join('');
+    } else {
+      invOptions = `<option value="" disabled>No existing items of this type</option>`;
+    }
+
+    showModal(`Restock Inventory from: ${item.name}`, `
+      <div style="background:var(--primary-soft);padding:12px;border-radius:12px;margin-bottom:16px;">
+        <strong>Bulk Item:</strong> ${item.name}<br>
+        <strong>Available Units:</strong> ${item.unitQty||0}<br>
+        <strong>1 Bulk = ${item.bulkSize||1} sellable pieces</strong>
+      </div>
+      <div class="form-group"><label>Bulk Packs to Take *</label><input type="number" class="form-control" id="s2iBulkQty" value="1" min="1" max="${Math.floor(item.unitQty/item.bulkSize)}"></div>
+      <div class="form-group"><label>Target Inventory Item</label>
+        <select class="form-control" id="s2iInventorySelect" style="width:100%;">
+          <option value="new">+ Create New Inventory Item</option>
+          ${invOptions}
+        </select>
+      </div>
+      <div id="s2iNewItemFields" style="display:${selectedId==='new'?'block':'none'};">
+        <div class="form-row"><div class="form-group"><label>New Item Name *</label><input class="form-control" id="s2iNewName"></div><div class="form-group"><label>Category</label><select class="form-control" id="s2iNewCategory">${categories.map(c=>`<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select></div></div>
+      </div>
+      <div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;">
+        <strong>Total Derived Pieces:</strong> <span id="s2iTotalPieces" style="font-size:1.2rem;">${item.bulkSize||1}</span>
+        <p style="font-size:0.7rem;color:var(--gray);">Allocate these pieces to the inventory forms below</p>
+      </div>
+      <div id="s2iAllocation"></div>
+      <p id="s2iValidationMsg" style="color:var(--danger);font-size:0.8rem;text-align:center;display:none;margin-top:10px;">Allocated pieces must equal total derived pieces.</p>
+      <p style="font-size:0.75rem;color:var(--warning);margin-top:8px;"><i class="fas fa-info-circle"></i> This will be saved as <strong>Incoming Inventory</strong> for review before being added to live stock.</p>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button class="btn btn-primary" onclick="submitIncomingRestock('${storeItemId}')"><i class="fas fa-paper-plane"></i> Send to Incoming</button>
+        <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
+      </div>
+    `);
+
+    const invType = item.inventoryItemType;
+    const bulkSize = item.bulkSize || 1;
+    const bulkQtyInput = document.getElementById('s2iBulkQty');
+    const totalPiecesSpan = document.getElementById('s2iTotalPieces');
+    const allocationDiv = document.getElementById('s2iAllocation');
+    const selectEl = document.getElementById('s2iInventorySelect');
+    const newFields = document.getElementById('s2iNewItemFields');
+
+    function updateTotalPieces() {
+      const bulk = parseInt(bulkQtyInput.value) || 0;
+      totalPiecesSpan.textContent = bulk * bulkSize;
+      renderAllocationForm(invType, bulk * bulkSize);
+    }
+
+    function renderAllocationForm(type, totalPieces) {
+      let html = '';
+      if (type === 'general') {
+        html = `<div class="form-group"><label>Unit Quantity</label><input type="number" class="form-control s2i-qty" data-form="unit" value="${totalPieces}" min="0" readonly></div>
+                <div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="${item.unitCost||0}" step="0.01"></div>`;
+      } else if (type === 'fashion') {
+        html = `<div class="form-row-3"><div class="form-group"><label>Unit Qty</label><input type="number" class="form-control s2i-qty" data-form="unit" value="0" min="0"></div><div class="form-group"><label>½ Qty (×0.5)</label><input type="number" class="form-control s2i-qty" data-form="half" value="0" min="0"></div><div class="form-group"><label>¼ Qty (×0.25)</label><input type="number" class="form-control s2i-qty" data-form="quarter" value="0" min="0"></div></div>
+                <div class="form-row-3"><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="${item.unitCost||0}" step="0.01"></div><div class="form-group"><label>½ Price ₦</label><input type="number" class="form-control" id="s2iHalfPrice" value="0" step="0.01"></div><div class="form-group"><label>¼ Price ₦</label><input type="number" class="form-control" id="s2iQuarterPrice" value="0" step="0.01"></div></div>`;
+      } else if (type === 'pack_bundle') {
+        html = `<div class="form-row"><div class="form-group"><label>Individual Pieces</label><input type="number" class="form-control s2i-qty" data-form="unit" value="0" min="0"></div><div class="form-group"><label>Packs</label><input type="number" class="form-control s2i-qty" data-form="pack" value="0" min="0"></div></div>
+                <div class="form-row"><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="${item.unitCost||0}" step="0.01"></div><div class="form-group"><label>Pack Price ₦</label><input type="number" class="form-control" id="s2iPackPrice" value="0" step="0.01"></div></div>
+                <div class="form-group"><label>Pack Size (items/pack)</label><input type="number" class="form-control" id="s2iPackSize" value="12" min="1"></div>`;
+      } else if (type === 'measured') {
+        html = `<div class="form-row"><div class="form-group"><label>Yards/Meters</label><input type="number" class="form-control s2i-qty" data-form="unit" value="0" min="0"></div><div class="form-group"><label>Bundles</label><input type="number" class="form-control s2i-qty" data-form="bundle" value="0" min="0"></div></div>
+                <div class="form-row"><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="${item.unitCost||0}" step="0.01"></div><div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="s2iBundlePrice" value="0" step="0.01"></div></div>
+                <div class="form-group"><label>Bundle Size (yards/bundle)</label><input type="number" class="form-control" id="s2iBundleSize" value="50" min="1"></div>`;
+      }
+      allocationDiv.innerHTML = html;
+      document.querySelectorAll('.s2i-qty').forEach(inp => inp.addEventListener('input', validateAllocation));
+      validateAllocation();
+    }
+
+    function validateAllocation() {
+      const totalPieces = parseInt(totalPiecesSpan.textContent) || 0;
+      let allocated = 0;
+      document.querySelectorAll('.s2i-qty').forEach(inp => {
+        const qty = parseInt(inp.value) || 0;
+        const form = inp.dataset.form;
+        if (form === 'half') allocated += qty * 0.5;
+        else if (form === 'quarter') allocated += qty * 0.25;
+        else if (form === 'pack') allocated += qty * (parseInt(document.getElementById('s2iPackSize')?.value) || 1);
+        else if (form === 'bundle') allocated += qty * (parseInt(document.getElementById('s2iBundleSize')?.value) || 1);
+        else allocated += qty;
+      });
+      document.getElementById('s2iValidationMsg').style.display = Math.abs(allocated - totalPieces) > 0.001 ? 'block' : 'none';
+    }
+
+    bulkQtyInput.addEventListener('input', updateTotalPieces);
+    selectEl.addEventListener('change', () => { newFields.style.display = selectEl.value === 'new' ? 'block' : 'none'; });
+    updateTotalPieces();
+  };
+
+  // ==================== SUBMIT INCOMING RESTOCK ====================
+  window.submitIncomingRestock = function(storeItemId) {
+    const item=storeItems.find(i=>i.id===storeItemId);
+    if(!item)return;
+    const bulkQty=parseInt(document.getElementById('s2iBulkQty')?.value)||0;
+    if(bulkQty<=0||bulkQty>(item.bulkStock||0)){showToast('Invalid bulk quantity','error');return;}
+    const totalPieces=bulkQty*(item.bulkSize||1);
+    const inventoryId=document.getElementById('s2iInventorySelect')?.value;
+    let inventoryName=item.name;
+    if(inventoryId==='new'){
+      inventoryName=document.getElementById('s2iNewName')?.value?.trim();
+      if(!inventoryName){showToast('Name required for new item','error');return;}
+    }
+
+    const allocation={};
+    document.querySelectorAll('.s2i-qty').forEach(inp=>{allocation[inp.dataset.form]=parseInt(inp.value)||0;});
+    const prices={
+      unit: parseFloat(document.getElementById('s2iUnitPrice')?.value)||0,
+      half: parseFloat(document.getElementById('s2iHalfPrice')?.value)||0,
+      quarter: parseFloat(document.getElementById('s2iQuarterPrice')?.value)||0,
+      pack: parseFloat(document.getElementById('s2iPackPrice')?.value)||0,
+      bundle: parseFloat(document.getElementById('s2iBundlePrice')?.value)||0
+    };
+    const packSize=parseInt(document.getElementById('s2iPackSize')?.value)||12;
+    const bundleSize=parseInt(document.getElementById('s2iBundleSize')?.value)||50;
+
+    let allocatedPieces=0;
+    for(const[form,qty]of Object.entries(allocation)){
+      if(form==='half')allocatedPieces+=qty*0.5;
+      else if(form==='quarter')allocatedPieces+=qty*0.25;
+      else if(form==='pack')allocatedPieces+=qty*packSize;
+      else if(form==='bundle')allocatedPieces+=qty*bundleSize;
+      else allocatedPieces+=qty;
+    }
+    if(Math.abs(allocatedPieces-totalPieces)>0.001){showToast(`Allocated pieces (${allocatedPieces}) must equal ${totalPieces}`,'error');return;}
+
+    showPinModal('Send to Incoming Inventory','save for review',async()=>{
+      try{
+        await addDoc(collection(db,'incoming_inventory'),{
+          storeItemId,storeItemName:item.name,storeItemCategory:item.category,
+          bulkQty,totalPieces,
+          targetInventoryId: inventoryId==='new'?null:inventoryId,
+          targetInventoryName: inventoryId==='new'?inventoryName:null,
+          newInventoryCategory: inventoryId==='new'?(document.getElementById('s2iNewCategory')?.value||'other'):null,
+          allocation,prices,packSize,bundleSize,
+          inventoryItemType: item.inventoryItemType,
+          unitsPerBulk: item.bulkSize||1,
+          requestedBy: currentUser?.uid,
+          requestedByName: userData?.fullName||'Staff',
+          status: 'pending',
+          createdAt: serverTimestamp()
+        });
+        const detail = `Incoming: ${item.name} → ${inventoryName} | ${bulkQty} bulk packs, ${totalPieces} pieces | Allocation: ${JSON.stringify(allocation)} | Prices: ${JSON.stringify(prices)}`;
+        await logAudit('incoming_inventory', detail);
+        showToast('Sent to Incoming Inventory for review!','success');
+        hideModal();
+      }catch(e){showToast('Failed: '+e.message,'error');}
+    });
+  };
+
+  // ==================== EDIT / DELETE STORE ITEMS ====================
+  window.openEditStoreItem = function(id) {
+    const item = storeItems.find(i => i.id === id);
+    if (!item) return;
+    showModal(`Edit: ${item.name}`, `
+      <div class="form-group"><label>Item Name</label><input class="form-control" value="${item.name||''}" readonly></div>
+      <div class="form-row"><div class="form-group"><label>Unit Quantity</label><input type="number" class="form-control" id="editUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Cost ₦</label><input type="number" class="form-control" id="editUnitCost" value="${item.unitCost||0}" step="0.01" min="0"></div></div>
+      <div class="form-row"><div class="form-group"><label>Bulk Size</label><input type="number" class="form-control" id="editBulkSize" value="${item.bulkSize||1}" min="1"></div><div class="form-group"><label>Bulk Cost ₦</label><input type="number" class="form-control" id="editBulkCost" value="${item.bulkCost||0}" step="0.01" min="0"></div></div>
+      <div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||5}" min="1"></div>
+      <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveStoreEdit('${id}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
+    `);
+  };
+  window.saveStoreEdit = async function(id) {
+    const unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0;
+    const unitCost = parseFloat(document.getElementById('editUnitCost')?.value) || 0;
+    const bulkSize = parseInt(document.getElementById('editBulkSize')?.value) || 1;
+    const bulkCost = parseFloat(document.getElementById('editBulkCost')?.value) || 0;
+    const threshold = parseInt(document.getElementById('editThreshold')?.value) || 5;
+    showPinModal('Confirm Edit', 'save changes', async () => {
+      try {
+        await updateDoc(doc(db,'store_items', id), { unitQty, unitCost, bulkSize, bulkCost, threshold, updatedAt: serverTimestamp() });
+        showToast('Updated', 'success');
+        hideModal();
+      } catch(e) { showToast('Failed', 'error'); }
+    });
+  };
+  window.deleteStoreItem = async function(id) {
+    if (!confirm('Delete this bulk item?')) return;
+    showPinModal('Confirm Delete', 'delete', async () => {
+      try { await deleteDoc(doc(db,'store_items', id)); showToast('Deleted', 'success'); } catch(e) { showToast('Failed', 'error'); }
+    });
+  };
+
+  // ==================== WHOLESALE SALE (WITH STOCK CHECK) ====================
+  window.openWholesaleSaleModal = async function() {
+    await loadCustomers();
+    const availableItems = storeItems.filter(i => Math.floor((i.unitQty||0)/(i.bulkSize||1)) > 0);
+    if (!availableItems.length) { showToast('No bulk packs available', 'error'); return; }
+
+    const custOptions = allCustomers.map(c => `<option value="${c.id}" data-name="${c.fullName||''}" data-phone="${c.phone||''}">${c.fullName} - ${c.phone||'No phone'}</option>`).join('');
+    const stockOptions = availableItems.map(i => {
+      const availPacks = Math.floor((i.unitQty||0)/(i.bulkSize||1));
+      return `<option value="${i.id}" data-name="${i.name||''}" data-avail-packs="${availPacks}" data-bulk-cost="${i.bulkCost||0}">${i.name} (${availPacks} packs)</option>`;
+    }).join('');
+
+    showModal('New Wholesale Sale', `
+      <div class="customer-type-toggle">
+        <button class="customer-type-btn active" data-type="existing" onclick="window._switchWSType('existing')"><i class="fas fa-users"></i> Existing</button>
+        <button class="customer-type-btn" data-type="new" onclick="window._switchWSType('new')"><i class="fas fa-user-plus"></i> New</button>
+      </div>
+      <div id="wsExistingSection"><div class="form-group"><label>Search Customer</label><select class="form-control" id="wsExistingCustomer" style="width:100%;"><option value="">-- Search --</option>${custOptions}</select></div></div>
+      <div id="wsNewSection" style="display:none;"><div class="form-row"><div class="form-group"><label>Full Name *</label><input class="form-control" id="wsNewName"></div><div class="form-group"><label>Phone *</label><input class="form-control" id="wsNewPhone"></div></div><div class="form-group"><label>Address</label><input class="form-control" id="wsNewAddress"></div></div>
+      <div id="wsItems"><div class="item-row" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;"><select class="form-control ws-select" style="flex:2;"><option value="">-- Select --</option>${stockOptions}</select><input type="number" class="form-control ws-qty" value="1" min="1" style="flex:0.5;"><input type="number" class="form-control ws-price" placeholder="Sell Price per Pack ₦" step="0.01" style="flex:1;"></div></div>
+      <button class="btn btn-outline btn-sm" onclick="addWSItem()"><i class="fas fa-plus"></i> Add Item</button>
+      <div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;"><button class="btn btn-outline ws-pay selected" data-m="cash" onclick="selWS('cash')">💵 Cash</button><button class="btn btn-outline ws-pay" data-m="transfer" onclick="selWS('transfer')">🏦 Transfer</button></div></div>
+      <div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;"><span style="font-weight:700;">Total: </span><span id="wsTotal" style="font-size:1.2rem;font-weight:800;">₦0</span></div>
+      <button class="btn btn-primary" onclick="processWS()" style="width:100%;margin-top:12px;"><i class="fas fa-check-circle"></i> Complete Sale</button>
+    `);
+    setTimeout(() => {
+      $('#wsExistingCustomer').select2({placeholder:'Search customer...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')});
+      bindWSEvents();
+    }, 150);
+  };
+
+  function bindWSEvents() {
+    document.querySelectorAll('.ws-select,.ws-qty,.ws-price').forEach(el => {
+      el.addEventListener('change', updateWSTotal);
+      el.addEventListener('input', updateWSTotal);
+    });
+    updateWSTotal();
+  }
+
+  window.addWSItem = function() {
+    const availableItems = storeItems.filter(i => Math.floor((i.unitQty||0)/(i.bulkSize||1)) > 0);
+    const stockOptions = availableItems.map(i => {
+      const availPacks = Math.floor((i.unitQty||0)/(i.bulkSize||1));
+      return `<option value="${i.id}" data-name="${i.name||''}" data-avail-packs="${availPacks}" data-bulk-cost="${i.bulkCost||0}">${i.name} (${availPacks} packs)</option>`;
+    }).join('');
+    const div = document.createElement('div');
+    div.className = 'item-row';
+    div.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center;';
+    div.innerHTML = `<select class="form-control ws-select" style="flex:2;"><option value="">-- Select --</option>${stockOptions}</select><input type="number" class="form-control ws-qty" value="1" min="1" style="flex:0.5;"><input type="number" class="form-control ws-price" placeholder="Sell Price per Pack ₦" step="0.01" style="flex:1;"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();updateWSTotal();"><i class="fas fa-times"></i></button>`;
+    document.getElementById('wsItems').appendChild(div);
+    div.querySelectorAll('.ws-select,.ws-qty,.ws-price').forEach(el => {
+      el.addEventListener('change', updateWSTotal);
+      el.addEventListener('input', updateWSTotal);
+    });
+    updateWSTotal();
+  };
+
+  function updateWSTotal() {
+    let total = 0;
+    document.querySelectorAll('#wsItems .item-row').forEach(row => {
+      const qty = parseInt(row.querySelector('.ws-qty')?.value) || 0;
+      const price = parseFloat(row.querySelector('.ws-price')?.value) || 0;
+      total += qty * price;
+    });
+    document.getElementById('wsTotal').textContent = formatCurrency(total);
+  }
+
+  window.selWS = function(m) { wholesalePayment = m; document.querySelectorAll('.ws-pay').forEach(b => b.classList.remove('selected')); document.querySelector(`.ws-pay[data-m="${m}"]`)?.classList.add('selected'); };
+
+  window.processWS = function() {
+    let customerId='', customerName='', customerPhone='';
+    if (wholesaleCustomerType === 'existing') {
+      const select = document.getElementById('wsExistingCustomer');
+      if (!select || !select.value) { showToast('Select a customer', 'error'); return; }
+      customerId = select.value;
+      const opt = select.options[select.selectedIndex];
+      customerName = opt.getAttribute('data-name') || '';
+      customerPhone = opt.getAttribute('data-phone') || '';
+    } else {
+      customerName = document.getElementById('wsNewName')?.value?.trim();
+      customerPhone = document.getElementById('wsNewPhone')?.value?.trim();
+      if (!customerName || !customerPhone) { showToast('Customer name & phone required', 'error'); return; }
+    }
+
+    const items = [];
+    let total = 0;
+    for (const row of document.querySelectorAll('#wsItems .item-row')) {
+      const sel = row.querySelector('.ws-select'), qtyEl = row.querySelector('.ws-qty'), priceEl = row.querySelector('.ws-price');
+      if (!sel?.value || !qtyEl) continue;
+      const opt = sel.options[sel.selectedIndex];
+      const qty = parseInt(qtyEl.value) || 0;
+      const price = parseFloat(priceEl?.value) || 0;
+      if (qty <= 0 || price <= 0) continue;
+      const availPacks = parseInt(opt.getAttribute('data-avail-packs')) || 0;
+      if (qty > availPacks) {
+        showToast(`Only ${availPacks} packs available for ${opt.getAttribute('data-name')}. Please adjust.`, 'error');
+        return;
+      }
+      items.push({ id: sel.value, name: opt.getAttribute('data-name'), quantity: qty, unitPrice: price });
+      total += qty * price;
+    }
+    if (!items.length) { showToast('Add at least one item', 'error'); return; }
+
+    showPinModal('Process Wholesale Sale', `sell for ${formatCurrency(total)}`, async () => {
+      try {
+        const batch = writeBatch(db);
+        const receiptNumber = 'WSL-' + Date.now().toString().slice(-8);
+        if (wholesaleCustomerType === 'new') {
+          const custRef = doc(collection(db,'customers'));
+          batch.set(custRef, {
+            fullName: customerName, phone: customerPhone,
+            address: document.getElementById('wsNewAddress')?.value?.trim()||'',
+            status: 'pending_approval',
+            createdBy: currentUser.uid, createdByName: userData.fullName,
+            createdAt: serverTimestamp()
+          });
+          customerId = custRef.id;
+        }
+        for (const item of items) {
+          const storeItem = storeItems.find(i => i.id === item.id);
+          const bulkSize = storeItem?.bulkSize || 1;
+          const unitsToDeduct = item.quantity * bulkSize;
+          batch.update(doc(db,'store_items', item.id), {
+            unitQty: increment(-unitsToDeduct),
+            updatedAt: serverTimestamp()
+          });
+        }
+        batch.set(doc(collection(db,'wholesale_sales')), {
+          receiptNumber, customerId, customerName, customerPhone,
+          items, totalAmount: total, paymentMethod: wholesalePayment,
+          attendantId: currentUser?.uid, attendantName: userData?.fullName||'Staff',
+          createdAt: serverTimestamp(), status: 'completed'
+        });
+        await batch.commit();
+        await logAudit('wholesale_sale', `Wholesale ${receiptNumber}: ${formatCurrency(total)}`);
+        showToast(`Sale completed! #${receiptNumber}`, 'success');
+        hideModal();
+      } catch(e) { showToast('Failed: '+e.message, 'error'); }
+    });
+  };
+
+  window.viewWholesaleReceipt = function(id) {
+    const s = wholesaleSales.find(x => x.id === id);
+    if (!s) return;
+    const itemsHtml = s.items.map(i => `<div class="receipt-item"><span>${i.quantity}× ${i.name}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('');
+    showModal('Receipt', `
+      <div class="receipt-container">
+        <div class="receipt-header"><h2 style="color:var(--primary);">✨ OmoCreations ✨</h2><p>#${s.receiptNumber}</p></div>
+        <p><strong>Customer:</strong> ${s.customerName}<br><strong>Payment:</strong> ${s.paymentMethod}</p>
+        <div class="receipt-items">${itemsHtml}</div>
+        <div class="receipt-total"><span>Total:</span><span>${formatCurrency(s.totalAmount)}</span></div>
+      </div>
+      <button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:12px;">Close</button>
+    `);
+  };
+
+  // ==================== HELP, EXPORT, REFRESH ====================
+  window.openHelpGuide = function() {
+    showModal('📖 How to Use the Store', `
+      <div style="font-size:0.9rem; line-height:1.6;">
+        <h4>🏬 What is the Store?</h4>
+        <p>The Store holds <strong>bulk stock</strong> tracked by sellable <strong>units</strong>. Each item has a <strong>bulk size</strong> (units per wholesale pack). Use <strong>Restock</strong> to allocate units to inventory, and <strong>Wholesale Sales</strong> to sell bulk packs.</p>
+        <h4 style="margin-top:16px;">🔄 Incoming Inventory</h4>
+        <p>After sending units from bulk stock, they appear in the <strong>Incoming Inventory</strong> tab grouped by type. An authorised person must <strong>Confirm</strong> each entry to add it to the live inventory.</p>
+      </div>
+      <button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close Guide</button>
+    `);
+  };
+  window.exportData = function(format) {
+    const h = ['Name','Category','Type','Units','Unit Cost','Bulk Size','Bulk Cost','Bulk Packs','Status'];
+    const rows = storeItems.map(i => {
+      const bulkPacks = Math.floor((i.unitQty||0)/(i.bulkSize||1));
+      return [i.name||'', i.category||'', i.inventoryItemType||'general', i.unitQty||0, i.unitCost||0, i.bulkSize||1, i.bulkCost||0, bulkPacks, getStoreItemStatus(i)];
+    });
+    const csv = [h.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: format==='csv'?'text/csv':'application/vnd.ms-excel' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `store_${new Date().toISOString().split('T')[0]}.${format}`; a.click();
+    document.getElementById('exportMenu').classList.remove('show');
+    showToast('Exported', 'success');
+  };
+  window.refreshStore = function() { loadStore(); showToast('Refreshed', 'success'); };
+
+  // ==================== EVENT LISTENERS ====================
+  document.getElementById('searchInput').addEventListener('input', renderStoreStock);
+  document.getElementById('categoryFilter').addEventListener('change', renderStoreStock);
+  document.getElementById('exportDropdownBtn').addEventListener('click', (e)=>{e.stopPropagation();document.getElementById('exportMenu').classList.toggle('show');});
+  document.addEventListener('click', ()=>document.getElementById('exportMenu').classList.remove('show'));
+
+  // Main tabs
+  document.querySelectorAll('.tabs-container .tab').forEach(t => t.addEventListener('click', function() {
+    currentTab = this.dataset.tab;
+    document.querySelectorAll('.tabs-container .tab').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    document.getElementById(currentTab + 'Panel').classList.add('active');
+    if (currentTab === 'stock') renderStoreStock();
+    else if (currentTab === 'incoming') renderIncomingInventory();
+    else renderWholesaleSales();
+  }));
+
+  // Incoming sub-tabs
+  document.querySelectorAll('[data-incoming-tab]').forEach(t => t.addEventListener('click', function() {
+    incomingTab = this.dataset.incomingTab;
+    document.querySelectorAll('[data-incoming-tab]').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    ['incomingGeneralPanel','incomingFashionPanel','incomingPackBundlePanel','incomingMeasuredPanel'].forEach(id => {
+      const panel = document.getElementById(id);
+      if (panel) panel.style.display = 'none';
+    });
+    const map = {general:'incomingGeneralPanel', fashion:'incomingFashionPanel', pack_bundle:'incomingPackBundlePanel', measured:'incomingMeasuredPanel'};
+    const targetPanel = document.getElementById(map[incomingTab]);
+    if (targetPanel) targetPanel.style.display = 'block';
+  }));
+
+  // ==================== AUTH ====================
+  onAuthStateChanged(auth, async (u) => {
+    if (!u) { window.location.href='auth.html'; return; }
+    currentUser = u;
+    try {
+      const snap = await getDoc(doc(db,'users', u.uid));
+      if (!snap.exists() || snap.data().status !== 'active') { await signOut(auth); window.location.href='auth.html'; return; }
+      userData = snap.data();
+      if (isAdmin()) storeValueRevealed = true;
+      document.getElementById('userName').textContent = userData.fullName?.split(' ')[0] || 'Staff';
+      document.getElementById('userRole').textContent = userData.role?.replace('_',' ') || 'Staff';
+      document.getElementById('userAvatar').textContent = (userData.fullName||'A').charAt(0).toUpperCase();
+      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+      buildSidebar();
+      await loadCategories();
+      loadStore();
+      await logAudit('view_store','Viewed store');
+    } catch(e) { showToast('Error', 'error'); }
+  });
+  window.addEventListener('beforeunload', cleanup);
 </script>
 </body>
 </html>
