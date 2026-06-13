@@ -224,6 +224,7 @@
 
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
+  function formatDateTime(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }); }
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
   function showToast(msg, type='success') { const c=document.getElementById('toastContainer'); if(!c)return; const t=document.createElement('div'); t.className=`toast ${type}`; t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`; c.appendChild(t); setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500); }
@@ -317,7 +318,6 @@
       return s + Math.floor((i.unitQty||0) / bulkSize);
     }, 0);
     document.getElementById('totalBulkPacks').textContent = totalBulkPacks;
-    // Fixed: pending incoming count now updates an existing element
     document.getElementById('pendingIncoming').textContent = incomingItems.filter(r=>r.status==='pending').length;
     updateStoreValueDisplay();
 
@@ -439,7 +439,6 @@
       wholesaleSales = snap.docs.map(d => ({id:d.id, ...d.data()}));
       renderWholesaleSales();
     }));
-    // Load inventory items for dropdown
     unsubscribes.push(onSnapshot(collection(db,'stock_items'), snap => {
       allInventoryItems = snap.docs.map(d => ({id:d.id, ...d.data()}));
     }));
@@ -484,11 +483,9 @@
       <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addStoreItem()"><i class="fas fa-plus"></i> Add to Store</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
     `);
 
-    // Initialize select2 for the inventory dropdown
     $('#storeLinkedInventory').select2({placeholder:'Search inventory...', allowClear:true, width:'100%', dropdownParent:$('#modalOverlay')});
   };
 
-  // Function to auto-populate form fields when an inventory item is selected
   window.populateFromInventory = function() {
     const select = document.getElementById('storeLinkedInventory');
     if (!select || !select.value) return;
@@ -518,12 +515,11 @@
     if (unitCost <= 0) { showToast('Unit cost required', 'error'); return; }
     if (bulkCost <= 0) bulkCost = unitCost * bulkSize;
 
-    const status = unitQty <= threshold ? 'low' : 'available';
     showPinModal('Confirm Add', 'add bulk item', async () => {
       try {
         const docData = {
           name, category, unitQty, unitCost, bulkSize, bulkCost,
-          inventoryItemType: invType, threshold, status,
+          inventoryItemType: invType, threshold, status: unitQty <= threshold ? 'low' : 'available',
           linkedInventoryId: linkedInventoryId || null,
           linkedInventoryName: linkedInventoryId ? (allInventoryItems.find(i=>i.id===linkedInventoryId)?.name || '') : null,
           createdBy: currentUser?.uid, createdByName: userData?.fullName||'Staff',
@@ -642,7 +638,6 @@
     const item=storeItems.find(i=>i.id===storeItemId);
     if(!item)return;
     const bulkQty=parseInt(document.getElementById('s2iBulkQty')?.value)||0;
-    // FIX: Calculate max packs correctly based on unitQty and bulkSize
     const maxPacks = Math.floor((item.unitQty || 0) / (item.bulkSize || 1));
     if(bulkQty<=0 || bulkQty > maxPacks) {
       showToast(`Invalid bulk quantity. Max packs available: ${maxPacks}`, 'error');
@@ -735,7 +730,7 @@
     });
   };
 
-  // ==================== WHOLESALE SALE (WITH STOCK CHECK) ====================
+  // ==================== WHOLESALE SALE ====================
   window.openWholesaleSaleModal = async function() {
     await loadCustomers();
     const availableItems = storeItems.filter(i => Math.floor((i.unitQty||0)/(i.bulkSize||1)) > 0);
@@ -766,14 +761,11 @@
     }, 150);
   };
 
-  // ==================== MISSING FUNCTION: SWITCH WHOLESALE CUSTOMER TYPE ====================
   window._switchWSType = function(type) {
     wholesaleCustomerType = type;
-    // Update button active states
     document.querySelectorAll('.customer-type-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.type === type);
     });
-    // Toggle visibility of sections
     document.getElementById('wsExistingSection').style.display = type === 'existing' ? 'block' : 'none';
     document.getElementById('wsNewSection').style.display = type === 'new' ? 'block' : 'none';
   };
@@ -895,12 +887,97 @@
     showModal('Receipt', `
       <div class="receipt-container">
         <div class="receipt-header"><h2 style="color:var(--primary);">✨ OmoCreations ✨</h2><p>#${s.receiptNumber}</p></div>
-        <p><strong>Customer:</strong> ${s.customerName}<br><strong>Payment:</strong> ${s.paymentMethod}</p>
+        <p><strong>Customer:</strong> ${s.customerName}<br><strong>Payment:</strong> ${s.paymentMethod}<br><strong>Date:</strong> ${formatDateTime(s.createdAt)}</p>
         <div class="receipt-items">${itemsHtml}</div>
         <div class="receipt-total"><span>Total:</span><span>${formatCurrency(s.totalAmount)}</span></div>
       </div>
-      <button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:12px;">Close</button>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button class="btn btn-primary" onclick="printReceipt('${s.id}')"><i class="fas fa-print"></i> Print Receipt</button>
+        <button class="btn btn-outline" onclick="hideModal()">Close</button>
+      </div>
     `);
+  };
+
+  // ==================== PRINT RECEIPT ====================
+  window.printReceipt = function(saleId) {
+    const s = wholesaleSales.find(x => x.id === saleId);
+    if (!s) return;
+    const itemsHtml = s.items.map(i => `<tr><td>${i.quantity}× ${i.name}</td><td style="text-align:right;">${formatCurrency(i.quantity*i.unitPrice)}</td></tr>`).join('');
+    const receiptHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt #${s.receiptNumber}</title>
+        <style>
+          body {
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            max-width: 300px;
+            margin: 0 auto;
+            text-align: center;
+          }
+          .receipt-header {
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+          }
+          .receipt-header h2 {
+            margin: 0;
+            color: #ff4da6;
+          }
+          .receipt-info {
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            text-align: left;
+          }
+          .receipt-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            text-align: left;
+          }
+          .receipt-items td {
+            padding: 4px 0;
+            border-bottom: 1px dotted #ddd;
+          }
+          .receipt-total {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ccc;
+            display: flex;
+            justify-content: space-between;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt-header">
+          <h2>✨ OmoCreations ✨</h2>
+          <p>Receipt #${s.receiptNumber}</p>
+        </div>
+        <div class="receipt-info">
+          <p><strong>Date:</strong> ${formatDateTime(s.createdAt)}<br>
+          <strong>Customer:</strong> ${s.customerName}<br>
+          <strong>Payment:</strong> ${s.paymentMethod}</p>
+        </div>
+        <table class="receipt-items">
+          ${itemsHtml}
+        </table>
+        <div class="receipt-total">
+          <span>Total:</span>
+          <span>${formatCurrency(s.totalAmount)}</span>
+        </div>
+        <p style="margin-top:20px;font-size:0.8rem;">Thank you for your purchase!</p>
+        <script>
+          window.onload = function() { window.print(); };
+        <\/script>
+      </body>
+      </html>
+    `;
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    printWindow.document.write(receiptHTML);
+    printWindow.document.close();
   };
 
   // ==================== HELP, EXPORT, REFRESH ====================
@@ -911,6 +988,8 @@
         <p>The Store holds <strong>bulk stock</strong> tracked by sellable <strong>units</strong>. Each item has a <strong>bulk size</strong> (units per wholesale pack). Use <strong>Restock</strong> to allocate units to inventory, and <strong>Wholesale Sales</strong> to sell bulk packs.</p>
         <h4 style="margin-top:16px;">🔄 Incoming Inventory</h4>
         <p>After sending units from bulk stock, they appear in the <strong>Incoming Inventory</strong> tab grouped by type. An authorised person must <strong>Confirm</strong> each entry to add it to the live inventory.</p>
+        <h4 style="margin-top:16px;">🖨️ Printing Receipts</h4>
+        <p>When viewing a wholesale sale receipt, click <strong>Print Receipt</strong> to open a printer-friendly version and print it.</p>
       </div>
       <button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close Guide</button>
     `);
@@ -935,7 +1014,6 @@
   document.getElementById('exportDropdownBtn').addEventListener('click', (e)=>{e.stopPropagation();document.getElementById('exportMenu').classList.toggle('show');});
   document.addEventListener('click', ()=>document.getElementById('exportMenu').classList.remove('show'));
 
-  // Main tabs
   document.querySelectorAll('.tabs-container .tab').forEach(t => t.addEventListener('click', function() {
     currentTab = this.dataset.tab;
     document.querySelectorAll('.tabs-container .tab').forEach(x => x.classList.remove('active'));
@@ -947,7 +1025,6 @@
     else renderWholesaleSales();
   }));
 
-  // Incoming sub-tabs
   document.querySelectorAll('[data-incoming-tab]').forEach(t => t.addEventListener('click', function() {
     incomingTab = this.dataset.incomingTab;
     document.querySelectorAll('[data-incoming-tab]').forEach(x => x.classList.remove('active'));
