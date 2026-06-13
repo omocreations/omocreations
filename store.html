@@ -56,9 +56,9 @@
     .page-title { font-size:1.5rem; font-weight:700; color:var(--dark); font-family:'Playfair Display',serif; } .current-date { color:var(--gray); font-size:0.85rem; white-space:nowrap; }
     .content-wrapper { padding:28px; max-width:1600px; }
 
-    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .stats-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:24px; }
     .stat-card { background:white; padding:18px 16px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(255,77,166,0.1); transition:all 0.3s; animation:fadeInUp 0.5s ease forwards; opacity:0; }
-    .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}.stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}
+    .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}.stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}.stat-card:nth-child(5){animation-delay:0.25s}
     .stat-card:hover { transform:translateY(-5px); box-shadow:0 12px 24px rgba(255,77,166,0.15); }
     .stat-header { display:flex; justify-content:space-between; margin-bottom:12px; }
     .stat-header span { font-size:0.65rem; color:var(--gray); text-transform:uppercase; font-weight:600; letter-spacing:1px; }
@@ -143,6 +143,7 @@
       <div class="stat-card"><div class="stat-header"><span>Total Units (Sellable)</span><div class="stat-icon"><i class="fas fa-cubes"></i></div></div><div class="stat-value" id="totalUnits">0</div></div>
       <div class="stat-card"><div class="stat-header"><span>Bulk Packs (Wholesale)</span><div class="stat-icon"><i class="fas fa-tags"></i></div></div><div class="stat-value" id="totalBulkPacks">0</div></div>
       <div class="stat-card value-locked" id="totalStoreValueCard"><div class="stat-header"><span>Store Value</span><div class="stat-icon"><i class="fas fa-naira-sign"></i></div></div><div class="stat-value" id="totalStoreValue">₦••••••</div><div class="value-hint" onclick="revealStoreValue()"><i class="fas fa-lock"></i> Tap to unlock with PIN</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Pending Incoming</span><div class="stat-icon"><i class="fas fa-truck-loading"></i></div></div><div class="stat-value" id="pendingIncoming">0</div></div>
     </div>
 
     <div class="lowstock-banner" id="storeLowBanner" style="display:none;"><i class="fas fa-box-open"></i><div style="flex:1;"><strong>Low Bulk Stock</strong> — <span id="storeLowMsg"></span></div><button class="btn btn-sm btn-warning" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i> Buy from Third Party</button></div>
@@ -316,6 +317,7 @@
       return s + Math.floor((i.unitQty||0) / bulkSize);
     }, 0);
     document.getElementById('totalBulkPacks').textContent = totalBulkPacks;
+    // Fixed: pending incoming count now updates an existing element
     document.getElementById('pendingIncoming').textContent = incomingItems.filter(r=>r.status==='pending').length;
     updateStoreValueDisplay();
 
@@ -635,12 +637,17 @@
     updateTotalPieces();
   };
 
-  // ==================== SUBMIT INCOMING RESTOCK ====================
+  // ==================== SUBMIT INCOMING RESTOCK (FIXED BULK STOCK CHECK) ====================
   window.submitIncomingRestock = function(storeItemId) {
     const item=storeItems.find(i=>i.id===storeItemId);
     if(!item)return;
     const bulkQty=parseInt(document.getElementById('s2iBulkQty')?.value)||0;
-    if(bulkQty<=0||bulkQty>(item.bulkStock||0)){showToast('Invalid bulk quantity','error');return;}
+    // FIX: Calculate max packs correctly based on unitQty and bulkSize
+    const maxPacks = Math.floor((item.unitQty || 0) / (item.bulkSize || 1));
+    if(bulkQty<=0 || bulkQty > maxPacks) {
+      showToast(`Invalid bulk quantity. Max packs available: ${maxPacks}`, 'error');
+      return;
+    }
     const totalPieces=bulkQty*(item.bulkSize||1);
     const inventoryId=document.getElementById('s2iInventorySelect')?.value;
     let inventoryName=item.name;
@@ -757,6 +764,18 @@
       $('#wsExistingCustomer').select2({placeholder:'Search customer...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')});
       bindWSEvents();
     }, 150);
+  };
+
+  // ==================== MISSING FUNCTION: SWITCH WHOLESALE CUSTOMER TYPE ====================
+  window._switchWSType = function(type) {
+    wholesaleCustomerType = type;
+    // Update button active states
+    document.querySelectorAll('.customer-type-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.type === type);
+    });
+    // Toggle visibility of sections
+    document.getElementById('wsExistingSection').style.display = type === 'existing' ? 'block' : 'none';
+    document.getElementById('wsNewSection').style.display = type === 'new' ? 'block' : 'none';
   };
 
   function bindWSEvents() {
