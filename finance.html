@@ -15,245 +15,205 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
-      --primary: #ff4da6; --primary-dark: #e6398c; --primary-light: #ffb3d9;
-      --primary-soft: #fff0f6; --dark: #1a1a2e; --gray: #6b7280;
-      --gray-light: #f3f4f6; --success: #10b981; --warning: #f59e0b;
-      --danger: #ef4444; --info: #3b82f6; --purple: #8b5cf6;
-      --sidebar-width: 280px; --header-height: 70px;
+      --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
+      --primary-soft:#fff0f6; --dark:#1a1a2e; --gray:#6b7280;
+      --gray-light:#f3f4f6; --success:#10b981; --warning:#f59e0b;
+      --danger:#ef4444; --info:#3b82f6; --purple:#8b5cf6;
+      --sidebar-width:280px; --header-height:70px;
     }
-
-    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
-
+    html { font-size:16px; -webkit-text-size-adjust:100%; }
     body {
-      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #f9fafb 0%, #fff0f6 100%);
-      display: flex; min-height: 100vh; overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
+      font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      background:linear-gradient(135deg,#f9fafb 0%,#fff0f6 100%);
+      display:flex; min-height:100vh; overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;
     }
-
     @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
     @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
     @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
-    @keyframes shimmer { 0%{background-position:-200% 0}100%{background-position:200% 0} }
 
     .sidebar {
-      width: var(--sidebar-width); min-width: var(--sidebar-width);
-      background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
-      color: white; position: fixed; top: 0; left: 0; height: 100vh;
-      overflow-y: auto; overflow-x: hidden; transition: transform 0.3s ease; z-index: 1000;
-      border-right: 1px solid rgba(255,77,166,0.2);
+      width:var(--sidebar-width); min-width:var(--sidebar-width);
+      background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%);
+      color:white; position:fixed; top:0; left:0; height:100vh;
+      overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000;
+      border-right:1px solid rgba(255,77,166,0.2);
     }
-    .sidebar::-webkit-scrollbar { width: 4px; }
-    .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-    .sidebar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+    .sidebar::-webkit-scrollbar { width:4px; }
+    .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); }
+    .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
+    .sidebar-header { padding:24px 18px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,77,166,0.2); position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); }
+    .sidebar-header .close-sidebar { display:none; background:rgba(255,255,255,0.1); border:none; color:white; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1.2rem; margin-left:auto; align-items:center; justify-content:center; }
+    .logo-icon { width:42px; height:42px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:700; flex-shrink:0; animation:flameRing 2s ease-in-out infinite; }
+    .logo-text { font-size:1.25rem; font-weight:800; font-family:'Playfair Display',serif; white-space:nowrap; } .logo-text span { color:var(--primary); }
+    .sidebar-nav { padding:20px 12px; display:flex; flex-direction:column; } .nav-section { margin-bottom:20px; }
+    .nav-section-title { font-size:0.65rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.4); padding:8px 14px 6px; font-weight:600; white-space:nowrap; }
+    .nav-item { display:flex; align-items:center; gap:14px; padding:12px 14px; border-radius:12px; color:rgba(255,255,255,0.7); cursor:pointer; border:none; background:none; width:100%; font-size:0.9rem; font-weight:500; text-align:left; margin-bottom:3px; transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; text-decoration:none; }
+    .nav-item i { width:22px; font-size:1.1rem; text-align:center; flex-shrink:0; }
+    .nav-item:hover { background:rgba(255,77,166,0.15); color:white; transform:translateX(5px); }
+    .nav-item.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; box-shadow:0 5px 15px rgba(255,77,166,0.3); }
+    .nav-item.logout { color:rgba(239,68,68,0.7); margin-top:auto; }
+    .nav-item.logout:hover { background:rgba(239,68,68,0.15); color:#ef4444; }
+    .sidebar-footer { padding:20px; border-top:1px solid rgba(255,77,166,0.2); position:sticky; bottom:0; background:linear-gradient(0deg,#0f0f1a 0%,transparent 100%); }
+    .user-profile { display:flex; align-items:center; gap:12px; }
+    .user-avatar { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); display:flex; align-items:center; justify-content:center; font-weight:700; color:white; flex-shrink:0; font-size:1.1rem; }
+    .user-details { white-space:nowrap; } .user-details h4 { font-size:0.85rem; font-weight:600; } .user-details p { font-size:0.7rem; opacity:0.6; }
+    .sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:999; display:none; } .sidebar-overlay.active { display:block; }
 
-    .sidebar-header { padding: 24px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,77,166,0.2); position: sticky; top: 0; z-index: 10; background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%); }
-    .sidebar-header .close-sidebar { display: none; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; margin-left: auto; align-items: center; justify-content: center; }
-    .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; flex-shrink: 0; animation: flameRing 2s ease-in-out infinite; }
-    .logo-text { font-size: 1.25rem; font-weight: 800; font-family: 'Playfair Display', serif; white-space: nowrap; } .logo-text span { color: var(--primary); }
+    .main-content { flex:1; margin-left:var(--sidebar-width); transition:margin-left 0.3s ease; min-height:100vh; width:calc(100% - var(--sidebar-width)); }
+    .top-bar { height:var(--header-height); background:rgba(255,255,255,0.98); backdrop-filter:blur(12px); padding:0 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,77,166,0.15); position:sticky; top:0; z-index:50; }
+    .top-bar-left { display:flex; align-items:center; gap:14px; } .menu-toggle { background:none; border:none; font-size:1.3rem; color:var(--gray); cursor:pointer; padding:10px; border-radius:10px; transition:all 0.2s; display:none; align-items:center; justify-content:center; } .menu-toggle:hover { background:var(--primary-soft); color:var(--primary); }
+    .page-title { font-size:1.5rem; font-weight:700; color:var(--dark); font-family:'Playfair Display',serif; } .current-date { color:var(--gray); font-size:0.85rem; white-space:nowrap; }
+    .content-wrapper { padding:28px; max-width:1600px; }
 
-    .sidebar-nav { padding: 20px 12px; display: flex; flex-direction: column; }
-    .nav-section { margin-bottom: 20px; }
-    .nav-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.4); padding: 8px 14px 6px; font-weight: 600; white-space: nowrap; }
-    .nav-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; color: rgba(255,255,255,0.7); cursor: pointer; border: none; background: none; width: 100%; font-size: 0.9rem; font-weight: 500; text-align: left; margin-bottom: 3px; transition: all 0.2s; font-family: 'Poppins', sans-serif; white-space: nowrap; text-decoration: none; }
-    .nav-item i { width: 22px; font-size: 1.1rem; text-align: center; flex-shrink: 0; }
-    .nav-item:hover { background: rgba(255,77,166,0.15); color: white; transform: translateX(5px); }
-    .nav-item.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 5px 15px rgba(255,77,166,0.3); }
-    .nav-item.logout { color: rgba(239,68,68,0.7); margin-top: auto; }
-    .nav-item.logout:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
-
-    .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,77,166,0.2); position: sticky; bottom: 0; background: linear-gradient(0deg, #0f0f1a 0%, transparent 100%); }
-    .user-profile { display: flex; align-items: center; gap: 12px; }
-    .user-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; flex-shrink: 0; font-size: 1.1rem; }
-    .user-details { white-space: nowrap; } .user-details h4 { font-size: 0.85rem; font-weight: 600; } .user-details p { font-size: 0.7rem; opacity: 0.6; }
-
-    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 999; display: none; }
-    .sidebar-overlay.active { display: block; }
-
-    .main-content { flex: 1; margin-left: var(--sidebar-width); transition: margin-left 0.3s ease; min-height: 100vh; width: calc(100% - var(--sidebar-width)); }
-
-    .top-bar { height: var(--header-height); background: rgba(255,255,255,0.98); backdrop-filter: blur(12px); padding: 0 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,77,166,0.15); position: sticky; top: 0; z-index: 50; }
-    .top-bar-left { display: flex; align-items: center; gap: 14px; }
-    .menu-toggle { background: none; border: none; font-size: 1.3rem; color: var(--gray); cursor: pointer; padding: 10px; border-radius: 10px; transition: all 0.2s; display: none; align-items: center; justify-content: center; }
-    .menu-toggle:hover { background: var(--primary-soft); color: var(--primary); }
-    .page-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
-    .current-date { color: var(--gray); font-size: 0.85rem; white-space: nowrap; }
-
-    .content-wrapper { padding: 28px; max-width: 1600px; }
-
-    /* Date Range Filter */
     .date-filter-bar {
-      background: white; border-radius: 20px; padding: 12px 20px; margin-bottom: 24px;
-      display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap; align-items: center;
-      border: 1px solid rgba(255,77,166,0.08);
+      background:white; border-radius:20px; padding:12px 20px; margin-bottom:24px;
+      display:flex; gap:8px; box-shadow:0 2px 8px rgba(0,0,0,0.02); flex-wrap:wrap; align-items:center;
+      border:1px solid rgba(255,77,166,0.08);
     }
-    .date-filter-bar .filter-label { font-size: 0.75rem; font-weight: 600; color: var(--gray); margin-right: 8px; }
+    .date-filter-bar .filter-label { font-size:0.75rem; font-weight:600; color:var(--gray); margin-right:8px; }
     .date-filter-btn {
-      padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem;
-      cursor: pointer; border: 1.5px solid rgba(0,0,0,0.08); background: white;
-      color: var(--gray); transition: all 0.2s; font-family: 'Poppins', sans-serif;
-      white-space: nowrap;
+      padding:8px 16px; border-radius:40px; font-weight:600; font-size:0.75rem;
+      cursor:pointer; border:1.5px solid rgba(0,0,0,0.08); background:white;
+      color:var(--gray); transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap;
     }
-    .date-filter-btn:hover { border-color: var(--primary); color: var(--primary); }
-    .date-filter-btn.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border-color: transparent; }
-    .date-filter-input { padding: 8px 12px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px; font-size: 0.8rem; outline: none; font-family: 'Poppins', sans-serif; }
-    .date-filter-input:focus { border-color: var(--primary); }
+    .date-filter-btn:hover { border-color:var(--primary); color:var(--primary); }
+    .date-filter-btn.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; border-color:transparent; }
+    .date-filter-input { padding:8px 12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:40px; font-size:0.8rem; outline:none; font-family:'Poppins',sans-serif; }
+    .date-filter-input:focus { border-color:var(--primary); }
 
-    /* Stats Grid */
-    .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: white; padding: 18px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(255,77,166,0.1); transition: all 0.3s; position: relative; overflow: hidden; animation: fadeInUp 0.5s ease forwards; opacity: 0; }
+    .stats-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:24px; }
+    .stat-card { background:white; padding:18px 16px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(255,77,166,0.1); transition:all 0.3s; position:relative; overflow:hidden; animation:fadeInUp 0.5s ease forwards; opacity:0; }
     .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}.stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}.stat-card:nth-child(5){animation-delay:0.25s}
-    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(255,77,166,0.15); }
-    .stat-header { display: flex; justify-content: space-between; margin-bottom: 12px; }
-    .stat-header span { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
-    .stat-icon { width: 36px; height: 36px; border-radius: 12px; background: var(--primary-soft); display: flex; align-items: center; justify-content: center; color: var(--primary); }
-    .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--dark); font-family: 'Playfair Display', serif; line-height: 1; }
-    .stat-change { font-size: 0.65rem; margin-top: 4px; color: var(--gray); }
-    .stat-change.positive { color: var(--success); } .stat-change.negative { color: var(--danger); }
+    .stat-card:hover { transform:translateY(-5px); box-shadow:0 12px 24px rgba(255,77,166,0.15); }
+    .stat-header { display:flex; justify-content:space-between; margin-bottom:12px; }
+    .stat-header span { font-size:0.65rem; color:var(--gray); text-transform:uppercase; font-weight:600; letter-spacing:1px; }
+    .stat-icon { width:36px; height:36px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; color:var(--primary); }
+    .stat-value { font-size:1.8rem; font-weight:800; color:var(--dark); font-family:'Playfair Display',serif; line-height:1; }
+    .stat-change { font-size:0.65rem; margin-top:4px; color:var(--gray); }
+    .stat-change.positive { color:var(--success); } .stat-change.negative { color:var(--danger); }
 
-    /* Financial Warning */
-    .financial-warning { padding: 16px 20px; border-radius: 14px; margin-bottom: 24px; display: flex; align-items: center; gap: 15px; background: rgba(239,68,68,0.1); border-left: 4px solid var(--danger); }
-    .financial-warning i { font-size: 2rem; color: var(--danger); }
-    .financial-warning.healthy { background: rgba(16,185,129,0.1); border-left-color: var(--success); }
-    .financial-warning.healthy i { color: var(--success); }
+    .financial-warning { padding:16px 20px; border-radius:14px; margin-bottom:24px; display:flex; align-items:center; gap:15px; background:rgba(239,68,68,0.1); border-left:4px solid var(--danger); }
+    .financial-warning i { font-size:2rem; color:var(--danger); }
+    .financial-warning.healthy { background:rgba(16,185,129,0.1); border-left-color:var(--success); }
+    .financial-warning.healthy i { color:var(--success); }
 
-    /* Financial Ratios */
-    .ratios-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-    .ratio-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(255,77,166,0.1); text-align: center; transition: all 0.3s; }
-    .ratio-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,77,166,0.1); }
-    .ratio-card .ratio-value { font-size: 2rem; font-weight: 800; color: var(--dark); font-family: 'Playfair Display', serif; }
-    .ratio-card .ratio-label { font-size: 0.75rem; color: var(--gray); margin-top: 4px; }
-    .ratio-card .ratio-icon { font-size: 1.5rem; color: var(--primary); margin-bottom: 8px; }
+    .ratios-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .ratio-card { background:white; padding:20px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(255,77,166,0.1); text-align:center; transition:all 0.3s; }
+    .ratio-card:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(255,77,166,0.1); }
+    .ratio-card .ratio-value { font-size:2rem; font-weight:800; color:var(--dark); font-family:'Playfair Display',serif; }
+    .ratio-card .ratio-label { font-size:0.75rem; color:var(--gray); margin-top:4px; }
+    .ratio-card .ratio-icon { font-size:1.5rem; color:var(--primary); margin-bottom:8px; }
 
-    /* Toggle */
-    .toggle-wrapper { display: flex; align-items: center; gap: 12px; background: white; padding: 8px 16px; border-radius: 40px; border: 1px solid rgba(0,0,0,0.08); }
-    .toggle-wrapper span { font-size: 0.75rem; font-weight: 600; color: var(--gray); white-space: nowrap; }
-    .toggle-wrapper span.active-label { color: var(--primary); }
-    .toggle-switch { position: relative; width: 48px; height: 26px; background: var(--gray-light); border-radius: 26px; cursor: pointer; transition: background 0.3s; flex-shrink: 0; }
-    .toggle-switch.active { background: var(--primary); }
-    .toggle-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: transform 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
-    .toggle-switch.active::after { transform: translateX(22px); }
+    .toggle-wrapper { display:flex; align-items:center; gap:12px; background:white; padding:8px 16px; border-radius:40px; border:1px solid rgba(0,0,0,0.08); }
+    .toggle-wrapper span { font-size:0.75rem; font-weight:600; color:var(--gray); white-space:nowrap; }
+    .toggle-wrapper span.active-label { color:var(--primary); }
+    .toggle-switch { position:relative; width:48px; height:26px; background:var(--gray-light); border-radius:26px; cursor:pointer; transition:background 0.3s; flex-shrink:0; }
+    .toggle-switch.active { background:var(--primary); }
+    .toggle-switch::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; background:white; border-radius:50%; transition:transform 0.3s; box-shadow:0 2px 4px rgba(0,0,0,0.15); }
+    .toggle-switch.active::after { transform:translateX(22px); }
 
-    /* Settings Card */
-    .settings-card { background: linear-gradient(135deg, var(--primary-soft), white); border-radius: 20px; padding: 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; border: 1px solid rgba(255,77,166,0.15); }
-    .settings-card h3 { font-size: 1rem; display: flex; align-items: center; gap: 10px; }
-    .point-value-input { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
-    .point-value-input input { width: 150px; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px; font-size: 1rem; font-weight: 600; text-align: center; outline: none; font-family: 'Poppins', sans-serif; }
-    .point-value-input input:focus { border-color: var(--primary); }
-    .point-info { font-size: 0.75rem; color: var(--gray); width: 100%; margin-top: 4px; }
+    .settings-card { background:linear-gradient(135deg,var(--primary-soft),white); border-radius:20px; padding:24px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; border:1px solid rgba(255,77,166,0.15); }
+    .settings-card h3 { font-size:1rem; display:flex; align-items:center; gap:10px; }
+    .point-value-input { display:flex; align-items:center; gap:15px; flex-wrap:wrap; }
+    .point-value-input input { width:150px; padding:12px 16px; border:1.5px solid rgba(0,0,0,0.08); border-radius:40px; font-size:1rem; font-weight:600; text-align:center; outline:none; font-family:'Poppins',sans-serif; }
+    .point-value-input input:focus { border-color:var(--primary); }
+    .point-info { font-size:0.75rem; color:var(--gray); width:100%; margin-top:4px; }
 
-    /* Charts */
-    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
-    .panel { background: white; border-radius: 24px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(255,77,166,0.08); transition: all 0.3s; margin-bottom: 24px; }
-    .panel:hover { box-shadow: 0 8px 25px rgba(255,77,166,0.08); }
-    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-    .panel-header h3 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--dark); }
-    .panel-header h3 i { color: var(--primary); }
-    .chart-container { position: relative; height: 280px; }
+    .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px; }
+    .panel { background:white; border-radius:24px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(255,77,166,0.08); transition:all 0.3s; margin-bottom:24px; }
+    .panel:hover { box-shadow:0 8px 25px rgba(255,77,166,0.08); }
+    .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
+    .panel-header h3 { font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:10px; color:var(--dark); }
+    .panel-header h3 i { color:var(--primary); }
+    .chart-container { position:relative; height:280px; }
 
-    /* P&L Statement */
-    .pl-statement { background: white; border-radius: 24px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(255,77,166,0.08); margin-bottom: 24px; }
-    .pl-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 0.9rem; }
-    .pl-row.indent { padding-left: 24px; }
-    .pl-row.total { font-weight: 700; font-size: 1rem; border-bottom: 2px solid rgba(0,0,0,0.08); }
-    .pl-row.grand-total { font-weight: 800; font-size: 1.2rem; border-bottom: none; color: var(--dark); }
-    .pl-section-title { font-weight: 700; color: var(--primary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; padding-top: 16px; }
+    .pl-statement { background:white; border-radius:24px; padding:32px; box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(255,77,166,0.08); margin-bottom:24px; }
+    .pl-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.9rem; }
+    .pl-row.indent { padding-left:24px; }
+    .pl-row.total { font-weight:700; font-size:1rem; border-bottom:2px solid rgba(0,0,0,0.08); }
+    .pl-row.grand-total { font-weight:800; font-size:1.2rem; border-bottom:none; color:var(--dark); }
+    .pl-section-title { font-weight:700; color:var(--primary); font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; padding-top:16px; }
 
-    /* Revenue Breakdown */
-    .revenue-breakdown { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-top: 15px; }
-    .breakdown-item { text-align: center; padding: 15px; background: var(--gray-light); border-radius: 14px; transition: all 0.3s; }
-    .breakdown-item:hover { transform: translateY(-3px); background: var(--primary-soft); }
-    .breakdown-item i { font-size: 1.5rem; color: var(--primary); margin-bottom: 8px; }
-    .breakdown-item h4 { font-size: 0.8rem; color: var(--gray); margin-bottom: 5px; }
-    .breakdown-item p { font-size: 1.2rem; font-weight: 700; color: var(--dark); }
+    .revenue-breakdown { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-top:15px; }
+    .breakdown-item { text-align:center; padding:15px; background:var(--gray-light); border-radius:14px; transition:all 0.3s; }
+    .breakdown-item:hover { transform:translateY(-3px); background:var(--primary-soft); }
+    .breakdown-item i { font-size:1.5rem; color:var(--primary); margin-bottom:8px; }
+    .breakdown-item h4 { font-size:0.8rem; color:var(--gray); margin-bottom:5px; }
+    .breakdown-item p { font-size:1.2rem; font-weight:700; color:var(--dark); }
 
-    /* Tables */
-    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 16px; }
-    .data-table { width: 100%; border-collapse: collapse; min-width: 900px; }
-    .data-table th { text-align: left; padding: 14px 10px; font-size: 0.7rem; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--primary-soft); white-space: nowrap; background: white; }
-    .data-table td { padding: 14px 10px; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 0.85rem; }
-    .data-table tbody tr { transition: background 0.2s; } .data-table tbody tr:hover { background: var(--primary-soft); }
+    .table-wrapper { overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:16px; }
+    .data-table { width:100%; border-collapse:collapse; min-width:900px; }
+    .data-table th { text-align:left; padding:14px 10px; font-size:0.7rem; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(--primary-soft); white-space:nowrap; background:white; }
+    .data-table td { padding:14px 10px; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
+    .data-table tbody tr { transition:background 0.2s; } .data-table tbody tr:hover { background:var(--primary-soft); }
 
-    .badge { padding: 5px 12px; border-radius: 40px; font-size: 0.7rem; font-weight: 600; display: inline-block; white-space: nowrap; }
-    .badge-success { background: rgba(16,185,129,0.1); color: var(--success); } .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
-    .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); } .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
-    .badge-purple { background: rgba(139,92,246,0.1); color: var(--purple); }
+    .badge { padding:5px 12px; border-radius:40px; font-size:0.7rem; font-weight:600; display:inline-block; white-space:nowrap; }
+    .badge-success { background:rgba(16,185,129,0.1); color:var(--success); } .badge-danger { background:rgba(239,68,68,0.1); color:var(--danger); }
+    .badge-warning { background:rgba(245,158,11,0.1); color:var(--warning); } .badge-info { background:rgba(59,130,246,0.1); color:var(--info); }
+    .badge-purple { background:rgba(139,92,246,0.1); color:var(--purple); }
 
-    .text-positive { color: var(--success); font-weight: 700; } .text-negative { color: var(--danger); font-weight: 700; }
+    .text-positive { color:var(--success); font-weight:700; } .text-negative { color:var(--danger); font-weight:700; }
 
-    /* Buttons */
-    .btn { padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background: white; border: 1px solid rgba(0,0,0,0.08); transition: all 0.2s; font-family: 'Poppins', sans-serif; white-space: nowrap; }
-    .btn:hover { transform: translateY(-2px); }
-    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; }
-    .btn-outline { border: 1.5px solid rgba(255,77,166,0.3); color: var(--primary); background: transparent; }
-    .btn-sm { padding: 6px 12px; font-size: 0.7rem; }
-    .btn-success { background: var(--success); color: white; border: none; }
-    .btn-danger { background: var(--danger); color: white; border: none; }
+    .btn { padding:8px 16px; border-radius:40px; font-weight:600; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; background:white; border:1px solid rgba(0,0,0,0.08); transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; }
+    .btn:hover { transform:translateY(-2px); }
+    .btn-primary { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; border:none; }
+    .btn-outline { border:1.5px solid rgba(255,77,166,0.3); color:var(--primary); background:transparent; }
+    .btn-sm { padding:6px 12px; font-size:0.7rem; }
+    .btn-success { background:var(--success); color:white; border:none; }
+    .btn-danger { background:var(--danger); color:white; border:none; }
 
-    /* Tabs */
-    .tabs-container { background: white; border-radius: 20px; padding: 6px; margin-bottom: 24px; display: flex; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap; }
-    .tab { padding: 12px 20px; border-radius: 16px; font-weight: 600; font-size: 0.85rem; cursor: pointer; border: none; background: none; color: var(--gray); display: flex; align-items: center; gap: 8px; transition: all 0.2s; font-family: 'Poppins', sans-serif; }
-    .tab:hover { background: var(--primary-soft); color: var(--primary); }
-    .tab.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
-    .tab .count { background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 30px; font-size: 0.7rem; font-weight: 700; min-width: 24px; text-align: center; }
+    .tabs-container { background:white; border-radius:20px; padding:6px; margin-bottom:24px; display:flex; gap:6px; box-shadow:0 2px 8px rgba(0,0,0,0.02); flex-wrap:wrap; }
+    .tab { padding:12px 20px; border-radius:16px; font-weight:600; font-size:0.85rem; cursor:pointer; border:none; background:none; color:var(--gray); display:flex; align-items:center; gap:8px; transition:all 0.2s; font-family:'Poppins',sans-serif; }
+    .tab:hover { background:var(--primary-soft); color:var(--primary); }
+    .tab.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; }
+    .tab .count { background:rgba(255,255,255,0.25); padding:2px 10px; border-radius:30px; font-size:0.7rem; font-weight:700; min-width:24px; text-align:center; }
 
-    .page-view { display: none; } .page-view.active { display: block; }
+    .page-view { display:none; } .page-view.active { display:block; }
 
-    /* Modal */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
-    .modal-overlay.active { display: flex; }
-    .modal { background: white; border-radius: 28px; padding: 28px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; animation: fadeInUp 0.3s ease; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
-    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray); padding: 5px; transition: all 0.2s; }
-    .modal-close:hover { color: var(--danger); transform: rotate(90deg); }
-    .form-group { margin-bottom: 18px; }
-    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
-    .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 14px; font-size: 0.9rem; outline: none; background: white; font-family: 'Poppins', sans-serif; transition: border 0.2s; }
-    .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,77,166,0.1); }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:2000; padding:16px; }
+    .modal-overlay.active { display:flex; }
+    .modal { background:white; border-radius:28px; padding:28px; max-width:600px; width:100%; max-height:85vh; overflow-y:auto; animation:fadeInUp 0.3s ease; }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .modal-header h3 { font-size:1.2rem; font-weight:700; }
+    .modal-close { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--gray); padding:5px; transition:all 0.2s; }
+    .modal-close:hover { color:var(--danger); transform:rotate(90deg); }
+    .form-group { margin-bottom:18px; }
+    .form-group label { display:block; font-size:0.8rem; font-weight:600; color:var(--dark); margin-bottom:6px; }
+    .form-control { width:100%; padding:12px 16px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; font-size:0.9rem; outline:none; background:white; font-family:'Poppins',sans-serif; transition:border 0.2s; }
+    .form-control:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(255,77,166,0.1); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 
-    /* Export Dropdown */
-    .export-dropdown { position: relative; display: inline-block; }
-    .export-menu { position: absolute; top: 100%; right: 0; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-width: 200px; display: none; z-index: 50; overflow: hidden; }
-    .export-menu.show { display: block; }
-    .export-item { padding: 12px 16px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s; display: flex; align-items: center; gap: 10px; }
-    .export-item:hover { background: var(--primary-soft); }
+    .export-dropdown { position:relative; display:inline-block; }
+    .export-menu { position:absolute; top:100%; right:0; background:white; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); min-width:200px; display:none; z-index:50; overflow:hidden; }
+    .export-menu.show { display:block; }
+    .export-item { padding:12px 16px; cursor:pointer; font-size:0.85rem; transition:background 0.2s; display:flex; align-items:center; gap:10px; }
+    .export-item:hover { background:var(--primary-soft); }
 
-    /* Toast */
-    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; }
-    .toast { background: white; color: var(--dark); padding: 14px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 0.85rem; animation: slideIn 0.3s ease; border-left: 4px solid var(--primary); transition: all 0.3s ease; }
-    .toast.success { border-left-color: var(--success); } .toast.error { border-left-color: var(--danger); }
-    .toast i { font-size: 1.1rem; }
+    .toast-container { position:fixed; bottom:24px; right:24px; z-index:3000; display:flex; flex-direction:column; gap:10px; }
+    .toast { background:white; color:var(--dark); padding:14px 20px; border-radius:50px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px; font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease; border-left:4px solid var(--primary); transition:all 0.3s ease; }
+    .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); }
+    .toast i { font-size:1.1rem; }
 
-    @media (max-width: 1400px) { .stats-grid, .ratios-grid { grid-template-columns: repeat(3, 1fr); } .revenue-breakdown { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 1100px) { .stats-grid, .ratios-grid { grid-template-columns: repeat(2, 1fr); } .charts-row { grid-template-columns: 1fr; } }
-    @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); width: 280px !important; min-width: 280px !important; }
-      .sidebar.mobile-open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.3); }
-      .sidebar-header .close-sidebar { display: flex !important; }
-      .menu-toggle { display: flex !important; }
-      .main-content { margin-left: 0 !important; width: 100% !important; }
-      .content-wrapper { padding: 16px 12px; }
-      .top-bar { padding: 0 16px; }
-      .page-title { font-size: 1.1rem; }
-      .current-date { display: none; }
-      .stats-grid, .ratios-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-      .stat-card, .ratio-card { padding: 14px 12px; }
-      .stat-value, .ratio-value { font-size: 1.4rem; }
-      .panel, .pl-statement { padding: 16px 12px; border-radius: 18px; }
-      .data-table { min-width: 700px; }
-      .data-table th, .data-table td { padding: 10px 6px; font-size: 0.75rem; }
-      .modal { padding: 20px; border-radius: 20px; }
-      .form-row { grid-template-columns: 1fr; }
-      .revenue-breakdown { grid-template-columns: 1fr 1fr; }
-      .date-filter-bar { gap: 4px; padding: 10px; }
-      .date-filter-btn { padding: 6px 10px; font-size: 0.7rem; }
+    @media (max-width:1400px) { .stats-grid,.ratios-grid { grid-template-columns:repeat(3,1fr); } .revenue-breakdown { grid-template-columns:repeat(3,1fr); } }
+    @media (max-width:1100px) { .stats-grid,.ratios-grid { grid-template-columns:repeat(2,1fr); } .charts-row { grid-template-columns:1fr; } }
+    @media (max-width:768px) {
+      .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; }
+      .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); }
+      .sidebar-header .close-sidebar { display:flex !important; } .menu-toggle { display:flex !important; }
+      .main-content { margin-left:0 !important; width:100% !important; } .content-wrapper { padding:16px 12px; }
+      .top-bar { padding:0 16px; } .page-title { font-size:1.1rem; } .current-date { display:none; }
+      .stats-grid,.ratios-grid { grid-template-columns:1fr 1fr; gap:10px; }
+      .stat-card,.ratio-card { padding:14px 12px; } .stat-value,.ratio-value { font-size:1.4rem; }
+      .panel,.pl-statement { padding:16px 12px; border-radius:18px; }
+      .data-table { min-width:700px; } .data-table th,.data-table td { padding:10px 6px; font-size:0.75rem; }
+      .modal { padding:20px; border-radius:20px; } .form-row { grid-template-columns:1fr; }
+      .revenue-breakdown { grid-template-columns:1fr 1fr; } .date-filter-bar { gap:4px; padding:10px; }
+      .date-filter-btn { padding:6px 10px; font-size:0.7rem; }
     }
-    @media (max-width: 480px) { .stats-grid, .ratios-grid { grid-template-columns: 1fr; } .content-wrapper { padding: 12px 8px; } .revenue-breakdown { grid-template-columns: 1fr; } }
+    @media (max-width:480px) { .stats-grid,.ratios-grid { grid-template-columns:1fr; } .content-wrapper { padding:12px 8px; } .revenue-breakdown { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -368,6 +328,7 @@
       <div class="pl-section-title">REVENUE</div>
       <div class="pl-row indent"><span>Retail Sales</span><span id="plRetailSales">₦0</span></div>
       <div class="pl-row indent"><span>Wholesale Sales</span><span id="plWholesaleSales">₦0</span></div>
+      <div class="pl-row indent"><span>Company Sales</span><span id="plCompanySales">₦0</span></div>
       <div class="pl-row total"><span>Total Revenue</span><span id="plTotalRevenue">₦0</span></div>
       <div class="pl-section-title">COST OF GOODS SOLD</div>
       <div class="pl-row indent"><span>Inventory Purchases</span><span id="plInvPurchases">₦0</span></div>
@@ -375,7 +336,8 @@
       <div class="pl-row total"><span>Total COGS</span><span id="plTotalCOGS">₦0</span></div>
       <div class="pl-row total"><span>GROSS PROFIT</span><span id="plGrossProfit" style="font-size:1.1rem;">₦0</span></div>
       <div class="pl-section-title">OPERATING EXPENSES</div>
-      <div class="pl-row indent"><span>Staff Salaries</span><span id="plSalaries">₦0</span></div>
+      <div class="pl-row indent"><span>Staff Salaries (Base)</span><span id="plBaseSalaries">₦0</span></div>
+      <div class="pl-row indent"><span>Point Bonuses/Penalties</span><span id="plPointBonusTotal">₦0</span></div>
       <div class="pl-row indent"><span>Miscellaneous Expenses</span><span id="plMisc">₦0</span></div>
       <div class="pl-row total"><span>Total Operating Expenses</span><span id="plTotalOpEx">₦0</span></div>
       <div class="pl-row grand-total" style="padding-top:16px;"><span>NET PROFIT</span><span id="plNetProfit" style="font-size:1.3rem;">₦0</span></div>
@@ -392,8 +354,8 @@
       <div class="breakdown-item"><i class="fas fa-cash-register"></i><h4>Cash Sales</h4><p id="cashSales">₦0</p></div>
       <div class="breakdown-item"><i class="fas fa-credit-card"></i><h4>POS / Transfer</h4><p id="posSales">₦0</p></div>
       <div class="breakdown-item"><i class="fas fa-store-alt"></i><h4>Wholesale</h4><p id="wholesaleRev">₦0</p></div>
-      <div class="breakdown-item"><i class="fas fa-box"></i><h4>Walk-in Sales</h4><p id="walkinSales">₦0</p></div>
-      <div class="breakdown-item"><i class="fas fa-shopping-bag"></i><h4>Online Orders</h4><p id="onlineSales">₦0</p></div>
+      <div class="breakdown-item"><i class="fas fa-building"></i><h4>Company Sales</h4><p id="companyRev">₦0</p></div>
+      <div class="breakdown-item"><i class="fas fa-shopping-bag"></i><h4>Walk‑in / Online</h4><p id="walkinSales">₦0</p></div>
     </div></div>
 
     <!-- Top Performing Items -->
@@ -401,7 +363,12 @@
       <div class="table-wrapper"><table class="data-table"><thead><tr><th>Rank</th><th>Item</th><th>Qty Sold</th><th>Revenue</th><th>% of Total</th></tr></thead><tbody id="topItemsTable"><tr><td colspan="5"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
     </div>
 
-    <!-- Tabs -->
+    <!-- Point Payroll Impact -->
+    <div class="panel"><div class="panel-header"><h3><i class="fas fa-star" style="color:#f59e0b;"></i> Point Payroll Impact (Current Period)</h3></div>
+      <div class="table-wrapper"><table class="data-table"><thead><tr><th>Staff</th><th>Role</th><th>Total Points</th><th>Point Value</th><th>Points Bonus</th><th>Base Salary</th><th>Final Salary</th></tr></thead><tbody id="pointPayrollTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
+    </div>
+
+    <!-- Tabs: Salary, Purchases, Misc Expenses -->
     <div class="tabs-container">
       <button class="tab active" data-tab="salary"><i class="fas fa-users"></i> Salary <span class="count" id="salaryCount">0</span></button>
       <button class="tab" data-tab="purchases"><i class="fas fa-shopping-cart"></i> All Purchases <span class="count" id="purchasesCount">0</span></button>
@@ -415,7 +382,7 @@
     <div id="miscPanel" class="page-view"><div class="panel"><div class="panel-header"><h3><i class="fas fa-receipt"></i> Miscellaneous Expenses</h3><button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()"><i class="fas fa-plus"></i> Add Expense</button></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Expense Name</th><th>Category</th><th>Amount</th><th>Issued By</th><th>Bought By</th><th>Status</th><th>Actions</th></tr></thead><tbody id="miscTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div></div>
 
     <!-- Monthly Comparison -->
-    <div class="panel"><div class="panel-header"><h3><i class="fas fa-calendar-alt"></i> Monthly Comparison</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Month</th><th>Revenue</th><th>Wholesale</th><th>Inv. Purch.</th><th>Store Purch.</th><th>Salaries</th><th>Misc</th><th>Total Exp.</th><th>Profit</th><th>vs Prev</th></tr></thead><tbody id="monthlyTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div>
+    <div class="panel"><div class="panel-header"><h3><i class="fas fa-calendar-alt"></i> Monthly Comparison</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Month</th><th>Revenue</th><th>Wholesale</th><th>Company</th><th>Inv. Purch.</th><th>Store Purch.</th><th>Salaries</th><th>Misc</th><th>Total Exp.</th><th>Profit</th><th>vs Prev</th></tr></thead><tbody id="monthlyTable"><tr><td colspan="11"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div>
 
   </div>
 </main>
@@ -483,6 +450,8 @@
   function getPointBonus(staff) { return (staff.totalPoints || 0) * ((staff.pointValueNaira || globalPointValue || 500) / 5); }
   function getFinalSalary(staff) { return (staff.baseSalary || 0) + getPointBonus(staff); }
   function getTotalPayroll() { const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active'); let total = workers.reduce((s, u) => s + getFinalSalary(u), 0); if(includeAdminSalary) { const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role) && u.status === 'active'); total += admins.reduce((s, u) => s + (u.baseSalary || 0), 0); } return total; }
+  function getTotalBaseSalaries() { const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active'); let total = workers.reduce((s, u) => s + (u.baseSalary || 0), 0); if(includeAdminSalary) { const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role) && u.status === 'active'); total += admins.reduce((s, u) => s + (u.baseSalary || 0), 0); } return total; }
+  function getTotalPointBonus() { const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active'); return workers.reduce((s, u) => s + getPointBonus(u), 0); }
   function getSalaryRows() { const workers = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active'); const rows = workers.map(u => ({ name: u.fullName||'-', role: u.role||'staff', baseSalary: u.baseSalary||0, points: u.totalPoints||0, pointValue: u.pointValueNaira||globalPointValue||500, pointBonus: getPointBonus(u), finalSalary: getFinalSalary(u), isAdmin: false })); if(includeAdminSalary) { const admins = allUsers.filter(u => ['admin','super_admin'].includes(u.role) && u.status === 'active'); admins.forEach(u => rows.push({ name: u.fullName||'-', role: u.role||'admin', baseSalary: u.baseSalary||0, points: 0, pointValue: 0, pointBonus: 0, finalSalary: u.baseSalary||0, isAdmin: true })); } return rows.sort((a, b) => b.finalSalary - a.finalSalary); }
 
   // ========== DATE RANGE LOGIC ==========
@@ -545,19 +514,21 @@
   }
 
   function renderAll() {
-    loadPointValue().then(() => { updateToggleUI(); renderStats(); renderRatios(); renderCashFlow(); renderPLStatement(); renderCharts(); renderRevenueBreakdown(); renderTopItems(); renderSalaryTable(); renderPurchasesTable(); renderMiscTable(); renderMonthlyComparison(); });
+    loadPointValue().then(() => { updateToggleUI(); renderStats(); renderRatios(); renderCashFlow(); renderPLStatement(); renderCharts(); renderRevenueBreakdown(); renderTopItems(); renderPointPayrollTable(); renderSalaryTable(); renderPurchasesTable(); renderMiscTable(); renderMonthlyComparison(); });
   }
 
   function getFilteredData() {
     const totalPayroll = getTotalPayroll();
-    let revenue = 0, wholesale = 0, purchases = 0, storePurchases = 0, misc = 0, refunds = 0, retailRevenue = 0;
-    filteredSales.forEach(s => { if(s.status !== 'returned') { const amt = s.totalAmount||0; revenue += amt; retailRevenue += amt; } });
+    const totalBaseSalaries = getTotalBaseSalaries();
+    const totalPointBonus = getTotalPointBonus();
+    let revenue = 0, wholesale = 0, companySales = 0, purchases = 0, storePurchases = 0, misc = 0, refunds = 0, retailRevenue = 0;
+    filteredSales.forEach(s => { if(s.status !== 'returned') { const amt = s.totalAmount||0; revenue += amt; if(s.isCompanySale) companySales += amt; else retailRevenue += amt; } });
     filteredWholesale.forEach(s => { const amt = s.totalAmount||0; wholesale += amt; revenue += amt; });
     filteredReturns.forEach(r => { if(r.returnAction === 'refund') { const amt = r.totalRefund||0; revenue -= amt; retailRevenue -= amt; } });
     filteredPurchases.forEach(p => { if(p.status === 'purchased') purchases += p.receivedItems?.reduce((s,i)=>s+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0; });
     filteredStorePurchases.forEach(p => { storePurchases += p.totalCost || 0; });
     filteredMisc.forEach(e => { if(e.status === 'approved') misc += e.amount || 0; });
-    return { revenue, wholesale, purchases, storePurchases, misc, refunds, retailRevenue, totalPayroll };
+    return { revenue, wholesale, companySales, purchases, storePurchases, misc, refunds, retailRevenue, totalPayroll, totalBaseSalaries, totalPointBonus };
   }
 
   function renderStats() {
@@ -565,7 +536,6 @@
     const expenses = d.purchases + d.storePurchases + d.totalPayroll + d.misc;
     const profit = d.revenue - expenses;
 
-    // Compare with previous period
     const { prevStart, prevEnd } = getDateRange();
     let prevRevenue = 0, prevExpenses = 0;
     allSales.forEach(s => { if(s.status!=='returned'){const dt=s.createdAt?.toDate();if(dt&&dt>=prevStart&&dt<=prevEnd)prevRevenue+=s.totalAmount||0;} });
@@ -602,7 +572,7 @@
     const expenseRatio = d.revenue > 0 ? ((expenses / d.revenue) * 100).toFixed(1) : 0;
     const activeStaff = allUsers.filter(u => ['staff','attendant','attendant_chief'].includes(u.role) && u.status === 'active').length;
     const revPerEmployee = activeStaff > 0 ? Math.round(d.revenue / activeStaff) : 0;
-    const totalInventory = allStockItems.reduce((s,i) => s + (i.quantityAvailable||0) * (i.unitPrice||0), 0);
+    const totalInventory = allStockItems.reduce((s,i) => s + (i.unitQty||0) * (i.unitPrice||0), 0);
     const cogs = d.purchases + d.storePurchases;
     const invTurnover = totalInventory > 0 ? (cogs / totalInventory).toFixed(1) : 0;
 
@@ -632,12 +602,14 @@
 
     document.getElementById('plRetailSales').textContent = formatCurrency(d.retailRevenue);
     document.getElementById('plWholesaleSales').textContent = formatCurrency(d.wholesale);
+    document.getElementById('plCompanySales').textContent = formatCurrency(d.companySales);
     document.getElementById('plTotalRevenue').textContent = formatCurrency(d.revenue);
     document.getElementById('plInvPurchases').textContent = formatCurrency(d.purchases);
     document.getElementById('plStorePurchases').textContent = formatCurrency(d.storePurchases);
     document.getElementById('plTotalCOGS').textContent = formatCurrency(totalCOGS);
     document.getElementById('plGrossProfit').textContent = formatCurrency(grossProfit);
-    document.getElementById('plSalaries').textContent = formatCurrency(d.totalPayroll);
+    document.getElementById('plBaseSalaries').textContent = formatCurrency(d.totalBaseSalaries);
+    document.getElementById('plPointBonusTotal').textContent = formatCurrency(d.totalPointBonus);
     document.getElementById('plMisc').textContent = formatCurrency(d.misc);
     document.getElementById('plTotalOpEx').textContent = formatCurrency(totalOpEx);
     document.getElementById('plNetProfit').textContent = formatCurrency(netProfit);
@@ -656,13 +628,13 @@
   }
 
   function renderRevenueBreakdown() {
-    let cashSales=0, posSales=0, walkinSales=0, onlineSales=0;
-    filteredSales.forEach(s => { if(s.status==='returned')return; const amt=s.totalAmount||0; if(s.source==='online')onlineSales+=amt; else if(s.paymentMethod==='cash')cashSales+=amt; else posSales+=amt; if(!s.customerId&&s.source!=='online')walkinSales+=amt; });
+    let cashSales=0, posSales=0, walkinSales=0, companyRev=0;
+    filteredSales.forEach(s => { if(s.status==='returned')return; const amt=s.totalAmount||0; if(s.isCompanySale){companyRev+=amt;return;} if(s.paymentMethod==='cash')cashSales+=amt; else posSales+=amt; if(!s.customerId)walkinSales+=amt; });
     document.getElementById('cashSales').textContent=formatCurrency(cashSales);
     document.getElementById('posSales').textContent=formatCurrency(posSales);
     document.getElementById('wholesaleRev').textContent=formatCurrency(filteredWholesale.reduce((s,w)=>s+(w.totalAmount||0),0));
+    document.getElementById('companyRev').textContent=formatCurrency(companyRev);
     document.getElementById('walkinSales').textContent=formatCurrency(walkinSales);
-    document.getElementById('onlineSales').textContent=formatCurrency(onlineSales);
   }
 
   function renderTopItems() {
@@ -673,6 +645,13 @@
     const tbody = document.getElementById('topItemsTable');
     if(!sorted.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><i class="fas fa-trophy"></i><p>No sales data for this period</p></div></td></tr>';return;}
     tbody.innerHTML = sorted.map((item,i) => `<tr><td>#${i+1}</td><td><strong>${item.name}</strong></td><td>${item.qty}</td><td>${formatCurrency(item.revenue)}</td><td>${totalRev>0?((item.revenue/totalRev)*100).toFixed(1):0}%</td></tr>`).join('');
+  }
+
+  function renderPointPayrollTable() {
+    const rows = getSalaryRows();
+    const tbody = document.getElementById('pointPayrollTable'); if(!tbody)return;
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="fas fa-star"></i><p>No staff data</p></div></td></tr>';return;}
+    tbody.innerHTML = rows.map(r => `<tr><td><strong>${r.name}</strong>${r.isAdmin?' <i class="fas fa-crown" style="color:#f59e0b;"></i>':''}</td><td>${r.isAdmin?'<span class="badge badge-purple">'+r.role+'</span>':'<span class="badge badge-info">'+r.role+'</span>'}</td><td>${r.isAdmin?'-':r.points}</td><td>${r.isAdmin?'-':'₦'+r.pointValue+'/5pts'}</td><td>${r.isAdmin?'-':`<span class="${r.pointBonus>=0?'text-positive':'text-negative'}">${r.pointBonus>=0?'+':''}${formatCurrency(r.pointBonus)}</span>`}</td><td>${formatCurrency(r.baseSalary)}</td><td><strong>${formatCurrency(r.finalSalary)}</strong></td></tr>`).join('');
   }
 
   function renderSalaryTable() {
@@ -703,22 +682,22 @@
   function renderMonthlyComparison() {
     const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const monthlyData={};
-    allSales.forEach(s=>{if(s.status==='returned')return;const d=s.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].revenue+=s.totalAmount||0;});
-    allWholesaleSales.forEach(s=>{const d=s.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].wholesale+=s.totalAmount||0;monthlyData[k].revenue+=s.totalAmount||0;});
-    allPurchases.forEach(p=>{if(p.status!=='purchased')return;const d=p.purchasedAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].purchases+=p.receivedItems?.reduce((s,i)=>s+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0;});
-    allStorePurchases.forEach(p=>{const d=p.date?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].storePurchases+=p.totalCost||0;});
-    allMiscExpenses.forEach(e=>{if(e.status!=='approved')return;const d=e.approvedAt?.toDate()||e.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].misc+=e.amount||0;});
+    allSales.forEach(s=>{if(s.status==='returned')return;const d=s.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,companySales:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].revenue+=s.totalAmount||0;if(s.isCompanySale)monthlyData[k].companySales+=s.totalAmount||0;});
+    allWholesaleSales.forEach(s=>{const d=s.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,companySales:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].wholesale+=s.totalAmount||0;monthlyData[k].revenue+=s.totalAmount||0;});
+    allPurchases.forEach(p=>{if(p.status!=='purchased')return;const d=p.purchasedAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,companySales:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].purchases+=p.receivedItems?.reduce((s,i)=>s+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0;});
+    allStorePurchases.forEach(p=>{const d=p.date?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,companySales:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].storePurchases+=p.totalCost||0;});
+    allMiscExpenses.forEach(e=>{if(e.status!=='approved')return;const d=e.approvedAt?.toDate()||e.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={revenue:0,wholesale:0,companySales:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].misc+=e.amount||0;});
     const tp=getTotalPayroll(); Object.keys(monthlyData).forEach(k=>{monthlyData[k].salaries=tp;});
     const sorted=Object.entries(monthlyData).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,12);
     const tbody=document.getElementById('monthlyTable'); if(!tbody)return;
-    if(!sorted.length){tbody.innerHTML='<tr><td colspan="10"><div class="empty-state"><i class="fas fa-calendar-alt"></i><p>No data yet</p></div></td></tr>';return;}
+    if(!sorted.length){tbody.innerHTML='<tr><td colspan="11"><div class="empty-state"><i class="fas fa-calendar-alt"></i><p>No data yet</p></div></td></tr>';return;}
     let prevProfit=0;
-    tbody.innerHTML=sorted.map(([key,data],i)=>{const[y,m]=key.split('-');const te=data.purchases+data.storePurchases+data.salaries+data.misc;const pr=data.revenue-te;const ch=i>0?((pr-prevProfit)/(Math.abs(prevProfit)||1)*100).toFixed(1):'-';const cls=ch>0?'badge-success':ch<0?'badge-danger':'badge-warning';prevProfit=pr;return`<tr><td><strong>${months[parseInt(m)]} ${y}</strong></td><td>${formatCurrency(data.revenue)}</td><td>${formatCurrency(data.wholesale||0)}</td><td>${formatCurrency(data.purchases)}</td><td>${formatCurrency(data.storePurchases||0)}</td><td>${formatCurrency(data.salaries)}</td><td>${formatCurrency(data.misc)}</td><td>${formatCurrency(te)}</td><td><strong>${formatCurrency(pr)}</strong></td><td><span class="badge ${cls}">${ch>0?'+':''}${ch}%</span></td></tr>`;}).join('');
+    tbody.innerHTML=sorted.map(([key,data],i)=>{const[y,m]=key.split('-');const te=data.purchases+data.storePurchases+data.salaries+data.misc;const pr=data.revenue-te;const ch=i>0?((pr-prevProfit)/(Math.abs(prevProfit)||1)*100).toFixed(1):'-';const cls=ch>0?'badge-success':ch<0?'badge-danger':'badge-warning';prevProfit=pr;return`<tr><td><strong>${months[parseInt(m)]} ${y}</strong></td><td>${formatCurrency(data.revenue)}</td><td>${formatCurrency(data.wholesale||0)}</td><td>${formatCurrency(data.companySales||0)}</td><td>${formatCurrency(data.purchases)}</td><td>${formatCurrency(data.storePurchases||0)}</td><td>${formatCurrency(data.salaries)}</td><td>${formatCurrency(data.misc)}</td><td>${formatCurrency(te)}</td><td><strong>${formatCurrency(pr)}</strong></td><td><span class="badge ${cls}">${ch>0?'+':''}${ch}%</span></td></tr>`;}).join('');
   }
 
   // ========== EXPORT FUNCTIONS ==========
   window.exportFullReport = function(format) { const d=getFilteredData(); const rows=[['Revenue',d.revenue],['Expenses',d.purchases+d.storePurchases+d.totalPayroll+d.misc],['Profit',d.revenue-(d.purchases+d.storePurchases+d.totalPayroll+d.misc)],['Inventory Purchases',d.purchases],['Store Purchases',d.storePurchases],['Salaries',d.totalPayroll],['Misc Expenses',d.misc]]; const csv=rows.map(r=>r.join(',')).join('\n'); const b=new Blob([csv],{type:format==='csv'?'text/csv':'application/vnd.ms-excel'}); const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`finance_report_${new Date().toISOString().split('T')[0]}.${format}`;a.click(); showToast('Exported','success'); };
-  window.exportPLStatement = function() { const d=getFilteredData(); const rows=[['Section','Amount'],['Retail Sales',d.retailRevenue],['Wholesale Sales',d.wholesale],['Total Revenue',d.revenue],['Inventory Purchases',d.purchases],['Store Purchases',d.storePurchases],['Total COGS',d.purchases+d.storePurchases],['Gross Profit',d.revenue-(d.purchases+d.storePurchases)],['Salaries',d.totalPayroll],['Misc Expenses',d.misc],['Total OpEx',d.totalPayroll+d.misc],['Net Profit',d.revenue-(d.purchases+d.storePurchases+d.totalPayroll+d.misc)]]; const csv=rows.map(r=>r.join(',')).join('\n'); const b=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`pl_statement_${new Date().toISOString().split('T')[0]}.csv`;a.click(); showToast('Exported','success'); };
+  window.exportPLStatement = function() { const d=getFilteredData(); const rows=[['Section','Amount'],['Retail Sales',d.retailRevenue],['Wholesale Sales',d.wholesale],['Company Sales',d.companySales],['Total Revenue',d.revenue],['Inventory Purchases',d.purchases],['Store Purchases',d.storePurchases],['Total COGS',d.purchases+d.storePurchases],['Gross Profit',d.revenue-(d.purchases+d.storePurchases)],['Base Salaries',d.totalBaseSalaries],['Point Bonuses/Penalties',d.totalPointBonus],['Misc Expenses',d.misc],['Total OpEx',d.totalPayroll+d.misc],['Net Profit',d.revenue-(d.purchases+d.storePurchases+d.totalPayroll+d.misc)]]; const csv=rows.map(r=>r.join(',')).join('\n'); const b=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`pl_statement_${new Date().toISOString().split('T')[0]}.csv`;a.click(); showToast('Exported','success'); };
   window.exportExpenseReport = function() { const rows=[['Date','Name','Category','Amount','Status']]; filteredMisc.forEach(e=>rows.push([formatDate(e.createdAt),e.name||'',e.category||'',e.amount||0,e.status||''])); const csv=rows.map(r=>r.join(',')).join('\n'); const b=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`expense_report_${new Date().toISOString().split('T')[0]}.csv`;a.click(); showToast('Exported','success'); };
   window.exportSalaries = function(format) { const rows=getSalaryRows(); const h='Name,Role,Base Salary,Points,Point Value,Points Bonus,Final Salary'; const csv=[h,...rows.map(r=>`"${r.name}","${r.role}","${r.baseSalary}","${r.points}","₦${r.pointValue}/5pts","${r.pointBonus>=0?'+':''}${r.pointBonus}","${r.finalSalary}"`)].join('\n'); const b=new Blob([csv],{type:format==='csv'?'text/csv':'application/vnd.ms-excel'}); const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`salaries_${new Date().toISOString().split('T')[0]}.${format}`;a.click(); showToast('Exported','success'); };
 
