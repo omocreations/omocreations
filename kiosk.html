@@ -71,6 +71,8 @@
     .pin-input:focus { border-color: var(--primary); }
     .pin-actions { display: flex; gap: 8px; } .pin-actions button { flex: 1; padding: 12px; border-radius: 30px; font-weight: 600; border: none; cursor: pointer; font-family: 'Poppins', sans-serif; }
     .loading { text-align: center; padding: 20px; color: var(--gray); }
+    /* Eye toggle */
+    .pin-eye-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--gray); position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 1; }
   </style>
 </head>
 <body>
@@ -94,9 +96,20 @@
   <div class="pin-box">
     <i class="fas fa-lock" style="font-size:2.5rem;color:var(--primary);margin-bottom:10px;"></i>
     <h3>Admin Verification</h3>
-    <p style="color:var(--gray);margin-bottom:20px;font-size:0.85rem;">Enter admin PIN to exit kiosk</p>
-    <div class="pin-inputs"><input type="password" maxlength="1" class="pin-input" id="pin1" inputmode="numeric"><input type="password" maxlength="1" class="pin-input" id="pin2" inputmode="numeric"><input type="password" maxlength="1" class="pin-input" id="pin3" inputmode="numeric"><input type="password" maxlength="1" class="pin-input" id="pin4" inputmode="numeric"></div>
-    <div class="pin-actions"><button onclick="hidePinModal()" style="background:#eee;color:var(--dark);">Cancel</button><button onclick="verifyExitPin()" style="background:var(--primary);color:white;">Exit</button></div>
+    <p style="color:var(--gray);margin-bottom:20px;font-size:0.85rem;">Enter any admin PIN to exit kiosk</p>
+    <div class="pin-inputs" style="position:relative;">
+      <input type="password" maxlength="1" class="pin-input" id="pin1" inputmode="numeric">
+      <input type="password" maxlength="1" class="pin-input" id="pin2" inputmode="numeric">
+      <input type="password" maxlength="1" class="pin-input" id="pin3" inputmode="numeric">
+      <input type="password" maxlength="1" class="pin-input" id="pin4" inputmode="numeric">
+    </div>
+    <div style="text-align:center;margin-bottom:15px;">
+      <i class="fas fa-eye pin-eye-btn" id="togglePinEye" onclick="togglePinVisibility()" title="Show/Hide PIN"></i>
+    </div>
+    <div class="pin-actions">
+      <button onclick="hidePinModal()" style="background:#eee;color:var(--dark);">Cancel</button>
+      <button onclick="verifyExitPin()" style="background:var(--primary);color:white;">Exit</button>
+    </div>
   </div>
 </div>
 
@@ -242,7 +255,7 @@
         await updateDoc(doc(db, 'users', staff.id), { totalPoints: increment(-pointsDeducted) });
         await addDoc(collection(db, 'audit_logs'), {
           actionType: 'points_deducted',
-          performedBy: 'kiosk',
+          performedBy: staff.id,
           performedByName: 'Kiosk System',
           performedAt: serverTimestamp(),
           note: `Late check‑in at ${now.toLocaleTimeString('en-GB')} (threshold ${checkInTime.toLocaleTimeString('en-GB')}). -${pointsDeducted} points.`
@@ -250,7 +263,7 @@
       } else {
         await addDoc(collection(db, 'audit_logs'), {
           actionType: 'attendance_marked',
-          performedBy: 'kiosk',
+          performedBy: staff.id,
           performedByName: 'Kiosk System',
           performedAt: serverTimestamp(),
           note: `${staff.fullName} checked in on time.`
@@ -288,7 +301,7 @@
         await updateDoc(doc(db, 'users', staff.id), { totalPoints: increment(-pointsDeducted) });
         await addDoc(collection(db, 'audit_logs'), {
           actionType: 'points_deducted',
-          performedBy: 'kiosk',
+          performedBy: staff.id,
           performedByName: 'Kiosk System',
           performedAt: serverTimestamp(),
           note: `Early departure at ${now.toLocaleTimeString('en-GB')} (threshold ${checkOutTime.toLocaleTimeString('en-GB')}). -${pointsDeducted} points.`
@@ -296,7 +309,7 @@
       } else {
         await addDoc(collection(db, 'audit_logs'), {
           actionType: 'attendance_marked',
-          performedBy: 'kiosk',
+          performedBy: staff.id,
           performedByName: 'Kiosk System',
           performedAt: serverTimestamp(),
           note: `${staff.fullName} checked out on time.`
@@ -321,11 +334,56 @@
 
   window.showExitModal = () => { document.getElementById('pinModal').classList.add('show'); document.getElementById('pin1').focus(); };
   window.hidePinModal = () => { document.getElementById('pinModal').classList.remove('show'); ['pin1','pin2','pin3','pin4'].forEach(id=>document.getElementById(id).value=''); };
-  window.verifyExitPin = () => {
-    const pin = ['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');
-    if(pin === kioskSettings.adminPin) { if(webcamStream) webcamStream.getTracks().forEach(t=>t.stop()); window.location.href = 'admin-dashboard.html'; }
-    else { alert('Invalid PIN'); }
+
+  // Eye toggle for PIN visibility
+  window.togglePinVisibility = () => {
+    const inputs = document.querySelectorAll('#pinModal .pin-input');
+    const eye = document.getElementById('togglePinEye');
+    const isPassword = inputs[0].type === 'password';
+    inputs.forEach(inp => inp.type = isPassword ? 'text' : 'password');
+    if (eye) {
+      eye.classList.toggle('fa-eye', !isPassword);
+      eye.classList.toggle('fa-eye-slash', isPassword);
+    }
   };
+
+  window.verifyExitPin = async () => {
+    const pin = ['pin1','pin2','pin3','pin4'].map(id => document.getElementById(id).value).join('');
+    // First check fallback master PIN from settings
+    if (pin === kioskSettings.adminPin) {
+      exitKiosk();
+      return;
+    }
+    // Then check all active admin/super-admin users' PINs
+    try {
+      const adminsSnap = await getDocs(
+        query(collection(db, 'users'),
+          where('role', 'in', ['admin', 'super_admin']),
+          where('status', '==', 'active')
+        )
+      );
+      let valid = false;
+      adminsSnap.forEach(d => {
+        const data = d.data();
+        if (data.adminPin === pin || data.attendantPin === pin) {
+          valid = true;
+        }
+      });
+      if (valid) {
+        exitKiosk();
+      } else {
+        alert('Invalid PIN');
+      }
+    } catch (e) {
+      alert('Error verifying PIN');
+    }
+  };
+
+  function exitKiosk() {
+    if (webcamStream) webcamStream.getTracks().forEach(t => t.stop());
+    window.location.href = 'admin-dashboard.html';
+  }
+
   document.querySelectorAll('.pin-input').forEach((inp,i,arr)=>inp.addEventListener('input',e=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();}));
 
   window.loadStaffList = loadStaffList;
