@@ -14,7 +14,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    /* Same CSS as provided in the prompt, no changes needed */
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
       --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
@@ -30,7 +29,6 @@
       display:flex; min-height:100vh; overflow-x:hidden;
       -webkit-font-smoothing:antialiased;
     }
-    /* keyframes and other styles remain the same */
     @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
     @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
     @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
@@ -161,6 +159,9 @@
     .checkbox-cell { width:40px; text-align:center; }
     .checkbox-cell input { width:16px; height:16px; cursor:pointer; accent-color:var(--primary); }
 
+    .points-filter { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+    .points-filter select { padding:6px 10px; border-radius:10px; border:1px solid rgba(0,0,0,0.1); font-size:0.8rem; }
+
     @media (max-width:1400px) { .stats-grid, .profile-stats { grid-template-columns:repeat(3,1fr); } }
     @media (max-width:1100px) { .stats-grid, .profile-stats { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:768px) {
@@ -179,7 +180,6 @@
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-  <!-- Sidebar identical to original, keep it -->
   <div class="sidebar-header">
     <div class="logo-icon">✨</div>
     <div class="logo-text"><span>Omo</span>Creations</div>
@@ -325,9 +325,12 @@
   function getPointBonus(staff) { return (staff.totalPoints || 0) * ((staff.pointValueNaira || globalPointValue || 500) / 5); }
   function getTotalSalary(staff) { return (staff.baseSalary || 0) + getPointBonus(staff); }
 
-  // Performance calculations
-  function getStaffSales(uid) { return allSales.filter(s => s.attendantId === uid && s.status === 'completed').reduce((sum, s) => sum + (s.totalAmount || 0), 0); }
-  function getStaffSalesCount(uid) { return allSales.filter(s => s.attendantId === uid && s.status === 'completed').length; }
+  function getStaffSales(uid) {
+    return allSales.filter(s => s.attendantId === uid && s.status === 'completed').reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+  }
+  function getStaffSalesCount(uid) {
+    return allSales.filter(s => s.attendantId === uid && s.status === 'completed').length;
+  }
   function getStaffAttendance(uid) {
     const records = allAttendance.filter(a => a.userId === uid);
     if (!records.length) return { rate: 0, early: 0, late: 0, absent: 0 };
@@ -342,10 +345,32 @@
     return logs.length > 0 ? logs[logs.length - 1].performedAt : null;
   }
 
-  // Detailed points history for a user (from audit logs that affect points)
+  // Enhanced points history with full reason visibility
   function getPointsHistory(uid) {
     const pointActions = ['attendance_marked', 'points_deducted', 'points_awarded', 'task_completed', 'points_forgiven'];
-    return allAuditLogs.filter(l => l.performedBy === uid && pointActions.includes(l.actionType)).sort((a,b) => (b.performedAt?.seconds||0) - (a.performedAt?.seconds||0));
+    return allAuditLogs
+      .filter(l => l.performedBy === uid && pointActions.includes(l.actionType))
+      .sort((a,b) => (b.performedAt?.seconds||0) - (a.performedAt?.seconds||0));
+  }
+
+  function renderPointsHistoryRows(logs, filter = 'all') {
+    let filtered = logs;
+    if (filter === 'deductions') {
+      filtered = logs.filter(l => (l.note||'').includes('late') || (l.note||'').includes('deducted') || l.actionType === 'points_deducted');
+    } else if (filter === 'additions') {
+      filtered = logs.filter(l => (l.note||'').includes('early') || (l.note||'').includes('awarded') || l.actionType === 'points_awarded');
+    }
+    if (filtered.length === 0) return '<tr><td colspan="4" style="text-align:center;color:var(--gray);">No records</td></tr>';
+    return filtered.map(l => {
+      const isDeduction = (l.note||'').includes('late') || l.actionType === 'points_deducted';
+      const icon = isDeduction ? '<i class="fas fa-minus-circle" style="color:var(--danger);"></i>' : '<i class="fas fa-plus-circle" style="color:var(--success);"></i>';
+      return `<tr>
+        <td>${formatDateTime(l.performedAt)}</td>
+        <td>${icon} ${l.actionType?.replace(/_/g,' ')}</td>
+        <td style="word-wrap:break-word;max-width:250px;">${l.note || '-'}</td>
+        <td>${l.performedByName || 'System'}</td>
+      </tr>`;
+    }).join('');
   }
 
   function loadAllData() {
@@ -382,13 +407,13 @@
     const roleFilter = document.getElementById('roleFilter')?.value || 'all';
     function applyFilters(list) { let f = [...list]; if(search) f = f.filter(u=>(u.fullName||'').toLowerCase().includes(search)||(u.email||'').toLowerCase().includes(search)||(u.phone||'').includes(search)); if(roleFilter!=='all') f = f.filter(u=>u.role===roleFilter); return f; }
 
-    // Workers table with forgive button
+    // Workers table with forgive button and detailed points history in profile
     const wTbody = document.getElementById('workersTable');
     const wf = applyFilters(activeWorkers).sort((a,b)=>(b.baseSalary||0)-(a.baseSalary||0));
     if (wf.length===0) { wTbody.innerHTML = '<tr><td colspan="14"><div class="empty-state"><i class="fas fa-hard-hat"></i><p>No workers found</p></div></td></tr>'; }
     else {
       wTbody.innerHTML = wf.map(u => {
-        const bonus = getPointBonus(u), total = getTotalSalary(u);
+        const bonus = getPointBonus(u), total = getTotalSalary(u), pv = u.pointValueNaira || globalPointValue || 500;
         const salesAmt = getStaffSales(u.uid), salesCount = getStaffSalesCount(u.uid);
         const att = getStaffAttendance(u.uid);
         const lastLogin = getLastLogin(u.uid);
@@ -439,47 +464,6 @@
     updateBulkBar();
   }
 
-  // ========== POINTS FORGIVENESS ==========
-  window.forgivePoints = function(uid) {
-    const staff = allUsers.find(u => u.uid === uid);
-    if (!staff) return;
-    const currentPoints = staff.totalPoints || 0;
-    const negativePoints = currentPoints < 0 ? Math.abs(currentPoints) : 0;
-    const forgivenessMax = negativePoints > 0 ? negativePoints : 100; // allow up to 100 if no negatives
-
-    showModal(`Forgive Points: ${staff.fullName}`, `
-      <div class="form-group"><label>Current Points</label><input class="form-control" value="${currentPoints}" readonly></div>
-      <div class="form-group"><label>Defaulted Points (negative)</label><input class="form-control" value="${negativePoints}" readonly></div>
-      <div class="form-group"><label>Points to Forgive (max ${forgivenessMax})</label><input type="number" class="form-control" id="forgiveAmount" min="1" max="${forgivenessMax}" value="${forgivenessMax}" step="1"></div>
-      <div class="form-group"><label>Reason (optional)</label><input class="form-control" id="forgiveReason" placeholder="e.g., Waiver for good conduct"></div>
-      <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="submitForgiveness('${uid}')"><i class="fas fa-check"></i> Forgive</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
-    `);
-  };
-
-  window.submitForgiveness = async function(uid) {
-    const amount = parseInt(document.getElementById('forgiveAmount')?.value) || 0;
-    const reason = document.getElementById('forgiveReason')?.value?.trim() || 'No reason';
-    if (amount <= 0) { showToast('Enter a positive amount', 'error'); return; }
-    const staff = allUsers.find(u => u.uid === uid);
-    if (!staff) return;
-    const currentPoints = staff.totalPoints || 0;
-    const maxForgive = currentPoints < 0 ? Math.abs(currentPoints) : 100;
-    if (amount > maxForgive) { showToast(`Maximum forgiveness is ${maxForgive}`, 'error'); return; }
-    try {
-      const newPoints = currentPoints + amount;
-      await updateDoc(doc(db, 'users', uid), { totalPoints: newPoints });
-      await addDoc(collection(db, 'audit_logs'), {
-        actionType: 'points_forgiven',
-        performedBy: currentUser?.uid,
-        performedByName: userData?.fullName || 'Admin',
-        performedAt: serverTimestamp(),
-        note: `Forgave ${amount} points (was ${currentPoints}, now ${newPoints}). Reason: ${reason}`
-      });
-      showToast(`${amount} points forgiven. New balance: ${newPoints}`, 'success');
-      hideModal();
-    } catch (e) { showToast('Failed: ' + e.message, 'error'); }
-  };
-
   // ========== BULK ACTIONS ==========
   window.toggleUserSelection = function(uid, checkbox) { if(checkbox.checked) selectedUsers.add(uid); else selectedUsers.delete(uid); updateBulkBar(); };
   window.toggleAllCheckboxes = function(headerCb) {
@@ -528,7 +512,7 @@
     try { await batch.commit(); selectedUsers.clear(); updateBulkBar(); showToast('Deleted', 'success'); } catch(e) { showToast('Failed', 'error'); }
   };
 
-  // ========== STAFF PROFILE VIEW (with detailed points history and forgive button) ==========
+  // ========== STAFF PROFILE VIEW (with detailed points history and forgive) ==========
   window.viewStaffProfile = function(uid) {
     const u = allUsers.find(x => x.uid === uid); if (!u) return;
     const bonus = getPointBonus(u), total = getTotalSalary(u);
@@ -560,12 +544,21 @@
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <h4 style="margin:0;"><i class="fas fa-star" style="color:#f59e0b;"></i> Points History</h4>
-        <button class="btn btn-sm btn-success" onclick="forgivePoints('${uid}')"><i class="fas fa-hand-holding-heart"></i> Forgive Points</button>
+        <div class="points-filter">
+          <select id="pointsFilterSelect" onchange="filterPointsHistory('${uid}')">
+            <option value="all">All Changes</option>
+            <option value="deductions">Deductions Only</option>
+            <option value="additions">Additions Only</option>
+          </select>
+          <button class="btn btn-sm btn-success" onclick="forgivePoints('${uid}')"><i class="fas fa-hand-holding-heart"></i> Forgive Points</button>
+        </div>
       </div>
-      <div style="max-height:200px;overflow-y:auto;margin-bottom:16px;">
-        <table class="data-table" style="min-width:600px;font-size:0.8rem;">
-          <thead><tr><th>Date</th><th>Action</th><th>Note</th><th>By</th></tr></thead>
-          <tbody>${pointsHistory.length===0?'<tr><td colspan="4" style="text-align:center;color:var(--gray);">No points history</td></tr>':pointsHistory.map(l=>`<tr><td>${formatDateTime(l.performedAt)}</td><td>${l.actionType?.replace(/_/g,' ')}</td><td>${l.note||'-'}</td><td>${l.performedByName||'System'}</td></tr>`).join('')}</tbody>
+      <div id="pointsHistoryContainer" style="max-height:300px;overflow-y:auto;margin-bottom:16px;">
+        <table class="data-table" style="min-width:700px;font-size:0.8rem;">
+          <thead><tr><th>Date</th><th>Action</th><th>Reason / Note</th><th>By</th></tr></thead>
+          <tbody id="pointsHistoryBody">
+            ${renderPointsHistoryRows(pointsHistory, 'all')}
+          </tbody>
         </table>
       </div>
       <h4 style="margin-bottom:8px;"><i class="fas fa-history" style="color:var(--info);"></i> Recent Activity</h4>
@@ -576,7 +569,53 @@
     `);
   };
 
-  // ========== APPROVE / REJECT / SUSPEND / TERMINATE / REINSTATE ==========
+  window.filterPointsHistory = function(uid) {
+    const filter = document.getElementById('pointsFilterSelect')?.value || 'all';
+    const history = getPointsHistory(uid);
+    document.getElementById('pointsHistoryBody').innerHTML = renderPointsHistoryRows(history, filter);
+  };
+
+  // ========== POINTS FORGIVENESS ==========
+  window.forgivePoints = function(uid) {
+    const staff = allUsers.find(u => u.uid === uid);
+    if (!staff) return;
+    const currentPoints = staff.totalPoints || 0;
+    const negativePoints = currentPoints < 0 ? Math.abs(currentPoints) : 0;
+    const forgivenessMax = negativePoints > 0 ? negativePoints : 100;
+    showModal(`Forgive Points: ${staff.fullName}`, `
+      <div class="form-group"><label>Current Points</label><input class="form-control" value="${currentPoints}" readonly></div>
+      <div class="form-group"><label>Defaulted Points (negative)</label><input class="form-control" value="${negativePoints}" readonly></div>
+      <div class="form-group"><label>Points to Forgive (max ${forgivenessMax})</label><input type="number" class="form-control" id="forgiveAmount" min="1" max="${forgivenessMax}" value="${forgivenessMax}" step="1"></div>
+      <div class="form-group"><label>Reason (optional)</label><input class="form-control" id="forgiveReason" placeholder="e.g., Waiver for good conduct"></div>
+      <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="submitForgiveness('${uid}')"><i class="fas fa-check"></i> Forgive</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
+    `);
+  };
+
+  window.submitForgiveness = async function(uid) {
+    const amount = parseInt(document.getElementById('forgiveAmount')?.value) || 0;
+    const reason = document.getElementById('forgiveReason')?.value?.trim() || 'No reason';
+    if (amount <= 0) { showToast('Enter a positive amount', 'error'); return; }
+    const staff = allUsers.find(u => u.uid === uid);
+    if (!staff) return;
+    const currentPoints = staff.totalPoints || 0;
+    const maxForgive = currentPoints < 0 ? Math.abs(currentPoints) : 100;
+    if (amount > maxForgive) { showToast(`Maximum forgiveness is ${maxForgive}`, 'error'); return; }
+    try {
+      const newPoints = currentPoints + amount;
+      await updateDoc(doc(db, 'users', uid), { totalPoints: newPoints });
+      await addDoc(collection(db, 'audit_logs'), {
+        actionType: 'points_forgiven',
+        performedBy: currentUser?.uid,
+        performedByName: userData?.fullName || 'Admin',
+        performedAt: serverTimestamp(),
+        note: `Forgave ${amount} points (was ${currentPoints}, now ${newPoints}). Reason: ${reason}`
+      });
+      showToast(`${amount} points forgiven. New balance: ${newPoints}`, 'success');
+      hideModal();
+    } catch (e) { showToast('Failed: ' + e.message, 'error'); }
+  };
+
+  // ========== APPROVE / REJECT / SUSPEND / TERMINATE ==========
   window.approveUser = async function(uid) {
     const role = document.getElementById(`role-${uid}`)?.value || 'staff';
     const salary = parseFloat(document.getElementById(`salary-${uid}`)?.value) || 50000;
@@ -614,8 +653,10 @@
     } catch(e) { showToast('Failed','error'); }
   };
 
+  window.resetAttendantPin = async function(uid) { try{await updateDoc(doc(db,'users',uid),{attendantPin:null,pinResetRequired:true});showToast('PIN reset.','success');}catch(e){showToast('Failed','error');} };
+
   window.openAddStaffModal = function() {
-    showModal('Add New Staff',`<div class="form-row"><div class="form-group"><label>Full Name *</label><input class="form-control" id="newName" placeholder="John Doe"></div><div class="form-group"><label>Email *</label><input type="email" class="form-control" id="newEmail" placeholder="staff@example.com"></div></div><div class="form-row"><div class="form-group"><label>Phone *</label><input class="form-control" id="newPhone" placeholder="08012345678"></div><div class="form-group"><label>Role *</label><select class="form-control" id="newRole"><option value="staff">Staff</option><option value="attendant">Attendant</option><option value="attendant_chief">Chief Attendant</option></select></div></div><div class="form-row"><div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="newSalary" value="50000"></div><div class="form-group"><label>Initial PIN (4 digits)</label><input type="text" class="form-control" id="newPin" value="1234" maxlength="4"></div></div><p style="font-size:0.75rem;color:var(--gray);background:var(--primary-soft);padding:12px;border-radius:10px;"><i class="fas fa-info-circle"></i> Staff must sign up using the <strong>same email</strong> at the login page. Then approve from <strong>Pending</strong> tab.</p><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addStaff()"><i class="fas fa-user-plus"></i> Add Staff</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
+    showModal('Add New Staff',`<div class="form-row"><div class="form-group"><label>Full Name *</label><input class="form-control" id="newName" placeholder="John Doe"></div><div class="form-group"><label>Email *</label><input type="email" class="form-control" id="newEmail" placeholder="staff@example.com"></div></div><div class="form-row"><div class="form-group"><label>Phone *</label><input class="form-control" id="newPhone" placeholder="08012345678"></div><div class="form-group"><label>Role *</label><select class="form-control" id="newRole"><option value="staff">Staff</option><option value="attendant">Attendant</option><option value="attendant_chief">Chief Attendant</option></select></div></div><div class="form-row"><div class="form-group"><label>Base Salary (₦)</label><input type="number" class="form-control" id="newSalary" value="50000"></div><div class="form-group"><label>Leave Days</label><input type="number" class="form-control" id="newLeave" value="2"></div></div><div class="form-row"><div class="form-group"><label>Initial PIN (4 digits)</label><input type="text" class="form-control" id="newPin" value="1234" maxlength="4"></div><div class="form-group"></div></div><p style="font-size:0.75rem;color:var(--gray);background:var(--primary-soft);padding:12px;border-radius:10px;"><i class="fas fa-info-circle"></i> Staff must sign up at the login page using the <strong>same email</strong>. Then approve from the <strong>Pending</strong> tab.</p><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addStaff()"><i class="fas fa-user-plus"></i> Add Staff</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`);
   };
 
   window.addStaff = async function() {
@@ -624,21 +665,23 @@
     const phone = document.getElementById('newPhone')?.value?.trim();
     const role = document.getElementById('newRole')?.value || 'staff';
     const salary = parseFloat(document.getElementById('newSalary')?.value) || 50000;
+    const leaveDays = parseInt(document.getElementById('newLeave')?.value) || 2;
     const pin = document.getElementById('newPin')?.value?.trim() || '1234';
     if(!name||!email||!phone){showToast('All fields required','error');return;}
     const existingSnap = await getDocs(query(collection(db,'users'),where('email','==',email)));
     if(!existingSnap.empty){showToast('Email already registered','error');return;}
     try {
       const emailKey = email.replace(/\./g,'_').replace(/@/g,'_at_');
-      await setDoc(doc(db,'users',emailKey),{uid:emailKey,fullName:name,email,phone,role,baseSalary:salary,pointValueNaira:globalPointValue,status:'pending_approval',totalPoints:0,tasksCompleted:0,attendantPin:pin,createdBy:currentUser?.uid,createdByName:userData?.fullName||'Admin',createdAt:serverTimestamp()});
-      showToast(`Staff added! Sign up with email: ${email}`, 'success'); hideModal();
+      await setDoc(doc(db,'users',emailKey),{uid:emailKey,fullName:name,email,phone,role,baseSalary:salary,leaveDaysRemaining:leaveDays,pointValueNaira:globalPointValue,status:'pending_approval',totalPoints:0,tasksCompleted:0,attendantPin:pin,createdBy:currentUser?.uid,createdByName:userData?.fullName||'Admin',createdAt:serverTimestamp()});
+      await logAudit('add_staff',`Added: ${name} (${email})`);
+      showToast(`Staff added! They should sign up with email: ${email}`, 'success'); hideModal();
     } catch(e) { showToast('Failed: '+e.message,'error'); }
   };
 
   window.exportData = function(format) {
     const all = [...allUsers.filter(u=>['staff','attendant','attendant_chief'].includes(u.role)),...allUsers.filter(u=>['admin','super_admin'].includes(u.role))];
-    const h=['Name','Email','Phone','Role','Status','Base Salary','Points','Point Value','Total Salary','Tasks','Sales','Attendance'];
-    const rows=all.map(u=>{const t=u.role==='admin'||u.role==='super_admin'?(u.baseSalary||0):getTotalSalary(u);return[u.fullName||'',u.email||'',u.phone||'',u.role,u.status,u.baseSalary||0,u.totalPoints||0,u.pointValueNaira||globalPointValue,t,u.tasksCompleted||0,formatCurrency(getStaffSales(u.uid)),getStaffAttendance(u.uid).rate+'%'];});
+    const h=['Name','Email','Phone','Role','Status','Base Salary','Points','Point Value','Total Salary','Tasks','Leave','Sales','Attendance'];
+    const rows=all.map(u=>{const t=u.role==='admin'||u.role==='super_admin'?(u.baseSalary||0):getTotalSalary(u);return[u.fullName||'',u.email||'',u.phone||'',u.role,u.status,u.baseSalary||0,u.totalPoints||0,u.pointValueNaira||globalPointValue,t,u.tasksCompleted||0,u.leaveDaysRemaining??2,formatCurrency(getStaffSales(u.uid)),getStaffAttendance(u.uid).rate+'%'];});
     const csv=[h.join(','),...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');
     const b=new Blob([csv],{type:format==='csv'?'text/csv':'application/vnd.ms-excel'});
     const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`staff_${new Date().toISOString().split('T')[0]}.${format}`;a.click();
