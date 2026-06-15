@@ -85,7 +85,7 @@
     .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
     .panel-header h3 { font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:10px; color:var(--dark); } .panel-header h3 i { color:var(--primary); }
     .table-wrapper { overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:16px; }
-    .data-table { width:100%; border-collapse:collapse; min-width:900px; }
+    .data-table { width:100%; border-collapse:collapse; min-width:800px; }
     .data-table th { text-align:left; padding:14px 10px; font-size:0.7rem; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(--primary-soft); white-space:nowrap; background:white; }
     .data-table td { padding:14px 10px; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
     .data-table tbody tr { transition:background 0.2s; } .data-table tbody tr:hover { background:var(--primary-soft); }
@@ -108,6 +108,12 @@
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; } .form-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
     .pin-input-container { display:flex; gap:10px; justify-content:center; margin:20px 0; } .pin-input { width:55px; height:65px; text-align:center; font-size:1.8rem; font-weight:700; border:2px solid rgba(255,77,166,0.2); border-radius:14px; outline:none; font-family:'Poppins',sans-serif; } .pin-input:focus { border-color:var(--primary); }
     .customer-type-toggle { display:flex; gap:10px; margin-bottom:15px; } .customer-type-btn { flex:1; padding:12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; background:white; cursor:pointer; font-weight:600; font-size:0.85rem; font-family:'Poppins',sans-serif; transition:all 0.2s; } .customer-type-btn.active { border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
+    .wholesale-pack-size-box { background:var(--primary-soft); border:2px solid var(--primary); border-radius:14px; padding:16px; margin-bottom:16px; text-align:center; }
+    .wholesale-pack-size-box label { font-weight:700; color:var(--primary); }
+    .wholesale-pack-size-box input { font-size:1.3rem; font-weight:700; text-align:center; }
+    .mixed-wholesale-info { background:var(--gray-light); border-radius:12px; padding:12px; margin:12px 0; font-size:0.8rem; }
+    .mixed-wholesale-info .progress-bar { height:8px; background:#e5e7eb; border-radius:4px; margin:8px 0; overflow:hidden; }
+    .mixed-wholesale-info .progress-fill { height:100%; background:var(--primary); border-radius:4px; transition:width 0.3s; }
     .measured-sub-toggle { display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; }
     .measured-sub-btn { flex:1; min-width:100px; padding:14px 12px; border:2px solid rgba(0,0,0,0.08); border-radius:16px; background:white; cursor:pointer; font-weight:600; font-size:0.85rem; font-family:'Poppins',sans-serif; transition:all 0.2s; text-align:center; }
     .measured-sub-btn i { display:block; font-size:1.5rem; margin-bottom:6px; color:var(--primary); }
@@ -154,35 +160,35 @@
 
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-header"><span>Total Store Items</span><div class="stat-icon"><i class="fas fa-boxes"></i></div></div><div class="stat-value" id="totalStoreItems">0</div></div>
-      <div class="stat-card"><div class="stat-header"><span>Total Units (Sellable)</span><div class="stat-icon"><i class="fas fa-cubes"></i></div></div><div class="stat-value" id="totalUnits">0</div></div>
-      <div class="stat-card"><div class="stat-header"><span>Bulk Packs (Wholesale)</span><div class="stat-icon"><i class="fas fa-tags"></i></div></div><div class="stat-value" id="totalBulkPacks">0</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Total Units</span><div class="stat-icon"><i class="fas fa-cubes"></i></div></div><div class="stat-value" id="totalUnits">0</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Wholesale Sales</span><div class="stat-icon"><i class="fas fa-tags"></i></div></div><div class="stat-value" id="totalWholesaleSales">0</div></div>
       <div class="stat-card value-locked" id="totalStoreValueCard"><div class="stat-header"><span>Store Value</span><div class="stat-icon"><i class="fas fa-naira-sign"></i></div></div><div class="stat-value" id="totalStoreValue">₦••••••</div><div class="value-hint" onclick="revealStoreValue()"><i class="fas fa-lock"></i> Tap to unlock with PIN</div></div>
       <div class="stat-card"><div class="stat-header"><span>Pending Incoming</span><div class="stat-icon"><i class="fas fa-truck-loading"></i></div></div><div class="stat-value" id="pendingIncoming">0</div></div>
     </div>
 
-    <div class="lowstock-banner" id="storeLowBanner" style="display:none;"><i class="fas fa-box-open"></i><div style="flex:1;"><strong>Low Bulk Stock</strong> — <span id="storeLowMsg"></span></div><button class="btn btn-sm btn-warning" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i> Buy from Third Party</button></div>
+    <div class="lowstock-banner" id="storeLowBanner" style="display:none;"><i class="fas fa-box-open"></i><div style="flex:1;"><strong>Low Stock</strong> — <span id="storeLowMsg"></span></div><button class="btn btn-sm btn-warning" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i> Buy from Third Party</button></div>
 
     <div class="tabs-container">
-      <button class="tab active" data-tab="stock"><i class="fas fa-warehouse"></i> Bulk Stock</button>
+      <button class="tab active" data-tab="stock"><i class="fas fa-warehouse"></i> Store Stock</button>
       <button class="tab" data-tab="incoming"><i class="fas fa-truck-loading"></i> Incoming Inventory</button>
       <button class="tab" data-tab="wholesale"><i class="fas fa-tags"></i> Wholesale Sales</button>
     </div>
 
-    <!-- BULK STOCK PANEL -->
+    <!-- STORE STOCK PANEL (No more Bulk Size/Cost columns) -->
     <div id="stockPanel" class="page-view active">
       <div class="filter-bar">
-        <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search bulk items..."></div>
+        <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search store items..."></div>
         <select class="filter-select" id="categoryFilter"><option value="all">All Categories</option></select>
         <div class="export-dropdown"><button class="btn btn-outline" id="exportDropdownBtn"><i class="fas fa-download"></i> Export</button><div class="export-menu" id="exportMenu"><div class="export-item" onclick="exportData('csv')"><i class="fas fa-file-csv"></i> CSV</div><div class="export-item" onclick="exportData('excel')"><i class="fas fa-file-excel"></i> Excel</div></div></div>
-        <button class="btn btn-primary" onclick="openAddStoreItemModal()"><i class="fas fa-plus"></i> Add Bulk Item</button>
+        <button class="btn btn-primary" onclick="openAddStoreItemModal()"><i class="fas fa-plus"></i> Add Store Item</button>
       </div>
       <div class="panel">
-        <div class="panel-header"><h3><i class="fas fa-warehouse"></i> Bulk Stock Items</h3><button class="btn btn-outline btn-sm" onclick="refreshStore()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item Name</th><th>Category</th><th>Inv. Type</th><th>Total Units</th><th>Unit Cost</th><th>Bulk Size</th><th>Bulk Cost</th><th>Bulk Packs</th><th>Status</th><th>Actions</th></tr></thead><tbody id="storeTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
+        <div class="panel-header"><h3><i class="fas fa-warehouse"></i> Store Stock Items</h3><button class="btn btn-outline btn-sm" onclick="refreshStore()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item Name</th><th>Category</th><th>Inv. Type</th><th>Total Units</th><th>Unit Cost</th><th>Status</th><th>Actions</th></tr></thead><tbody id="storeTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
       </div>
     </div>
 
-    <!-- INCOMING INVENTORY PANEL -->
+    <!-- INCOMING INVENTORY PANEL (unchanged from previous) -->
     <div id="incomingPanel" class="page-view">
       <div class="tabs-container" style="margin-bottom:16px;">
         <button class="tab active" data-incoming-tab="general"><i class="fas fa-cube"></i> General</button>
@@ -212,7 +218,7 @@
     <div id="wholesalePanel" class="page-view">
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-tags"></i> Wholesale Sales History</h3><button class="btn btn-primary btn-sm" onclick="openWholesaleSaleModal()"><i class="fas fa-cash-register"></i> New Wholesale Sale</button></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Receipt #</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Actions</th></tr></thead><tbody id="wholesaleTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Receipt #</th><th>Customer</th><th>Pack Size</th><th>Items</th><th>Total Pieces</th><th>Total</th><th>Payment</th><th>Actions</th></tr></thead><tbody id="wholesaleTable"><tr><td colspan="9"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -237,6 +243,7 @@
   let storeItems = [], wholesaleSales = [], categories = [], allCustomers = [], incomingItems = [], allInventoryItems = [];
   let currentTab = 'stock', incomingTab = 'general', storeValueRevealed = false;
   let wholesaleCustomerType = 'existing', wholesalePayment = 'cash';
+  let wholesalePackSize = 50; // Default, user can change per sale
   let measuredSubType = 'yard';
 
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
@@ -322,6 +329,7 @@
     }
   }
 
+  // ==================== RENDER STORE STOCK (Simplified - no bulk columns) ====================
   function renderStoreStock() {
     const search=(document.getElementById('searchInput')?.value||'').toLowerCase(), cat=document.getElementById('categoryFilter')?.value||'all';
     let filtered=[...storeItems];
@@ -330,11 +338,7 @@
 
     document.getElementById('totalStoreItems').textContent = storeItems.length;
     document.getElementById('totalUnits').textContent = storeItems.reduce((s,i) => s + (i.unitQty||0), 0);
-    const totalBulkPacks = storeItems.reduce((s,i) => {
-      const bulkSize = i.bulkSize || 1;
-      return s + Math.floor((i.unitQty||0) / bulkSize);
-    }, 0);
-    document.getElementById('totalBulkPacks').textContent = totalBulkPacks;
+    document.getElementById('totalWholesaleSales').textContent = wholesaleSales.length;
     document.getElementById('pendingIncoming').textContent = incomingItems.filter(r=>r.status==='pending').length;
     updateStoreValueDisplay();
 
@@ -344,21 +348,16 @@
     if(lowCount>0) document.getElementById('storeLowMsg').textContent=`${lowCount} item(s) running low.`;
 
     const tbody = document.getElementById('storeTable');
-    if(!filtered.length){tbody.innerHTML='<tr><td colspan="10"><div class="empty-state"><i class="fas fa-store"></i><p>No bulk items. Buy from Purchases to stock up.</p></div></td></tr>';return;}
+    if(!filtered.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="fas fa-store"></i><p>No store items. Add stock to get started.</p></div></td></tr>';return;}
     tbody.innerHTML = filtered.map(item => {
       const st = getStoreItemStatus(item);
       const sb = st==='available'?'success':st==='low'?'warning':'danger';
-      const bulkSize = item.bulkSize || 1;
-      const bulkPacks = Math.floor((item.unitQty||0) / bulkSize);
       return `<tr>
         <td><strong>${item.name||'-'}</strong></td>
         <td><span class="badge badge-purple">${item.category||'-'}</span></td>
         <td><span class="badge badge-info">${item.inventoryItemType||'general'}</span></td>
         <td style="font-weight:600;">${item.unitQty||0}</td>
         <td>${formatCurrency(item.unitCost||0)}</td>
-        <td>${bulkSize}</td>
-        <td>${formatCurrency(item.bulkCost||0)}</td>
-        <td>${bulkPacks}</td>
         <td><span class="badge badge-${sb}">${st.replace(/_/g,' ')}</span></td>
         <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
           <button class="btn btn-sm btn-success" onclick="openRestockModal('${item.id}')"><i class="fas fa-boxes"></i> Restock</button>
@@ -389,7 +388,6 @@
       ? packItems.map(i => `<tr><td><strong>${i.storeItemName||'-'}</strong></td><td>${i.bulkQty||0}</td><td>${i.allocation?.unit||0}</td><td>${i.allocation?.pack||0}</td><td>${i.packSize||12}</td><td>${i.targetInventoryName||'—'}</td><td>${formatCurrency(i.prices?.unit||0)} / ${formatCurrency(i.prices?.pack||0)}</td><td>${i.requestedByName||'-'}</td><td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer('${i.id}')"><i class="fas fa-check"></i> Confirm</button></td></tr>`).join('')
       : '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr>';
 
-    // Dynamic measured table columns
     const measuredColH = document.getElementById('measuredColH');
     const measuredBundleColH = document.getElementById('measuredBundleColH');
     if (measuredItems.length && measuredItems[0].measuredSubType === 'bundle') {
@@ -418,14 +416,12 @@
     showPinModal('Confirm Transfer','add to live inventory', async () => {
       try {
         const batch = writeBatch(db);
-        const unitsToDeduct = inc.bulkQty * (storeItems.find(s=>s.id===inc.storeItemId)?.bulkSize || 1);
+        const unitsToDeduct = inc.bulkQty * (inc.unitsPerBulk || 1);
         batch.update(doc(db,'store_items',inc.storeItemId),{unitQty:increment(-unitsToDeduct),updatedAt:serverTimestamp()});
         batch.delete(doc(db,'incoming_inventory',incomingId));
-
         const inventoryRef = inc.targetInventoryId
           ? doc(db,'stock_items',inc.targetInventoryId)
           : doc(collection(db,'stock_items'));
-
         if (!inc.targetInventoryId) {
           const newItem = {
             name: inc.targetInventoryName,
@@ -478,8 +474,12 @@
 
   function renderWholesaleSales() {
     const tbody = document.getElementById('wholesaleTable');
-    if(!wholesaleSales.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="fas fa-tags"></i><p>No wholesale sales yet.</p></div></td></tr>';return;}
-    tbody.innerHTML = wholesaleSales.map(s => `<tr><td>${formatDate(s.createdAt)}</td><td><span class="badge badge-info">${s.receiptNumber||'N/A'}</span></td><td>${s.customerName||'Walk-in'}</td><td>${s.items?.length||0} items</td><td><strong>${formatCurrency(s.totalAmount)}</strong></td><td><span class="badge badge-success">${s.paymentMethod||'cash'}</span></td><td><button class="btn btn-sm btn-outline" onclick="viewWholesaleReceipt('${s.id}')"><i class="fas fa-receipt"></i></button></td></tr>`).join('');
+    if(!wholesaleSales.length){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-tags"></i><p>No wholesale sales yet.</p></div></td></tr>';return;}
+    tbody.innerHTML = wholesaleSales.map(s => {
+      const packSize = s.wholesalePackSize || s.packSize || 50;
+      const totalPieces = s.items?.reduce((sum, i) => sum + (i.pieces || i.quantity || 0), 0) || 0;
+      return `<tr><td>${formatDate(s.createdAt)}</td><td><span class="badge badge-info">${s.receiptNumber||'N/A'}</span></td><td>${s.customerName||'Walk-in'}</td><td><span class="badge badge-purple">${packSize} pcs/pack</span></td><td>${s.items?.length||0} items</td><td style="font-weight:600;">${totalPieces} pcs</td><td><strong>${formatCurrency(s.totalAmount)}</strong></td><td><span class="badge badge-success">${s.paymentMethod||'cash'}</span></td><td><button class="btn btn-sm btn-outline" onclick="viewWholesaleReceipt('${s.id}')"><i class="fas fa-receipt"></i></button></td></tr>`;
+    }).join('');
   }
 
   function loadStore() {
@@ -505,7 +505,7 @@
 
   async function loadCustomers() { try { const snap = await getDocs(query(collection(db,'customers'), where('status','==','approved'))); allCustomers = snap.docs.map(d=>({id:d.id,...d.data()})); } catch(e) { allCustomers=[]; } }
 
-  // ==================== ADD BULK ITEM ====================
+  // ==================== ADD STORE ITEM (Simplified - no bulk fields) ====================
   window.openAddStoreItemModal = async function() {
     const invSnap = await getDocs(collection(db,'stock_items'));
     const invItems = invSnap.docs.map(d => ({id:d.id, ...d.data()}));
@@ -516,28 +516,24 @@
     const invTypes = ['general','fashion','pack_bundle','measured'];
     const typeOptions = invTypes.map(t => `<option value="${t}">${t.replace(/_/g,' ')}</option>`).join('');
 
-    showModal('Add Bulk Item', `
+    showModal('Add Store Item', `
       <div class="form-group"><label>Select Inventory Item (Optional)</label>
         <select class="form-control" id="storeLinkedInventory" style="width:100%;" onchange="populateFromInventory()">
           ${invOptions}
         </select>
-        <p style="font-size:0.7rem;color:var(--gray);">Pick an existing inventory item to auto‑fill details, or leave blank to create a new bulk item.</p>
+        <p style="font-size:0.7rem;color:var(--gray);">Pick an existing inventory item to auto‑fill details.</p>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Item Name *</label><input class="form-control" id="storeItemName"></div>
         <div class="form-group"><label>Category *</label><div style="display:flex;gap:8px;"><select class="form-control" id="storeItemCategory">${categories.map(c=>`<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Total Unit Quantity *</label><input type="number" class="form-control" id="storeUnitQty" value="0" min="1"><p style="font-size:0.7rem;color:var(--gray);">Total sellable pieces</p></div>
-        <div class="form-group"><label>Cost per Unit ₦ *</label><input type="number" class="form-control" id="storeUnitCost" value="0" step="0.01" min="0"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Units per Bulk (Wholesale Pack Size)</label><input type="number" class="form-control" id="storeBulkSize" value="1" min="1"><p style="font-size:0.7rem;color:var(--gray);">How many units make one wholesale/bulk pack</p></div>
-        <div class="form-group"><label>Cost per Bulk ₦</label><input type="number" class="form-control" id="storeBulkCost" value="0" step="0.01" min="0"><p style="font-size:0.7rem;color:var(--gray);">Price for one wholesale pack (auto if left empty)</p></div>
+        <div class="form-group"><label>Total Unit Quantity *</label><input type="number" class="form-control" id="storeUnitQty" value="0" min="1"><p style="font-size:0.7rem;color:var(--gray);">Total pieces in stock</p></div>
+        <div class="form-group"><label>Cost per Unit ₦ *</label><input type="number" class="form-control" id="storeUnitCost" value="0" step="0.01" min="0"><p style="font-size:0.7rem;color:var(--gray);">Your cost price per piece</p></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Inventory Type *</label><select class="form-control" id="storeInvType">${typeOptions}</select></div>
-        <div class="form-group"><label>Low Stock Threshold</label><input type="number" class="form-control" id="storeThreshold" value="5" min="1"><p style="font-size:0.7rem;color:var(--gray);">Min units before low stock alert</p></div>
+        <div class="form-group"><label>Low Stock Threshold</label><input type="number" class="form-control" id="storeThreshold" value="5" min="1"></div>
       </div>
       <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addStoreItem()"><i class="fas fa-plus"></i> Add to Store</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
     `);
@@ -548,12 +544,9 @@
     const select = document.getElementById('storeLinkedInventory');
     if (!select || !select.value) return;
     const option = select.options[select.selectedIndex];
-    const name = option.getAttribute('data-name') || '';
-    const category = option.getAttribute('data-category') || '';
-    const type = option.getAttribute('data-type') || 'general';
-    if (name) document.getElementById('storeItemName').value = name;
-    if (category) document.getElementById('storeItemCategory').value = category;
-    if (type) document.getElementById('storeInvType').value = type;
+    document.getElementById('storeItemName').value = option.getAttribute('data-name') || '';
+    document.getElementById('storeItemCategory').value = option.getAttribute('data-category') || '';
+    document.getElementById('storeInvType').value = option.getAttribute('data-type') || 'general';
   };
 
   window.addStoreItem = async function() {
@@ -561,89 +554,79 @@
     const category = document.getElementById('storeItemCategory')?.value || 'other';
     const unitQty = parseInt(document.getElementById('storeUnitQty')?.value) || 0;
     const unitCost = parseFloat(document.getElementById('storeUnitCost')?.value) || 0;
-    const bulkSize = parseInt(document.getElementById('storeBulkSize')?.value) || 1;
-    let bulkCost = parseFloat(document.getElementById('storeBulkCost')?.value) || 0;
     const invType = document.getElementById('storeInvType')?.value || 'general';
     const threshold = parseInt(document.getElementById('storeThreshold')?.value) || 5;
     const linkedInventoryId = document.getElementById('storeLinkedInventory')?.value || '';
+
     if (!name) { showToast('Item name required', 'error'); return; }
     if (unitQty <= 0) { showToast('Unit quantity required', 'error'); return; }
     if (unitCost <= 0) { showToast('Unit cost required', 'error'); return; }
-    if (bulkCost <= 0) bulkCost = unitCost * bulkSize;
-    showPinModal('Confirm Add', 'add bulk item', async () => {
+
+    showPinModal('Confirm Add', 'add store item', async () => {
       try {
         const docData = {
-          name, category, unitQty, unitCost, bulkSize, bulkCost,
-          inventoryItemType: invType, threshold, status: unitQty <= threshold ? 'low' : 'available',
+          name, category, unitQty, unitCost,
+          inventoryItemType: invType, threshold,
+          status: unitQty <= threshold ? 'low' : 'available',
           linkedInventoryId: linkedInventoryId || null,
           linkedInventoryName: linkedInventoryId ? (allInventoryItems.find(i=>i.id===linkedInventoryId)?.name || '') : null,
           createdBy: currentUser?.uid, createdByName: userData?.fullName||'Staff',
           createdAt: serverTimestamp(), updatedAt: serverTimestamp()
         };
         await addDoc(collection(db,'store_items'), docData);
-        await logAudit('add_store_item', `Added bulk: ${name} x${unitQty} units`);
-        showToast('Bulk item added', 'success');
+        await logAudit('add_store_item', `Added store item: ${name} x${unitQty} units`);
+        showToast('Store item added', 'success');
         hideModal();
       } catch(e) { showToast('Failed: '+e.message, 'error'); }
     });
   };
 
-  // ==================== RESTOCK WITH MEASURED SUB-TYPE TOGGLE ====================
-  window.openRestockModal = async function(storeItemId, preselectedInventoryId = null) {
+  // ==================== RESTOCK (unchanged from previous, uses unitsPerBulk) ====================
+  window.openRestockModal = async function(storeItemId) {
     const item = storeItems.find(i => i.id === storeItemId);
     if (!item) return;
-
     const invSnap = await getDocs(query(collection(db,'stock_items'), where('itemType','==', item.inventoryItemType)));
     const invItems = invSnap.docs.map(d => ({id:d.id, ...d.data()}));
-    const selectedId = preselectedInventoryId || 'new';
-    let invOptions = '';
-    if (invItems.length) {
-      invOptions = invItems.map(i => `<option value="${i.id}" ${i.id===selectedId?'selected':''}>${i.name} (avail)</option>`).join('');
-    } else {
-      invOptions = `<option value="" disabled>No existing items of this type</option>`;
-    }
+    let invOptions = invItems.length
+      ? invItems.map(i => `<option value="${i.id}">${i.name} (avail)</option>`).join('')
+      : `<option value="" disabled>No existing items of this type</option>`;
 
     const isMeasured = item.inventoryItemType === 'measured';
-    let defaultMeasured = 'yard';
-    if (selectedId !== 'new' && isMeasured) {
-      const targetItem = invItems.find(i => i.id === selectedId);
-      if (targetItem) defaultMeasured = targetItem.measuredSubType || 'yard';
-    }
-    measuredSubType = defaultMeasured;
+    measuredSubType = 'yard';
 
     showModal(`Restock Inventory from: ${item.name}`, `
       <div style="background:var(--primary-soft);padding:12px;border-radius:12px;margin-bottom:16px;">
-        <strong>Bulk Item:</strong> ${item.name}<br>
-        <strong>Available Units:</strong> ${item.unitQty||0}<br>
-        <strong>1 Bulk = ${item.bulkSize||1} sellable pieces</strong>
+        <strong>Store Item:</strong> ${item.name}<br>
+        <strong>Available Units:</strong> ${item.unitQty||0}
       </div>
-      <div class="form-group"><label>Bulk Packs to Take *</label><input type="number" class="form-control" id="s2iBulkQty" value="1" min="1" max="${Math.floor(item.unitQty/item.bulkSize)}"></div>
+      <div class="form-group"><label>Bulk Packs to Take *</label><input type="number" class="form-control" id="s2iBulkQty" value="1" min="1"><p style="font-size:0.7rem;color:var(--gray);">How many wholesale packs to convert</p></div>
+      <div class="form-group"><label>Units per Bulk Pack</label><input type="number" class="form-control" id="s2iUnitsPerBulk" value="50" min="1"><p style="font-size:0.7rem;color:var(--gray);">How many pieces in one bulk pack (e.g., 50)</p></div>
       <div class="form-group"><label>Target Inventory Item</label>
         <select class="form-control" id="s2iInventorySelect" style="width:100%;">
           <option value="new">+ Create New Inventory Item</option>
           ${invOptions}
         </select>
       </div>
-      <div id="s2iNewItemFields" style="display:${selectedId==='new'?'block':'none'};">
+      <div id="s2iNewItemFields">
         <div class="form-row"><div class="form-group"><label>New Item Name *</label><input class="form-control" id="s2iNewName"></div><div class="form-group"><label>Category</label><select class="form-control" id="s2iNewCategory">${categories.map(c=>`<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select></div></div>
-        ${isMeasured && selectedId==='new' ? `
+        ${isMeasured ? `
         <div class="measured-sub-toggle" id="measuredSubToggle">
-          <div class="measured-sub-btn ${measuredSubType==='yard'?'active':''}" onclick="switchMeasuredSub('yard')">
+          <div class="measured-sub-btn active" onclick="switchMeasuredSub('yard')">
             <i class="fas fa-ruler"></i> Yard<span class="sub-label">By yardage</span>
           </div>
-          <div class="measured-sub-btn ${measuredSubType==='bundle'?'active':''}" onclick="switchMeasuredSub('bundle')">
+          <div class="measured-sub-btn" onclick="switchMeasuredSub('bundle')">
             <i class="fas fa-box"></i> Bundle<span class="sub-label">By bundle</span>
           </div>
         </div>
         ` : ''}
       </div>
       <div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;">
-        <strong>Total Derived Pieces:</strong> <span id="s2iTotalPieces" style="font-size:1.2rem;">${item.bulkSize||1}</span>
+        <strong>Total Derived Pieces:</strong> <span id="s2iTotalPieces" style="font-size:1.2rem;">50</span>
         <p style="font-size:0.7rem;color:var(--gray);">Allocate these pieces to the inventory forms below</p>
       </div>
       <div id="s2iAllocation"></div>
       <p id="s2iValidationMsg" style="color:var(--danger);font-size:0.8rem;text-align:center;display:none;margin-top:10px;">Allocated pieces must equal total derived pieces.</p>
-      <p style="font-size:0.75rem;color:var(--warning);margin-top:8px;"><i class="fas fa-info-circle"></i> This will be saved as <strong>Incoming Inventory</strong> for review before being added to live stock.</p>
+      <p style="font-size:0.75rem;color:var(--warning);margin-top:8px;"><i class="fas fa-info-circle"></i> This will be saved as <strong>Incoming Inventory</strong> for review.</p>
       <div style="display:flex;gap:10px;margin-top:16px;">
         <button class="btn btn-primary" onclick="submitIncomingRestock('${storeItemId}')"><i class="fas fa-paper-plane"></i> Send to Incoming</button>
         <button class="btn btn-outline" onclick="hideModal()">Cancel</button>
@@ -655,13 +638,12 @@
       document.querySelectorAll('#measuredSubToggle .measured-sub-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(`'${subType}'`));
       });
-      const total = parseInt(document.getElementById('s2iTotalPieces').textContent) || 0;
-      renderAllocationForm(item.inventoryItemType, total);
+      updateTotalPieces();
     };
 
     const invType = item.inventoryItemType;
-    const bulkSize = item.bulkSize || 1;
     const bulkQtyInput = document.getElementById('s2iBulkQty');
+    const unitsPerBulkInput = document.getElementById('s2iUnitsPerBulk');
     const totalPiecesSpan = document.getElementById('s2iTotalPieces');
     const allocationDiv = document.getElementById('s2iAllocation');
     const selectEl = document.getElementById('s2iInventorySelect');
@@ -669,8 +651,9 @@
 
     function updateTotalPieces() {
       const bulk = parseInt(bulkQtyInput.value) || 0;
-      totalPiecesSpan.textContent = bulk * bulkSize;
-      renderAllocationForm(invType, bulk * bulkSize);
+      const perBulk = parseInt(unitsPerBulkInput.value) || 50;
+      totalPiecesSpan.textContent = bulk * perBulk;
+      renderAllocationForm(invType, bulk * perBulk);
     }
 
     window.renderAllocationForm = function(type, totalPieces) {
@@ -717,11 +700,11 @@
     }
 
     bulkQtyInput.addEventListener('input', updateTotalPieces);
+    unitsPerBulkInput.addEventListener('input', updateTotalPieces);
     selectEl.addEventListener('change', () => {
-      const val = selectEl.value;
-      newFields.style.display = val === 'new' ? 'block' : 'none';
-      if (val !== 'new' && isMeasured) {
-        const target = invItems.find(i => i.id === val);
+      newFields.style.display = selectEl.value === 'new' ? 'block' : 'none';
+      if (selectEl.value !== 'new' && isMeasured) {
+        const target = invItems.find(i => i.id === selectEl.value);
         if (target) measuredSubType = target.measuredSubType || 'yard';
       }
       updateTotalPieces();
@@ -733,12 +716,11 @@
     const item=storeItems.find(i=>i.id===storeItemId);
     if(!item)return;
     const bulkQty=parseInt(document.getElementById('s2iBulkQty')?.value)||0;
-    const maxPacks = Math.floor((item.unitQty || 0) / (item.bulkSize || 1));
-    if(bulkQty<=0 || bulkQty > maxPacks) {
-      showToast(`Invalid bulk quantity. Max packs available: ${maxPacks}`, 'error');
-      return;
-    }
-    const totalPieces=bulkQty*(item.bulkSize||1);
+    const unitsPerBulk=parseInt(document.getElementById('s2iUnitsPerBulk')?.value)||50;
+    const totalPieces=bulkQty*unitsPerBulk;
+    if(bulkQty<=0){showToast('Invalid bulk quantity','error');return;}
+    if(totalPieces > (item.unitQty||0)){showToast(`Not enough stock. Available: ${item.unitQty} pieces`,'error');return;}
+
     const inventoryId=document.getElementById('s2iInventorySelect')?.value;
     let inventoryName=item.name;
     if(inventoryId==='new'){
@@ -763,20 +745,19 @@
       if(form==='half')allocatedPieces+=qty*0.5;
       else if(form==='quarter')allocatedPieces+=qty*0.25;
       else if(form==='pack')allocatedPieces+=qty*packSize;
-      else if(form==='bundle')allocatedPieces+=qty*(bundleSize || 50);
+      else if(form==='bundle')allocatedPieces+=qty*(bundleSize||50);
       else allocatedPieces+=qty;
     }
     if(Math.abs(allocatedPieces-totalPieces)>0.001){showToast(`Allocated pieces (${allocatedPieces}) must equal ${totalPieces}`,'error');return;}
 
     const incomingData = {
       storeItemId,storeItemName:item.name,storeItemCategory:item.category,
-      bulkQty,totalPieces,
+      bulkQty,totalPieces,unitsPerBulk,
       targetInventoryId: inventoryId==='new'?null:inventoryId,
       targetInventoryName: inventoryId==='new'?inventoryName:null,
       newInventoryCategory: inventoryId==='new'?(document.getElementById('s2iNewCategory')?.value||'other'):null,
       allocation,prices,packSize,bundleSize,
       inventoryItemType: item.inventoryItemType,
-      unitsPerBulk: item.bulkSize||1,
       requestedBy: currentUser?.uid,
       requestedByName: userData?.fullName||'Staff',
       status: 'pending',
@@ -789,22 +770,20 @@
     showPinModal('Send to Incoming Inventory','save for review',async()=>{
       try{
         await addDoc(collection(db,'incoming_inventory'), incomingData);
-        const detail = `Incoming: ${item.name} → ${inventoryName} | ${bulkQty} bulk packs, ${totalPieces} pieces | Allocation: ${JSON.stringify(allocation)} | Prices: ${JSON.stringify(prices)}`;
-        await logAudit('incoming_inventory', detail);
+        await logAudit('incoming_inventory', `Incoming: ${item.name} → ${inventoryName} | ${bulkQty} packs × ${unitsPerBulk}`);
         showToast('Sent to Incoming Inventory for review!','success');
         hideModal();
       }catch(e){showToast('Failed: '+e.message,'error');}
     });
   };
 
-  // ==================== EDIT / DELETE ====================
+  // ==================== EDIT / DELETE (Simplified) ====================
   window.openEditStoreItem = function(id) {
     const item = storeItems.find(i => i.id === id);
     if (!item) return;
     showModal(`Edit: ${item.name}`, `
       <div class="form-group"><label>Item Name</label><input class="form-control" value="${item.name||''}" readonly></div>
       <div class="form-row"><div class="form-group"><label>Unit Quantity</label><input type="number" class="form-control" id="editUnitQty" value="${item.unitQty||0}" min="0"></div><div class="form-group"><label>Unit Cost ₦</label><input type="number" class="form-control" id="editUnitCost" value="${item.unitCost||0}" step="0.01" min="0"></div></div>
-      <div class="form-row"><div class="form-group"><label>Bulk Size</label><input type="number" class="form-control" id="editBulkSize" value="${item.bulkSize||1}" min="1"></div><div class="form-group"><label>Bulk Cost ₦</label><input type="number" class="form-control" id="editBulkCost" value="${item.bulkCost||0}" step="0.01" min="0"></div></div>
       <div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="${item.threshold||5}" min="1"></div>
       <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveStoreEdit('${id}')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>
     `);
@@ -812,34 +791,32 @@
   window.saveStoreEdit = async function(id) {
     const unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0;
     const unitCost = parseFloat(document.getElementById('editUnitCost')?.value) || 0;
-    const bulkSize = parseInt(document.getElementById('editBulkSize')?.value) || 1;
-    const bulkCost = parseFloat(document.getElementById('editBulkCost')?.value) || 0;
     const threshold = parseInt(document.getElementById('editThreshold')?.value) || 5;
     showPinModal('Confirm Edit', 'save changes', async () => {
       try {
-        await updateDoc(doc(db,'store_items', id), { unitQty, unitCost, bulkSize, bulkCost, threshold, updatedAt: serverTimestamp() });
+        await updateDoc(doc(db,'store_items', id), { unitQty, unitCost, threshold, updatedAt: serverTimestamp() });
         showToast('Updated', 'success');
         hideModal();
       } catch(e) { showToast('Failed', 'error'); }
     });
   };
   window.deleteStoreItem = async function(id) {
-    if (!confirm('Delete this bulk item?')) return;
+    if (!confirm('Delete this store item?')) return;
     showPinModal('Confirm Delete', 'delete', async () => {
       try { await deleteDoc(doc(db,'store_items', id)); showToast('Deleted', 'success'); } catch(e) { showToast('Failed', 'error'); }
     });
   };
 
-  // ==================== WHOLESALE SALES ====================
+  // ==================== WHOLESALE SALE WITH FLEXIBLE PACK SIZE & MIXED ITEMS ====================
   window.openWholesaleSaleModal = async function() {
     await loadCustomers();
-    const availableItems = storeItems.filter(i => Math.floor((i.unitQty||0)/(i.bulkSize||1)) > 0);
-    if (!availableItems.length) { showToast('No bulk packs available', 'error'); return; }
+    const availableItems = storeItems.filter(i => (i.unitQty||0) > 0);
+    if (!availableItems.length) { showToast('No stock available', 'error'); return; }
 
     const custOptions = allCustomers.map(c => `<option value="${c.id}" data-name="${c.fullName||''}" data-phone="${c.phone||''}">${c.fullName} - ${c.phone||'No phone'}</option>`).join('');
+    
     const stockOptions = availableItems.map(i => {
-      const availPacks = Math.floor((i.unitQty||0)/(i.bulkSize||1));
-      return `<option value="${i.id}" data-name="${i.name||''}" data-avail-packs="${availPacks}" data-bulk-cost="${i.bulkCost||0}">${i.name} (${availPacks} packs)</option>`;
+      return `<option value="${i.id}" data-name="${i.name||''}" data-avail="${i.unitQty||0}" data-cost="${i.unitCost||0}">${i.name} (${i.unitQty||0} pcs avail)</option>`;
     }).join('');
 
     showModal('New Wholesale Sale', `
@@ -849,23 +826,50 @@
       </div>
       <div id="wsExistingSection"><div class="form-group"><label>Search Customer</label><select class="form-control" id="wsExistingCustomer" style="width:100%;"><option value="">-- Search --</option>${custOptions}</select></div></div>
       <div id="wsNewSection" style="display:none;"><div class="form-row"><div class="form-group"><label>Full Name *</label><input class="form-control" id="wsNewName"></div><div class="form-group"><label>Phone *</label><input class="form-control" id="wsNewPhone"></div></div><div class="form-group"><label>Address</label><input class="form-control" id="wsNewAddress"></div></div>
-      <div id="wsItems"><div class="item-row" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;"><select class="form-control ws-select" style="flex:2;"><option value="">-- Select --</option>${stockOptions}</select><input type="number" class="form-control ws-qty" value="1" min="1" style="flex:0.5;"><input type="number" class="form-control ws-price" placeholder="Sell Price per Pack ₦" step="0.01" style="flex:1;"></div></div>
+      
+      <div class="wholesale-pack-size-box">
+        <label>📦 Wholesale Pack Size (pieces per pack)</label>
+        <input type="number" class="form-control" id="wsPackSize" value="50" min="1" style="font-size:1.5rem;text-align:center;" onchange="updateWSTotal()">
+        <p style="font-size:0.75rem;color:var(--gray);margin-top:4px;">Customer must buy this many pieces total (can mix items)</p>
+      </div>
+
+      <div id="wsItems">
+        <div class="ws-item-row" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+          <select class="form-control ws-select" style="flex:2;"><option value="">-- Select Item --</option>${stockOptions}</select>
+          <input type="number" class="form-control ws-qty" value="0" min="0" style="flex:0.8;" placeholder="Pieces">
+          <input type="number" class="form-control ws-price" placeholder="Price/pc ₦" step="0.01" style="flex:1;">
+          <button class="btn btn-sm btn-danger" onclick="this.closest('.ws-item-row').remove();updateWSTotal();"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
       <button class="btn btn-outline btn-sm" onclick="addWSItem()"><i class="fas fa-plus"></i> Add Item</button>
+
+      <div class="mixed-wholesale-info">
+        <div style="display:flex;justify-content:space-between;">
+          <span>Total Pieces Selected:</span>
+          <span id="wsTotalPieces" style="font-weight:700;">0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;">
+          <span>Required for Wholesale:</span>
+          <span id="wsRequiredPieces" style="font-weight:700;color:var(--primary);">50</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="wsProgressFill" style="width:0%;"></div>
+        </div>
+        <p id="wsStatusMsg" style="font-size:0.75rem;color:var(--danger);text-align:center;margin-top:4px;">Need 50 more pieces to qualify</p>
+      </div>
+
+      <div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;">
+        <span style="font-weight:700;">Total Amount: </span><span id="wsTotal" style="font-size:1.2rem;font-weight:800;">₦0</span>
+      </div>
+
       <div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;"><button class="btn btn-outline ws-pay selected" data-m="cash" onclick="selWS('cash')">💵 Cash</button><button class="btn btn-outline ws-pay" data-m="transfer" onclick="selWS('transfer')">🏦 Transfer</button></div></div>
-      <div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;"><span style="font-weight:700;">Total: </span><span id="wsTotal" style="font-size:1.2rem;font-weight:800;">₦0</span></div>
-      <button class="btn btn-primary" onclick="processWS()" style="width:100%;margin-top:12px;"><i class="fas fa-check-circle"></i> Complete Sale</button>
+      <button class="btn btn-primary" onclick="processWS()" style="width:100%;margin-top:12px;"><i class="fas fa-check-circle"></i> Complete Wholesale Sale</button>
     `);
+
     setTimeout(() => {
       $('#wsExistingCustomer').select2({placeholder:'Search customer...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')});
       bindWSEvents();
     }, 150);
-  };
-
-  window._switchWSType = function(type) {
-    wholesaleCustomerType = type;
-    document.querySelectorAll('.customer-type-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.type === type));
-    document.getElementById('wsExistingSection').style.display = type === 'existing' ? 'block' : 'none';
-    document.getElementById('wsNewSection').style.display = type === 'new' ? 'block' : 'none';
   };
 
   function bindWSEvents() {
@@ -873,36 +877,87 @@
       el.addEventListener('change', updateWSTotal);
       el.addEventListener('input', updateWSTotal);
     });
+    document.querySelectorAll('.ws-select').forEach(sel => {
+      sel.addEventListener('change', function() {
+        const row = this.closest('.ws-item-row');
+        const opt = this.options[this.selectedIndex];
+        const priceInput = row.querySelector('.ws-price');
+        if (opt && opt.value && (!priceInput.value || parseFloat(priceInput.value) === 0)) {
+          priceInput.value = parseFloat(opt.getAttribute('data-cost')) || 0;
+        }
+        updateWSTotal();
+      });
+    });
     updateWSTotal();
   }
+
   window.addWSItem = function() {
-    const availableItems = storeItems.filter(i => Math.floor((i.unitQty||0)/(i.bulkSize||1)) > 0);
+    const availableItems = storeItems.filter(i => (i.unitQty||0) > 0);
     const stockOptions = availableItems.map(i => {
-      const availPacks = Math.floor((i.unitQty||0)/(i.bulkSize||1));
-      return `<option value="${i.id}" data-name="${i.name||''}" data-avail-packs="${availPacks}" data-bulk-cost="${i.bulkCost||0}">${i.name} (${availPacks} packs)</option>`;
+      return `<option value="${i.id}" data-name="${i.name||''}" data-avail="${i.unitQty||0}" data-cost="${i.unitCost||0}">${i.name} (${i.unitQty||0} pcs avail)</option>`;
     }).join('');
     const div = document.createElement('div');
-    div.className = 'item-row';
+    div.className = 'ws-item-row';
     div.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center;';
-    div.innerHTML = `<select class="form-control ws-select" style="flex:2;"><option value="">-- Select --</option>${stockOptions}</select><input type="number" class="form-control ws-qty" value="1" min="1" style="flex:0.5;"><input type="number" class="form-control ws-price" placeholder="Sell Price per Pack ₦" step="0.01" style="flex:1;"><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();updateWSTotal();"><i class="fas fa-times"></i></button>`;
+    div.innerHTML = `
+      <select class="form-control ws-select" style="flex:2;"><option value="">-- Select Item --</option>${stockOptions}</select>
+      <input type="number" class="form-control ws-qty" value="0" min="0" style="flex:0.8;" placeholder="Pieces">
+      <input type="number" class="form-control ws-price" placeholder="Price/pc ₦" step="0.01" style="flex:1;">
+      <button class="btn btn-sm btn-danger" onclick="this.closest('.ws-item-row').remove();updateWSTotal();"><i class="fas fa-times"></i></button>`;
     document.getElementById('wsItems').appendChild(div);
-    div.querySelectorAll('.ws-select,.ws-qty,.ws-price').forEach(el => {
+    div.querySelector('.ws-select').addEventListener('change', function() {
+      const opt = this.options[this.selectedIndex];
+      const priceInput = div.querySelector('.ws-price');
+      if (opt && opt.value && (!priceInput.value || parseFloat(priceInput.value) === 0)) {
+        priceInput.value = parseFloat(opt.getAttribute('data-cost')) || 0;
+      }
+      updateWSTotal();
+    });
+    div.querySelectorAll('.ws-qty,.ws-price').forEach(el => {
       el.addEventListener('change', updateWSTotal);
       el.addEventListener('input', updateWSTotal);
     });
     updateWSTotal();
   };
+
   function updateWSTotal() {
-    let total = 0;
-    document.querySelectorAll('#wsItems .item-row').forEach(row => {
-      const qty = parseInt(row.querySelector('.ws-qty')?.value) || 0;
-      const price = parseFloat(row.querySelector('.ws-price')?.value) || 0;
-      total += qty * price;
+    const packSize = parseInt(document.getElementById('wsPackSize')?.value) || 50;
+    let totalPieces = 0, totalAmount = 0;
+    
+    document.querySelectorAll('.ws-item-row').forEach(row => {
+      const sel = row.querySelector('.ws-select');
+      const qtyEl = row.querySelector('.ws-qty');
+      const priceEl = row.querySelector('.ws-price');
+      if (!sel?.value || !qtyEl) return;
+      const qty = parseInt(qtyEl.value) || 0;
+      const price = parseFloat(priceEl?.value) || 0;
+      totalPieces += qty;
+      totalAmount += qty * price;
     });
-    document.getElementById('wsTotal').textContent = formatCurrency(total);
+
+    document.getElementById('wsTotalPieces').textContent = totalPieces;
+    document.getElementById('wsRequiredPieces').textContent = packSize;
+    document.getElementById('wsTotal').textContent = formatCurrency(totalAmount);
+
+    const progress = Math.min((totalPieces / packSize) * 100, 100);
+    document.getElementById('wsProgressFill').style.width = progress + '%';
+    
+    const remaining = packSize - totalPieces;
+    const statusMsg = document.getElementById('wsStatusMsg');
+    if (remaining <= 0) {
+      statusMsg.textContent = '✅ Wholesale requirement met!';
+      statusMsg.style.color = 'var(--success)';
+    } else {
+      statusMsg.textContent = `Need ${remaining} more pieces to qualify for wholesale`;
+      statusMsg.style.color = 'var(--danger)';
+    }
   }
+
   window.selWS = function(m) { wholesalePayment = m; document.querySelectorAll('.ws-pay').forEach(b => b.classList.remove('selected')); document.querySelector(`.ws-pay[data-m="${m}"]`)?.classList.add('selected'); };
+
   window.processWS = function() {
+    const packSize = parseInt(document.getElementById('wsPackSize')?.value) || 50;
+    
     let customerId='', customerName='', customerPhone='';
     if (wholesaleCustomerType === 'existing') {
       const select = document.getElementById('wsExistingCustomer');
@@ -917,25 +972,42 @@
       if (!customerName || !customerPhone) { showToast('Customer name & phone required', 'error'); return; }
     }
 
-    const items = []; let total = 0;
-    for (const row of document.querySelectorAll('#wsItems .item-row')) {
-      const sel = row.querySelector('.ws-select'), qtyEl = row.querySelector('.ws-qty'), priceEl = row.querySelector('.ws-price');
-      if (!sel?.value || !qtyEl) continue;
-      const opt = sel.options[sel.selectedIndex];
+    const items = []; let totalPieces = 0, totalAmount = 0;
+    
+    document.querySelectorAll('.ws-item-row').forEach(row => {
+      const sel = row.querySelector('.ws-select');
+      const qtyEl = row.querySelector('.ws-qty');
+      const priceEl = row.querySelector('.ws-price');
+      if (!sel?.value || !qtyEl) return;
       const qty = parseInt(qtyEl.value) || 0;
       const price = parseFloat(priceEl?.value) || 0;
-      if (qty <= 0 || price <= 0) continue;
-      const availPacks = parseInt(opt.getAttribute('data-avail-packs')) || 0;
-      if (qty > availPacks) {
-        showToast(`Only ${availPacks} packs available for ${opt.getAttribute('data-name')}. Please adjust.`, 'error');
+      if (qty <= 0 || price <= 0) return;
+      
+      const opt = sel.options[sel.selectedIndex];
+      const avail = parseInt(opt.getAttribute('data-avail')) || 0;
+      
+      if (qty > avail) {
+        showToast(`Only ${avail} pieces available for ${opt.getAttribute('data-name')}.`, 'error');
         return;
       }
-      items.push({ id: sel.value, name: opt.getAttribute('data-name'), quantity: qty, unitPrice: price });
-      total += qty * price;
-    }
-    if (!items.length) { showToast('Add at least one item', 'error'); return; }
+      
+      items.push({
+        id: sel.value,
+        name: opt.getAttribute('data-name'),
+        pieces: qty,
+        unitPrice: price
+      });
+      totalPieces += qty;
+      totalAmount += qty * price;
+    });
 
-    showPinModal('Process Wholesale Sale', `sell for ${formatCurrency(total)}`, async () => {
+    if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
+    if (totalPieces < packSize) {
+      showToast(`Wholesale requires ${packSize} pieces. You've selected ${totalPieces}. Add ${packSize - totalPieces} more.`, 'error');
+      return;
+    }
+
+    showPinModal('Process Wholesale Sale', `sell ${totalPieces} pieces for ${formatCurrency(totalAmount)}`, async () => {
       try {
         const batch = writeBatch(db);
         const receiptNumber = 'WSL-' + Date.now().toString().slice(-8);
@@ -951,35 +1023,37 @@
           customerId = custRef.id;
         }
         for (const item of items) {
-          const storeItem = storeItems.find(i => i.id === item.id);
-          const bulkSize = storeItem?.bulkSize || 1;
-          const unitsToDeduct = item.quantity * bulkSize;
           batch.update(doc(db,'store_items', item.id), {
-            unitQty: increment(-unitsToDeduct),
+            unitQty: increment(-item.pieces),
             updatedAt: serverTimestamp()
           });
         }
-        const saleRef = doc(collection(db,'wholesale_sales'));
-        batch.set(saleRef, {
+        batch.set(doc(collection(db,'wholesale_sales')), {
           receiptNumber, customerId, customerName, customerPhone,
-          items, totalAmount: total, paymentMethod: wholesalePayment,
+          items, wholesalePackSize: packSize,
+          totalPieces, totalAmount, paymentMethod: wholesalePayment,
           attendantId: currentUser?.uid, attendantName: userData?.fullName||'Staff',
           createdAt: serverTimestamp(), status: 'completed'
         });
         await batch.commit();
-        await logAudit('wholesale_sale', `Wholesale ${receiptNumber}: ${formatCurrency(total)}`);
-        showToast(`Sale completed! #${receiptNumber}`, 'success');
-        showWholesaleReceiptModal({id:saleRef.id, receiptNumber, customerName, customerPhone, items, totalAmount: total, paymentMethod: wholesalePayment, attendantName: userData?.fullName||'Staff', createdAt: new Date()});
+        await logAudit('wholesale_sale', `Wholesale ${receiptNumber}: ${totalPieces} pcs for ${formatCurrency(totalAmount)}`);
+        showToast(`Wholesale sale completed! #${receiptNumber}`, 'success');
+        showWholesaleReceiptModal({
+          receiptNumber, customerName, customerPhone,
+          items, wholesalePackSize: packSize,
+          totalPieces, totalAmount, paymentMethod: wholesalePayment,
+          attendantName: userData?.fullName||'Staff',
+          createdAt: new Date()
+        });
         hideModal();
       } catch(e) { showToast('Failed: '+e.message, 'error'); }
     });
   };
 
-  // ==================== RECEIPTS (STYLE FROM SALES PAGE) ====================
   function showWholesaleReceiptModal(sale) {
     const dateStr = sale.createdAt ? new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     const timeStr = sale.createdAt ? new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    const itemsHtml = sale.items.map(i => `<div class="receipt-item"><span>${i.quantity}x ${i.name}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('');
+    const itemsHtml = sale.items.map(i => `<div class="receipt-item"><span>${i.pieces} pcs × ${i.name}</span><span>${formatCurrency(i.pieces*i.unitPrice)}</span></div>`).join('');
     showModal('Receipt', `
       <div class="receipt-container">
         <div class="receipt-header">
@@ -990,14 +1064,15 @@
           <p class="addr" style="font-weight:bold;">📞 0807 734 0294</p>
           <p class="rec" style="margin-top:6px;">#${sale.receiptNumber} (Wholesale)</p>
           <p class="rec">${dateStr} ${timeStr}</p>
+          <p class="rec">Pack Size: ${sale.wholesalePackSize} pieces</p>
         </div>
         <p class="cust-info"><strong>Customer:</strong> ${sale.customerName}<br><strong>Payment:</strong> ${sale.paymentMethod}<br><strong>Served by:</strong> ${sale.attendantName}</p>
         <div class="receipt-items">${itemsHtml}</div>
-        <div class="receipt-total"><span>Total:</span><span>${formatCurrency(sale.totalAmount)}</span></div>
+        <div class="receipt-total"><span>Total (${sale.totalPieces} pcs):</span><span>${formatCurrency(sale.totalAmount)}</span></div>
         <p class="thanks">Thank you for your patronage!</p>
       </div>
       <div style="display:flex;gap:10px;margin-top:20px;">
-        <button class="btn btn-primary" onclick="printWholesaleReceipt('${sale.id}')" style="flex:1;"><i class="fas fa-print"></i> Print</button>
+        <button class="btn btn-primary" onclick="printWholesaleReceipt('${sale.receiptNumber}')" style="flex:1;"><i class="fas fa-print"></i> Print</button>
         <button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>
       </div>
     `);
@@ -1008,12 +1083,13 @@
     if (s) showWholesaleReceiptModal(s);
   };
 
-  window.printWholesaleReceipt = (id) => {
-    const s = wholesaleSales.find(x => x.id === id);
+  window.printWholesaleReceipt = (receiptNumber) => {
+    const s = wholesaleSales.find(x => x.receiptNumber === receiptNumber) || 
+              wholesaleSales.find(x => x.id === receiptNumber);
     if (!s) return;
     const dateStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '';
     const timeStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
-    const receiptHTML = `<html><head><title>Receipt #${s.receiptNumber}</title><style>@page{margin:0;size:80mm auto}*{margin:0;padding:0}body{font-family:'Segoe UI',Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:8pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1}.item span:last-child{text-align:right;min-width:60px}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style></head><body><div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#${s.receiptNumber} (Wholesale)</p><p class="rec">${dateStr} ${timeStr}</p></div><p class="cust">Customer: ${s.customerName}<br>Payment: ${s.paymentMethod}<br>Served by: ${s.attendantName}</p><div class="items">${s.items.map(i=>`<div class="item"><span>${i.quantity}x ${i.name}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('')}</div><div class="total">Total: ${formatCurrency(s.totalAmount)}</div><p class="thanks">Thank you for your patronage!</p></body></html>`;
+    const receiptHTML = `<html><head><title>Receipt #${s.receiptNumber}</title><style>@page{margin:0;size:80mm auto}*{margin:0;padding:0}body{font-family:'Segoe UI',Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:8pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1}.item span:last-child{text-align:right;min-width:60px}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style></head><body><div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#${s.receiptNumber} (Wholesale)</p><p class="rec">${dateStr} ${timeStr}</p><p class="rec">Pack Size: ${s.wholesalePackSize} pieces</p></div><p class="cust">Customer: ${s.customerName}<br>Payment: ${s.paymentMethod}<br>Served by: ${s.attendantName}</p><div class="items">${s.items.map(i=>`<div class="item"><span>${i.pieces} pcs × ${i.name}</span><span>${formatCurrency(i.pieces*i.unitPrice)}</span></div>`).join('')}</div><div class="total">Total (${s.totalPieces} pcs): ${formatCurrency(s.totalAmount)}</div><p class="thanks">Thank you for your patronage!</p></body></html>`;
     const oldFrame = document.getElementById('printIframe');
     if (oldFrame) oldFrame.remove();
     const iframe = document.createElement('iframe'); iframe.id='printIframe'; iframe.style.display='none'; document.body.appendChild(iframe);
@@ -1025,24 +1101,22 @@
   window.openHelpGuide = function() {
     showModal('📖 How to Use the Store', `
       <div style="font-size:0.9rem; line-height:1.6;">
-        <h4>🏬 What is the Store?</h4>
-        <p>The Store holds <strong>bulk stock</strong> tracked by sellable <strong>units</strong>. Each item has a <strong>bulk size</strong> (units per wholesale pack). Use <strong>Restock</strong> to allocate units to inventory, and <strong>Wholesale Sales</strong> to sell bulk packs.</p>
-        <h4 style="margin-top:16px;">🔄 Incoming Inventory</h4>
-        <p>After sending units from bulk stock, they appear in the <strong>Incoming Inventory</strong> tab grouped by type (General, Fashion, Pack/Bundle, Measured). An authorised person must <strong>Confirm</strong> each entry to add it to the live inventory.</p>
-        <h4 style="margin-top:16px;">📏 Measured Items (Yard / Bundle)</h4>
-        <p>When restocking a measured store item, you can choose <strong>Yard</strong> or <strong>Bundle</strong> sub-type for new inventory items, matching the inventory form standards. Existing measured items inherit their sub-type automatically.</p>
-        <h4 style="margin-top:16px;">🖨️ Printing Receipts</h4>
-        <p>When viewing a wholesale sale receipt, click <strong>Print</strong> to open a professional thermal-printer-friendly receipt with business address.</p>
+        <h4>🏬 Store Stock</h4>
+        <p>Store items track <strong>total unit quantity</strong> and <strong>cost per unit</strong>. No fixed bulk sizes — wholesale pack size is defined per sale.</p>
+        <h4>🏷️ Wholesale Sales (Flexible)</h4>
+        <p><strong>1. Set pack size</strong> — Define how many pieces the customer must buy (e.g., 50 pieces).</p>
+        <p><strong>2. Mix items</strong> — Pick 30 white stone + 20 green stone = 50 pieces. The progress bar shows how close you are to the target.</p>
+        <p><strong>3. Price per piece</strong> — Set wholesale price per piece for each item (auto-fills from unit cost).</p>
+        <p>System validates total pieces meet the wholesale pack size before allowing the sale.</p>
+        <h4>✅ Inventory Safety</h4>
+        <p>Wholesale deducts exact piece counts from store stock. Incoming restock still works for transferring to sellable inventory.</p>
       </div>
       <button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close Guide</button>
     `);
   };
   window.exportData = function(format) {
-    const h = ['Name','Category','Type','Units','Unit Cost','Bulk Size','Bulk Cost','Bulk Packs','Status'];
-    const rows = storeItems.map(i => {
-      const bulkPacks = Math.floor((i.unitQty||0)/(i.bulkSize||1));
-      return [i.name||'', i.category||'', i.inventoryItemType||'general', i.unitQty||0, i.unitCost||0, i.bulkSize||1, i.bulkCost||0, bulkPacks, getStoreItemStatus(i)];
-    });
+    const h = ['Name','Category','Type','Units','Unit Cost','Status'];
+    const rows = storeItems.map(i => [i.name||'', i.category||'', i.inventoryItemType||'general', i.unitQty||0, i.unitCost||0, getStoreItemStatus(i)]);
     const csv = [h.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: format==='csv'?'text/csv':'application/vnd.ms-excel' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `store_${new Date().toISOString().split('T')[0]}.${format}`; a.click();
