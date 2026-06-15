@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -423,6 +422,23 @@
             color: var(--warning);
             font-size: 1.3rem;
         }
+        .discrepancy-banner {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid var(--danger);
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: var(--danger);
+            font-weight: 600;
+        }
+        .discrepancy-banner i {
+            color: var(--danger);
+            font-size: 1.3rem;
+        }
         .filter-bar {
             display: flex;
             gap: 12px;
@@ -541,7 +557,7 @@
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 2600px;
+            min-width: 3200px;
         }
         .data-table th {
             text-align: left;
@@ -939,6 +955,23 @@
             max-width: 90vw;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
         }
+        .clickable-sold {
+            color: var(--primary);
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .clickable-sold:hover {
+            color: var(--primary-dark);
+        }
+        .balance-ok {
+            color: var(--success);
+            font-weight: 600;
+        }
+        .balance-warn {
+            color: var(--danger);
+            font-weight: 600;
+        }
         @media (max-width:1400px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -991,7 +1024,7 @@
                 border-radius: 18px;
             }
             .data-table {
-                min-width: 1600px;
+                min-width: 2000px;
             }
             .data-table th,
             .data-table td {
@@ -1081,6 +1114,11 @@
                 <div style="flex:1;"><strong>Low Stock Alert</strong> — <span id="lowStockMsg"></span></div>
             </div>
 
+            <div class="discrepancy-banner" id="discrepancyBanner" style="display:none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div style="flex:1;"><strong>Stock Discrepancy Detected</strong> — <span id="discrepancyMsg"></span></div>
+            </div>
+
             <div class="tabs-container">
                 <button class="tab active" data-tab="all"><i class="fas fa-warehouse"></i> All Items <span class="count" id="allCount">0</span></button>
                 <button class="tab" data-tab="low"><i class="fas fa-exclamation-triangle"></i> Low Stock <span class="count" id="lowCount">0</span></button>
@@ -1112,15 +1150,32 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Item Name</th><th>Category</th><th>Type</th>
-                                    <th>Unit Sold</th><th>Half Sold</th><th>Quarter Sold</th><th>Pack/Bundle Sold</th>
-                                    <th>Unit Avail</th><th>Half Avail</th><th>Quarter Avail</th><th>Pack/Bundle Avail</th>
-                                    <th>Unit Price</th><th>½ Price</th><th>¼ Price</th><th>Pack/Bundle Price</th>
-                                    <th>Revenue</th><th>Status</th><th>Actions</th>
+                                    <th>Item Name</th>
+                                    <th>Category</th>
+                                    <th>Type</th>
+                                    <th>Initial U</th>
+                                    <th>Initial ½</th>
+                                    <th>Initial ¼</th>
+                                    <th>Unit Sold</th>
+                                    <th>Half Sold</th>
+                                    <th>Quarter Sold</th>
+                                    <th>Pack/Bundle Sold</th>
+                                    <th>Unit Avail</th>
+                                    <th>Half Avail</th>
+                                    <th>Quarter Avail</th>
+                                    <th>Pack/Bundle Avail</th>
+                                    <th>Unit Price</th>
+                                    <th>½ Price</th>
+                                    <th>¼ Price</th>
+                                    <th>Pack/Bundle Price</th>
+                                    <th>Revenue</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="inventoryTable">
-                                <tr><td colspan="18"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading inventory...</p></div></td></tr>
+                                <tr><td colspan="22"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading inventory...</p></div></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1134,14 +1189,27 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Item Name</th><th>Category</th><th>Type</th>
-                                    <th>Unit Sold</th><th>Half Sold</th><th>Quarter Sold</th><th>Pack/Bundle Sold</th>
-                                    <th>Unit Avail</th><th>Half Avail</th><th>Quarter Avail</th><th>Pack/Bundle Avail</th>
-                                    <th>Price</th><th>Status</th><th>Actions</th>
+                                    <th>Item Name</th>
+                                    <th>Category</th>
+                                    <th>Type</th>
+                                    <th>Initial U</th>
+                                    <th>Initial ½</th>
+                                    <th>Initial ¼</th>
+                                    <th>Unit Sold</th>
+                                    <th>Half Sold</th>
+                                    <th>Quarter Sold</th>
+                                    <th>Pack/Bundle Sold</th>
+                                    <th>Unit Avail</th>
+                                    <th>Half Avail</th>
+                                    <th>Quarter Avail</th>
+                                    <th>Pack/Bundle Avail</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="lowTable">
-                                <tr><td colspan="14"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
+                                <tr><td colspan="17"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1192,7 +1260,10 @@
         let allItems = [],
             allRejectedItems = [],
             categories = [],
-            allSales = [];
+            allSales = [],
+            allWholesaleSales = [],
+            allReturns = [],
+            allMovements = [];
         let currentTab = 'all',
             revenueRevealed = false;
         let addItemType = 'general';
@@ -1255,6 +1326,21 @@
                 await addDoc(collection(db, 'audit_logs'), { actionType: action, performedBy: currentUser?.uid ||
                         'unknown', performedByName: userData?.fullName || 'Staff', performedAt: serverTimestamp(),
                         note: note || '' });
+            } catch (e) {}
+        }
+
+        async function logMovement(itemId, itemName, type, change, reference) {
+            try {
+                await addDoc(collection(db, 'stock_movements'), {
+                    itemId,
+                    itemName,
+                    movementType: type,
+                    change,
+                    reference,
+                    performedBy: currentUser?.uid || 'unknown',
+                    performedByName: userData?.fullName || 'Staff',
+                    performedAt: serverTimestamp()
+                });
             } catch (e) {}
         }
 
@@ -1355,28 +1441,150 @@
                 logAudit('reveal_revenue', 'Revenue revealed');
                 showToast('Revenue unlocked', 'success'); }); };
 
-        function calculateRevenueFromSales() { const rev = {},
-                sold = {};
-            allSales.forEach(s => { if (s.status === 'returned' || !s.items) return;
-                s.items.forEach(item => { const id = item.id; if (!id) return;
-                    rev[id] = (rev[id] || 0) + (item.quantity || 0) * (item.unitPrice || 0);
-                    sold[id] = (sold[id] || 0) + (item.quantity || 0); }); }); return { rev, sold }; }
-
-        function updateRevenueDisplay() {
-            const card = document.getElementById('totalRevenueCard'),
-                val = document.getElementById('totalRevenue');
-            if (revenueRevealed || isAdmin()) { card.classList.remove('value-locked'); const { rev } =
-                    calculateRevenueFromSales(); const total = allItems.reduce((s, i) => s + (rev[i.id] || i
-                        .totalSoldValue || 0), 0);
-                val.textContent = formatCurrency(total);
-                val.style.filter = 'none'; }
+        function getSoldBreakdown(itemId) {
+            const result = {
+                unitSold: 0,
+                halfSold: 0,
+                quarterSold: 0,
+                packSold: 0,
+                bundleSold: 0,
+                totalRevenue: 0,
+                allTransactions: []
+            };
+            const allTransactions = [...allSales, ...allWholesaleSales];
+            allTransactions.forEach(s => {
+                if (s.status === 'returned' || !s.items) return;
+                s.items.forEach(item => {
+                    if (item.id !== itemId) return;
+                    const qty = item.quantity || 0;
+                    const price = item.unitPrice || 0;
+                    const size = item.sizeLabel || item.size || 'unit';
+                    result.totalRevenue += qty * price;
+                    result.allTransactions.push({
+                        date: s.createdAt,
+                        receipt: s.receiptNumber || '-',
+                        customer: s.customerName || 'Walk-in',
+                        attendant: s.attendantName || '-',
+                        quantity: qty,
+                        size: size,
+                        price: price,
+                        total: qty * price,
+                        type: s.type || 'sale'
+                    });
+                    if (size === 'half' || size === '½') result.halfSold += qty;
+                    else if (size === 'quarter' || size === '¼') result.quarterSold += qty;
+                    else if (size === 'pack' || size === 'bundle') {
+                        if (size === 'pack') result.packSold += qty;
+                        else result.bundleSold += qty;
+                    } else result.unitSold += qty;
+                });
+            });
+            allReturns.forEach(r => {
+                if (!r.items) return;
+                r.items.forEach(item => {
+                    if (item.id !== itemId) return;
+                    const qty = item.quantity || 0;
+                    const size = item.sizeLabel || item.size || 'unit';
+                    result.allTransactions.push({
+                        date: r.createdAt,
+                        receipt: r.receiptNumber || 'Return',
+                        customer: r.customerName || 'Walk-in',
+                        attendant: r.attendantName || '-',
+                        quantity: -qty,
+                        size: size,
+                        price: item.unitPrice || 0,
+                        total: -(qty * (item.unitPrice || 0)),
+                        type: 'return'
+                    });
+                    if (size === 'half' || size === '½') result.halfSold -= qty;
+                    else if (size === 'quarter' || size === '¼') result.quarterSold -= qty;
+                    else if (size === 'pack') result.packSold -= qty;
+                    else if (size === 'bundle') result.bundleSold -= qty;
+                    else result.unitSold -= qty;
+                });
+            });
+            return result;
         }
 
-        function getItemRevenue(item) { const { rev } = calculateRevenueFromSales(); return rev[item.id] || item
-                .totalSoldValue || 0; }
+        function getMovementBreakdown(itemId) {
+            const movements = allMovements.filter(m => m.itemId === itemId);
+            let initialUnit = 0,
+                initialHalf = 0,
+                initialQuarter = 0;
+            let addedUnit = 0,
+                addedHalf = 0,
+                addedQuarter = 0;
+            let soldUnit = 0,
+                soldHalf = 0,
+                soldQuarter = 0;
+            let returnedUnit = 0,
+                returnedHalf = 0,
+                returnedQuarter = 0;
+            const ledger = [];
+            movements.forEach(m => {
+                const change = m.change || {};
+                ledger.push({
+                    date: m.performedAt,
+                    type: m.movementType,
+                    reference: m.reference || '',
+                    change: change,
+                    performedBy: m.performedByName || '-'
+                });
+                if (m.movementType === 'initial') {
+                    initialUnit += change.unit || 0;
+                    initialHalf += change.half || 0;
+                    initialQuarter += change.quarter || 0;
+                } else if (m.movementType === 'add' || m.movementType === 'edit') {
+                    addedUnit += change.unit || 0;
+                    addedHalf += change.half || 0;
+                    addedQuarter += change.quarter || 0;
+                } else if (m.movementType === 'sale') {
+                    soldUnit += change.unit || 0;
+                    soldHalf += change.half || 0;
+                    soldQuarter += change.quarter || 0;
+                } else if (m.movementType === 'return') {
+                    returnedUnit += change.unit || 0;
+                    returnedHalf += change.half || 0;
+                    returnedQuarter += change.quarter || 0;
+                } else if (m.movementType === 'reject') {
+                    addedUnit -= change.unit || 0;
+                    addedHalf -= change.half || 0;
+                    addedQuarter -= change.quarter || 0;
+                }
+            });
+            const calculatedUnit = initialUnit + addedUnit - soldUnit + returnedUnit;
+            const calculatedHalf = initialHalf + addedHalf - soldHalf + returnedHalf;
+            const calculatedQuarter = initialQuarter + addedQuarter - soldQuarter + returnedQuarter;
+            return {
+                initialUnit,
+                initialHalf,
+                initialQuarter,
+                addedUnit,
+                addedHalf,
+                addedQuarter,
+                soldUnit,
+                soldHalf,
+                soldQuarter,
+                returnedUnit,
+                returnedHalf,
+                returnedQuarter,
+                calculatedUnit,
+                calculatedHalf,
+                calculatedQuarter,
+                ledger: ledger.sort((a, b) => (a.date?.seconds || 0) - (b.date?.seconds || 0))
+            };
+        }
 
-        function getItemSoldQty(item) { const { sold } = calculateRevenueFromSales(); return sold[item.id] || item
-                .totalSoldQty || item.quantitySold || 0; }
+        function getItemRevenue(item) {
+            const breakdown = getSoldBreakdown(item.id);
+            return breakdown.totalRevenue;
+        }
+
+        function getItemSoldQty(item) {
+            const breakdown = getSoldBreakdown(item.id);
+            return breakdown.unitSold + breakdown.halfSold + breakdown.quarterSold + breakdown.packSold + breakdown
+                .bundleSold;
+        }
 
         function getLowStockFlags(item) {
             const type = item.itemType || 'general';
@@ -1427,24 +1635,111 @@
             return '🔧 General';
         }
 
+        window.showUnitSalesHistory = function(itemId, itemName) {
+            const breakdown = getSoldBreakdown(itemId);
+            const unitTxns = breakdown.allTransactions.filter(t => t.size === 'unit' || (!t.size || t.size === ''));
+            let html = `<h3>Unit Sales: ${itemName}</h3>`;
+            if (unitTxns.length === 0) html += '<p>No unit sales found.</p>';
+            else {
+                html += '<table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Receipt</th><th>Customer</th><th>Qty</th><th>Price</th><th>Total</th></tr>';
+                unitTxns.forEach(t => {
+                    html +=
+                        `<tr><td>${formatDateTime(t.date)}</td><td>${t.receipt}</td><td>${t.customer}</td><td>${t.quantity}</td><td>${formatCurrency(t.price)}</td><td>${formatCurrency(t.total)}</td></tr>`;
+                });
+                html += '</table>';
+            }
+            html +=
+                '<button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:16px;">Close</button>';
+            showModal('Unit Sales History', html);
+        };
+
+        window.showHalfSalesHistory = function(itemId, itemName) {
+            const breakdown = getSoldBreakdown(itemId);
+            const halfTxns = breakdown.allTransactions.filter(t => t.size === 'half' || t.size === '½');
+            let html = `<h3>Half Sales: ${itemName}</h3>`;
+            if (halfTxns.length === 0) html += '<p>No half sales found.</p>';
+            else {
+                html += '<table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Receipt</th><th>Customer</th><th>Qty</th><th>Price</th><th>Total</th></tr>';
+                halfTxns.forEach(t => {
+                    html +=
+                        `<tr><td>${formatDateTime(t.date)}</td><td>${t.receipt}</td><td>${t.customer}</td><td>${t.quantity}</td><td>${formatCurrency(t.price)}</td><td>${formatCurrency(t.total)}</td></tr>`;
+                });
+                html += '</table>';
+            }
+            html +=
+                '<button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:16px;">Close</button>';
+            showModal('Half Sales History', html);
+        };
+
+        window.showQuarterSalesHistory = function(itemId, itemName) {
+            const breakdown = getSoldBreakdown(itemId);
+            const quarterTxns = breakdown.allTransactions.filter(t => t.size === 'quarter' || t.size === '¼');
+            let html = `<h3>Quarter Sales: ${itemName}</h3>`;
+            if (quarterTxns.length === 0) html += '<p>No quarter sales found.</p>';
+            else {
+                html += '<table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Receipt</th><th>Customer</th><th>Qty</th><th>Price</th><th>Total</th></tr>';
+                quarterTxns.forEach(t => {
+                    html +=
+                        `<tr><td>${formatDateTime(t.date)}</td><td>${t.receipt}</td><td>${t.customer}</td><td>${t.quantity}</td><td>${formatCurrency(t.price)}</td><td>${formatCurrency(t.total)}</td></tr>`;
+                });
+                html += '</table>';
+            }
+            html +=
+                '<button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:16px;">Close</button>';
+            showModal('Quarter Sales History', html);
+        };
+
+        window.showPackBundleSalesHistory = function(itemId, itemName) {
+            const breakdown = getSoldBreakdown(itemId);
+            const packTxns = breakdown.allTransactions.filter(t => t.size === 'pack' || t.size === 'bundle');
+            let html = `<h3>Pack/Bundle Sales: ${itemName}</h3>`;
+            if (packTxns.length === 0) html += '<p>No pack/bundle sales found.</p>';
+            else {
+                html += '<table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Receipt</th><th>Customer</th><th>Qty</th><th>Price</th><th>Total</th></tr>';
+                packTxns.forEach(t => {
+                    html +=
+                        `<tr><td>${formatDateTime(t.date)}</td><td>${t.receipt}</td><td>${t.customer}</td><td>${t.quantity}</td><td>${formatCurrency(t.price)}</td><td>${formatCurrency(t.total)}</td></tr>`;
+                });
+                html += '</table>';
+            }
+            html +=
+                '<button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:16px;">Close</button>';
+            showModal('Pack/Bundle Sales History', html);
+        };
+
+        window.showMovementHistory = function(itemId, itemName) {
+            const mov = getMovementBreakdown(itemId);
+            let html = `<h3>Movement Ledger: ${itemName}</h3>`;
+            html +=
+                `<p>Initial: U:${mov.initialUnit} | ½:${mov.initialHalf} | ¼:${mov.initialQuarter}</p>`;
+            html +=
+                `<p>Calculated Available: U:${mov.calculatedUnit} | ½:${mov.calculatedHalf} | ¼:${mov.calculatedQuarter}</p>`;
+            if (mov.ledger.length === 0) html += '<p>No movements recorded.</p>';
+            else {
+                html += '<table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Type</th><th>Ref</th><th>U</th><th>½</th><th>¼</th><th>By</th></tr>';
+                mov.ledger.forEach(l => {
+                    html +=
+                        `<tr><td>${formatDateTime(l.date)}</td><td>${l.type}</td><td>${l.reference}</td><td>${l.change.unit||0}</td><td>${l.change.half||0}</td><td>${l.change.quarter||0}</td><td>${l.performedBy}</td></tr>`;
+                });
+                html += '</table>';
+            }
+            html +=
+                '<button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:16px;">Close</button>';
+            showModal('Movement Ledger', html);
+        };
+
         window.showSalesHistory = async function(itemId, itemName) {
-            const salesQuery = query(collection(db, 'sales'), orderBy('createdAt', 'desc'), limit(50));
-            const snap = await getDocs(salesQuery);
+            const breakdown = getSoldBreakdown(itemId);
             let html = `<h3>Sales History: ${itemName}</h3>`;
-            let found = false;
-            snap.forEach(doc => {
-                const s = doc.data();
-                if (!s.items || !Array.isArray(s.items)) return;
-                const item = s.items.find(i => i.id === itemId);
-                if (!item) return;
-                found = true;
-                html += `<div style="margin-bottom:8px;padding:8px;background:var(--gray-light);border-radius:8px;">
-                  <strong>${formatDateTime(s.createdAt)}</strong> — Receipt: ${s.receiptNumber||'-'}<br>
-                  Customer: ${s.customerName||'Walk-in'} | Sold by: ${s.attendantName||'-'}<br>
-                  Qty: ${item.quantity} ${item.sizeLabel?`(${item.sizeLabel})`:''} | Amount: ${formatCurrency((item.quantity||0)*(item.unitPrice||0))}
-                </div>`;
-            });
-            if (!found) html += '<p>No recent sales found for this item.</p>';
+            if (breakdown.allTransactions.length === 0) html += '<p>No sales found.</p>';
+            else {
+                html += '<table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Receipt</th><th>Customer</th><th>Qty</th><th>Size</th><th>Total</th></tr>';
+                breakdown.allTransactions.forEach(t => {
+                    html +=
+                        `<tr><td>${formatDateTime(t.date)}</td><td>${t.receipt}</td><td>${t.customer}</td><td>${t.quantity}</td><td>${t.size||'unit'}</td><td>${formatCurrency(t.total)}</td></tr>`;
+                });
+                html += '</table>';
+            }
             html +=
                 '<button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:16px;">Close</button>';
             showModal('Sales History', html);
@@ -1483,18 +1778,50 @@
                 msg.textContent = `${lowAndOut.length} item(s) with low stock.`; } else { banner.style.display =
             'none'; }
 
+            let discrepancyItems = [];
+            available.forEach(item => {
+                const mov = getMovementBreakdown(item.id);
+                const itemType = item.itemType || 'general';
+                if (itemType === 'fashion') {
+                    if (mov.calculatedUnit !== (item.unitQty || 0) || mov.calculatedHalf !== (item.halfQty ||
+                            0) || mov.calculatedQuarter !== (item.quarterQty || 0)) {
+                        discrepancyItems.push(item);
+                    }
+                } else if (itemType === 'general') {
+                    if (mov.calculatedUnit !== (item.unitQty || 0)) discrepancyItems.push(item);
+                } else if (itemType === 'pack_bundle') {
+                    if (mov.calculatedUnit !== (item.unitQty || 0)) discrepancyItems.push(item);
+                } else if (itemType === 'measured') {
+                    const mst = item.measuredSubType || 'yard';
+                    if (mst === 'yard') {
+                        if (mov.calculatedUnit !== (item.yardQty || item.unitQty || 0)) discrepancyItems.push(
+                            item);
+                    } else {
+                        if (mov.calculatedUnit !== (item.bundleQty || 0)) discrepancyItems.push(item);
+                    }
+                }
+            });
+            const discBanner = document.getElementById('discrepancyBanner'),
+                discMsg = document.getElementById('discrepancyMsg');
+            if (discrepancyItems.length > 0) {
+                discBanner.style.display = 'flex';
+                discMsg.textContent = `${discrepancyItems.length} item(s) have stock discrepancies. Check ledger.`;
+            } else { discBanner.style.display = 'none'; }
+
             const tbody = document.getElementById('inventoryTable');
             if (tbody) {
                 if (available.length === 0) { tbody.innerHTML =
-                        '<tr><td colspan="18"><div class="empty-state"><i class="fas fa-box"></i><p>No items found. Click "Add Item" to get started.</p></div></td></tr>'; } else {
+                        '<tr><td colspan="22"><div class="empty-state"><i class="fas fa-box"></i><p>No items found. Click "Add Item" to get started.</p></div></td></tr>'; } else {
                     tbody.innerHTML = available.map(item => {
                         const flags = getLowStockFlags(item);
                         const st = flags.length > 0 ? 'low' : 'available';
                         const sb = st === 'available' ? 'success' : 'warning';
-                        const unitS = getItemSoldQty(item),
-                            halfS = 0,
-                            quarterS = 0,
-                            packS = 0;
+                        const breakdown = getSoldBreakdown(item.id);
+                        const mov = getMovementBreakdown(item.id);
+                        const unitS = breakdown.unitSold,
+                            halfS = breakdown.halfSold,
+                            quarterS = breakdown.quarterSold,
+                            packS = breakdown.packSold + breakdown.bundleSold;
                         const unitA = item.unitQty || 0,
                             halfA = item.halfQty || 0,
                             quarterA = item.quarterQty || 0;
@@ -1544,12 +1871,29 @@
                         if (flags.includes('general')) statusLabel = 'general low';
                         if (flags.includes('yard')) statusLabel = 'yard low';
                         if (flags.includes('bundle')) statusLabel = 'bundle low';
+
+                        let balanceOk = true;
+                        if (item.itemType === 'fashion') {
+                            balanceOk = mov.calculatedUnit === unitA && mov.calculatedHalf === halfA && mov
+                                .calculatedQuarter === quarterA;
+                        } else {
+                            balanceOk = mov.calculatedUnit === (unitA || item.yardQty || item.bundleQty ||
+                                0);
+                        }
+                        const balanceClass = balanceOk ? 'balance-ok' : 'balance-warn';
+                        const balanceIcon = balanceOk ? '✅' : '⚠️';
+
                         return `<tr>
                           <td><strong>${item.name||'-'}</strong></td>
                           <td><span class="badge badge-purple">${item.category||'-'}</span></td>
                           <td>${getItemTypeLabel(item)}</td>
-                          <td><span style="cursor:pointer;color:var(--primary);text-decoration:underline;" onclick="showSalesHistory('${item.id}','${item.name}')">${unitS}</span></td>
-                          <td>${halfS}</td><td>${quarterS}</td><td>${packS}</td>
+                          <td>${mov.initialUnit}</td>
+                          <td>${mov.initialHalf}</td>
+                          <td>${mov.initialQuarter}</td>
+                          <td><span class="clickable-sold" onclick="showUnitSalesHistory('${item.id}','${item.name}')">${unitS}</span></td>
+                          <td><span class="clickable-sold" onclick="showHalfSalesHistory('${item.id}','${item.name}')">${halfS}</span></td>
+                          <td><span class="clickable-sold" onclick="showQuarterSalesHistory('${item.id}','${item.name}')">${quarterS}</span></td>
+                          <td><span class="clickable-sold" onclick="showPackBundleSalesHistory('${item.id}','${item.name}')">${packS}</span></td>
                           <td style="color:${unitLowStyle};font-weight:${unitLowWeight};">${unitA}</td>
                           <td style="color:${halfLowStyle};font-weight:${halfLowWeight};">${halfA}</td>
                           <td style="color:${quarterLowStyle};font-weight:${quarterLowWeight};">${quarterA}</td>
@@ -1559,10 +1903,12 @@
                           <td>${item.quarterPrice?formatCurrency(item.quarterPrice):'—'}</td>
                           <td>${packPrice?formatCurrency(packPrice):'—'}</td>
                           <td style="font-weight:600;">${showRev?formatCurrency(rev):'₦••••'}</td>
+                          <td class="${balanceClass}">${balanceIcon}</td>
                           <td><span class="badge badge-${sb}">${statusLabel}</span></td>
                           <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
                             ${flags.length?`<button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')" title="Restock"><i class="fas fa-box-open"></i></button>`:''}
                             <button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline" onclick="showMovementHistory('${item.id}','${item.name}')" title="Ledger"><i class="fas fa-book"></i></button>
                             <button class="btn btn-sm btn-outline" onclick="viewHistory('${item.id}')" title="History"><i class="fas fa-history"></i></button>
                             <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')" title="Delete"><i class="fas fa-trash"></i></button>
                             ${isAdmin()?`<button class="btn btn-sm btn-warning" onclick="rejectItem('${item.id}')" title="Reject"><i class="fas fa-ban"></i></button>`:''}
@@ -1575,7 +1921,7 @@
             const lTbody = document.getElementById('lowTable');
             if (lTbody) {
                 if (lowAndOut.length === 0) lTbody.innerHTML =
-                    '<tr><td colspan="14"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items well stocked</p></div></td></tr>';
+                    '<tr><td colspan="17"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items well stocked</p></div></td></tr>';
                 else lTbody.innerHTML = lowAndOut.map(item => {
                     const flags = getLowStockFlags(item);
                     let statusLabel = flags.join(', ') + ' low';
@@ -1584,6 +1930,8 @@
                     if (flags.includes('bundle')) statusLabel = 'bundle low';
                     const isMeasured = item.itemType === 'measured';
                     const mst = item.measuredSubType || 'yard';
+                    const mov = getMovementBreakdown(item.id);
+                    const breakdown = getSoldBreakdown(item.id);
                     let packInfo, packPrice;
                     if (isMeasured && mst === 'yard') { packInfo = `${item.yardQty||item.unitQty||0} yds`;
                         packPrice = item.pricePerYard || item.unitPrice || 0; } else if (isMeasured &&
@@ -1592,7 +1940,25 @@
                     { packInfo = item.packSize ? `${item.packSize}/pk` : '—';
                         packPrice = item.packPrice || 0; } else { packInfo = '—';
                         packPrice = 0; }
-                    return `<tr><td><strong>${item.name||'-'}</strong></td><td>${item.category||'-'}</td><td>${getItemTypeLabel(item)}</td><td>0</td><td>0</td><td>0</td><td>0</td><td>${item.unitQty||0}</td><td>${item.halfQty||0}</td><td>${item.quarterQty||0}</td><td>${packInfo}</td><td>${formatCurrency(item.unitPrice||0)}</td><td><span class="badge badge-warning">${statusLabel}</span></td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')"><i class="fas fa-box-open"></i></button><button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')"><i class="fas fa-edit"></i></button></div></td></tr>`;
+                    return `<tr>
+                        <td><strong>${item.name||'-'}</strong></td>
+                        <td>${item.category||'-'}</td>
+                        <td>${getItemTypeLabel(item)}</td>
+                        <td>${mov.initialUnit}</td>
+                        <td>${mov.initialHalf}</td>
+                        <td>${mov.initialQuarter}</td>
+                        <td><span class="clickable-sold" onclick="showUnitSalesHistory('${item.id}','${item.name}')">${breakdown.unitSold}</span></td>
+                        <td><span class="clickable-sold" onclick="showHalfSalesHistory('${item.id}','${item.name}')">${breakdown.halfSold}</span></td>
+                        <td><span class="clickable-sold" onclick="showQuarterSalesHistory('${item.id}','${item.name}')">${breakdown.quarterSold}</span></td>
+                        <td><span class="clickable-sold" onclick="showPackBundleSalesHistory('${item.id}','${item.name}')">${breakdown.packSold+breakdown.bundleSold}</span></td>
+                        <td>${item.unitQty||0}</td>
+                        <td>${item.halfQty||0}</td>
+                        <td>${item.quarterQty||0}</td>
+                        <td>${packInfo}</td>
+                        <td>${formatCurrency(item.unitPrice||0)}</td>
+                        <td><span class="badge badge-warning">${statusLabel}</span></td>
+                        <td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-warning" onclick="openRestockOptions('${item.id}')"><i class="fas fa-box-open"></i></button><button class="btn btn-sm btn-outline" onclick="openEditItem('${item.id}')"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-outline" onclick="showMovementHistory('${item.id}','${item.name}')"><i class="fas fa-book"></i></button></div></td>
+                    </tr>`;
                 }).join('');
             }
 
@@ -1630,7 +1996,10 @@
                         thresholdHalf: data.thresholdHalf || data.threshold || 10,
                         thresholdQuarter: data.thresholdQuarter || data.threshold || 10,
                         status: data.status || 'available',
-                        itemType: data.itemType || 'general'
+                        itemType: data.itemType || 'general',
+                        initialUnitQty: data.initialUnitQty || 0,
+                        initialHalfQty: data.initialHalfQty || 0,
+                        initialQuarterQty: data.initialQuarterQty || 0
                     };
                 });
                 allItems.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
@@ -1646,11 +2015,20 @@
                 allSales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderInventory();
             }));
-            unsubscribes.push(onSnapshot(collection(db, 'wholesale_sales'), snap => {
-                const ws = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                allSales = [...allSales.filter(s => !ws.find(w => w.id === s.id)), ...ws];
+            unsubscribes.push(onSnapshot(query(collection(db, 'wholesale_sales'), orderBy('createdAt', 'desc')),
+                snap => {
+                    allWholesaleSales = snap.docs.map(d => ({ id: d.id, ...d.data(), type: 'wholesale' }));
+                    renderInventory();
+                }));
+            unsubscribes.push(onSnapshot(query(collection(db, 'returns'), orderBy('createdAt', 'desc')), snap => {
+                allReturns = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderInventory();
             }));
+            unsubscribes.push(onSnapshot(query(collection(db, 'stock_movements'), orderBy('performedAt', 'asc')),
+                snap => {
+                    allMovements = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    renderInventory();
+                }));
         }
 
         async function loadCategories() {
@@ -1729,7 +2107,7 @@
                 sec.innerHTML = `<div class="form-group"><label>Unit Quantity (pieces) *</label><input type="number" class="form-control" id="unitQty" value="0" min="0"></div><div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="unitPrice" value="0" step="0.01" min="0"></div><div class="form-group"><label>Low Stock Threshold</label><input type="number" class="form-control" id="itemThreshold" value="10" min="1"><span class="help-text">Minimum unit quantity before low stock alert</span></div>`;
             } else if (addItemType === 'fashion') {
                 sec.innerHTML = `<p class="help-text">Rhinestones, beads: sold by unit, half, quarter.</p>
-              <div class="form-row-3"><div class="form-group"><label>Unit Qty (1) *</label><input type="number" class="form-control" id="unitQty" value="0" min="0"></div><div class="form-group"><label>Half Qty (½)</label><input type="number" class="form-control" id="halfQty" value="0" min="0"></div><div class="form-group"><label>Quarter Qty (¼)</label><input type="number" class="form-control" id="quarterQty" value="0" min="0"></div></div>
+              <div class="form-row-3"><div class="form-group"><label>Initial Unit Qty *</label><input type="number" class="form-control" id="unitQty" value="0" min="0"></div><div class="form-group"><label>Initial Half Qty</label><input type="number" class="form-control" id="halfQty" value="0" min="0"></div><div class="form-group"><label>Initial Quarter Qty</label><input type="number" class="form-control" id="quarterQty" value="0" min="0"></div></div>
               <div class="form-row-3"><div class="form-group"><label>Unit Price (1) ₦ *</label><input type="number" class="form-control" id="unitPrice" value="0" step="0.01" min="0"></div><div class="form-group"><label>Half Price (½) ₦</label><input type="number" class="form-control" id="halfPrice" value="0" step="0.01" min="0"></div><div class="form-group"><label>Quarter Price (¼) ₦</label><input type="number" class="form-control" id="quarterPrice" value="0" step="0.01" min="0"></div></div>
               <div class="form-row"><div class="form-group"><label>Low Stock Threshold (Unit)</label><input type="number" class="form-control" id="thresholdUnit" value="10" min="1"></div><div class="form-group"><label>Low Stock Threshold (Half)</label><input type="number" class="form-control" id="thresholdHalf" value="10" min="1"></div></div>
               <div class="form-row"><div class="form-group"><label>Low Stock Threshold (Quarter)</label><input type="number" class="form-control" id="thresholdQuarter" value="10" min="1"></div><div class="form-group"><label>General Low Stock Threshold</label><input type="number" class="form-control" id="itemThreshold" value="10" min="1"><span class="help-text">When ALL forms are low</span></div></div>`;
@@ -1769,11 +2147,13 @@
                 unitPrice: 0, halfQty: 0, halfPrice: 0, quarterQty: 0, quarterPrice: 0, packSize: 0,
                 packPrice: 0, bundleSize: 0, bundlePrice: 0, yardQty: 0, pricePerYard: 0,
                 measuredSubType: 'yard', threshold: 10, thresholdUnit: 10, thresholdHalf: 10,
-                thresholdQuarter: 10, measureUnit: 'piece' };
+                thresholdQuarter: 10, measureUnit: 'piece', initialUnitQty: 0, initialHalfQty: 0,
+                initialQuarterQty: 0 };
             if (addItemType === 'general') {
                 data.unitQty = parseInt(document.getElementById('unitQty')?.value) || 0;
                 data.unitPrice = parseFloat(document.getElementById('unitPrice')?.value) || 0;
                 data.threshold = parseInt(document.getElementById('itemThreshold')?.value) || 10;
+                data.initialUnitQty = data.unitQty;
                 if (data.unitPrice <= 0) { showToast('Unit price must be > 0', 'error'); return; }
             } else if (addItemType === 'fashion') {
                 data.unitQty = parseInt(document.getElementById('unitQty')?.value) || 0;
@@ -1786,6 +2166,9 @@
                 data.thresholdHalf = parseInt(document.getElementById('thresholdHalf')?.value) || 10;
                 data.thresholdQuarter = parseInt(document.getElementById('thresholdQuarter')?.value) || 10;
                 data.threshold = parseInt(document.getElementById('itemThreshold')?.value) || 10;
+                data.initialUnitQty = data.unitQty;
+                data.initialHalfQty = data.halfQty;
+                data.initialQuarterQty = data.quarterQty;
                 if (data.unitPrice <= 0) { showToast('Unit price must be > 0', 'error'); return; }
             } else if (addItemType === 'pack_bundle') {
                 data.unitQty = parseInt(document.getElementById('unitQty')?.value) || 0;
@@ -1793,6 +2176,7 @@
                 data.packSize = parseInt(document.getElementById('packSize')?.value) || 12;
                 data.packPrice = parseFloat(document.getElementById('packPrice')?.value) || 0;
                 data.threshold = parseInt(document.getElementById('itemThreshold')?.value) || 10;
+                data.initialUnitQty = data.unitQty;
                 if (data.unitPrice <= 0) { showToast('Unit price must be > 0', 'error'); return; }
             } else if (addItemType === 'measured') {
                 data.measuredSubType = measuredSubType;
@@ -1803,12 +2187,14 @@
                     data.pricePerYard = parseFloat(document.getElementById('pricePerYard')?.value) || 0;
                     data.unitQty = data.yardQty;
                     data.unitPrice = data.pricePerYard;
+                    data.initialUnitQty = data.yardQty;
                     if (data.pricePerYard <= 0) { showToast('Price per yard must be > 0', 'error'); return; }
                 } else {
                     data.bundleQty = parseInt(document.getElementById('bundleQty')?.value) || 0;
                     data.bundlePrice = parseFloat(document.getElementById('bundlePrice')?.value) || 0;
                     data.unitQty = data.bundleQty;
                     data.unitPrice = data.bundlePrice;
+                    data.initialUnitQty = data.bundleQty;
                     if (data.bundlePrice <= 0) { showToast('Bundle price must be > 0', 'error'); return; }
                 }
             }
@@ -1816,10 +2202,16 @@
             if (!isAdmin()) data.status = 'pending_approval';
             else data.status = totalQty === 0 ? 'out_of_stock' : totalQty <= (data.threshold || 10) ? 'low' :
                 'available';
-            addDoc(collection(db, 'stock_items'), data).then(async () => { await logAudit('add_item',
-                    `Added: ${name}`);
+            addDoc(collection(db, 'stock_items'), data).then(async (docRef) => {
+                await logMovement(docRef.id, name, 'initial', {
+                    unit: data.unitQty || 0,
+                    half: data.halfQty || 0,
+                    quarter: data.quarterQty || 0
+                }, 'Item creation');
+                await logAudit('add_item', `Added: ${name}`);
                 showToast(isAdmin() ? 'Item added' : 'Submitted', 'success');
-                hideModal(); }).catch(e => { showToast('Failed: ' + e.message, 'error');
+                hideModal();
+            }).catch(e => { showToast('Failed: ' + e.message, 'error');
                 showDebug('Add item failed: ' + e.message); });
         };
 
@@ -1871,6 +2263,9 @@
             const type = item?.itemType || 'general';
             const mst = item?.measuredSubType || 'yard';
             let updateData = { name, category: document.getElementById('editCategory')?.value, updatedAt: serverTimestamp() };
+            let oldUnit = item?.unitQty || 0,
+                oldHalf = item?.halfQty || 0,
+                oldQuarter = item?.quarterQty || 0;
             if (type === 'general') {
                 updateData.unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0;
                 updateData.unitPrice = parseFloat(document.getElementById('editUnitPrice')?.value) || 0;
@@ -1917,12 +2312,20 @@
                     .quarterQty || 0);
                 updateData.status = totalQty === 0 ? 'out_of_stock' : totalQty <= (updateData.threshold ||
                     10) ? 'low' : 'available';
-                try { await updateDoc(doc(db, 'stock_items', id), updateData);
+                try {
+                    await updateDoc(doc(db, 'stock_items', id), updateData);
+                    const changeUnit = (updateData.unitQty || 0) - oldUnit;
+                    const changeHalf = (updateData.halfQty || 0) - oldHalf;
+                    const changeQuarter = (updateData.quarterQty || 0) - oldQuarter;
+                    if (changeUnit !== 0 || changeHalf !== 0 || changeQuarter !== 0) {
+                        await logMovement(id, name, 'edit', { unit: changeUnit, half: changeHalf,
+                            quarter: changeQuarter }, 'Qty adjustment');
+                    }
                     await logAudit('edit_item', `Updated: ${name}`);
                     showToast('Updated!', 'success');
                     hideModal();
-                    showDebug('Edit saved: ' + name); } catch (e) { showToast('Failed: ' + e.message,
-                        'error');
+                    showDebug('Edit saved: ' + name);
+                } catch (e) { showToast('Failed: ' + e.message, 'error');
                     showDebug('Edit save failed: ' + e.message); }
             };
             if (isAdmin()) { executeSave(); } else { requireAdminPin('edit this item', executeSave); }
@@ -1979,7 +2382,8 @@
             let newData = { name, category: document.getElementById('rejEditCategory')?.value, itemType: type,
                 measureUnit: item.measureUnit || 'piece', measuredSubType: mst, updatedAt: serverTimestamp(),
                 createdAt: item.createdAt || serverTimestamp(), createdBy: item.createdBy,
-                createdByName: item.createdByName };
+                createdByName: item.createdByName, initialUnitQty: item.initialUnitQty || 0,
+                initialHalfQty: item.initialHalfQty || 0, initialQuarterQty: item.initialQuarterQty || 0 };
             if (type === 'general') { newData.unitQty = parseInt(document.getElementById('rejEditUnitQty')?.value) ||
                     0;
                 newData.unitPrice = parseFloat(document.getElementById('rejEditUnitPrice')?.value) || 0;
@@ -2021,6 +2425,8 @@
             try { const targetId = item.originalId || id;
                 await setDoc(doc(db, 'stock_items', targetId), newData);
                 await deleteDoc(doc(db, 'rejected_inventory', id));
+                await logMovement(targetId, name, 'add', { unit: newData.unitQty || 0, half: newData.halfQty || 0,
+                    quarter: newData.quarterQty || 0 }, 'Resubmitted from rejected');
                 await logAudit('resubmit_item', `Edited & resubmitted rejected item: ${name}`);
                 showToast('Item successfully resubmitted!', 'success');
                 hideModal();
@@ -2051,7 +2457,8 @@
                         .message, 'error');
                     showDebug('Delete all failed: ' + e.message); } }); };
 
-        window.rejectItem = function(id) { if (!isAdmin()) { showToast('Only admin can reject', 'error'); } const item =
+        window.rejectItem = function(id) { if (!isAdmin()) { showToast('Only admin can reject', 'error');
+                return; } const item =
                 allItems.find(i => i.id === id); if (!item) return;
             showModal('Reject Item',
                 `<p style="margin-bottom:12px;">Reject <strong>${item.name}</strong>?</p><div class="form-group"><label>Reason *</label><textarea class="form-control" id="rejectionReason" rows="3" placeholder="Why?"></textarea></div><div style="display:flex;gap:10px;"><button class="btn btn-warning" onclick="confirmRejectItem('${id}')"><i class="fas fa-ban"></i> Reject</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>`
@@ -2066,6 +2473,8 @@
                     rejectionReason: reason, rejectedBy: currentUser?.uid, rejectedByName: userData
                     ?.fullName || 'Admin', rejectedAt: serverTimestamp() });
                 await deleteDoc(doc(db, 'stock_items', id));
+                await logMovement(id, item.name, 'reject', { unit: -(item.unitQty || 0), half: -(item.halfQty || 0),
+                    quarter: -(item.quarterQty || 0) }, `Rejected: ${reason}`);
                 await logAudit('reject_item', `Rejected: ${item.name} - ${reason}`);
                 showToast('Rejected!', 'success');
                 hideModal();
@@ -2138,21 +2547,26 @@
                         10, thresholdUnit: parseInt(row.thresholdunit) || parseInt(row.threshold) || 10,
                     thresholdHalf: parseInt(row.thresholdhalf) || parseInt(row.threshold) || 10,
                     thresholdQuarter: parseInt(row.thresholdquarter) || parseInt(row.threshold) || 10,
-                    measureUnit: 'piece' };
+                    measureUnit: 'piece', initialUnitQty: 0, initialHalfQty: 0, initialQuarterQty: 0 };
                 if (itemType === 'general') { data.unitQty = parseInt(row.unitqty) || 0;
-                    data.unitPrice = parseFloat(row.unitprice) || 0; if (data.unitPrice <= 0) { errors++;
-                        continue; } } else if (itemType === 'fashion') { data.unitQty = parseInt(row.unitqty) ||
+                    data.unitPrice = parseFloat(row.unitprice) || 0;
+                    data.initialUnitQty = data.unitQty; if (data.unitPrice <= 0) { errors++;
+                    continue; } } else if (itemType === 'fashion') { data.unitQty = parseInt(row.unitqty) ||
                         0;
                     data.halfQty = parseInt(row.halfqty) || 0;
                     data.quarterQty = parseInt(row.quarterqty) || 0;
                     data.unitPrice = parseFloat(row.unitprice) || 0;
                     data.halfPrice = parseFloat(row.halfprice) || 0;
-                    data.quarterPrice = parseFloat(row.quarterprice) || 0; if (data.unitPrice <= 0) { errors++;
-                        continue; } } else if (itemType === 'pack_bundle') { data.unitQty = parseInt(row
+                    data.quarterPrice = parseFloat(row.quarterprice) || 0;
+                    data.initialUnitQty = data.unitQty;
+                    data.initialHalfQty = data.halfQty;
+                    data.initialQuarterQty = data.quarterQty; if (data.unitPrice <= 0) { errors++; continue; } }
+                    else if (itemType === 'pack_bundle') { data.unitQty = parseInt(row
                         .unitqty) || 0;
                     data.unitPrice = parseFloat(row.unitprice) || 0;
                     data.packSize = parseInt(row.packsize) || 12;
-                    data.packPrice = parseFloat(row.packprice) || 0; if (data.unitPrice <= 0 && data
+                    data.packPrice = parseFloat(row.packprice) || 0;
+                    data.initialUnitQty = data.unitQty; if (data.unitPrice <= 0 && data
                         .packPrice <= 0) { errors++; continue; } } else if (itemType === 'measured') { if (
                         measuredSub === 'yard') { data.yardQty = parseInt(row.yardqty) || parseInt(row
                             .unitqty) || 0;
@@ -2160,12 +2574,16 @@
                             0;
                         data.unitQty = data.yardQty;
                         data.unitPrice = data.pricePerYard;
-                        data.measureUnit = 'yard'; if (data.pricePerYard <= 0) { errors++; continue; } } else {
+                        data.measureUnit = 'yard';
+                        data.initialUnitQty = data.yardQty; if (data.pricePerYard <= 0) { errors++;
+                        continue; } } else {
                         data.bundleQty = parseInt(row.bundleqty) || parseInt(row.unitqty) || 0;
                         data.bundlePrice = parseFloat(row.bundleprice) || parseFloat(row.unitprice) || 0;
                         data.unitQty = data.bundleQty;
                         data.unitPrice = data.bundlePrice;
-                        data.measureUnit = 'bundle'; if (data.bundlePrice <= 0) { errors++; continue; } } }
+                        data.measureUnit = 'bundle';
+                        data.initialUnitQty = data.bundleQty; if (data.bundlePrice <= 0) { errors++;
+                        continue; } } }
                 const ref = doc(collection(db, 'stock_items'));
                 batch.set(ref, data);
                 added++;
@@ -2179,8 +2597,9 @@
         window.openRestockOptions = function(id) {
             const item = allItems.find(i => i.id === id);
             if (!item) return;
+            const breakdown = getSoldBreakdown(item.id);
             showModal(`Restock: ${item.name}`,
-                `<p>Current: ${getItemSoldQty(item)} | Threshold: ${item.threshold||10}</p><div class="restock-options"><div class="restock-option" onclick="restockFromStore('${id}')"><i class="fas fa-store"></i><div class="label">From Store</div><div class="sub">Buy from bulk stock</div></div><div class="restock-option" onclick="restockFromThirdParty('${id}')"><i class="fas fa-truck"></i><div class="label">Third Party</div><div class="sub">Purchase request</div></div></div><button class="btn btn-outline" onclick="hideModal()" style="width:100%;margin-top:12px;">Cancel</button>`
+                `<p>Current: Unit Sold: ${breakdown.unitSold} | Half Sold: ${breakdown.halfSold} | Quarter Sold: ${breakdown.quarterSold} | Threshold: ${item.threshold||10}</p><div class="restock-options"><div class="restock-option" onclick="restockFromStore('${id}')"><i class="fas fa-store"></i><div class="label">From Store</div><div class="sub">Buy from bulk stock</div></div><div class="restock-option" onclick="restockFromThirdParty('${id}')"><i class="fas fa-truck"></i><div class="label">Third Party</div><div class="sub">Purchase request</div></div></div><button class="btn btn-outline" onclick="hideModal()" style="width:100%;margin-top:12px;">Cancel</button>`
                 );
         };
         window.restockFromStore = function(id) { const item = allItems.find(i => i.id === id); if (!item) return;
@@ -2194,8 +2613,9 @@
             if (!item) return;
             try {
                 const snap = await getDocs(query(collection(db, 'audit_logs'), orderBy('performedAt', 'desc')));
+                const breakdown = getSoldBreakdown(item.id);
                 let html =
-                    `<h4>${item.name}</h4><p>Unit Qty: ${item.unitQty||0} | Total: ${(item.unitQty||0)+(item.halfQty||0)+(item.quarterQty||0)} | Sold: ${getItemSoldQty(item)} | Revenue: ${formatCurrency(getItemRevenue(item))}</p>`;
+                    `<h4>${item.name}</h4><p>Unit Qty: ${item.unitQty||0} | Total: ${(item.unitQty||0)+(item.halfQty||0)+(item.quarterQty||0)} | Unit Sold: ${breakdown.unitSold} | Half Sold: ${breakdown.halfSold} | Quarter Sold: ${breakdown.quarterSold} | Revenue: ${formatCurrency(getItemRevenue(item))}</p>`;
                 const logs = snap.docs.map(d => d.data()).filter(l => l.note && l.note.includes(item.name));
                 if (logs.length === 0) html += '<p>No history</p>';
                 else {
@@ -2213,18 +2633,22 @@
         };
 
         window.exportData = function(format) {
-            const headers = ['Name', 'Category', 'Type', 'Unit Qty', 'Half Qty', 'Quarter Qty', 'Pack/Bundle',
-                'Sold', 'Avail', 'Unit Price', 'Half Price', 'Quarter Price', 'Pack/Bundle Price', 'Revenue',
+            const headers = ['Name', 'Category', 'Type', 'Initial U', 'Initial ½', 'Initial ¼', 'Unit Sold',
+                'Half Sold', 'Quarter Sold', 'Pack/Bundle Sold', 'Unit Avail', 'Half Avail', 'Quarter Avail',
+                'Pack/Bundle Avail', 'Unit Price', 'Half Price', 'Quarter Price', 'Pack/Bundle Price', 'Revenue',
                 'Status'
             ];
             const rows = allItems.map(i => {
+                const breakdown = getSoldBreakdown(i.id);
+                const mov = getMovementBreakdown(i.id);
                 const pack = i.packSize ? `${i.packSize}/pk` : i.bundleSize ? `${i.bundleSize}/bundle` : i
                     .yardQty ? `${i.yardQty}yds` : '';
-                return [i.name || '', i.category || '', i.itemType || 'general', i.unitQty || 0, i.halfQty ||
-                    0, i.quarterQty || 0, pack, getItemSoldQty(i), (i.unitQty || 0) + (i.halfQty || 0) + (
-                        i.quarterQty || 0), i.unitPrice || 0, i.halfPrice || 0, i.quarterPrice || 0, i
-                    .packPrice || i.bundlePrice || i.pricePerYard || 0, getItemRevenue(i), getLowStockFlags(
-                        i).join(', ') || 'available'
+                return [i.name || '', i.category || '', i.itemType || 'general', mov.initialUnit,
+                    mov.initialHalf, mov.initialQuarter, breakdown.unitSold, breakdown.halfSold,
+                    breakdown.quarterSold, breakdown.packSold + breakdown.bundleSold, i.unitQty || 0, i
+                    .halfQty || 0, i.quarterQty || 0, pack, i.unitPrice || 0, i.halfPrice || 0, i
+                    .quarterPrice || 0, i.packPrice || i.bundlePrice || i.pricePerYard || 0,
+                    getItemRevenue(i), getLowStockFlags(i).join(', ') || 'available'
                 ];
             });
             const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
@@ -2247,6 +2671,7 @@
               <div class="guide-section"><h4>📁 CSV Import/Export</h4><p>Download template, fill it, then upload. The system handles all item types and measured sub-types.</p></div>
               <div class="guide-section"><h4>🔐 Revenue View</h4><p>Hidden by default. Click the lock and enter your PIN to reveal.</p></div>
               <div class="guide-section"><h4>🔄 Restock Options</h4><p>From Store (existing bulk) or Third Party (external purchase).</p></div>
+              <div class="guide-section"><h4>📊 Stock Movement Ledger</h4><p>Every stock change is tracked. Click the Ledger button to see full history. Balance column shows ✅ if calculated matches actual, ⚠️ if there's a discrepancy.</p></div>
               <button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close Guide</button>
             `;
             showModal('📖 How to Use Inventory', guide);
@@ -2263,6 +2688,11 @@
             if (targetPanel) { targetPanel.classList.add('active');
                 renderInventory(); }
         }));
+
+        window.switchToRejectedTab = function() {
+            const tab = document.querySelector('.tab[data-tab="rejected"]');
+            if (tab) tab.click();
+        };
 
         onAuthStateChanged(auth, async (u) => {
             if (!u) { window.location.href = 'auth.html'; return; }
