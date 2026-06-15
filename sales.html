@@ -8,9 +8,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Sales · OmoCreations</title>
 
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="manifest.json">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -81,6 +78,12 @@
     .stat-card .value-hint { font-size:0.6rem; color:var(--primary); text-align:center; cursor:pointer; margin-top:2px; display:none; }
     .stat-card.value-locked .value-hint { display:block; }
 
+    .attendant-stats { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px; margin-bottom:24px; }
+    .attendant-card { background:white; padding:14px; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(255,77,166,0.1); }
+    .attendant-card h5 { font-size:0.8rem; color:var(--gray); margin-bottom:6px; }
+    .attendant-card .attendant-sales { font-size:1.3rem; font-weight:700; color:var(--success); }
+    .attendant-card .attendant-count { font-size:0.7rem; color:var(--gray); }
+
     .filter-bar { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
     .search-wrapper { flex:1; min-width:200px; position:relative; }
     .search-wrapper i { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--gray); }
@@ -99,6 +102,7 @@
     .data-table tbody tr { transition:background 0.2s; cursor:pointer; }
     .data-table tbody tr:hover { background:var(--primary-soft); }
     .data-table tbody tr.returned-row { background:rgba(239,68,68,0.03); }
+    .data-table tbody tr.pending-sync { background:rgba(245,158,11,0.05); }
 
     .badge { padding:5px 12px; border-radius:40px; font-size:0.7rem; font-weight:600; display:inline-block; white-space:nowrap; }
     .badge-success { background:rgba(16,185,129,0.1); color:var(--success); }
@@ -151,6 +155,10 @@
     .pin-input { width:55px; height:65px; text-align:center; font-size:1.8rem; font-weight:700; border:2px solid rgba(255,77,166,0.2); border-radius:14px; outline:none; font-family:'Poppins',sans-serif; }
     .pin-input:focus { border-color:var(--primary); }
 
+    .wholesale-pack-size-box { background:var(--primary-soft); border:2px solid var(--primary); border-radius:14px; padding:16px; margin-bottom:16px; text-align:center; }
+    .wholesale-pack-size-box label { font-weight:700; color:var(--primary); }
+    .wholesale-pack-size-box input { font-size:1.3rem; font-weight:700; text-align:center; }
+
     .receipt-container { background:#f8f9fa; border-radius:12px; padding:20px; font-family:'Segoe UI',Roboto,'Helvetica Neue',sans-serif; font-weight:normal; }
     .receipt-header { text-align:center; border-bottom:1px dashed #ccc; padding-bottom:10px; margin-bottom:10px; }
     .receipt-header h2 { font-weight:bold; margin:0; }
@@ -168,14 +176,12 @@
     .return-option.selected { border-color:var(--primary); background:var(--primary-soft); }
     .return-option i { font-size:1.3rem; color:var(--primary); width:30px; text-align:center; }
 
-    .pending-sync-badge { background: var(--warning); color: white; border-radius: 12px; padding: 2px 8px; font-size: 0.65rem; margin-left: 6px; }
-
     .empty-state { text-align:center; padding:40px 20px; color:var(--gray); }
     .empty-state i { font-size:2.5rem; color:var(--primary-light); margin-bottom:10px; display:block; }
 
     .toast-container { position:fixed; bottom:24px; right:24px; z-index:3000; display:flex; flex-direction:column; gap:10px; }
     .toast { background:white; color:var(--dark); padding:14px 20px; border-radius:50px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px; font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease; border-left:4px solid var(--primary); transition:all 0.3s ease; }
-    .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); } .toast i { font-size:1.1rem; }
+    .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); } .toast.warning { border-left-color:var(--warning); } .toast i { font-size:1.1rem; }
 
     @media (max-width:1400px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:768px) {
@@ -193,7 +199,7 @@
 
 <!-- Offline Banner -->
 <div class="offline-banner" id="offlineBanner">
-  <i class="fas fa-wifi"></i> You are offline — sales will sync when reconnected
+  <i class="fas fa-wifi"></i> You are offline — sales saved locally, will sync when reconnected
 </div>
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -215,6 +221,7 @@
 
   <div class="content-wrapper">
 
+    <!-- Stats Grid -->
     <div class="stats-grid">
       <div class="stat-card value-locked" id="todayCard"><div class="stat-header"><span>Today's Sales</span><div class="stat-icon"><i class="fas fa-calendar-day"></i></div></div><div class="stat-value" id="todaySales">₦0</div><div class="stat-sub" id="todayTransactions">0 txn</div><div class="value-hint" onclick="revealStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
       <div class="stat-card value-locked" id="weekCard"><div class="stat-header"><span>This Week</span><div class="stat-icon"><i class="fas fa-calendar-week"></i></div></div><div class="stat-value" id="weekSales">₦0</div><div class="stat-sub" id="weekTransactions">0 txn</div><div class="value-hint" onclick="revealStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
@@ -222,10 +229,18 @@
       <div class="stat-card value-locked" id="yearCard"><div class="stat-header"><span>This Year</span><div class="stat-icon"><i class="fas fa-chart-line"></i></div></div><div class="stat-value" id="yearSales">₦0</div><div class="stat-sub" id="yearTransactions">0 txn</div><div class="value-hint" onclick="revealStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
     </div>
 
+    <!-- Attendant Stats -->
+    <div class="panel" id="attendantStatsPanel" style="display:none;">
+      <div class="panel-header"><h3><i class="fas fa-users"></i> Attendant Performance (Today)</h3></div>
+      <div class="attendant-stats" id="attendantStats"></div>
+    </div>
+
+    <!-- Filter Bar -->
     <div class="filter-bar">
       <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="salesSearchInput" placeholder="Search by customer, phone, or receipt #..."></div>
     </div>
 
+    <!-- Sales Table -->
     <div class="panel">
       <div class="panel-header">
         <h3><i class="fas fa-history"></i> Recent Sales</h3>
@@ -234,12 +249,13 @@
           <button class="btn btn-outline btn-sm" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
           <button class="btn btn-primary btn-sm" onclick="openNewSaleModal()"><i class="fas fa-plus"></i> New Sale</button>
           <button class="btn btn-primary btn-sm" onclick="openCompanySaleModal()"><i class="fas fa-building"></i> Sell to Company</button>
+          <button class="btn btn-success btn-sm" onclick="openWholesaleSaleModal()"><i class="fas fa-tags"></i> Wholesale</button>
         </div>
       </div>
       <div class="table-wrapper">
         <table class="data-table">
-          <thead><tr><th>Time</th><th>Receipt #</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody id="salesTable"><tr><td colspan="9"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading sales...</p></div></td></tr></tbody>
+          <thead><tr><th>Time</th><th>Receipt #</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Payment</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="salesTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading sales...</p></div></td></tr></tbody>
         </table>
       </div>
     </div>
@@ -258,7 +274,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, increment, writeBatch, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, deleteDoc, setDoc, increment, writeBatch, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
@@ -273,25 +289,28 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // Enable offline persistence
+  // Enable offline persistence (same as store)
   try {
-    await enableIndexedDbPersistence(db);
-    console.log('Offline persistence enabled');
-  } catch (err) {
-    if (err.code === 'failed-precondition') {
-      console.warn('Multiple tabs open, persistence disabled');
-    } else if (err.code === 'unimplemented') {
-      console.warn('Browser doesn\'t support persistence');
-    }
+    enableIndexedDbPersistence(db).then(() => {
+      console.log('Offline persistence enabled');
+    }).catch((err) => {
+      if (err.code === 'failed-precondition') {
+        console.warn('Multiple tabs open, persistence disabled');
+      } else if (err.code === 'unimplemented') {
+        console.warn('Browser doesn\'t support persistence');
+      }
+    });
+  } catch (e) {
+    console.warn('Persistence setup error:', e);
   }
 
   let currentUser = null, userData = null, unsubscribes = [];
-  let allSales = [], allReturns = [], allCustomers = [], allStockItems = [];
+  let allSales = [], allReturns = [], allCustomers = [], allStockItems = [], allStoreItems = [];
   let selectedPayment = 'cash', customerType = 'existing';
   let statsRevealed = false, selectedReturnAction = 'refund';
   let adminPins = new Set();
   let isOnline = navigator.onLine;
-  let pendingSync = [];
+  let offlineSales = JSON.parse(localStorage.getItem('offlineSales') || '[]');
 
   // ============================================
   // ONLINE/OFFLINE DETECTION
@@ -300,112 +319,156 @@
     isOnline = true;
     document.getElementById('offlineBanner').classList.remove('show');
     document.getElementById('syncStatus').textContent = '';
-    syncPendingSales();
-    showToast('Back online! Syncing...', 'success');
+    syncOfflineSales();
   });
 
   window.addEventListener('offline', () => {
     isOnline = false;
     document.getElementById('offlineBanner').classList.add('show');
     document.getElementById('syncStatus').textContent = '⚠️ Offline';
-    showToast('You are offline. Sales will be saved locally.', 'warning');
   });
 
   if (!navigator.onLine) {
+    isOnline = false;
     document.getElementById('offlineBanner').classList.add('show');
     document.getElementById('syncStatus').textContent = '⚠️ Offline';
   }
 
   // ============================================
-  // PENDING SYNC SYSTEM
+  // OFFLINE SALES SYNC
   // ============================================
-  function savePendingSale(saleData) {
-    let pending = JSON.parse(localStorage.getItem('pendingSales') || '[]');
-    pending.push({ ...saleData, savedAt: new Date().toISOString() });
-    localStorage.setItem('pendingSales', JSON.stringify(pending));
+  function saveOfflineSale(saleData) {
+    offlineSales.push(saleData);
+    localStorage.setItem('offlineSales', JSON.stringify(offlineSales));
+    // Immediately add to display
+    allSales.unshift(saleData);
+    renderSales();
   }
 
-  async function syncPendingSales() {
-    if (!isOnline) return;
-    let pending = JSON.parse(localStorage.getItem('pendingSales') || '[]');
-    if (pending.length === 0) return;
+  async function syncOfflineSales() {
+    if (!isOnline || offlineSales.length === 0) return;
     
-    showToast(`Syncing ${pending.length} pending sale(s)...`, 'success');
+    const toSync = [...offlineSales];
+    offlineSales = [];
+    localStorage.setItem('offlineSales', JSON.stringify(offlineSales));
     
-    for (const saleData of pending) {
+    showToast(`Syncing ${toSync.length} offline sale(s)...`, 'warning');
+    
+    for (const saleData of toSync) {
       try {
         const batch = writeBatch(db);
-        const saleRef = doc(collection(db, 'sales'));
-        batch.set(saleRef, {
-          ...saleData,
-          syncedAt: serverTimestamp(),
-          createdAt: saleData.createdAt || serverTimestamp()
-        });
         
-        if (saleData.stockUpdates) {
-          for (const update of saleData.stockUpdates) {
-            batch.update(doc(db, 'stock_items', update.id), update.data);
+        // Create customer if new
+        let customerId = saleData.customerId || '';
+        if (saleData._newCustomer && saleData._customerData) {
+          const custRef = doc(collection(db, 'customers'));
+          batch.set(custRef, {
+            ...saleData._customerData,
+            createdAt: serverTimestamp()
+          });
+          customerId = custRef.id;
+        }
+        
+        // Create sale document
+        const saleRef = doc(collection(db, saleData._type === 'wholesale' ? 'wholesale_sales' : 'sales'));
+        const cleanData = { ...saleData };
+        delete cleanData._type;
+        delete cleanData._newCustomer;
+        delete cleanData._customerData;
+        delete cleanData._stockUpdates;
+        delete cleanData._movements;
+        delete cleanData._localId;
+        cleanData.customerId = customerId;
+        cleanData.createdAt = serverTimestamp();
+        batch.set(saleRef, cleanData);
+        
+        // Apply stock updates
+        if (saleData._stockUpdates) {
+          for (const update of saleData._stockUpdates) {
+            if (update.collection === 'store_items') {
+              batch.update(doc(db, 'store_items', update.id), update.data);
+            } else {
+              batch.update(doc(db, 'stock_items', update.id), update.data);
+            }
           }
         }
         
-        if (saleData.movements) {
-          for (const mov of saleData.movements) {
+        // Create movement records
+        if (saleData._movements) {
+          for (const mov of saleData._movements) {
             const movRef = doc(collection(db, 'stock_movements'));
             batch.set(movRef, { ...mov, performedAt: serverTimestamp() });
           }
         }
         
         await batch.commit();
+        
+        // Update local sale with synced ID
+        const syncedSale = allSales.find(s => s._localId === saleData._localId);
+        if (syncedSale) {
+          syncedSale.id = saleRef.id;
+          syncedSale._synced = true;
+        }
+        
+        console.log('Synced sale:', saleData.receiptNumber);
       } catch (e) {
-        console.error('Sync failed for sale:', e);
+        console.error('Sync failed for sale:', saleData.receiptNumber, e);
+        // Put back in offline queue
+        offlineSales.push(saleData);
+        localStorage.setItem('offlineSales', JSON.stringify(offlineSales));
+        showToast('Some sales failed to sync. Will retry.', 'error');
         return;
       }
     }
     
-    localStorage.removeItem('pendingSales');
-    showToast('All pending sales synced!', 'success');
+    renderSales();
+    showToast('All offline sales synced!', 'success');
   }
 
   // ============================================
   // UTILITY FUNCTIONS
   // ============================================
-  function formatTime(d) { if(!d) return '-'; const date=d.toDate?d.toDate():new Date(d); return date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
-  function formatCurrency(n) { return '₦'+(n||0).toLocaleString(); }
-  function navigateTo(url) { window.location.href=url; }
+  function formatTime(d) { 
+    if(!d) return new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    if (typeof d === 'string') return new Date(d).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    const date = d.toDate ? d.toDate() : new Date(d); 
+    return date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); 
+  }
+  function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
+  function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
-  function generateReceiptNumber() { return 'RCP-'+Date.now().toString().slice(-8)+'-'+Math.random().toString(36).substr(2,4).toUpperCase(); }
+  function generateReceiptNumber(prefix) {
+    prefix = prefix || 'RCP';
+    return prefix + '-' + Date.now().toString().slice(-8) + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+  }
 
-  function showToast(msg, type='success') {
-    const c=document.getElementById('toastContainer'); if(!c) return;
-    const t=document.createElement('div'); t.className=`toast ${type}`;
-    const icon = type==='success'?'check-circle':type==='error'?'exclamation-circle':'exclamation-triangle';
-    t.innerHTML=`<i class="fas fa-${icon}"></i> ${msg}`;
+  function showToast(msg, type) {
+    type = type || 'success';
+    const c = document.getElementById('toastContainer');
+    if (!c) return;
+    const t = document.createElement('div');
+    t.className = 'toast ' + type;
+    const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle';
+    t.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + msg;
     c.appendChild(t);
-    setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},4000);
+    setTimeout(function() {
+      t.style.opacity = '0';
+      t.style.transform = 'translateX(100%)';
+      t.style.transition = 'all 0.3s ease';
+      setTimeout(function() { t.remove(); }, 300);
+    }, 4000);
   }
 
   async function logAudit(action, note) {
-    try { 
-      await addDoc(collection(db,'audit_logs'),{
-        actionType:action,
-        performedBy:currentUser?.uid||'unknown',
-        performedByName:userData?.fullName||'Staff',
-        performedAt:serverTimestamp(),
-        note:note||'',
-        deviceInfo: navigator.userAgent
-      }); 
-    } catch(e){}
-  }
-
-  async function logMovement(itemId, itemName, type, change, reference) {
     try {
-      await addDoc(collection(db, 'stock_movements'), {
-        itemId, itemName, movementType: type, change, reference,
-        performedBy: currentUser?.uid || 'unknown',
-        performedByName: userData?.fullName || 'Staff',
-        performedAt: serverTimestamp()
+      await addDoc(collection(db, 'audit_logs'), {
+        actionType: action,
+        performedBy: currentUser ? currentUser.uid : 'unknown',
+        performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+        performedAt: serverTimestamp(),
+        note: note || ''
       });
-    } catch(e){}
+    } catch (e) {}
   }
 
   function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
@@ -415,57 +478,63 @@
     document.getElementById('modalContent').innerHTML = content;
     document.getElementById('modalOverlay').classList.add('active');
   }
-  function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
-  function isAdmin() { return userData?.role==='admin'||userData?.role==='super_admin'; }
+  function cleanup() { unsubscribes.forEach(function(u) { u(); }); unsubscribes = []; }
+  function isAdmin() { return userData && (userData.role === 'admin' || userData.role === 'super_admin'); }
 
   window.toggleSidebar = function() {
-    const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay');
-    if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}
-    else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';}
+    const s = document.getElementById('sidebar');
+    const o = document.getElementById('sidebarOverlay');
+    if (s.classList.contains('mobile-open')) {
+      s.classList.remove('mobile-open');
+      o.classList.remove('active');
+      document.body.style.overflow = '';
+    } else {
+      s.classList.add('mobile-open');
+      o.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
   };
   window.closeSidebar = function() {
     document.getElementById('sidebar').classList.remove('mobile-open');
-    document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow='';
+    document.getElementById('sidebarOverlay').classList.remove('active');
+    document.body.style.overflow = '';
   };
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){hideModal();closeSidebar();}});
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { hideModal(); closeSidebar(); } });
 
   function buildSidebar() {
-    const nav=document.getElementById('sidebarNav'); if(!nav) return;
-    const dashboardLink=isAdmin()?'admin-dashboard.html':'attendant-dashboard.html';
-    nav.innerHTML=`
+    const nav = document.getElementById('sidebarNav');
+    if (!nav) return;
+    const dashboardLink = isAdmin() ? 'admin-dashboard.html' : 'attendant-dashboard.html';
+    nav.innerHTML = `
       <div class="nav-section"><div class="nav-section-title">OVERVIEW</div>
         <button class="nav-item" onclick="navigateTo('${dashboardLink}')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
-        ${isAdmin()?`<button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button><button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>`:''}
+        ${isAdmin()?`<button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>`:''}
       </div>
-      ${isAdmin()?`<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
-        <button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff Management</span></button>
-        <button class="nav-item" onclick="navigateTo('make-admin.html')"><i class="fas fa-user-shield"></i><span>Make Admin</span></button>
-        <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
-        <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit Logs</span></button>
-      </div>`:''}
-      <div class="nav-section"><div class="nav-section-title">MONITORING</div>
+      <div class="nav-section"><div class="nav-section-title">OPERATIONS</div>
         <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
+        <button class="nav-item" onclick="navigateTo('store.html')"><i class="fas fa-store"></i><span>Store</span></button>
         <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
         <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
         <button class="nav-item active"><i class="fas fa-cash-register"></i><span>Sales</span></button>
-        <button class="nav-item" onclick="navigateTo('history.html')"><i class="fas fa-history"></i><span>History</span></button>
-        ${isAdmin()?`<button class="nav-item" onclick="navigateTo('orders-admin.html')"><i class="fas fa-clipboard-list"></i><span>Orders Admin</span></button>`:''}
       </div>
-      ${isAdmin()?`<div class="nav-section"><div class="nav-section-title">SHOP &amp; KIOSK</div>
-        <button class="nav-item" onclick="window.open('kiosk.html','_blank')"><i class="fas fa-desktop"></i><span>Launch Kiosk</span></button>
-        <button class="nav-item" onclick="navigateTo('kiosk-settings.html')"><i class="fas fa-cog"></i><span>Kiosk Settings</span></button>
-        <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
-        <button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><span>Catalog</span></button>
-      </div>`:`<button class="nav-item" onclick="navigateTo('attendant-profile.html')"><i class="fas fa-user"></i><span>Profile</span></button>`}
+      ${isAdmin()?`<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
+        <button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff</span></button>
+        <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
+        <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit</span></button>
+      </div>`:''}
       <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
     `;
-    document.getElementById('logoutBtn')?.addEventListener('click',async()=>{try{await logAudit('logout');}catch(e){}await signOut(auth);window.location.href='auth.html';});
+    document.getElementById('logoutBtn')?.addEventListener('click', async function() {
+      try { await logAudit('logout'); } catch (e) {}
+      await signOut(auth);
+      window.location.href = 'auth.html';
+    });
   }
 
   async function verifySalePin(pin) {
     if (pin === '1234') return true;
     if (adminPins.has(pin)) return true;
-    if (pin === (userData?.attendantPin || '1234')) return true;
+    if (pin === (userData && userData.attendantPin)) return true;
     return false;
   }
 
@@ -473,127 +542,369 @@
     try {
       const snap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['admin', 'super_admin']), where('status', '==', 'active')));
       adminPins.clear();
-      snap.forEach(d => {
+      snap.forEach(function(d) {
         const data = d.data();
         if (data.adminPin) adminPins.add(data.adminPin);
         if (data.attendantPin) adminPins.add(data.attendantPin);
       });
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
   }
 
   function showPinModal(title, action, onSuccess) {
-    showModal(title, `<p style="text-align:center;margin-bottom:20px;">Enter any admin/attendant PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`);
+    showModal(title, 
+      '<p style="text-align:center;margin-bottom:20px;">Enter your PIN to ' + action + '</p>' +
+      '<div class="pin-input-container">' +
+      '<input type="password" maxlength="1" class="pin-input" id="pin1">' +
+      '<input type="password" maxlength="1" class="pin-input" id="pin2">' +
+      '<input type="password" maxlength="1" class="pin-input" id="pin3">' +
+      '<input type="password" maxlength="1" class="pin-input" id="pin4">' +
+      '</div>' +
+      '<button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>'
+    );
     document.getElementById('pin1').focus();
-    document.querySelectorAll('#modalOverlay .pin-input').forEach((inp,i,arr)=>{inp.addEventListener('input',e=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();});});
-    document.getElementById('verifyPinBtn').onclick = async () => {
-      const pin = ['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');
+    document.querySelectorAll('#modalOverlay .pin-input').forEach(function(inp, i, arr) {
+      inp.addEventListener('input', function(e) {
+        if (e.target.value && i < arr.length - 1) arr[i + 1].focus();
+      });
+    });
+    document.getElementById('verifyPinBtn').onclick = async function() {
+      const pin = ['pin1','pin2','pin3','pin4'].map(function(id) { return document.getElementById(id).value; }).join('');
       const isValid = await verifySalePin(pin);
       if (isValid) { hideModal(); onSuccess(); }
-      else showToast('Invalid PIN','error');
+      else showToast('Invalid PIN', 'error');
     };
   }
 
   window.revealStats = function() {
-    if(statsRevealed) return;
-    if(isAdmin()){statsRevealed=true;updateStatsDisplay();return;}
-    showPinModal('Unlock Financial Stats','view sales figures',()=>{statsRevealed=true;updateStatsDisplay();logAudit('reveal_sales_stats','Sales figures revealed');showToast('Sales figures unlocked','success');});
+    if (statsRevealed) return;
+    if (isAdmin()) { statsRevealed = true; updateStatsDisplay(); updateAttendantStats(); return; }
+    showPinModal('Unlock Stats', 'view sales figures', function() {
+      statsRevealed = true;
+      updateStatsDisplay();
+      updateAttendantStats();
+      logAudit('reveal_sales_stats', 'Sales figures revealed');
+      showToast('Sales figures unlocked', 'success');
+    });
   };
 
   function updateStatsDisplay() {
-    if(!statsRevealed) return;
-    ['todayCard','weekCard','monthCard','yearCard'].forEach(id=>{
-      const card=document.getElementById(id);
-      if(card){card.classList.remove('value-locked');const valEl=card.querySelector('.stat-value');if(valEl){valEl.style.filter='none';valEl.style.cursor='default';}const hint=card.querySelector('.value-hint');if(hint)hint.style.display='none';}
+    if (!statsRevealed) return;
+    ['todayCard','weekCard','monthCard','yearCard'].forEach(function(id) {
+      const card = document.getElementById(id);
+      if (card) {
+        card.classList.remove('value-locked');
+        const valEl = card.querySelector('.stat-value');
+        if (valEl) { valEl.style.filter = 'none'; valEl.style.cursor = 'default'; }
+        const hint = card.querySelector('.value-hint');
+        if (hint) hint.style.display = 'none';
+      }
     });
-  }
-
-  function updateStats(){
-    const now=new Date();
-    const today=now.toISOString().split('T')[0];
-    const weekStart=new Date(now);weekStart.setDate(now.getDate()-now.getDay());
-    const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
-    const yearStart=new Date(now.getFullYear(),0,1);
-    let todayTotal=0,weekTotal=0,monthTotal=0,yearTotal=0,todayCount=0,weekCount=0,monthCount=0,yearCount=0;
-    allSales.forEach(s=>{if(s.status==='returned')return;const d=s.createdAt?.toDate();if(!d)return;const amt=parseFloat(s.totalAmount)||0;if(d.toISOString().split('T')[0]===today){todayTotal+=amt;todayCount++;}if(d>=weekStart){weekTotal+=amt;weekCount++;}if(d>=monthStart){monthTotal+=amt;monthCount++;}if(d>=yearStart){yearTotal+=amt;yearCount++;}});
-    allReturns.forEach(r=>{if(r.returnAction!=='refund')return;const d=r.createdAt?.toDate();if(!d)return;const amt=parseFloat(r.totalRefund)||0;if(d.toISOString().split('T')[0]===today){todayTotal-=amt;todayCount--;}if(d>=weekStart){weekTotal-=amt;weekCount--;}if(d>=monthStart){monthTotal-=amt;monthCount--;}if(d>=yearStart){yearTotal-=amt;yearCount--;}});
-    document.getElementById('todaySales').textContent=formatCurrency(Math.max(0,todayTotal));
-    document.getElementById('weekSales').textContent=formatCurrency(Math.max(0,weekTotal));
-    document.getElementById('monthSales').textContent=formatCurrency(Math.max(0,monthTotal));
-    document.getElementById('yearSales').textContent=formatCurrency(Math.max(0,yearTotal));
-    document.getElementById('todayTransactions').textContent=`${Math.max(0,todayCount)} txn`;
-    document.getElementById('weekTransactions').textContent=`${Math.max(0,weekCount)} txn`;
-    document.getElementById('monthTransactions').textContent=`${Math.max(0,monthCount)} txn`;
-    document.getElementById('yearTransactions').textContent=`${Math.max(0,yearCount)} txn`;
-  }
-
-  function renderSales(){
-    const tbody=document.getElementById('salesTable');
-    const search=(document.getElementById('salesSearchInput')?.value||'').toLowerCase();
-    let filtered=[...allSales];
-    if(search) filtered=filtered.filter(s=>(s.customerName||'').toLowerCase().includes(search)||(s.customerPhone||'').toLowerCase().includes(search)||(s.receiptNumber||'').toLowerCase().includes(search));
-    tbody.innerHTML='';
-    if(filtered.length===0){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-cash-register"></i><p>No sales found</p></div></td></tr>';updateStats();return;}
-    filtered.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
-    filtered.forEach(s=>{
-      const isReturned=s.status==='returned';
-      const statusBadge=isReturned?`<span class="badge badge-danger">Returned</span>`:`<span class="badge badge-success">Completed</span>`;
-      const returnInfo=isReturned?`<br><small style="color:var(--danger);">Action: ${s.returnAction?.replace(/_/g,' ')} | Refund: -${formatCurrency(s.totalRefund||0)}</small>`:'';
-      tbody.innerHTML+=`<tr class="${isReturned?'returned-row':''}"><td>${formatTime(s.createdAt)}</td><td><span class="badge badge-info">${s.receiptNumber||'N/A'}</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;" onclick="navigateTo('history.html?customerId=${s.customerId||''}')">${s.customerName||'Walk-in'}</td><td>${s.customerPhone||'-'}</td><td>${s.items?.length||0} items</td><td><strong style="color:${isReturned?'var(--danger)':'inherit'};">${isReturned?'-':''}${formatCurrency(s.totalAmount)}</strong>${returnInfo}</td><td><span class="badge badge-success">${s.paymentMethod||'cash'}</span></td><td>${statusBadge}</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt('${s.id}')" title="View"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt('${s.id}')" title="Print"><i class="fas fa-print"></i></button>${!isReturned?`<button class="btn btn-sm btn-warning" onclick="openReturnModal('${s.id}')" title="Return"><i class="fas fa-undo"></i></button>`:''}</div></td></tr>`;
-    });
-    updateStats();
-  }
-
-  function loadSales(){
-    cleanup();
-    const q=query(collection(db,'sales'),orderBy('createdAt','desc'));
-    unsubscribes.push(onSnapshot(q,snap=>{allSales=snap.docs.map(d=>({id:d.id,...d.data()}));renderSales();},error=>{unsubscribes.push(onSnapshot(collection(db,'sales'),snap=>{allSales=snap.docs.map(d=>({id:d.id,...d.data()}));allSales.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));renderSales();}));}));
-    unsubscribes.push(onSnapshot(query(collection(db,'returns'),orderBy('createdAt','desc')),snap=>{allReturns=snap.docs.map(d=>({id:d.id,...d.data()}));renderSales();},error=>{unsubscribes.push(onSnapshot(collection(db,'returns'),snap=>{allReturns=snap.docs.map(d=>({id:d.id,...d.data()}));allReturns.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));renderSales();}));}));
-  }
-
-  async function loadCustomersAndStock(){
-    try{
-      const custSnap=await getDocs(query(collection(db,'customers'),where('status','==','approved')));
-      allCustomers=custSnap.docs.map(d=>({id:d.id,...d.data()}));
-      const stockSnap=await getDocs(collection(db,'stock_items'));
-      allStockItems=stockSnap.docs.map(d=>{
-        const data=d.data();
-        return {
-          id:d.id,...data,
-          unitQty: parseFloat(data.unitQty ?? data.quantityAvailable ?? data.initialStock ?? 0),
-          unitPrice: parseFloat(data.unitPrice ?? 0),
-          halfQty: parseFloat(data.halfQty ?? 0),
-          halfPrice: parseFloat(data.halfPrice ?? 0),
-          quarterQty: parseFloat(data.quarterQty ?? 0),
-          quarterPrice: parseFloat(data.quarterPrice ?? 0),
-          packSize: parseInt(data.packSize ?? 12),
-          packQty: parseFloat(data.packQty ?? 0),
-          packPrice: parseFloat(data.packPrice ?? 0),
-          bundleSize: parseInt(data.bundleSize ?? 50),
-          bundleQty: parseFloat(data.bundleQty ?? 0),
-          bundlePrice: parseFloat(data.bundlePrice ?? 0),
-          measureUnit: data.measureUnit ?? 'piece',
-          itemType: data.itemType ?? 'general',
-          measuredSubType: data.measuredSubType ?? 'yard',
-          yardQty: parseFloat(data.yardQty ?? data.unitQty ?? 0),
-          pricePerYard: parseFloat(data.pricePerYard ?? data.unitPrice ?? 0),
-          threshold: parseFloat(data.threshold ?? 10),
-          thresholdUnit: parseFloat(data.thresholdUnit ?? data.threshold ?? 10),
-          thresholdHalf: parseFloat(data.thresholdHalf ?? data.threshold ?? 10),
-          thresholdQuarter: parseFloat(data.thresholdQuarter ?? data.threshold ?? 10)
-        };
-      }).filter(i=>i.status !== 'deleted');
-    }catch(e){showToast('Error loading data','error');}
+    document.getElementById('attendantStatsPanel').style.display = 'block';
   }
 
   // ============================================
-  // STOCK VALIDATION & DEDUCTION HELPERS
+  // ATTENDANT STATS
+  // ============================================
+  function updateAttendantStats() {
+    if (!statsRevealed) {
+      document.getElementById('attendantStatsPanel').style.display = 'none';
+      return;
+    }
+    document.getElementById('attendantStatsPanel').style.display = 'block';
+    
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const attendantMap = {};
+    const allTxns = allSales.concat(offlineSales);
+    
+    allTxns.forEach(function(s) {
+      if (s.status === 'returned') return;
+      const d = s.createdAt;
+      let saleDate;
+      if (typeof d === 'string') {
+        saleDate = new Date(d);
+      } else if (d && d.toDate) {
+        saleDate = d.toDate();
+      } else if (d instanceof Date) {
+        saleDate = d;
+      } else {
+        saleDate = new Date();
+      }
+      
+      const name = s.attendantName || 'Unknown';
+      
+      if (!attendantMap[name]) {
+        attendantMap[name] = { sales: 0, count: 0, todaySales: 0, todayCount: 0 };
+      }
+      
+      attendantMap[name].sales += (parseFloat(s.totalAmount) || 0);
+      attendantMap[name].count += 1;
+      
+      if (saleDate >= todayStart) {
+        attendantMap[name].todaySales += (parseFloat(s.totalAmount) || 0);
+        attendantMap[name].todayCount += 1;
+      }
+    });
+    
+    const statsDiv = document.getElementById('attendantStats');
+    statsDiv.innerHTML = Object.entries(attendantMap).map(function([name, data]) {
+      return '<div class="attendant-card">' +
+        '<h5>' + name + '</h5>' +
+        '<div class="attendant-sales">' + formatCurrency(data.todaySales) + '</div>' +
+        '<div class="attendant-count">Today: ' + data.todayCount + ' txn | All: ' + data.count + ' txn</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // ============================================
+  // STATS UPDATE
+  // ============================================
+  function updateStats() {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay());
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    
+    let todayTotal = 0, weekTotal = 0, monthTotal = 0, yearTotal = 0;
+    let todayCount = 0, weekCount = 0, monthCount = 0, yearCount = 0;
+    
+    const allTxns = allSales.concat(offlineSales);
+    
+    allTxns.forEach(function(s) {
+      if (s.status === 'returned') return;
+      const d = s.createdAt;
+      let saleDate;
+      if (typeof d === 'string') {
+        saleDate = new Date(d);
+      } else if (d && d.toDate) {
+        saleDate = d.toDate();
+      } else if (d instanceof Date) {
+        saleDate = d;
+      } else {
+        saleDate = new Date();
+      }
+      
+      const amt = parseFloat(s.totalAmount) || 0;
+      
+      if (saleDate.toISOString().split('T')[0] === today) { todayTotal += amt; todayCount++; }
+      if (saleDate >= weekStart) { weekTotal += amt; weekCount++; }
+      if (saleDate >= monthStart) { monthTotal += amt; monthCount++; }
+      if (saleDate >= yearStart) { yearTotal += amt; yearCount++; }
+    });
+    
+    document.getElementById('todaySales').textContent = formatCurrency(Math.max(0, todayTotal));
+    document.getElementById('weekSales').textContent = formatCurrency(Math.max(0, weekTotal));
+    document.getElementById('monthSales').textContent = formatCurrency(Math.max(0, monthTotal));
+    document.getElementById('yearSales').textContent = formatCurrency(Math.max(0, yearTotal));
+    document.getElementById('todayTransactions').textContent = Math.max(0, todayCount) + ' txn';
+    document.getElementById('weekTransactions').textContent = Math.max(0, weekCount) + ' txn';
+    document.getElementById('monthTransactions').textContent = Math.max(0, monthCount) + ' txn';
+    document.getElementById('yearTransactions').textContent = Math.max(0, yearCount) + ' txn';
+    
+    updateAttendantStats();
+  }
+
+  // ============================================
+  // RENDER SALES TABLE
+  // ============================================
+  function renderSales() {
+    const tbody = document.getElementById('salesTable');
+    const search = (document.getElementById('salesSearchInput') && document.getElementById('salesSearchInput').value || '').toLowerCase();
+    
+    let filtered = allSales.slice();
+    
+    if (search) {
+      filtered = filtered.filter(function(s) {
+        return (s.customerName || '').toLowerCase().indexOf(search) !== -1 ||
+               (s.customerPhone || '').toLowerCase().indexOf(search) !== -1 ||
+               (s.receiptNumber || '').toLowerCase().indexOf(search) !== -1;
+      });
+    }
+    
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-cash-register"></i><p>No sales found</p></div></td></tr>';
+      updateStats();
+      return;
+    }
+    
+    filtered.sort(function(a, b) {
+      const aTime = a.createdAt ? (a.createdAt.seconds || new Date(a.createdAt).getTime() / 1000 || 0) : 0;
+      const bTime = b.createdAt ? (b.createdAt.seconds || new Date(b.createdAt).getTime() / 1000 || 0) : 0;
+      return bTime - aTime;
+    });
+    
+    tbody.innerHTML = '';
+    filtered.forEach(function(s) {
+      const isReturned = s.status === 'returned';
+      const isOffline = s._localId && !s._synced;
+      const isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
+      const rowClass = isReturned ? 'returned-row' : (isOffline ? 'pending-sync' : '');
+      
+      let statusBadge = isReturned ? '<span class="badge badge-danger">Returned</span>' : '<span class="badge badge-success">Completed</span>';
+      if (isOffline) statusBadge = '<span class="badge badge-warning">Pending Sync</span>';
+      
+      let typeBadge = isWholesale ? '<span class="badge badge-purple">Wholesale</span>' : (s.isCompanySale ? '<span class="badge badge-info">Company</span>' : '<span class="badge badge-info">Regular</span>');
+      
+      const returnInfo = isReturned ? '<br><small style="color:var(--danger);">Refund: -' + formatCurrency(s.totalRefund || 0) + '</small>' : '';
+      const offlineInfo = isOffline ? '<br><small style="color:var(--warning);">Will sync when online</small>' : '';
+      
+      tbody.innerHTML += '<tr class="' + rowClass + '">' +
+        '<td>' + formatTime(s.createdAt) + '</td>' +
+        '<td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td>' +
+        '<td style="cursor:pointer;color:var(--primary);font-weight:600;">' + (s.customerName || 'Walk-in') + '</td>' +
+        '<td>' + (s.customerPhone || '-') + '</td>' +
+        '<td>' + (s.items ? s.items.length : 0) + ' items</td>' +
+        '<td><strong style="color:' + (isReturned ? 'var(--danger)' : 'inherit') + ';">' + (isReturned ? '-' : '') + formatCurrency(s.totalAmount) + '</strong>' + returnInfo + offlineInfo + '</td>' +
+        '<td><span class="badge badge-success">' + (s.paymentMethod || 'cash') + '</span></td>' +
+        '<td>' + typeBadge + '</td>' +
+        '<td>' + statusBadge + '</td>' +
+        '<td><div style="display:flex;gap:4px;">' +
+        '<button class="btn btn-sm btn-outline" onclick="viewReceipt(\'' + (s.id || s._localId) + '\')" title="View"><i class="fas fa-receipt"></i></button>' +
+        '<button class="btn btn-sm btn-outline" onclick="printReceipt(\'' + (s.id || s._localId) + '\')" title="Print"><i class="fas fa-print"></i></button>' +
+        (!isReturned && !isWholesale ? '<button class="btn btn-sm btn-warning" onclick="openReturnModal(\'' + (s.id || s._localId) + '\')" title="Return"><i class="fas fa-undo"></i></button>' : '') +
+        '</div></td></tr>';
+    });
+    
+    updateStats();
+  }
+
+  // ============================================
+  // DATA LOADING (Same pattern as store)
+  // ============================================
+  function loadSales() {
+    cleanup();
+    
+    // Sales listener
+    const salesQuery = query(collection(db, 'sales'), orderBy('createdAt', 'desc'));
+    unsubscribes.push(onSnapshot(salesQuery, function(snap) {
+      const serverSales = snap.docs.map(function(d) {
+        return { id: d.id, _synced: true, _type: 'regular', ...d.data() };
+      });
+      
+      // Merge server sales with offline sales (avoid duplicates)
+      const serverIds = new Set(serverSales.map(function(s) { return s.id; }));
+      const mergedOffline = offlineSales.filter(function(s) {
+        return !serverIds.has(s.id) && !s._synced;
+      });
+      
+      allSales = serverSales.concat(mergedOffline);
+      renderSales();
+    }, function(error) {
+      // Fallback if index missing
+      unsubscribes.push(onSnapshot(collection(db, 'sales'), function(snap) {
+        const serverSales = snap.docs.map(function(d) {
+          return { id: d.id, _synced: true, _type: 'regular', ...d.data() };
+        });
+        const serverIds = new Set(serverSales.map(function(s) { return s.id; }));
+        const mergedOffline = offlineSales.filter(function(s) {
+          return !serverIds.has(s.id) && !s._synced;
+        });
+        allSales = serverSales.concat(mergedOffline);
+        allSales.sort(function(a, b) {
+          const aTime = a.createdAt ? (a.createdAt.seconds || 0) : 0;
+          const bTime = b.createdAt ? (b.createdAt.seconds || 0) : 0;
+          return bTime - aTime;
+        });
+        renderSales();
+      }));
+    }));
+    
+    // Wholesale sales listener
+    const wsQuery = query(collection(db, 'wholesale_sales'), orderBy('createdAt', 'desc'));
+    unsubscribes.push(onSnapshot(wsQuery, function(snap) {
+      const wsSales = snap.docs.map(function(d) {
+        return { id: d.id, _synced: true, _type: 'wholesale', ...d.data() };
+      });
+      
+      // Add wholesale sales that aren't already in allSales
+      const existingIds = new Set(allSales.map(function(s) { return s.id; }));
+      wsSales.forEach(function(ws) {
+        if (!existingIds.has(ws.id)) {
+          allSales.push(ws);
+        }
+      });
+      
+      renderSales();
+    }, function(error) {
+      unsubscribes.push(onSnapshot(collection(db, 'wholesale_sales'), function(snap) {
+        const wsSales = snap.docs.map(function(d) {
+          return { id: d.id, _synced: true, _type: 'wholesale', ...d.data() };
+        });
+        const existingIds = new Set(allSales.map(function(s) { return s.id; }));
+        wsSales.forEach(function(ws) {
+          if (!existingIds.has(ws.id)) {
+            allSales.push(ws);
+          }
+        });
+        renderSales();
+      }));
+    }));
+    
+    // Returns listener
+    unsubscribes.push(onSnapshot(query(collection(db, 'returns'), orderBy('createdAt', 'desc')), function(snap) {
+      allReturns = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+      renderSales();
+    }));
+  }
+
+  async function loadCustomersAndStock() {
+    try {
+      const custSnap = await getDocs(query(collection(db, 'customers'), where('status', '==', 'approved')));
+      allCustomers = custSnap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+      
+      const stockSnap = await getDocs(collection(db, 'stock_items'));
+      allStockItems = stockSnap.docs.map(function(d) {
+        const data = d.data();
+        return {
+          id: d.id,
+          name: data.name || '',
+          category: data.category || '',
+          itemType: data.itemType || 'general',
+          unitQty: parseFloat(data.unitQty || data.quantityAvailable || 0),
+          unitPrice: parseFloat(data.unitPrice || 0),
+          halfQty: parseFloat(data.halfQty || 0),
+          halfPrice: parseFloat(data.halfPrice || 0),
+          quarterQty: parseFloat(data.quarterQty || 0),
+          quarterPrice: parseFloat(data.quarterPrice || 0),
+          packSize: parseInt(data.packSize || 12),
+          packPrice: parseFloat(data.packPrice || 0),
+          bundleSize: parseInt(data.bundleSize || 50),
+          bundlePrice: parseFloat(data.bundlePrice || 0),
+          measuredSubType: data.measuredSubType || 'yard',
+          yardQty: parseFloat(data.yardQty || 0),
+          pricePerYard: parseFloat(data.pricePerYard || 0),
+          threshold: parseFloat(data.threshold || 10)
+        };
+      });
+      
+      const storeSnap = await getDocs(collection(db, 'store_items'));
+      allStoreItems = storeSnap.docs.map(function(d) {
+        const data = d.data();
+        return {
+          id: d.id,
+          name: data.name || '',
+          category: data.category || '',
+          unitQty: parseFloat(data.unitQty || 0),
+          unitCost: parseFloat(data.unitCost || 0),
+          inventoryItemType: data.inventoryItemType || 'general'
+        };
+      });
+    } catch (e) {
+      showToast('Error loading data', 'error');
+    }
+  }
+
+  // ============================================
+  // STOCK HELPERS
   // ============================================
   function getAvailableStock(item, size) {
     if (size === '0.5' || size === '½') return item.halfQty || 0;
     if (size === '0.25' || size === '¼') return item.quarterQty || 0;
     if (size === 'pack') return item.packQty || 0;
     if (size === 'bundle') return item.bundleQty || 0;
-    if (item.itemType === 'measured' && item.measuredSubType === 'yard') return item.yardQty || item.unitQty || 0;
     return item.unitQty || 0;
   }
 
@@ -605,22 +916,51 @@
     return qty;
   }
 
-  function checkStockAvailability(item, size, qty) {
-    const available = getAvailableStock(item, size);
-    const deductQty = getDeductQuantity(item, size, qty);
-    return { available, deductQty, sufficient: deductQty <= available };
-  }
-
   function getSizeLabel(size) {
     const labels = { '1': 'Unit', '0.5': '½', '0.25': '¼', 'pack': 'Pack', 'bundle': 'Bundle' };
     return labels[size] || 'Unit';
   }
 
+  function getStockOptionsHtml() {
+    return allStockItems.map(function(i) {
+      const label = getItemTypeLabel(i.itemType || 'general');
+      let stockInfo = '';
+      if (i.itemType === 'fashion') {
+        stockInfo = '(U:' + (i.unitQty||0) + ', H:' + (i.halfQty||0) + ', Q:' + (i.quarterQty||0) + ')';
+      } else {
+        stockInfo = '(' + (i.unitQty||0) + ')';
+      }
+      return '<option value="' + i.id + '" data-name="' + (i.name||'') + '" data-price="' + (i.unitPrice||0) + '" data-halfprice="' + (i.halfPrice||0) + '" data-quarterprice="' + (i.quarterPrice||0) + '" data-packprice="' + (i.packPrice||0) + '" data-bundleprice="' + (i.bundlePrice||0) + '" data-packsize="' + (i.packSize||12) + '" data-bundlesize="' + (i.bundleSize||50) + '" data-stock="' + (i.unitQty||0) + '">' + label + ' ' + (i.name||'') + ' - ' + formatCurrency(i.unitPrice||0) + ' ' + stockInfo + '</option>';
+    }).join('');
+  }
+
+  function getStoreOptionsHtml() {
+    return allStoreItems.map(function(i) {
+      return '<option value="' + i.id + '" data-name="' + (i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + (i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>';
+    }).join('');
+  }
+
+  function getItemTypeLabel(type) {
+    const labels = { fashion: '👗', pack_bundle: '📦', measured: '📏', general: '🔧' };
+    return labels[type] || '🔧';
+  }
+
+  function getSizeOptions(item) {
+    const opts = [];
+    if (parseFloat(item.unitPrice) > 0) opts.push({ value: '1', label: '1 (Unit)' });
+    if (parseFloat(item.halfPrice) > 0) opts.push({ value: '0.5', label: '½ (Half)' });
+    if (parseFloat(item.quarterPrice) > 0) opts.push({ value: '0.25', label: '¼ (Quarter)' });
+    if (parseFloat(item.packPrice) > 0) opts.push({ value: 'pack', label: '📦 Pack (' + (item.packSize||12) + ')' });
+    if (parseFloat(item.bundlePrice) > 0) opts.push({ value: 'bundle', label: '📦 Bundle (' + (item.bundleSize||50) + ')' });
+    if (opts.length === 0) opts.push({ value: '1', label: '1 (Unit)' });
+    return opts;
+  }
+
   // ============================================
-  // PROCESS SALE (WITH MOVEMENT LOGGING)
+  // PROCESS SALE (Works online and offline)
   // ============================================
-  async function processSaleWithMovement(items, total, customerInfo, paymentMethod, isCompanySale, extraData) {
-    const receiptNumber = generateReceiptNumber();
+  function processSaleCommon(items, total, customerInfo, paymentMethod, isCompanySale, extraData, saleType) {
+    const receiptNumber = generateReceiptNumber(saleType === 'wholesale' ? 'WSL' : 'RCP');
     const stockUpdates = [];
     const movements = [];
     let customerId = customerInfo.customerId || '';
@@ -628,294 +968,258 @@
     // Validate stock and prepare updates
     for (const item of items) {
       if (item.isNonInventory || !item.id) continue;
-      const stockItem = allStockItems.find(si => si.id === item.id);
-      if (!stockItem) {
-        showToast(`Item ${item.name} not found in stock`, 'error');
-        return false;
-      }
-      const { sufficient, deductQty } = checkStockAvailability(stockItem, item.size, item.quantity);
-      if (!sufficient) {
-        showToast(`Insufficient stock for ${item.name} (${item.sizeLabel || getSizeLabel(item.size)})`, 'error');
-        return false;
-      }
-
-      // Prepare stock update
-      const updateData = {};
-      const sizeKey = item.size;
-      if (sizeKey === '0.5' || sizeKey === '½') {
-        updateData.halfQty = increment(-deductQty);
-      } else if (sizeKey === '0.25' || sizeKey === '¼') {
-        updateData.quarterQty = increment(-deductQty);
-      } else if (sizeKey === 'pack') {
-        updateData.packQty = increment(-item.quantity);
-        updateData.unitQty = increment(-deductQty);
-      } else if (sizeKey === 'bundle') {
-        updateData.bundleQty = increment(-item.quantity);
-        updateData.unitQty = increment(-deductQty);
-      } else {
-        updateData.unitQty = increment(-deductQty);
-        if (stockItem.itemType === 'measured' && stockItem.measuredSubType === 'yard') {
-          updateData.yardQty = increment(-deductQty);
+      
+      if (saleType === 'wholesale') {
+        // For wholesale, deduct from store_items
+        const storeItem = allStoreItems.find(function(si) { return si.id === item.id; });
+        if (!storeItem) {
+          showToast('Store item not found: ' + item.name, 'error');
+          return null;
         }
+        if (item.pieces > (storeItem.unitQty || 0)) {
+          showToast('Insufficient store stock for ' + item.name, 'error');
+          return null;
+        }
+        stockUpdates.push({
+          collection: 'store_items',
+          id: item.id,
+          data: { unitQty: increment(-item.pieces), updatedAt: serverTimestamp() }
+        });
+        movements.push({
+          itemId: item.id,
+          itemName: item.name,
+          movementType: 'wholesale_sale',
+          change: { unit: -item.pieces },
+          reference: 'Receipt ' + receiptNumber,
+          performedBy: currentUser ? currentUser.uid : 'unknown',
+          performedByName: userData ? (userData.fullName || 'Staff') : 'Staff'
+        });
+      } else {
+        // Regular sale - deduct from stock_items
+        const stockItem = allStockItems.find(function(si) { return si.id === item.id; });
+        if (!stockItem) continue;
+        
+        const available = getAvailableStock(stockItem, item.size);
+        const deductQty = getDeductQuantity(stockItem, item.size, item.quantity);
+        
+        if (deductQty > available) {
+          showToast('Insufficient stock for ' + item.name + ' (' + (item.sizeLabel || getSizeLabel(item.size)) + ')', 'error');
+          return null;
+        }
+        
+        const updateData = { updatedAt: serverTimestamp() };
+        const change = {};
+        
+        if (item.size === '0.5' || item.size === '½') {
+          updateData.halfQty = increment(-deductQty);
+          change.half = -deductQty;
+        } else if (item.size === '0.25' || item.size === '¼') {
+          updateData.quarterQty = increment(-deductQty);
+          change.quarter = -deductQty;
+        } else if (item.size === 'pack') {
+          updateData.packQty = increment(-item.quantity);
+          updateData.unitQty = increment(-deductQty);
+          change.unit = -deductQty;
+        } else if (item.size === 'bundle') {
+          updateData.bundleQty = increment(-item.quantity);
+          updateData.unitQty = increment(-deductQty);
+          change.unit = -deductQty;
+        } else {
+          updateData.unitQty = increment(-deductQty);
+          change.unit = -deductQty;
+        }
+        
+        stockUpdates.push({
+          collection: 'stock_items',
+          id: item.id,
+          data: updateData
+        });
+        
+        movements.push({
+          itemId: item.id,
+          itemName: item.name,
+          movementType: 'sale',
+          change: change,
+          reference: 'Receipt ' + receiptNumber,
+          performedBy: currentUser ? currentUser.uid : 'unknown',
+          performedByName: userData ? (userData.fullName || 'Staff') : 'Staff'
+        });
       }
-      updateData.updatedAt = serverTimestamp();
-
-      stockUpdates.push({
-        id: item.id,
-        data: updateData,
-        name: item.name,
-        deductQty,
-        size: item.size,
-        sizeLabel: item.sizeLabel || getSizeLabel(item.size)
-      });
-
-      // Prepare movement record
-      const change = {};
-      if (item.size === '0.5' || item.size === '½') change.half = -deductQty;
-      else if (item.size === '0.25' || item.size === '¼') change.quarter = -deductQty;
-      else change.unit = -deductQty;
-
-      movements.push({
-        itemId: item.id,
-        itemName: item.name,
-        movementType: 'sale',
-        change,
-        reference: `Receipt ${receiptNumber}`,
-        performedBy: currentUser?.uid || 'unknown',
-        performedByName: userData?.fullName || 'Staff'
-      });
     }
 
-    // Process sale
     const saleData = {
-      receiptNumber,
-      customerId,
+      receiptNumber: receiptNumber,
+      customerId: customerId,
       customerName: customerInfo.customerName || 'Walk-in',
       customerPhone: customerInfo.customerPhone || '',
       customerAddress: customerInfo.customerAddress || '',
       isCompanySale: isCompanySale || false,
-      ...extraData,
-      items: items.map(i => ({
-        id: i.id,
-        name: i.name,
-        quantity: i.quantity,
-        size: i.size,
-        sizeLabel: i.sizeLabel || getSizeLabel(i.size),
-        unitPrice: i.unitPrice,
-        isNonInventory: i.isNonInventory || false
-      })),
+      items: items.map(function(i) {
+        return {
+          id: i.id,
+          name: i.name,
+          quantity: i.quantity || i.pieces,
+          pieces: i.pieces,
+          size: i.size || '1',
+          sizeLabel: i.sizeLabel || getSizeLabel(i.size || '1'),
+          unitPrice: i.unitPrice,
+          isNonInventory: i.isNonInventory || false
+        };
+      }),
       totalAmount: total,
-      paymentMethod,
-      attendantId: currentUser?.uid,
-      attendantName: userData?.fullName || 'Staff',
+      paymentMethod: paymentMethod,
+      attendantId: currentUser ? currentUser.uid : '',
+      attendantName: userData ? (userData.fullName || 'Staff') : 'Staff',
       status: 'completed',
-      createdAt: serverTimestamp()
+      _type: saleType,
+      _stockUpdates: stockUpdates,
+      _movements: movements,
+      _localId: 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6)
     };
-
+    
+    // Add extra data
+    if (extraData) {
+      Object.assign(saleData, extraData);
+    }
+    
     if (isOnline) {
-      try {
-        const batch = writeBatch(db);
-        const saleRef = doc(collection(db, 'sales'));
-        batch.set(saleRef, saleData);
+      // Save to Firestore immediately
+      saveSaleToFirestore(saleData, customerInfo);
+    } else {
+      // Save offline
+      saleData.createdAt = new Date().toISOString();
+      saleData._synced = false;
+      saveOfflineSale(saleData);
+    }
+    
+    return saleData;
+  }
 
-        for (const update of stockUpdates) {
-          batch.update(doc(db, 'stock_items', update.id), update.data);
+  async function saveSaleToFirestore(saleData, customerInfo) {
+    try {
+      const batch = writeBatch(db);
+      let customerId = saleData.customerId || '';
+      
+      // Create new customer if needed
+      if (customerInfo._isNew && customerInfo._customerData) {
+        const custRef = doc(collection(db, 'customers'));
+        batch.set(custRef, {
+          ...customerInfo._customerData,
+          createdAt: serverTimestamp()
+        });
+        customerId = custRef.id;
+      }
+      
+      // Create sale document
+      const collectionName = saleData._type === 'wholesale' ? 'wholesale_sales' : 'sales';
+      const saleRef = doc(collection(db, collectionName));
+      const cleanData = { ...saleData };
+      delete cleanData._type;
+      delete cleanData._stockUpdates;
+      delete cleanData._movements;
+      delete cleanData._localId;
+      cleanData.customerId = customerId;
+      cleanData.createdAt = serverTimestamp();
+      batch.set(saleRef, cleanData);
+      
+      // Apply stock updates
+      if (saleData._stockUpdates) {
+        for (const update of saleData._stockUpdates) {
+          const ref = doc(db, update.collection, update.id);
+          batch.update(ref, update.data);
         }
-
-        for (const mov of movements) {
+      }
+      
+      // Create movement records
+      if (saleData._movements) {
+        for (const mov of saleData._movements) {
           const movRef = doc(collection(db, 'stock_movements'));
           batch.set(movRef, { ...mov, performedAt: serverTimestamp() });
         }
-
-        if (customerId && !isCompanySale) {
-          batch.update(doc(db, 'customers', customerId), {
-            totalSpent: increment(total),
-            purchaseCount: increment(1),
-            lastPurchase: serverTimestamp()
-          });
-        }
-
-        await batch.commit();
-        await logAudit(isCompanySale ? 'company_sale' : 'sale', 
-          `${isCompanySale ? 'Company' : ''} Sale ${receiptNumber}: ${formatCurrency(total)}`);
-
-        return { success: true, saleId: saleRef.id, receiptNumber, saleData };
-      } catch (e) {
-        showToast('Failed: ' + e.message, 'error');
-        return { success: false, error: e.message };
       }
-    } else {
-      // OFFLINE: Save locally
-      savePendingSale({
-        ...saleData,
-        stockUpdates,
-        movements
-      });
-      return { success: true, offline: true, receiptNumber, saleData };
+      
+      // Update customer stats
+      if (customerId && !saleData.isCompanySale && saleData._type !== 'wholesale') {
+        batch.update(doc(db, 'customers', customerId), {
+          totalSpent: increment(saleData.totalAmount),
+          purchaseCount: increment(1),
+          lastPurchase: serverTimestamp()
+        });
+      }
+      
+      await batch.commit();
+      await logAudit(saleData._type === 'wholesale' ? 'wholesale_sale' : 'sale',
+        'Sale ' + saleData.receiptNumber + ': ' + formatCurrency(saleData.totalAmount));
+      
+      return saleRef.id;
+    } catch (e) {
+      console.error('Failed to save sale:', e);
+      // If online save fails, save offline
+      saleData.createdAt = new Date().toISOString();
+      saleData._synced = false;
+      saveOfflineSale(saleData);
+      return null;
     }
   }
-
-  // ============================================
-  // STOCK OPTIONS & SIZE OPTIONS
-  // ============================================
-  function getStockOptionsHtml() {
-    return allStockItems.map(i=>{
-      const it=i.itemType||'general';
-      const label = getItemTypeLabel(it);
-      let stockInfo = '';
-      if (it === 'fashion') {
-        stockInfo = `(U:${i.unitQty||0}, H:${i.halfQty||0}, Q:${i.quarterQty||0})`;
-      } else if (it === 'measured') {
-        stockInfo = i.measuredSubType === 'yard' ? `(${i.yardQty||i.unitQty||0} yds)` : `(${i.bundleQty||0} bundles)`;
-      } else {
-        stockInfo = `(${i.unitQty||0})`;
-      }
-      return `<option value="${i.id}" data-name="${i.name||''}" data-price="${i.unitPrice||0}" data-halfprice="${i.halfPrice||0}" data-quarterprice="${i.quarterPrice||0}" data-packprice="${i.packPrice||0}" data-bundleprice="${i.bundlePrice||0}" data-packsize="${i.packSize||12}" data-bundlesize="${i.bundleSize||50}" data-stock="${i.unitQty||0}">${label} ${i.name||''} - ${formatCurrency(i.unitPrice||0)} ${stockInfo}</option>`;
-    }).join('');
-  }
-
-  function getItemTypeLabel(type){ 
-    const labels={simple:'🔧',fashion:'👗',pack_bundle:'📦',measured:'📏',pack:'📦',general:'🔧'}; 
-    return labels[type]||'🔧'; 
-  }
-
-  function getSizeOptions(item){
-    const opts = [];
-    if(parseFloat(item.unitPrice) > 0) opts.push({value:'1',label:'1 (Unit)'});
-    if(parseFloat(item.halfPrice) > 0) opts.push({value:'0.5',label:'½ (Half)'});
-    if(parseFloat(item.quarterPrice) > 0) opts.push({value:'0.25',label:'¼ (Quarter)'});
-    if(parseFloat(item.packPrice) > 0) opts.push({value:'pack',label:`📦 Pack (${item.packSize||12})`});
-    if(parseFloat(item.bundlePrice) > 0) opts.push({value:'bundle',label:`📦 Bundle (${item.bundleSize||50})`});
-    if(opts.length === 0) opts.push({value:'1',label:'1 (Unit)'});
-    return opts;
-  }
-
-  window._validateRowStock = function(row) {
-    const checkbox = row.querySelector('.non-inv-check');
-    if (checkbox && checkbox.checked) {
-      const warning = row.querySelector('.stock-warning');
-      if (warning) warning.style.display = 'none';
-      return true;
-    }
-    const select = row.querySelector('.item-select');
-    const sizeEl = row.querySelector('.item-size');
-    const qtyEl = row.querySelector('.item-qty');
-    const warning = row.querySelector('.stock-warning');
-    if (!select || !select.value) {
-      if (warning) warning.style.display = 'none';
-      return true;
-    }
-    const opt = select.options[select.selectedIndex];
-    if (!opt || !opt.value) return true;
-    const itemId = opt.value;
-    const stockItem = allStockItems.find(si => si.id === itemId);
-    if (!stockItem) return true;
-    const qty = parseFloat(qtyEl?.value) || 1;
-    const size = sizeEl?.value || '1';
-    const { sufficient, deductQty, available } = checkStockAvailability(stockItem, size, qty);
-    if (!sufficient) {
-      if (warning) {
-        warning.textContent = `Only ${available} available. Need ${deductQty}.`;
-        warning.style.display = 'inline';
-      }
-      return false;
-    } else {
-      if (warning) warning.style.display = 'none';
-      return true;
-    }
-  };
-
-  window._updateSaleSummary = function() {
-    let total=0, count=0;
-    let allValid = true;
-    document.querySelectorAll('.item-row').forEach(row=>{
-      const checkbox = row.querySelector('.non-inv-check');
-      const qtyEl = row.querySelector('.item-qty');
-      const qty = parseFloat(qtyEl?.value) || 1;
-      if (checkbox && checkbox.checked) {
-        const priceEl = row.querySelector('.item-custom-price');
-        const price = parseFloat(priceEl?.value) || 0;
-        total += price * qty;
-        count++;
-      } else {
-        const select=row.querySelector('.item-select'); const sizeEl=row.querySelector('.item-size');
-        if(select&&qtyEl&&select.value){
-          const opt=select.options[select.selectedIndex]; const size=sizeEl?.value||'1';
-          let price=parseFloat(opt?.getAttribute('data-price'))||0;
-          if(size==='0.5'&&parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));
-          else if(size==='0.25'&&parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));
-          else if(size==='pack'&&parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));
-          else if(size==='bundle'&&parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));
-          total+=price*qty; count++;
-        }
-      }
-      if (!window._validateRowStock(row)) allValid = false;
-    });
-    document.getElementById('itemCount').textContent=count; 
-    document.getElementById('saleTotal').textContent=formatCurrency(total);
-    return allValid;
-  };
-
-  window._updateSizeDropdown = function(selectEl){
-    const row=selectEl.closest('.item-row');if(!row)return;
-    const sizeEl=row.querySelector('.item-size');if(!sizeEl)return;
-    const opt=selectEl.options[selectEl.selectedIndex];
-    if(!opt||!opt.value) { sizeEl.innerHTML='<option value="1">1 (Unit)</option>'; return; }
-    const itemData={
-      unitPrice: parseFloat(opt.getAttribute('data-price'))||0,
-      halfPrice: parseFloat(opt.getAttribute('data-halfprice'))||0,
-      quarterPrice: parseFloat(opt.getAttribute('data-quarterprice'))||0,
-      packPrice: parseFloat(opt.getAttribute('data-packprice'))||0,
-      bundlePrice: parseFloat(opt.getAttribute('data-bundleprice'))||0,
-      packSize: parseInt(opt.getAttribute('data-packsize'))||12,
-      bundleSize: parseInt(opt.getAttribute('data-bundlesize'))||50
-    };
-    const options=getSizeOptions(itemData);
-    sizeEl.innerHTML=options.map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
-    window._updateSaleSummary();
-  };
 
   // ============================================
   // NEW SALE MODAL
   // ============================================
-  window.openNewSaleModal = async function(){
+  window.openNewSaleModal = async function() {
     await loadCustomersAndStock();
-    if(allStockItems.length===0){showToast('No items available','error');return;}
-    const custOptions=allCustomers.map(c=>`<option value="${c.id}" data-name="${c.fullName||''}" data-phone="${c.phone||''}" data-address="${c.address||c.location||''}" data-purchase-count="${c.purchaseCount||0}">${c.fullName||''} - ${c.phone||'No phone'} (${c.purchaseCount||0} purchases)</option>`).join('');
+    if (allStockItems.length === 0) { showToast('No items available', 'error'); return; }
+    
+    const custOptions = allCustomers.map(function(c) {
+      return '<option value="' + c.id + '" data-name="' + (c.fullName||'') + '" data-phone="' + (c.phone||'') + '" data-address="' + (c.address||c.location||'') + '">' + (c.fullName||'') + ' - ' + (c.phone||'No phone') + ' (' + (c.purchaseCount||0) + ' purchases)</option>';
+    }).join('');
+    
     const stockOptions = getStockOptionsHtml();
     const firstItem = allStockItems[0];
-    const firstSizeOpts = firstItem ? getSizeOptions(firstItem).map(o=>`<option value="${o.value}">${o.label}</option>`).join('') : '<option value="1">1 (Unit)</option>';
+    const firstSizeOpts = firstItem ? getSizeOptions(firstItem).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
 
-    showModal('New Sale',`
-      <div class="customer-type-toggle"><button class="customer-type-btn active" data-type="existing" onclick="window._switchCustomerType('existing')"><i class="fas fa-users"></i> Existing</button><button class="customer-type-btn" data-type="new" onclick="window._switchCustomerType('new')"><i class="fas fa-user-plus"></i> New</button></div>
-      <div id="existingCustomerSection"><div class="form-group"><label>Search Customer</label><select class="form-control" id="existingCustomerSelect" style="width:100%;"><option value="">-- Search --</option>${custOptions}</select></div></div>
-      <div id="newCustomerSection" style="display:none;"><div class="form-group"><label>Full Name *</label><input type="text" class="form-control" id="newCustomerName"></div><div class="form-group"><label>Phone *</label><input type="tel" class="form-control" id="newCustomerPhone"></div><div class="form-group"><label>Address *</label><textarea class="form-control" id="newCustomerAddress" rows="2"></textarea></div><div class="form-group"><label>Email</label><input type="email" class="form-control" id="newCustomerEmail"></div></div>
-      <div id="saleItems">
-        <div class="item-row">
-          <div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this)"> <span>Non‑Inventory</span></div>
-          <select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>${stockOptions}</select>
-          <input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">
-          <select class="form-control item-size">${firstSizeOpts}</select>
-          <input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">
-          <input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">
-          <span class="stock-warning"></span>
-          <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();"><i class="fas fa-times"></i></button>
-        </div>
-      </div>
-      <button type="button" class="btn btn-outline btn-sm" onclick="window._addSaleItem()"><i class="fas fa-plus"></i> Add Item</button>
-      <div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods"><div class="payment-method selected" data-method="cash" onclick="window._selectPayment('cash')">💵 Cash</div><div class="payment-method" data-method="transfer" onclick="window._selectPayment('transfer')">🏦 Transfer</div><div class="payment-method" data-method="pos" onclick="window._selectPayment('pos')">💳 POS</div></div></div>
-      <div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div>
-      <button class="btn btn-primary" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>
-    `);
+    showModal('New Sale',
+      '<div class="customer-type-toggle">' +
+      '<button class="customer-type-btn active" data-type="existing" onclick="window._switchCustomerType(\'existing\')"><i class="fas fa-users"></i> Existing</button>' +
+      '<button class="customer-type-btn" data-type="new" onclick="window._switchCustomerType(\'new\')"><i class="fas fa-user-plus"></i> New</button>' +
+      '</div>' +
+      '<div id="existingCustomerSection"><div class="form-group"><label>Search Customer</label><select class="form-control" id="existingCustomerSelect" style="width:100%;"><option value="">-- Search --</option>' + custOptions + '</select></div></div>' +
+      '<div id="newCustomerSection" style="display:none;">' +
+      '<div class="form-group"><label>Full Name *</label><input type="text" class="form-control" id="newCustomerName"></div>' +
+      '<div class="form-group"><label>Phone *</label><input type="tel" class="form-control" id="newCustomerPhone"></div>' +
+      '<div class="form-group"><label>Address *</label><textarea class="form-control" id="newCustomerAddress" rows="2"></textarea></div>' +
+      '<div class="form-group"><label>Email</label><input type="email" class="form-control" id="newCustomerEmail"></div>' +
+      '</div>' +
+      '<div id="saleItems">' +
+      '<div class="item-row">' +
+      '<div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this)"> <span>Non-Inventory</span></div>' +
+      '<select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
+      '<input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">' +
+      '<select class="form-control item-size">' + firstSizeOpts + '</select>' +
+      '<input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">' +
+      '<input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">' +
+      '<span class="stock-warning"></span>' +
+      '<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();"><i class="fas fa-times"></i></button>' +
+      '</div></div>' +
+      '<button type="button" class="btn btn-outline btn-sm" onclick="window._addSaleItem()"><i class="fas fa-plus"></i> Add Item</button>' +
+      '<div class="form-group" style="margin-top:20px;"><label>Payment</label>' +
+      '<div class="payment-methods">' +
+      '<div class="payment-method selected" data-method="cash" onclick="window._selectPayment(\'cash\')">💵 Cash</div>' +
+      '<div class="payment-method" data-method="transfer" onclick="window._selectPayment(\'transfer\')">🏦 Transfer</div>' +
+      '<div class="payment-method" data-method="pos" onclick="window._selectPayment(\'pos\')">💳 POS</div>' +
+      '</div></div>' +
+      '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div>' +
+      '<div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div>' +
+      '<button class="btn btn-primary" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>'
+    );
 
-    setTimeout(()=>{
-      $('#existingCustomerSelect').select2({placeholder:'Search customer...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')});
-      const firstSelect=$('.item-select').first();
-      firstSelect.select2({placeholder:'Search product...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')}).on('change',function(){window._updateSizeDropdown(this);window._updateSaleSummary();});
-      $('.item-qty').on('input',window._updateSaleSummary);
-      $('.item-size').on('change',window._updateSaleSummary);
+    setTimeout(function() {
+      $('#existingCustomerSelect').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
+      const firstSelect = $('.item-select').first();
+      firstSelect.select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { window._updateSizeDropdown(this); window._updateSaleSummary(); });
+      $('.item-qty').on('input', window._updateSaleSummary);
+      $('.item-size').on('change', window._updateSaleSummary);
       window._updateSaleSummary();
-    },150);
+    }, 150);
   };
 
   window._toggleNonInventory = function(checkbox) {
@@ -936,161 +1240,193 @@
       sizeSelect.style.display = '';
       customName.style.display = 'none';
       customPrice.style.display = 'none';
-      $(select).select2({placeholder:'Search product...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')}).on('change',function(){window._updateSizeDropdown(this);window._updateSaleSummary();});
+      $(select).select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { window._updateSizeDropdown(this); window._updateSaleSummary(); });
     }
     window._updateSaleSummary();
   };
 
-  window._switchCustomerType = function(type) { 
-    customerType=type;
-    document.querySelectorAll('.customer-type-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelector(`[data-type="${type}"]`)?.classList.add('active');
-    document.getElementById('existingCustomerSection').style.display=type==='existing'?'block':'none';
-    document.getElementById('newCustomerSection').style.display=type==='new'?'block':'none'; 
+  window._updateSizeDropdown = function(selectEl) {
+    const row = selectEl.closest('.item-row');
+    if (!row) return;
+    const sizeEl = row.querySelector('.item-size');
+    if (!sizeEl) return;
+    const opt = selectEl.options[selectEl.selectedIndex];
+    if (!opt || !opt.value) { sizeEl.innerHTML = '<option value="1">1 (Unit)</option>'; return; }
+    const itemData = {
+      unitPrice: parseFloat(opt.getAttribute('data-price')) || 0,
+      halfPrice: parseFloat(opt.getAttribute('data-halfprice')) || 0,
+      quarterPrice: parseFloat(opt.getAttribute('data-quarterprice')) || 0,
+      packPrice: parseFloat(opt.getAttribute('data-packprice')) || 0,
+      bundlePrice: parseFloat(opt.getAttribute('data-bundleprice')) || 0,
+      packSize: parseInt(opt.getAttribute('data-packsize')) || 12,
+      bundleSize: parseInt(opt.getAttribute('data-bundlesize')) || 50
+    };
+    const options = getSizeOptions(itemData);
+    sizeEl.innerHTML = options.map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('');
+    window._updateSaleSummary();
   };
 
-  window._selectPayment = function(method) { 
-    selectedPayment=method;
-    document.querySelectorAll('.payment-method').forEach(m=>m.classList.remove('selected'));
-    document.querySelector(`[data-method="${method}"]`)?.classList.add('selected'); 
+  window._switchCustomerType = function(type) {
+    customerType = type;
+    document.querySelectorAll('.customer-type-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelector('[data-type="' + type + '"]').classList.add('active');
+    document.getElementById('existingCustomerSection').style.display = type === 'existing' ? 'block' : 'none';
+    document.getElementById('newCustomerSection').style.display = type === 'new' ? 'block' : 'none';
+  };
+
+  window._selectPayment = function(method) {
+    selectedPayment = method;
+    document.querySelectorAll('.payment-method').forEach(function(m) { m.classList.remove('selected'); });
+    document.querySelector('[data-method="' + method + '"]').classList.add('selected');
   };
 
   window._addSaleItem = function() {
     const stockOptions = getStockOptionsHtml();
-    const div=document.createElement('div');div.className='item-row';
-    div.innerHTML=`
-      <div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this)"> <span>Non‑Inventory</span></div>
-      <select class="form-control item-select" style="width:100%;"><option value="">-- Search --</option>${stockOptions}</select>
-      <input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">
-      <select class="form-control item-size"><option value="1">1 (Unit)</option></select>
-      <input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">
-      <input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">
-      <span class="stock-warning"></span>
-      <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();"><i class="fas fa-times"></i></button>`;
+    const div = document.createElement('div');
+    div.className = 'item-row';
+    div.innerHTML = 
+      '<div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this)"> <span>Non-Inventory</span></div>' +
+      '<select class="form-control item-select" style="width:100%;"><option value="">-- Search --</option>' + stockOptions + '</select>' +
+      '<input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">' +
+      '<select class="form-control item-size"><option value="1">1 (Unit)</option></select>' +
+      '<input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">' +
+      '<input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">' +
+      '<span class="stock-warning"></span>' +
+      '<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();"><i class="fas fa-times"></i></button>';
     document.getElementById('saleItems').appendChild(div);
-    $(div).find('.item-select').select2({placeholder:'Search product...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')}).on('change',function(){window._updateSizeDropdown(this);window._updateSaleSummary();});
-    $(div).find('.item-qty').on('input',window._updateSaleSummary);
-    $(div).find('.item-size').on('change',window._updateSaleSummary);
+    $(div).find('.item-select').select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { window._updateSizeDropdown(this); window._updateSaleSummary(); });
+    $(div).find('.item-qty').on('input', window._updateSaleSummary);
+    $(div).find('.item-size').on('change', window._updateSaleSummary);
     window._updateSaleSummary();
   };
 
-  window._processSale = async function() {
-    if (!window._updateSaleSummary()) { 
-      showToast('Some items exceed available stock. Please adjust quantities.','error'); 
-      return; 
-    }
-
-    let customerId='', customerName='', customerPhone='', customerEmail='', customerAddress='';
-    if(customerType==='existing'){
-      const select=document.getElementById('existingCustomerSelect');
-      if(!select||!select.value){showToast('Select a customer','error');return;}
-      customerId=select.value;
-      const opt=select.options[select.selectedIndex];
-      customerName=opt.dataset.name;
-      customerPhone=opt.dataset.phone;
-      customerAddress=opt.dataset.address||'';
-    } else {
-      customerName=document.getElementById('newCustomerName')?.value?.trim();
-      customerPhone=document.getElementById('newCustomerPhone')?.value?.trim();
-      customerEmail=document.getElementById('newCustomerEmail')?.value?.trim();
-      customerAddress=document.getElementById('newCustomerAddress')?.value?.trim();
-      if(!customerName||!customerPhone||!customerAddress){showToast('Name, phone & address required','error');return;}
-    }
-
-    if(customerType==='new' && allCustomers.some(c=>c.phone===customerPhone)){
-      showToast('Customer with this phone already exists. Please select from Existing tab.','error'); 
-      return;
-    }
-
-    const items=[];let total=0;
-    for(const row of document.querySelectorAll('.item-row')){
+  window._updateSaleSummary = function() {
+    let total = 0, count = 0;
+    document.querySelectorAll('.item-row').forEach(function(row) {
       const checkbox = row.querySelector('.non-inv-check');
       const qtyEl = row.querySelector('.item-qty');
-      const qty = parseFloat(qtyEl?.value) || 1;
+      const qty = parseFloat(qtyEl && qtyEl.value) || 1;
+      if (checkbox && checkbox.checked) {
+        const priceEl = row.querySelector('.item-custom-price');
+        const price = parseFloat(priceEl && priceEl.value) || 0;
+        total += price * qty;
+        count++;
+      } else {
+        const select = row.querySelector('.item-select');
+        const sizeEl = row.querySelector('.item-size');
+        if (select && qtyEl && select.value) {
+          const opt = select.options[select.selectedIndex];
+          const size = sizeEl ? (sizeEl.value || '1') : '1';
+          let price = parseFloat(opt && opt.getAttribute('data-price')) || 0;
+          if (size === '0.5' && parseFloat(opt && opt.getAttribute('data-halfprice')) > 0) price = parseFloat(opt.getAttribute('data-halfprice'));
+          else if (size === '0.25' && parseFloat(opt && opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
+          else if (size === 'pack' && parseFloat(opt && opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
+          else if (size === 'bundle' && parseFloat(opt && opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
+          total += price * qty;
+          count++;
+        }
+      }
+    });
+    document.getElementById('itemCount').textContent = count;
+    document.getElementById('saleTotal').textContent = formatCurrency(total);
+  };
+
+  window._processSale = function() {
+    let customerId = '', customerName = '', customerPhone = '', customerEmail = '', customerAddress = '';
+    let isNewCustomer = false;
+    let customerData = null;
+
+    if (customerType === 'existing') {
+      const select = document.getElementById('existingCustomerSelect');
+      if (!select || !select.value) { showToast('Select a customer', 'error'); return; }
+      customerId = select.value;
+      const opt = select.options[select.selectedIndex];
+      customerName = opt.dataset.name;
+      customerPhone = opt.dataset.phone;
+      customerAddress = opt.dataset.address || '';
+    } else {
+      customerName = document.getElementById('newCustomerName')?.value?.trim();
+      customerPhone = document.getElementById('newCustomerPhone')?.value?.trim();
+      customerEmail = document.getElementById('newCustomerEmail')?.value?.trim();
+      customerAddress = document.getElementById('newCustomerAddress')?.value?.trim();
+      if (!customerName || !customerPhone || !customerAddress) { showToast('Name, phone & address required', 'error'); return; }
+      if (allCustomers.some(function(c) { return c.phone === customerPhone; })) {
+        showToast('Customer with this phone already exists', 'error');
+        return;
+      }
+      isNewCustomer = true;
+      customerData = {
+        fullName: customerName,
+        phone: customerPhone,
+        email: customerEmail,
+        address: customerAddress,
+        location: customerAddress,
+        totalSpent: 0,
+        purchaseCount: 0,
+        status: 'pending_approval',
+        createdBy: currentUser.uid,
+        createdByName: userData.fullName
+      };
+    }
+
+    const items = [];
+    let total = 0;
+
+    document.querySelectorAll('.item-row').forEach(function(row) {
+      const checkbox = row.querySelector('.non-inv-check');
+      const qtyEl = row.querySelector('.item-qty');
+      const qty = parseFloat(qtyEl && qtyEl.value) || 1;
 
       if (checkbox && checkbox.checked) {
         const nameEl = row.querySelector('.item-custom-name');
         const priceEl = row.querySelector('.item-custom-price');
-        const name = nameEl?.value?.trim();
-        const price = parseFloat(priceEl?.value) || 0;
+        const name = nameEl && nameEl.value.trim();
+        const price = parseFloat(priceEl && priceEl.value) || 0;
         if (!name || price <= 0) { showToast('Enter valid name and price for custom item', 'error'); return; }
-        items.push({ name, quantity: qty, unitPrice: price, size: '1', sizeLabel: 'Unit', isNonInventory: true });
+        items.push({ name: name, quantity: qty, unitPrice: price, size: '1', sizeLabel: 'Unit', isNonInventory: true });
         total += price * qty;
       } else {
-        const select=row.querySelector('.item-select');const sizeEl=row.querySelector('.item-size');
-        if(select&&select.value){
-          const opt=select.options[select.selectedIndex];
-          const size=sizeEl?.value||'1';
-          let price=parseFloat(opt?.getAttribute('data-price'))||0;
-          let sizeLabel = getSizeLabel(size);
-          if(size==='0.5'&&parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));
-          else if(size==='0.25'&&parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));
-          else if(size==='pack'&&parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));
-          else if(size==='bundle'&&parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));
+        const select = row.querySelector('.item-select');
+        const sizeEl = row.querySelector('.item-size');
+        if (select && select.value) {
+          const opt = select.options[select.selectedIndex];
+          const size = sizeEl ? (sizeEl.value || '1') : '1';
+          let price = parseFloat(opt && opt.getAttribute('data-price')) || 0;
+          const sizeLabel = getSizeLabel(size);
+          if (size === '0.5' && parseFloat(opt && opt.getAttribute('data-halfprice')) > 0) price = parseFloat(opt.getAttribute('data-halfprice'));
+          else if (size === '0.25' && parseFloat(opt && opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
+          else if (size === 'pack' && parseFloat(opt && opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
+          else if (size === 'bundle' && parseFloat(opt && opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
           items.push({
-            id:select.value,
-            name:opt.dataset.name,
-            quantity:qty,
-            size:size,
-            sizeLabel,
-            unitPrice:price
+            id: select.value,
+            name: opt.dataset.name,
+            quantity: qty,
+            size: size,
+            sizeLabel: sizeLabel,
+            unitPrice: price
           });
-          total+=price*qty;
+          total += price * qty;
         }
       }
-    }
+    });
 
-    if(items.length===0){showToast('Add at least one item','error');return;}
+    if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
 
-    showPinModal('Process Sale',`process sale of ${formatCurrency(total)}`, async () => {
-      // Create new customer if needed
-      if (customerType === 'new' && isOnline) {
-        const custRef = doc(collection(db, 'customers'));
-        await setDoc(custRef, {
-          fullName: customerName,
-          phone: customerPhone,
-          email: customerEmail,
-          address: customerAddress,
-          location: customerAddress,
-          totalSpent: 0,
-          purchaseCount: 0,
-          status: 'pending_approval',
-          createdBy: currentUser.uid,
-          createdByName: userData.fullName,
-          createdAt: serverTimestamp()
-        });
-        customerId = custRef.id;
-      }
+    showPinModal('Process Sale', 'process sale of ' + formatCurrency(total), function() {
+      const customerInfo = {
+        customerId: customerId,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        customerAddress: customerAddress,
+        _isNew: isNewCustomer,
+        _customerData: customerData
+      };
 
-      const result = await processSaleWithMovement(
-        items, 
-        total,
-        { customerId, customerName, customerPhone, customerAddress },
-        selectedPayment,
-        false,
-        {}
-      );
+      const result = processSaleCommon(items, total, customerInfo, selectedPayment, false, {}, 'regular');
 
-      if (result.success) {
-        const msg = result.offline 
-          ? `Sale saved offline! #${result.receiptNumber} - Will sync when online`
-          : `Sale completed! #${result.receiptNumber}`;
-        showToast(msg, result.offline ? 'warning' : 'success');
-        
-        if (!result.offline) {
-          showReceiptModal({
-            id: result.saleId,
-            receiptNumber: result.receiptNumber,
-            customerName,
-            customerPhone,
-            customerAddress,
-            items: items.map(i => ({...i, sizeLabel: i.sizeLabel || getSizeLabel(i.size)})),
-            totalAmount: total,
-            paymentMethod: selectedPayment,
-            attendantName: userData.fullName,
-            createdAt: new Date()
-          });
-        }
+      if (result) {
+        showToast('Sale completed! #' + result.receiptNumber, 'success');
+        showReceiptModal(result);
         hideModal();
       }
     });
@@ -1099,298 +1435,702 @@
   // ============================================
   // COMPANY SALE MODAL
   // ============================================
-  window.openCompanySaleModal = async function(){
+  window.openCompanySaleModal = async function() {
     await loadCustomersAndStock();
     const stockOptions = getStockOptionsHtml();
-    const firstSizeOpts = allStockItems.length ? getSizeOptions(allStockItems[0]).map(o=>`<option value="${o.value}">${o.label}</option>`).join('') : '<option value="1">1 (Unit)</option>';
+    const firstSizeOpts = allStockItems.length ? getSizeOptions(allStockItems[0]).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
 
-    showModal('Sell to Company',`
-      <p style="font-weight:600;margin-bottom:10px;">🏢 Customer: <span style="color:var(--primary);">Company</span></p>
-      <div class="form-group"><label>Collected By *</label><input type="text" class="form-control" id="companyCollectedBy" placeholder="Full name of person collecting"></div>
-      <div class="form-group"><label>Usage / Description *</label><textarea class="form-control" id="companyUsage" rows="2" placeholder="e.g., Staff uniforms, Office supplies"></textarea></div>
-      <div id="companyItems">
-        <div class="item-row">
-          <div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this)"> <span>Non‑Inventory</span></div>
-          <select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>${stockOptions}</select>
-          <input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">
-          <select class="form-control item-size">${firstSizeOpts}</select>
-          <input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">
-          <input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">
-          <span class="stock-warning"></span>
-          <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();"><i class="fas fa-times"></i></button>
-        </div>
-      </div>
-      <button type="button" class="btn btn-outline btn-sm" onclick="window._addCompanyItem()"><i class="fas fa-plus"></i> Add Item</button>
-      <div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods"><div class="payment-method selected" data-method="cash" onclick="window._selectCompanyPayment('cash')">💵 Cash</div><div class="payment-method" data-method="transfer" onclick="window._selectCompanyPayment('transfer')">🏦 Transfer</div><div class="payment-method" data-method="pos" onclick="window._selectCompanyPayment('pos')">💳 POS</div></div></div>
-      <div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="companyItemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="companyTotal">₦0</span></div></div>
-      <button class="btn btn-primary" onclick="window._processCompanySale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Company Sale</button>
-    `);
+    showModal('Sell to Company',
+      '<p style="font-weight:600;margin-bottom:10px;">🏢 Customer: <span style="color:var(--primary);">Company</span></p>' +
+      '<div class="form-group"><label>Collected By *</label><input type="text" class="form-control" id="companyCollectedBy" placeholder="Full name of person collecting"></div>' +
+      '<div class="form-group"><label>Usage / Description *</label><textarea class="form-control" id="companyUsage" rows="2" placeholder="e.g., Staff uniforms, Office supplies"></textarea></div>' +
+      '<div id="companyItems">' +
+      '<div class="item-row">' +
+      '<div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this)"> <span>Non-Inventory</span></div>' +
+      '<select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
+      '<input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">' +
+      '<select class="form-control item-size">' + firstSizeOpts + '</select>' +
+      '<input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">' +
+      '<input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">' +
+      '<span class="stock-warning"></span>' +
+      '<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();"><i class="fas fa-times"></i></button>' +
+      '</div></div>' +
+      '<button type="button" class="btn btn-outline btn-sm" onclick="window._addCompanyItem()"><i class="fas fa-plus"></i> Add Item</button>' +
+      '<div class="form-group" style="margin-top:20px;"><label>Payment</label>' +
+      '<div class="payment-methods">' +
+      '<div class="payment-method selected" data-method="cash" onclick="window._selectCompanyPayment(\'cash\')">💵 Cash</div>' +
+      '<div class="payment-method" data-method="transfer" onclick="window._selectCompanyPayment(\'transfer\')">🏦 Transfer</div>' +
+      '<div class="payment-method" data-method="pos" onclick="window._selectCompanyPayment(\'pos\')">💳 POS</div>' +
+      '</div></div>' +
+      '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="companyItemCount">0</span></div>' +
+      '<div class="summary-row total"><span>Total:</span><span id="companyTotal">₦0</span></div></div>' +
+      '<button class="btn btn-primary" onclick="window._processCompanySale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Company Sale</button>'
+    );
 
-    setTimeout(()=>{
-      const firstSelect=$('.item-select').first();
-      firstSelect.select2({placeholder:'Search product...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')}).on('change',function(){window._updateSizeDropdown(this);window._updateCompanySummary();});
-      $('.item-qty').on('input',window._updateCompanySummary);
-      $('.item-size').on('change',window._updateCompanySummary);
+    setTimeout(function() {
+      const firstSelect = $('.item-select').first();
+      firstSelect.select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { window._updateSizeDropdown(this); window._updateCompanySummary(); });
+      $('.item-qty').on('input', window._updateCompanySummary);
+      $('.item-size').on('change', window._updateCompanySummary);
       window._updateCompanySummary();
-    },150);
+    }, 150);
+  };
+
+  let companySelectedPayment = 'cash';
+  window._selectCompanyPayment = function(method) {
+    companySelectedPayment = method;
+    document.querySelectorAll('#modalOverlay .payment-method').forEach(function(m) { m.classList.remove('selected'); });
+    const el = document.querySelector('#modalOverlay .payment-method[data-method="' + method + '"]');
+    if (el) el.classList.add('selected');
   };
 
   window._addCompanyItem = function() {
     const stockOptions = getStockOptionsHtml();
-    const div=document.createElement('div');div.className='item-row';
-    div.innerHTML=`
-      <div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this)"> <span>Non‑Inventory</span></div>
-      <select class="form-control item-select" style="width:100%;"><option value="">-- Search --</option>${stockOptions}</select>
-      <input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">
-      <select class="form-control item-size"><option value="1">1 (Unit)</option></select>
-      <input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">
-      <input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">
-      <span class="stock-warning"></span>
-      <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();"><i class="fas fa-times"></i></button>`;
+    const div = document.createElement('div');
+    div.className = 'item-row';
+    div.innerHTML = 
+      '<div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this)"> <span>Non-Inventory</span></div>' +
+      '<select class="form-control item-select" style="width:100%;"><option value="">-- Search --</option>' + stockOptions + '</select>' +
+      '<input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">' +
+      '<select class="form-control item-size"><option value="1">1 (Unit)</option></select>' +
+      '<input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">' +
+      '<input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">' +
+      '<span class="stock-warning"></span>' +
+      '<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();"><i class="fas fa-times"></i></button>';
     document.getElementById('companyItems').appendChild(div);
-    $(div).find('.item-select').select2({placeholder:'Search product...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')}).on('change',function(){window._updateSizeDropdown(this);window._updateCompanySummary();});
-    $(div).find('.item-qty').on('input',window._updateCompanySummary);
-    $(div).find('.item-size').on('change',window._updateCompanySummary);
+    $(div).find('.item-select').select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { window._updateSizeDropdown(this); window._updateCompanySummary(); });
+    $(div).find('.item-qty').on('input', window._updateCompanySummary);
+    $(div).find('.item-size').on('change', window._updateCompanySummary);
     window._updateCompanySummary();
   };
 
-  let companySelectedPayment = 'cash';
-  window._selectCompanyPayment = function(method) { 
-    companySelectedPayment=method;
-    document.querySelectorAll('#modalOverlay .payment-method').forEach(m=>m.classList.remove('selected'));
-    const el = document.querySelector(`#modalOverlay .payment-method[data-method="${method}"]`);
-    if (el) el.classList.add('selected');
-  };
-
   window._updateCompanySummary = function() {
-    let total=0, count=0;
-    let allValid = true;
-    document.querySelectorAll('#companyItems .item-row').forEach(row=>{
+    let total = 0, count = 0;
+    document.querySelectorAll('#companyItems .item-row').forEach(function(row) {
       const checkbox = row.querySelector('.non-inv-check');
       const qtyEl = row.querySelector('.item-qty');
-      const qty = parseFloat(qtyEl?.value) || 1;
+      const qty = parseFloat(qtyEl && qtyEl.value) || 1;
       if (checkbox && checkbox.checked) {
         const priceEl = row.querySelector('.item-custom-price');
-        const price = parseFloat(priceEl?.value) || 0;
+        const price = parseFloat(priceEl && priceEl.value) || 0;
         total += price * qty;
         count++;
       } else {
-        const select=row.querySelector('.item-select'); const sizeEl=row.querySelector('.item-size');
-        if(select&&qtyEl&&select.value){
-          const opt=select.options[select.selectedIndex]; const size=sizeEl?.value||'1';
-          let price=parseFloat(opt?.getAttribute('data-price'))||0;
-          if(size==='0.5'&&parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));
-          else if(size==='0.25'&&parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));
-          else if(size==='pack'&&parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));
-          else if(size==='bundle'&&parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));
-          total+=price*qty; count++;
+        const select = row.querySelector('.item-select');
+        const sizeEl = row.querySelector('.item-size');
+        if (select && qtyEl && select.value) {
+          const opt = select.options[select.selectedIndex];
+          const size = sizeEl ? (sizeEl.value || '1') : '1';
+          let price = parseFloat(opt && opt.getAttribute('data-price')) || 0;
+          if (size === '0.5' && parseFloat(opt && opt.getAttribute('data-halfprice')) > 0) price = parseFloat(opt.getAttribute('data-halfprice'));
+          else if (size === '0.25' && parseFloat(opt && opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
+          else if (size === 'pack' && parseFloat(opt && opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
+          else if (size === 'bundle' && parseFloat(opt && opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
+          total += price * qty;
+          count++;
         }
       }
-      if (!window._validateRowStock(row)) allValid = false;
     });
-    document.getElementById('companyItemCount').textContent=count; 
-    document.getElementById('companyTotal').textContent=formatCurrency(total);
-    return allValid;
+    document.getElementById('companyItemCount').textContent = count;
+    document.getElementById('companyTotal').textContent = formatCurrency(total);
   };
 
-  window._processCompanySale = async function() {
-    if (!window._updateCompanySummary()) { 
-      showToast('Some items exceed stock. Please adjust quantities.','error'); 
-      return; 
-    }
+  window._processCompanySale = function() {
     const collectedBy = document.getElementById('companyCollectedBy')?.value?.trim();
     const usage = document.getElementById('companyUsage')?.value?.trim();
-    if (!collectedBy || !usage) { showToast('Collected by and usage are required','error'); return; }
+    if (!collectedBy || !usage) { showToast('Collected by and usage are required', 'error'); return; }
 
-    const items=[];let total=0;
-    for(const row of document.querySelectorAll('#companyItems .item-row')){
+    const items = [];
+    let total = 0;
+
+    document.querySelectorAll('#companyItems .item-row').forEach(function(row) {
       const checkbox = row.querySelector('.non-inv-check');
       const qtyEl = row.querySelector('.item-qty');
-      const qty = parseFloat(qtyEl?.value) || 1;
+      const qty = parseFloat(qtyEl && qtyEl.value) || 1;
+
       if (checkbox && checkbox.checked) {
         const nameEl = row.querySelector('.item-custom-name');
         const priceEl = row.querySelector('.item-custom-price');
-        const name = nameEl?.value?.trim();
-        const price = parseFloat(priceEl?.value) || 0;
-        if (!name || price <= 0) { showToast('Enter valid name and price for custom item', 'error'); return; }
-        items.push({ name, quantity: qty, unitPrice: price, size: '1', sizeLabel: 'Unit', isNonInventory: true });
+        const name = nameEl && nameEl.value.trim();
+        const price = parseFloat(priceEl && priceEl.value) || 0;
+        if (!name || price <= 0) { showToast('Enter valid name and price', 'error'); return; }
+        items.push({ name: name, quantity: qty, unitPrice: price, size: '1', sizeLabel: 'Unit', isNonInventory: true });
         total += price * qty;
       } else {
-        const select=row.querySelector('.item-select');const sizeEl=row.querySelector('.item-size');
-        if(select&&select.value){
-          const opt=select.options[select.selectedIndex];
-          const size=sizeEl?.value||'1';
-          let price=parseFloat(opt?.getAttribute('data-price'))||0;
-          let sizeLabel = getSizeLabel(size);
-          if(size==='0.5'&&parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));
-          else if(size==='0.25'&&parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));
-          else if(size==='pack'&&parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));
-          else if(size==='bundle'&&parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));
+        const select = row.querySelector('.item-select');
+        const sizeEl = row.querySelector('.item-size');
+        if (select && select.value) {
+          const opt = select.options[select.selectedIndex];
+          const size = sizeEl ? (sizeEl.value || '1') : '1';
+          let price = parseFloat(opt && opt.getAttribute('data-price')) || 0;
+          const sizeLabel = getSizeLabel(size);
+          if (size === '0.5' && parseFloat(opt && opt.getAttribute('data-halfprice')) > 0) price = parseFloat(opt.getAttribute('data-halfprice'));
+          else if (size === '0.25' && parseFloat(opt && opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
+          else if (size === 'pack' && parseFloat(opt && opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
+          else if (size === 'bundle' && parseFloat(opt && opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
           items.push({
-            id:select.value,
-            name:opt.dataset.name,
-            quantity:qty,
-            size:size,
-            sizeLabel,
-            unitPrice:price
+            id: select.value,
+            name: opt.dataset.name,
+            quantity: qty,
+            size: size,
+            sizeLabel: sizeLabel,
+            unitPrice: price
           });
-          total+=price*qty;
+          total += price * qty;
         }
       }
-    }
+    });
 
-    if(items.length===0){showToast('Add at least one item','error');return;}
+    if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
 
-    showPinModal('Process Company Sale',`process company sale of ${formatCurrency(total)}`, async () => {
-      const result = await processSaleWithMovement(
-        items,
-        total,
-        { customerId: '', customerName: 'Company', customerPhone: '', customerAddress: '' },
-        companySelectedPayment,
-        true,
-        { collectedBy, usage }
-      );
+    showPinModal('Process Company Sale', 'process company sale of ' + formatCurrency(total), function() {
+      const customerInfo = {
+        customerId: '',
+        customerName: 'Company',
+        customerPhone: '',
+        customerAddress: ''
+      };
 
-      if (result.success) {
-        const msg = result.offline 
-          ? `Company sale saved offline! #${result.receiptNumber}`
-          : `Company sale completed! #${result.receiptNumber}`;
-        showToast(msg, result.offline ? 'warning' : 'success');
-        
-        if (!result.offline) {
-          showCompanyReceiptModal({
-            id: result.saleId,
-            receiptNumber: result.receiptNumber,
-            collectedBy,
-            usage,
-            items: items.map(i => ({...i, sizeLabel: i.sizeLabel || getSizeLabel(i.size)})),
-            totalAmount: total,
-            paymentMethod: companySelectedPayment,
-            attendantName: userData.fullName,
-            createdAt: new Date()
-          });
-        }
+      const result = processSaleCommon(items, total, customerInfo, companySelectedPayment, true, {
+        collectedBy: collectedBy,
+        usage: usage
+      }, 'regular');
+
+      if (result) {
+        showToast('Company sale completed! #' + result.receiptNumber, 'success');
+        showReceiptModal(result);
         hideModal();
       }
     });
   };
 
   // ============================================
-  // RECEIPTS & PRINTING (unchanged from original)
+  // WHOLESALE SALE MODAL (Moved from store)
   // ============================================
-  function showCompanyReceiptModal(sale) {
-    const dateStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-    const timeStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    const itemsHtml=sale.items.map(i=>`<div class="receipt-item"><span>${i.quantity}x ${i.name}${i.sizeLabel?` (${i.sizeLabel})`:''}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('');
-    showModal('Company Receipt',`
-      <div class="receipt-container">
-        <div class="receipt-header">
-          <h2 style="font-weight:bold;">✨ OmoCreations ✨</h2>
-          <p class="addr" style="font-weight:bold;">3 Oyebo Street, Abiola Way</p>
-          <p class="addr" style="font-weight:bold;">Behind Laroy Suite, Abeokuta 111101</p>
-          <p class="addr" style="font-weight:bold;">Ogun State, Nigeria</p>
-          <p class="addr" style="font-weight:bold;">📞 0807 734 0294</p>
-          <p class="rec" style="margin-top:6px;">#${sale.receiptNumber} (Company)</p>
-          <p class="rec">${dateStr} ${timeStr}</p>
-        </div>
-        <p class="cust-info"><strong>Customer:</strong> Company<br><strong>Collected by:</strong> ${sale.collectedBy}<br><strong>Usage:</strong> ${sale.usage}<br><strong>Served by:</strong> ${sale.attendantName}</p>
-        <div class="receipt-items">${itemsHtml}</div>
-        <div class="receipt-total"><span>Total:</span><span>${formatCurrency(sale.totalAmount)}</span></div>
-        <p class="thanks">Thank you for your patronage!</p>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:20px;">
-        <button class="btn btn-primary" onclick="printCompanyReceipt('${sale.id}')" style="flex:1;"><i class="fas fa-print"></i> Print</button>
-        <button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>
-      </div>
-    `);
-  }
+  window.openWholesaleSaleModal = async function() {
+    await loadCustomersAndStock();
+    
+    const availableItems = allStoreItems.filter(function(i) { return (i.unitQty || 0) > 0; });
+    if (!availableItems.length) { showToast('No store stock available for wholesale', 'error'); return; }
 
-  window.showReceiptModal = (sale)=>{
-    const dateStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-    const timeStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    const itemsHtml=sale.items.map(i=>`<div class="receipt-item"><span>${i.quantity}x ${i.name}${i.sizeLabel?` (${i.sizeLabel})`:''}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('');
-    showModal('Receipt',`
-      <div class="receipt-container">
-        <div class="receipt-header">
-          <h2 style="font-weight:bold;">✨ OmoCreations ✨</h2>
-          <p class="addr" style="font-weight:bold;">3 Oyebo Street, Abiola Way</p>
-          <p class="addr" style="font-weight:bold;">Behind Laroy Suite, Abeokuta 111101</p>
-          <p class="addr" style="font-weight:bold;">Ogun State, Nigeria</p>
-          <p class="addr" style="font-weight:bold;">📞 0807 734 0294</p>
-          <p class="rec" style="margin-top:6px;">#${sale.receiptNumber}</p>
-          <p class="rec">${dateStr} ${timeStr}</p>
-        </div>
-        <p class="cust-info"><strong>Customer:</strong> ${sale.customerName}<br><strong>Served by:</strong> ${sale.attendantName}</p>
-        <div class="receipt-items">${itemsHtml}</div>
-        <div class="receipt-total"><span>Total:</span><span>${formatCurrency(sale.totalAmount)}</span></div>
-        <p class="thanks">Thank you for your patronage!</p>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:20px;">
-        <button class="btn btn-primary" onclick="printReceipt('${sale.id}')" style="flex:1;"><i class="fas fa-print"></i> Print</button>
-        <button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>
-      </div>
-    `);
+    const custOptions = allCustomers.map(function(c) {
+      return '<option value="' + c.id + '" data-name="' + (c.fullName||'') + '" data-phone="' + (c.phone||'') + '">' + (c.fullName||'') + ' - ' + (c.phone||'No phone') + '</option>';
+    }).join('');
+    
+    const storeOptions = availableItems.map(function(i) {
+      return '<option value="' + i.id + '" data-name="' + (i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + (i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>';
+    }).join('');
+
+    showModal('New Wholesale Sale',
+      '<div class="customer-type-toggle">' +
+      '<button class="customer-type-btn active" data-type="existing" onclick="window._switchWSType(\'existing\')"><i class="fas fa-users"></i> Existing</button>' +
+      '<button class="customer-type-btn" data-type="new" onclick="window._switchWSType(\'new\')"><i class="fas fa-user-plus"></i> New</button>' +
+      '</div>' +
+      '<div id="wsExistingSection"><div class="form-group"><label>Search Customer</label><select class="form-control" id="wsExistingCustomer" style="width:100%;"><option value="">-- Search --</option>' + custOptions + '</select></div></div>' +
+      '<div id="wsNewSection" style="display:none;">' +
+      '<div class="form-row"><div class="form-group"><label>Full Name *</label><input class="form-control" id="wsNewName"></div><div class="form-group"><label>Phone *</label><input class="form-control" id="wsNewPhone"></div></div>' +
+      '<div class="form-group"><label>Address</label><input class="form-control" id="wsNewAddress"></div></div>' +
+      
+      '<div class="wholesale-pack-size-box">' +
+      '<label>📦 Wholesale Pack Size (pieces required)</label>' +
+      '<input type="number" class="form-control" id="wsPackSize" value="50" min="1" style="font-size:1.5rem;text-align:center;" onchange="window._updateWSTotal()">' +
+      '<p style="font-size:0.75rem;color:var(--gray);margin-top:4px;">Customer must buy at least this many pieces total</p>' +
+      '</div>' +
+
+      '<div id="wsItems">' +
+      '<div class="ws-item-row" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">' +
+      '<select class="form-control ws-select" style="flex:2;"><option value="">-- Select Item --</option>' + storeOptions + '</select>' +
+      '<input type="number" class="form-control ws-qty" value="0" min="0" style="flex:0.8;" placeholder="Pieces">' +
+      '<input type="number" class="form-control ws-price" placeholder="Price/pc ₦" step="0.01" style="flex:1;">' +
+      '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.ws-item-row\').remove();window._updateWSTotal();"><i class="fas fa-times"></i></button>' +
+      '</div></div>' +
+      '<button class="btn btn-outline btn-sm" onclick="window._addWSItem()"><i class="fas fa-plus"></i> Add Item</button>' +
+
+      '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;">' +
+      '<div style="display:flex;justify-content:space-between;"><span>Total Pieces:</span><span id="wsTotalPieces" style="font-weight:700;">0</span></div>' +
+      '<div style="display:flex;justify-content:space-between;"><span>Required:</span><span id="wsRequiredPieces" style="font-weight:700;color:var(--primary);">50</span></div>' +
+      '<p id="wsStatusMsg" style="font-size:0.75rem;color:var(--danger);text-align:center;margin-top:4px;"></p>' +
+      '</div>' +
+
+      '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;">' +
+      '<span style="font-weight:700;">Total Amount: </span><span id="wsTotalAmount" style="font-size:1.2rem;font-weight:800;">₦0</span>' +
+      '</div>' +
+
+      '<div class="form-group" style="margin-top:15px;"><label>Payment</label>' +
+      '<div style="display:flex;gap:10px;">' +
+      '<button class="btn btn-outline ws-pay selected" data-m="cash" onclick="window._selWS(\'cash\')">💵 Cash</button>' +
+      '<button class="btn btn-outline ws-pay" data-m="transfer" onclick="window._selWS(\'transfer\')">🏦 Transfer</button>' +
+      '</div></div>' +
+      '<button class="btn btn-primary" onclick="window._processWS()" style="width:100%;margin-top:12px;"><i class="fas fa-check-circle"></i> Complete Wholesale Sale</button>'
+    );
+
+    setTimeout(function() {
+      $('#wsExistingCustomer').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
+      window._bindWSEvents();
+    }, 150);
   };
 
-  window.viewReceipt = (id)=>{const s=allSales.find(x=>x.id===id);if(s) s.isCompanySale ? showCompanyReceiptModal(s) : showReceiptModal(s);};
+  let wholesaleCustomerType = 'existing';
+  let wholesalePayment = 'cash';
 
-  window.printReceipt = (id) => {
-    const s = allSales.find(x => x.id === id);
+  window._switchWSType = function(type) {
+    wholesaleCustomerType = type;
+    document.querySelectorAll('.customer-type-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.type === type);
+    });
+    document.getElementById('wsExistingSection').style.display = type === 'existing' ? 'block' : 'none';
+    document.getElementById('wsNewSection').style.display = type === 'new' ? 'block' : 'none';
+  };
+
+  window._selWS = function(m) {
+    wholesalePayment = m;
+    document.querySelectorAll('.ws-pay').forEach(function(b) { b.classList.remove('selected'); });
+    document.querySelector('.ws-pay[data-m="' + m + '"]').classList.add('selected');
+  };
+
+  window._addWSItem = function() {
+    const availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
+    const storeOptions = availableItems.map(function(i) {
+      return '<option value="' + i.id + '" data-name="' + (i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + (i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>';
+    }).join('');
+    
+    const div = document.createElement('div');
+    div.className = 'ws-item-row';
+    div.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center;';
+    div.innerHTML = 
+      '<select class="form-control ws-select" style="flex:2;"><option value="">-- Select Item --</option>' + storeOptions + '</select>' +
+      '<input type="number" class="form-control ws-qty" value="0" min="0" style="flex:0.8;" placeholder="Pieces">' +
+      '<input type="number" class="form-control ws-price" placeholder="Price/pc ₦" step="0.01" style="flex:1;">' +
+      '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.ws-item-row\').remove();window._updateWSTotal();"><i class="fas fa-times"></i></button>';
+    document.getElementById('wsItems').appendChild(div);
+    div.querySelector('.ws-select').addEventListener('change', function() {
+      const opt = this.options[this.selectedIndex];
+      const priceInput = div.querySelector('.ws-price');
+      if (opt && opt.value && (!priceInput.value || parseFloat(priceInput.value) === 0)) {
+        priceInput.value = parseFloat(opt.getAttribute('data-cost')) || 0;
+      }
+      window._updateWSTotal();
+    });
+    div.querySelectorAll('.ws-qty,.ws-price').forEach(function(el) {
+      el.addEventListener('change', window._updateWSTotal);
+      el.addEventListener('input', window._updateWSTotal);
+    });
+    window._updateWSTotal();
+  };
+
+  window._bindWSEvents = function() {
+    document.querySelectorAll('.ws-select,.ws-qty,.ws-price').forEach(function(el) {
+      el.addEventListener('change', window._updateWSTotal);
+      el.addEventListener('input', window._updateWSTotal);
+    });
+    window._updateWSTotal();
+  };
+
+  window._updateWSTotal = function() {
+    const packSize = parseInt(document.getElementById('wsPackSize')?.value) || 50;
+    let totalPieces = 0, totalAmount = 0;
+    
+    document.querySelectorAll('.ws-item-row').forEach(function(row) {
+      const sel = row.querySelector('.ws-select');
+      const qtyEl = row.querySelector('.ws-qty');
+      const priceEl = row.querySelector('.ws-price');
+      if (!sel || !sel.value || !qtyEl) return;
+      const qty = parseInt(qtyEl.value) || 0;
+      const price = parseFloat(priceEl && priceEl.value) || 0;
+      totalPieces += qty;
+      totalAmount += qty * price;
+    });
+
+    document.getElementById('wsTotalPieces').textContent = totalPieces;
+    document.getElementById('wsRequiredPieces').textContent = packSize;
+    document.getElementById('wsTotalAmount').textContent = formatCurrency(totalAmount);
+
+    const statusMsg = document.getElementById('wsStatusMsg');
+    if (totalPieces < packSize) {
+      statusMsg.innerHTML = '⚠️ Need <strong>' + (packSize - totalPieces) + '</strong> more pieces';
+      statusMsg.style.color = 'var(--danger)';
+    } else if (totalPieces === packSize) {
+      statusMsg.innerHTML = '✅ <strong>Perfect!</strong> Wholesale requirement met';
+      statusMsg.style.color = 'var(--success)';
+    } else {
+      statusMsg.innerHTML = '⚠️ <strong>' + (totalPieces - packSize) + ' extra piece(s)</strong> beyond pack size';
+      statusMsg.style.color = 'var(--warning)';
+    }
+  };
+
+  window._processWS = function() {
+    const packSize = parseInt(document.getElementById('wsPackSize')?.value) || 50;
+    
+    let customerId = '', customerName = '', customerPhone = '';
+    let isNewCustomer = false;
+    let customerData = null;
+
+    if (wholesaleCustomerType === 'existing') {
+      const select = document.getElementById('wsExistingCustomer');
+      if (!select || !select.value) { showToast('Select a customer', 'error'); return; }
+      customerId = select.value;
+      const opt = select.options[select.selectedIndex];
+      customerName = opt.getAttribute('data-name') || '';
+      customerPhone = opt.getAttribute('data-phone') || '';
+    } else {
+      customerName = document.getElementById('wsNewName')?.value?.trim();
+      customerPhone = document.getElementById('wsNewPhone')?.value?.trim();
+      if (!customerName || !customerPhone) { showToast('Customer name & phone required', 'error'); return; }
+      isNewCustomer = true;
+      customerData = {
+        fullName: customerName,
+        phone: customerPhone,
+        address: document.getElementById('wsNewAddress')?.value?.trim() || '',
+        status: 'pending_approval',
+        createdBy: currentUser.uid,
+        createdByName: userData.fullName
+      };
+    }
+
+    const items = [];
+    let totalPieces = 0, totalAmount = 0;
+    
+    document.querySelectorAll('.ws-item-row').forEach(function(row) {
+      const sel = row.querySelector('.ws-select');
+      const qtyEl = row.querySelector('.ws-qty');
+      const priceEl = row.querySelector('.ws-price');
+      if (!sel || !sel.value || !qtyEl) return;
+      const qty = parseInt(qtyEl.value) || 0;
+      const price = parseFloat(priceEl && priceEl.value) || 0;
+      if (qty <= 0 || price <= 0) return;
+      
+      const opt = sel.options[sel.selectedIndex];
+      const avail = parseInt(opt.getAttribute('data-avail')) || 0;
+      
+      if (qty > avail) {
+        showToast('Only ' + avail + ' pieces available for ' + opt.getAttribute('data-name'), 'error');
+        return;
+      }
+      
+      items.push({
+        id: sel.value,
+        name: opt.getAttribute('data-name'),
+        pieces: qty,
+        unitPrice: price
+      });
+      totalPieces += qty;
+      totalAmount += qty * price;
+    });
+
+    if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
+    
+    if (totalPieces < packSize) {
+      showToast('Wholesale requires ' + packSize + ' pieces. You\'ve selected ' + totalPieces, 'error');
+      return;
+    }
+    
+    if (totalPieces > packSize) {
+      const extra = totalPieces - packSize;
+      if (!confirm('You\'ve selected ' + totalPieces + ' pieces (' + extra + ' extra). Continue?')) return;
+    }
+
+    showPinModal('Process Wholesale Sale', 'sell ' + totalPieces + ' pieces for ' + formatCurrency(totalAmount), function() {
+      const customerInfo = {
+        customerId: customerId,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        customerAddress: '',
+        _isNew: isNewCustomer,
+        _customerData: customerData
+      };
+
+      const result = processSaleCommon(items, totalAmount, customerInfo, wholesalePayment, false, {
+        wholesalePackSize: packSize,
+        totalPieces: totalPieces,
+        exceededPackSize: totalPieces > packSize,
+        extraPieces: totalPieces > packSize ? totalPieces - packSize : 0
+      }, 'wholesale');
+
+      if (result) {
+        showToast('Wholesale sale completed! #' + result.receiptNumber, 'success');
+        showReceiptModal(result);
+        hideModal();
+      }
+    });
+  };
+
+  // ============================================
+  // RECEIPTS
+  // ============================================
+  window.showReceiptModal = function(sale) {
+    const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const itemsHtml = sale.items.map(function(i) {
+      return '<div class="receipt-item"><span>' + (i.quantity || i.pieces || 1) + 'x ' + i.name + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span>' + formatCurrency((i.quantity || i.pieces || 1) * i.unitPrice) + '</span></div>';
+    }).join('');
+
+    const isWholesale = sale._type === 'wholesale' || sale.wholesalePackSize;
+    const title = isWholesale ? 'Wholesale Receipt' : (sale.isCompanySale ? 'Company Receipt' : 'Receipt');
+    const extraInfo = sale.isCompanySale ? '<p class="cust-info"><strong>Collected by:</strong> ' + (sale.collectedBy || '') + '<br><strong>Usage:</strong> ' + (sale.usage || '') + '</p>' : '';
+    const wholesaleInfo = isWholesale ? '<p class="rec">Pack Size: ' + (sale.wholesalePackSize || 50) + ' pcs | Sold: ' + (sale.totalPieces || 0) + ' pcs</p>' : '';
+
+    showModal(title,
+      '<div class="receipt-container">' +
+      '<div class="receipt-header">' +
+      '<h2 style="font-weight:bold;">✨ OmoCreations ✨</h2>' +
+      '<p class="addr" style="font-weight:bold;">3 Oyebo Street, Abiola Way</p>' +
+      '<p class="addr" style="font-weight:bold;">Behind Laroy Suite, Abeokuta 111101</p>' +
+      '<p class="addr" style="font-weight:bold;">Ogun State, Nigeria</p>' +
+      '<p class="addr" style="font-weight:bold;">📞 0807 734 0294</p>' +
+      '<p class="rec" style="margin-top:6px;">#' + (sale.receiptNumber || 'N/A') + '</p>' +
+      '<p class="rec">' + dateStr + ' ' + timeStr + '</p>' +
+      wholesaleInfo +
+      '</div>' +
+      '<p class="cust-info"><strong>Customer:</strong> ' + (sale.customerName || 'Walk-in') + '<br><strong>Served by:</strong> ' + (sale.attendantName || 'Staff') + '</p>' +
+      extraInfo +
+      '<div class="receipt-items">' + itemsHtml + '</div>' +
+      '<div class="receipt-total"><span>Total:</span><span>' + formatCurrency(sale.totalAmount) + '</span></div>' +
+      '<p class="thanks">Thank you for your patronage!</p>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;margin-top:20px;">' +
+      '<button class="btn btn-primary" onclick="printReceiptModal(\'' + (sale.id || sale._localId) + '\')" style="flex:1;"><i class="fas fa-print"></i> Print</button>' +
+      '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>' +
+      '</div>'
+    );
+  };
+
+  window.viewReceipt = function(id) {
+    const s = allSales.find(function(x) { return (x.id || x._localId) === id; });
+    if (s) showReceiptModal(s);
+  };
+
+  window.printReceipt = function(id) {
+    const s = allSales.find(function(x) { return (x.id || x._localId) === id; });
     if (!s) return;
-    if (s.isCompanySale) { printCompanyReceipt(id); return; }
-    const dateStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '';
-    const timeStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
-    const receiptHTML = `<html><head><title>Receipt #${s.receiptNumber}</title><style>@page{margin:0;size:80mm auto}*{margin:0;padding:0}body{font-family:'Segoe UI',Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:8pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1}.item span:last-child{text-align:right;min-width:60px}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style></head><body><div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#${s.receiptNumber}</p><p class="rec">${dateStr} ${timeStr}</p></div><p class="cust">Customer: ${s.customerName}<br>Served by: ${s.attendantName}</p><div class="items">${s.items.map(i=>`<div class="item"><span>${i.quantity}x ${i.name}${i.sizeLabel?` (${i.sizeLabel})`:''}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('')}</div><div class="total">Total: ${formatCurrency(s.totalAmount)}</div><p class="thanks">Thank you for your patronage!</p></body></html>`;
+    const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const itemsHtml = s.items.map(function(i) {
+      return '<div class="item"><span>' + (i.quantity || i.pieces || 1) + 'x ' + i.name + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span>' + formatCurrency((i.quantity || i.pieces || 1) * i.unitPrice) + '</span></div>';
+    }).join('');
+    
+    const receiptHTML = '<html><head><title>Receipt #' + (s.receiptNumber||'') + '</title><style>@page{margin:0;size:80mm auto}*{margin:0;padding:0}body{font-family:"Segoe UI",Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:8pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1}.item span:last-child{text-align:right;min-width:60px}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style></head><body><div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#' + (s.receiptNumber||'') + '</p><p class="rec">' + dateStr + ' ' + timeStr + '</p></div><p class="cust">Customer: ' + (s.customerName||'Walk-in') + '<br>Served by: ' + (s.attendantName||'Staff') + '</p><div class="items">' + itemsHtml + '</div><div class="total">Total: ' + formatCurrency(s.totalAmount) + '</div><p class="thanks">Thank you for your patronage!</p></body></html>';
+    
     const oldFrame = document.getElementById('printIframe');
     if (oldFrame) oldFrame.remove();
-    const iframe = document.createElement('iframe'); iframe.id='printIframe'; iframe.style.display='none'; document.body.appendChild(iframe);
-    iframe.contentWindow.document.open(); iframe.contentWindow.document.write(receiptHTML); iframe.contentWindow.document.close();
-    iframe.onload = ()=>setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();setTimeout(()=>iframe.remove(),1000)},300);
+    const iframe = document.createElement('iframe');
+    iframe.id = 'printIframe';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    iframe.contentWindow.document.open();
+    iframe.contentWindow.document.write(receiptHTML);
+    iframe.contentWindow.document.close();
+    iframe.onload = function() {
+      setTimeout(function() {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        setTimeout(function() { iframe.remove(); }, 1000);
+      }, 300);
+    };
   };
 
-  window.printCompanyReceipt = (id) => {
-    const s = allSales.find(x => x.id === id);
-    if (!s || !s.isCompanySale) { showToast('Receipt not found','error'); return; }
-    const dateStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '';
-    const timeStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
-    const receiptHTML = `<html><head><title>Receipt #${s.receiptNumber}</title><style>@page{margin:0;size:80mm auto}*{margin:0;padding:0}body{font-family:'Segoe UI',Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:8pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1}.item span:last-child{text-align:right;min-width:60px}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style></head><body><div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#${s.receiptNumber} (Company)</p><p class="rec">${dateStr} ${timeStr}</p></div><p class="cust">Customer: Company<br>Collected by: ${s.collectedBy}<br>Usage: ${s.usage}<br>Served by: ${s.attendantName}</p><div class="items">${s.items.map(i=>`<div class="item"><span>${i.quantity}x ${i.name}${i.sizeLabel?` (${i.sizeLabel})`:''}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('')}</div><div class="total">Total: ${formatCurrency(s.totalAmount)}</div><p class="thanks">Thank you for your patronage!</p></body></html>`;
-    const oldFrame = document.getElementById('printIframe');
-    if (oldFrame) oldFrame.remove();
-    const iframe = document.createElement('iframe'); iframe.id='printIframe'; iframe.style.display='none'; document.body.appendChild(iframe);
-    iframe.contentWindow.document.open(); iframe.contentWindow.document.write(receiptHTML); iframe.contentWindow.document.close();
-    iframe.onload = ()=>setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();setTimeout(()=>iframe.remove(),1000)},300);
+  window.printReceiptModal = function(id) {
+    hideModal();
+    setTimeout(function() { window.printReceipt(id); }, 300);
   };
 
   // ============================================
-  // RETURNS (unchanged from original)
+  // RETURNS (simplified)
   // ============================================
-  window.openReturnModal = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;let itemsHtml=sale.items.map((item,idx)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--gray-light);border-radius:10px;"><span style="flex:1;"><strong>${item.name}</strong>${item.sizeLabel?` <small>(${item.sizeLabel})</small>`:''}<br><small>Sold: ${item.quantity} x ${formatCurrency(item.unitPrice)}</small></span><input type="number" step="0.25" id="return-qty-${idx}" value="0" min="0" max="${item.quantity}" style="width:70px;padding:8px;border-radius:8px;border:1px solid #ddd;text-align:center;"><span style="font-size:0.8rem;color:var(--gray);">/ ${item.quantity}</span></div>`).join('');showModal('Return Goods',`<p><strong>Receipt:</strong> ${sale.receiptNumber} | <strong>Customer:</strong> ${sale.customerName}</p><p style="color:var(--gray);">Select quantity to return:</p>${itemsHtml}<div class="form-group"><label>Reason</label><textarea class="form-control" id="returnReason" rows="2"></textarea></div><p style="font-weight:600;">Return Action:</p><div class="return-options"><div class="return-option selected" data-action="refund" onclick="window._selectReturnAction('refund')"><i class="fas fa-money-bill-wave"></i><div><strong>Full Refund</strong><br><small>Return money to customer</small></div></div><div class="return-option" data-action="exchange_same" onclick="window._selectReturnAction('exchange_same')"><i class="fas fa-exchange-alt"></i><div><strong>Exchange Same Price</strong><br><small>Swap for another item</small></div></div><div class="return-option" data-action="exchange_higher" onclick="window._selectReturnAction('exchange_higher')"><i class="fas fa-level-up-alt"></i><div><strong>Exchange + Add Money</strong><br><small>Upgrade to higher price</small></div></div><div class="return-option" data-action="store_credit" onclick="window._selectReturnAction('store_credit')"><i class="fas fa-piggy-bank"></i><div><strong>Store Credit</strong><br><small>Keep for later</small></div></div></div><button class="btn btn-primary" onclick="window._processReturn('${saleId}')" style="width:100%;margin-top:15px;"><i class="fas fa-check"></i> Process Return</button>`);};
-  window._selectReturnAction = (action)=>{selectedReturnAction=action;document.querySelectorAll('.return-option').forEach(o=>o.classList.remove('selected'));document.querySelector(`[data-action="${action}"]`)?.classList.add('selected');};
-  window._processReturn = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;const returnedItems=[];let totalRefund=0;sale.items.forEach((item,idx)=>{const q=parseFloat(document.getElementById(`return-qty-${idx}`)?.value)||0;if(q>0){returnedItems.push({...item,returnedQty:q,refundAmount:q*item.unitPrice});totalRefund+=q*item.unitPrice;}});if(returnedItems.length===0){showToast('Select quantity to return','error');return;}const reason=document.getElementById('returnReason')?.value?.trim()||'No reason';showPinModal('Process Return',`process return of ${formatCurrency(totalRefund)}`,async()=>{try{const batch=writeBatch(db);for(const item of returnedItems){if(item.id && !item.isNonInventory){const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);if(snap.exists()){const cur=parseFloat(snap.data().quantityAvailable??snap.data().unitQty??0);const threshold=parseFloat(snap.data().threshold||10);const stockItem = allStockItems.find(si => si.id === item.id);const size = item.size || '1';const addBackQty = getDeductQuantity(stockItem || snap.data(), size, item.returnedQty);const newQty=cur+addBackQty;batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,updatedAt:serverTimestamp()});}}}batch.set(doc(collection(db,'returns')),{saleId,saleReceiptNumber:sale.receiptNumber,customerId:sale.customerId,customerName:sale.customerName,returnedItems,totalRefund,returnAction:selectedReturnAction,reason,processedBy:currentUser.uid,processedByName:userData.fullName,createdAt:serverTimestamp()});const saleUpdate={status:'returned',returnedAt:serverTimestamp(),returnedBy:currentUser.uid,returnedByName:userData.fullName,returnAction:selectedReturnAction,totalRefund};if(selectedReturnAction==='exchange_same')saleUpdate.exchangeNote='Exchanged for same price item';else if(selectedReturnAction==='exchange_higher')saleUpdate.exchangeNote='Exchanged for higher price + additional payment';else if(selectedReturnAction==='store_credit')saleUpdate.exchangeNote='Store credit held for later';batch.update(doc(db,'sales',saleId),saleUpdate);if(sale.customerId&&selectedReturnAction==='refund'){batch.update(doc(db,'customers',sale.customerId),{totalSpent:increment(-totalRefund),purchaseCount:increment(-1)});}await batch.commit();await logAudit('return_goods',`Return ${formatCurrency(totalRefund)} | Receipt ${sale.receiptNumber} | Action: ${selectedReturnAction}`);const labels={refund:`Refunded: -${formatCurrency(totalRefund)}`,exchange_same:`Exchanged: ${formatCurrency(totalRefund)}`,exchange_higher:`Upgrade exchange: ${formatCurrency(totalRefund)}`,store_credit:`Store credit: ${formatCurrency(totalRefund)}`};showToast(labels[selectedReturnAction],'success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});};
+  window.openReturnModal = function(saleId) {
+    const sale = allSales.find(function(s) { return (s.id || s._localId) === saleId; });
+    if (!sale) return;
+    if (sale._type === 'wholesale') { showToast('Wholesale returns not supported yet', 'error'); return; }
+    
+    let itemsHtml = sale.items.map(function(item, idx) {
+      return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--gray-light);border-radius:10px;">' +
+        '<span style="flex:1;"><strong>' + item.name + '</strong>' + (item.sizeLabel ? ' <small>(' + item.sizeLabel + ')</small>' : '') + '<br><small>Sold: ' + item.quantity + ' x ' + formatCurrency(item.unitPrice) + '</small></span>' +
+        '<input type="number" step="0.25" id="return-qty-' + idx + '" value="0" min="0" max="' + item.quantity + '" style="width:70px;padding:8px;border-radius:8px;border:1px solid #ddd;text-align:center;">' +
+        '<span style="font-size:0.8rem;color:var(--gray);">/ ' + item.quantity + '</span>' +
+        '</div>';
+    }).join('');
+    
+    showModal('Return Goods',
+      '<p><strong>Receipt:</strong> ' + sale.receiptNumber + ' | <strong>Customer:</strong> ' + sale.customerName + '</p>' +
+      '<p style="color:var(--gray);">Select quantity to return:</p>' +
+      itemsHtml +
+      '<div class="form-group"><label>Reason</label><textarea class="form-control" id="returnReason" rows="2"></textarea></div>' +
+      '<p style="font-weight:600;">Return Action:</p>' +
+      '<div class="return-options">' +
+      '<div class="return-option selected" data-action="refund" onclick="window._selectReturnAction(\'refund\')"><i class="fas fa-money-bill-wave"></i><div><strong>Full Refund</strong><br><small>Return money to customer</small></div></div>' +
+      '<div class="return-option" data-action="exchange_same" onclick="window._selectReturnAction(\'exchange_same\')"><i class="fas fa-exchange-alt"></i><div><strong>Exchange Same Price</strong></div></div>' +
+      '<div class="return-option" data-action="exchange_higher" onclick="window._selectReturnAction(\'exchange_higher\')"><i class="fas fa-level-up-alt"></i><div><strong>Exchange + Add Money</strong></div></div>' +
+      '<div class="return-option" data-action="store_credit" onclick="window._selectReturnAction(\'store_credit\')"><i class="fas fa-piggy-bank"></i><div><strong>Store Credit</strong></div></div>' +
+      '</div>' +
+      '<button class="btn btn-primary" onclick="window._processReturn(\'' + saleId + '\')" style="width:100%;margin-top:15px;"><i class="fas fa-check"></i> Process Return</button>'
+    );
+  };
+
+  window._selectReturnAction = function(action) {
+    selectedReturnAction = action;
+    document.querySelectorAll('.return-option').forEach(function(o) { o.classList.remove('selected'); });
+    document.querySelector('[data-action="' + action + '"]').classList.add('selected');
+  };
+
+  window._processReturn = function(saleId) {
+    const sale = allSales.find(function(s) { return (s.id || s._localId) === saleId; });
+    if (!sale) return;
+    
+    const returnedItems = [];
+    let totalRefund = 0;
+    
+    sale.items.forEach(function(item, idx) {
+      const q = parseFloat(document.getElementById('return-qty-' + idx)?.value) || 0;
+      if (q > 0) {
+        returnedItems.push({ ...item, returnedQty: q, refundAmount: q * item.unitPrice });
+        totalRefund += q * item.unitPrice;
+      }
+    });
+    
+    if (returnedItems.length === 0) { showToast('Select quantity to return', 'error'); return; }
+    
+    const reason = document.getElementById('returnReason')?.value?.trim() || 'No reason';
+    
+    showPinModal('Process Return', 'process return of ' + formatCurrency(totalRefund), async function() {
+      try {
+        const batch = writeBatch(db);
+        
+        for (const item of returnedItems) {
+          if (item.id && !item.isNonInventory) {
+            const ref = doc(db, 'stock_items', item.id);
+            const size = item.size || '1';
+            const addBackQty = getDeductQuantity(
+              allStockItems.find(function(si) { return si.id === item.id; }) || {},
+              size,
+              item.returnedQty
+            );
+            batch.update(ref, {
+              unitQty: increment(addBackQty),
+              updatedAt: serverTimestamp()
+            });
+          }
+        }
+        
+        batch.set(doc(collection(db, 'returns')), {
+          saleId: sale.id,
+          saleReceiptNumber: sale.receiptNumber,
+          customerId: sale.customerId,
+          customerName: sale.customerName,
+          returnedItems: returnedItems,
+          totalRefund: totalRefund,
+          returnAction: selectedReturnAction,
+          reason: reason,
+          processedBy: currentUser.uid,
+          processedByName: userData.fullName,
+          createdAt: serverTimestamp()
+        });
+        
+        batch.update(doc(db, 'sales', sale.id), {
+          status: 'returned',
+          returnedAt: serverTimestamp(),
+          returnedBy: currentUser.uid,
+          returnedByName: userData.fullName,
+          returnAction: selectedReturnAction,
+          totalRefund: totalRefund
+        });
+        
+        await batch.commit();
+        
+        const labels = {
+          refund: 'Refunded: -' + formatCurrency(totalRefund),
+          exchange_same: 'Exchanged: ' + formatCurrency(totalRefund),
+          exchange_higher: 'Upgrade exchange: ' + formatCurrency(totalRefund),
+          store_credit: 'Store credit: ' + formatCurrency(totalRefund)
+        };
+        showToast(labels[selectedReturnAction], 'success');
+        hideModal();
+      } catch (e) {
+        showToast('Failed: ' + e.message, 'error');
+      }
+    });
+  };
 
   // ============================================
   // EXPORT & REFRESH
   // ============================================
-  window.exportSalesData = ()=>{const headers=['Receipt #','Date','Customer','Phone','Items','Total','Payment','Status'];const rows=allSales.map(s=>[s.receiptNumber||'',s.createdAt?.toDate().toLocaleString()||'',s.customerName||'',s.customerPhone||'',s.items?.length||0,s.totalAmount||0,s.paymentMethod||'',s.status||'completed']);const csv=[headers.join(','),...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');const b=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`sales_${new Date().toISOString().split('T')[0]}.csv`;a.click();showToast('Exported','success');};
-  window.refreshData = ()=>{loadSales();showToast('Refreshed','success');};
-
-  document.getElementById('salesSearchInput').addEventListener('input',renderSales);
-
-  onAuthStateChanged(auth,async(u)=>{if(!u){window.location.href='auth.html';return;}currentUser=u;try{const snap=await getDoc(doc(db,'users',u.uid));if(!snap.exists()||snap.data().status!=='active'){await signOut(auth);window.location.href='auth.html';return;}userData=snap.data();document.getElementById('userName').textContent=userData.fullName?.split(' ')[0]||'Staff';document.getElementById('userRole').textContent=userData.role?.replace('_',' ')||'Staff';document.getElementById('userAvatar').textContent=(userData.fullName||'A').charAt(0).toUpperCase();document.getElementById('currentDate').textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});await loadAdminPins();buildSidebar();loadSales();if(isAdmin()){statsRevealed=true;updateStatsDisplay();}await logAudit('view_sales','Viewed sales');}catch(e){showToast('Error loading','error');}});
-  window.addEventListener('beforeunload',cleanup);
-</script>
-
-<!-- Register Service Worker for PWA -->
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').then(reg => {
-        console.log('Service Worker registered');
-      }).catch(err => {
-        console.log('Service Worker failed:', err);
-      });
+  window.exportSalesData = function() {
+    const headers = ['Receipt #', 'Date', 'Customer', 'Phone', 'Items', 'Total', 'Payment', 'Type', 'Status'];
+    const rows = allSales.map(function(s) {
+      return [
+        s.receiptNumber || '',
+        s.createdAt ? (s.createdAt.toDate ? s.createdAt.toDate().toLocaleString() : new Date(s.createdAt).toLocaleString()) : '',
+        s.customerName || '',
+        s.customerPhone || '',
+        s.items ? s.items.length : 0,
+        s.totalAmount || 0,
+        s.paymentMethod || '',
+        s._type || 'regular',
+        s.status || 'completed'
+      ];
     });
-  }
+    const csv = [headers.join(','), ...rows.map(function(r) { return r.map(function(c) { return '"' + c + '"'; }).join(','); })].join('\n');
+    const b = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = 'sales_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+    showToast('Exported', 'success');
+  };
+
+  window.refreshData = function() {
+    loadSales();
+    showToast('Refreshed', 'success');
+  };
+
+  // ============================================
+  // EVENT LISTENERS
+  // ============================================
+  document.getElementById('salesSearchInput').addEventListener('input', renderSales);
+
+  // ============================================
+  // AUTH & INIT
+  // ============================================
+  onAuthStateChanged(auth, async function(u) {
+    if (!u) { window.location.href = 'auth.html'; return; }
+    currentUser = u;
+    try {
+      const snap = await getDoc(doc(db, 'users', u.uid));
+      if (!snap.exists() || snap.data().status !== 'active') {
+        await signOut(auth);
+        window.location.href = 'auth.html';
+        return;
+      }
+      userData = snap.data();
+      
+      if (isAdmin()) {
+        statsRevealed = true;
+      }
+      
+      document.getElementById('userName').textContent = (userData.fullName || 'Staff').split(' ')[0];
+      document.getElementById('userRole').textContent = (userData.role || '').replace('_', ' ');
+      document.getElementById('userAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
+      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      
+      await loadAdminPins();
+      buildSidebar();
+      loadSales();
+      
+      if (statsRevealed) {
+        updateStatsDisplay();
+        updateAttendantStats();
+      }
+      
+      // Sync any pending offline sales
+      if (isOnline && offlineSales.length > 0) {
+        syncOfflineSales();
+      }
+      
+      await logAudit('view_sales', 'Viewed sales');
+    } catch (e) {
+      showToast('Error loading', 'error');
+    }
+  });
+
+  window.addEventListener('beforeunload', cleanup);
 </script>
 </body>
 </html>
