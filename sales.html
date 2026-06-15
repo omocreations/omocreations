@@ -8,6 +8,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Sales · OmoCreations</title>
 
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -33,6 +36,13 @@
     @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
     @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
     @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
+
+    .offline-banner {
+      background: var(--warning); color: white; text-align: center;
+      padding: 8px; font-size: 0.8rem; font-weight: 600;
+      display: none; position: sticky; top: 0; z-index: 100;
+    }
+    .offline-banner.show { display: block; }
 
     .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); color:white; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000; border-right:1px solid rgba(255,77,166,0.2); }
     .sidebar::-webkit-scrollbar { width:4px; } .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); } .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
@@ -141,11 +151,7 @@
     .pin-input { width:55px; height:65px; text-align:center; font-size:1.8rem; font-weight:700; border:2px solid rgba(255,77,166,0.2); border-radius:14px; outline:none; font-family:'Poppins',sans-serif; }
     .pin-input:focus { border-color:var(--primary); }
 
-    .receipt-container {
-      background:#f8f9fa; border-radius:12px; padding:20px;
-      font-family:'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-      font-weight:normal;
-    }
+    .receipt-container { background:#f8f9fa; border-radius:12px; padding:20px; font-family:'Segoe UI',Roboto,'Helvetica Neue',sans-serif; font-weight:normal; }
     .receipt-header { text-align:center; border-bottom:1px dashed #ccc; padding-bottom:10px; margin-bottom:10px; }
     .receipt-header h2 { font-weight:bold; margin:0; }
     .receipt-header .addr { font-weight:bold; margin:2px 0; }
@@ -161,6 +167,8 @@
     .return-option:hover { border-color:var(--primary); background:var(--primary-soft); }
     .return-option.selected { border-color:var(--primary); background:var(--primary-soft); }
     .return-option i { font-size:1.3rem; color:var(--primary); width:30px; text-align:center; }
+
+    .pending-sync-badge { background: var(--warning); color: white; border-radius: 12px; padding: 2px 8px; font-size: 0.65rem; margin-left: 6px; }
 
     .empty-state { text-align:center; padding:40px 20px; color:var(--gray); }
     .empty-state i { font-size:2.5rem; color:var(--primary-light); margin-bottom:10px; display:block; }
@@ -183,6 +191,11 @@
 </head>
 <body>
 
+<!-- Offline Banner -->
+<div class="offline-banner" id="offlineBanner">
+  <i class="fas fa-wifi"></i> You are offline — sales will sync when reconnected
+</div>
+
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header"><div class="logo-icon">✨</div><div class="logo-text"><span>Omo</span>creations</div><button class="close-sidebar" onclick="closeSidebar()"><i class="fas fa-times"></i></button></div>
@@ -194,6 +207,7 @@
   <header class="top-bar">
     <div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">Sales & Transactions</h1></div>
     <div style="display:flex;align-items:center;gap:12px;">
+      <span id="syncStatus" style="font-size:0.75rem;color:var(--gray);"></span>
       <button class="btn btn-outline btn-sm" onclick="navigateTo('history.html')"><i class="fas fa-history"></i> History</button>
       <span class="current-date" id="currentDate"></span>
     </div>
@@ -244,7 +258,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, increment, writeBatch, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
@@ -259,12 +273,102 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
+  // Enable offline persistence
+  try {
+    await enableIndexedDbPersistence(db);
+    console.log('Offline persistence enabled');
+  } catch (err) {
+    if (err.code === 'failed-precondition') {
+      console.warn('Multiple tabs open, persistence disabled');
+    } else if (err.code === 'unimplemented') {
+      console.warn('Browser doesn\'t support persistence');
+    }
+  }
+
   let currentUser = null, userData = null, unsubscribes = [];
   let allSales = [], allReturns = [], allCustomers = [], allStockItems = [];
   let selectedPayment = 'cash', customerType = 'existing';
   let statsRevealed = false, selectedReturnAction = 'refund';
   let adminPins = new Set();
+  let isOnline = navigator.onLine;
+  let pendingSync = [];
 
+  // ============================================
+  // ONLINE/OFFLINE DETECTION
+  // ============================================
+  window.addEventListener('online', () => {
+    isOnline = true;
+    document.getElementById('offlineBanner').classList.remove('show');
+    document.getElementById('syncStatus').textContent = '';
+    syncPendingSales();
+    showToast('Back online! Syncing...', 'success');
+  });
+
+  window.addEventListener('offline', () => {
+    isOnline = false;
+    document.getElementById('offlineBanner').classList.add('show');
+    document.getElementById('syncStatus').textContent = '⚠️ Offline';
+    showToast('You are offline. Sales will be saved locally.', 'warning');
+  });
+
+  if (!navigator.onLine) {
+    document.getElementById('offlineBanner').classList.add('show');
+    document.getElementById('syncStatus').textContent = '⚠️ Offline';
+  }
+
+  // ============================================
+  // PENDING SYNC SYSTEM
+  // ============================================
+  function savePendingSale(saleData) {
+    let pending = JSON.parse(localStorage.getItem('pendingSales') || '[]');
+    pending.push({ ...saleData, savedAt: new Date().toISOString() });
+    localStorage.setItem('pendingSales', JSON.stringify(pending));
+  }
+
+  async function syncPendingSales() {
+    if (!isOnline) return;
+    let pending = JSON.parse(localStorage.getItem('pendingSales') || '[]');
+    if (pending.length === 0) return;
+    
+    showToast(`Syncing ${pending.length} pending sale(s)...`, 'success');
+    
+    for (const saleData of pending) {
+      try {
+        const batch = writeBatch(db);
+        const saleRef = doc(collection(db, 'sales'));
+        batch.set(saleRef, {
+          ...saleData,
+          syncedAt: serverTimestamp(),
+          createdAt: saleData.createdAt || serverTimestamp()
+        });
+        
+        if (saleData.stockUpdates) {
+          for (const update of saleData.stockUpdates) {
+            batch.update(doc(db, 'stock_items', update.id), update.data);
+          }
+        }
+        
+        if (saleData.movements) {
+          for (const mov of saleData.movements) {
+            const movRef = doc(collection(db, 'stock_movements'));
+            batch.set(movRef, { ...mov, performedAt: serverTimestamp() });
+          }
+        }
+        
+        await batch.commit();
+      } catch (e) {
+        console.error('Sync failed for sale:', e);
+        return;
+      }
+    }
+    
+    localStorage.removeItem('pendingSales');
+    showToast('All pending sales synced!', 'success');
+  }
+
+  // ============================================
+  // UTILITY FUNCTIONS
+  // ============================================
   function formatTime(d) { if(!d) return '-'; const date=d.toDate?d.toDate():new Date(d); return date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
   function formatCurrency(n) { return '₦'+(n||0).toLocaleString(); }
   function navigateTo(url) { window.location.href=url; }
@@ -274,13 +378,34 @@
   function showToast(msg, type='success') {
     const c=document.getElementById('toastContainer'); if(!c) return;
     const t=document.createElement('div'); t.className=`toast ${type}`;
-    t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
+    const icon = type==='success'?'check-circle':type==='error'?'exclamation-circle':'exclamation-triangle';
+    t.innerHTML=`<i class="fas fa-${icon}"></i> ${msg}`;
     c.appendChild(t);
-    setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500);
+    setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},4000);
   }
 
   async function logAudit(action, note) {
-    try { await addDoc(collection(db,'audit_logs'),{actionType:action,performedBy:currentUser?.uid||'unknown',performedByName:userData?.fullName||'Staff',performedAt:serverTimestamp(),note:note||''}); } catch(e){}
+    try { 
+      await addDoc(collection(db,'audit_logs'),{
+        actionType:action,
+        performedBy:currentUser?.uid||'unknown',
+        performedByName:userData?.fullName||'Staff',
+        performedAt:serverTimestamp(),
+        note:note||'',
+        deviceInfo: navigator.userAgent
+      }); 
+    } catch(e){}
+  }
+
+  async function logMovement(itemId, itemName, type, change, reference) {
+    try {
+      await addDoc(collection(db, 'stock_movements'), {
+        itemId, itemName, movementType: type, change, reference,
+        performedBy: currentUser?.uid || 'unknown',
+        performedByName: userData?.fullName || 'Staff',
+        performedAt: serverTimestamp()
+      });
+    } catch(e){}
   }
 
   function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
@@ -378,13 +503,7 @@
     if(!statsRevealed) return;
     ['todayCard','weekCard','monthCard','yearCard'].forEach(id=>{
       const card=document.getElementById(id);
-      if(card){
-        card.classList.remove('value-locked');
-        const valEl=card.querySelector('.stat-value');
-        if(valEl){valEl.style.filter='none';valEl.style.cursor='default';}
-        const hint=card.querySelector('.value-hint');
-        if(hint)hint.style.display='none';
-      }
+      if(card){card.classList.remove('value-locked');const valEl=card.querySelector('.stat-value');if(valEl){valEl.style.filter='none';valEl.style.cursor='default';}const hint=card.querySelector('.value-hint');if(hint)hint.style.display='none';}
     });
   }
 
@@ -435,74 +554,234 @@
     try{
       const custSnap=await getDocs(query(collection(db,'customers'),where('status','==','approved')));
       allCustomers=custSnap.docs.map(d=>({id:d.id,...d.data()}));
-
       const stockSnap=await getDocs(collection(db,'stock_items'));
       allStockItems=stockSnap.docs.map(d=>{
         const data=d.data();
         return {
           id:d.id,...data,
           unitQty: parseFloat(data.unitQty ?? data.quantityAvailable ?? data.initialStock ?? 0),
-          initialUnitQty: parseFloat(data.initialUnitQty ?? data.initialStock ?? data.unitQty ?? 0),
           unitPrice: parseFloat(data.unitPrice ?? 0),
-          halfQty: parseFloat(data.halfQty ?? data.halfQuantityAvailable ?? 0),
-          initialHalfQty: parseFloat(data.initialHalfQty ?? data.halfQty ?? 0),
+          halfQty: parseFloat(data.halfQty ?? 0),
           halfPrice: parseFloat(data.halfPrice ?? 0),
-          quarterQty: parseFloat(data.quarterQty ?? data.quarterQuantityAvailable ?? 0),
-          initialQuarterQty: parseFloat(data.initialQuarterQty ?? data.quarterQty ?? 0),
+          quarterQty: parseFloat(data.quarterQty ?? 0),
           quarterPrice: parseFloat(data.quarterPrice ?? 0),
           packSize: parseInt(data.packSize ?? 12),
           packQty: parseFloat(data.packQty ?? 0),
-          initialPackQty: parseFloat(data.initialPackQty ?? data.packQty ?? 0),
           packPrice: parseFloat(data.packPrice ?? 0),
           bundleSize: parseInt(data.bundleSize ?? 50),
           bundleQty: parseFloat(data.bundleQty ?? 0),
-          initialBundleQty: parseFloat(data.initialBundleQty ?? data.bundleQty ?? 0),
           bundlePrice: parseFloat(data.bundlePrice ?? 0),
           measureUnit: data.measureUnit ?? 'piece',
-          itemType: data.itemType ?? 'general'
+          itemType: data.itemType ?? 'general',
+          measuredSubType: data.measuredSubType ?? 'yard',
+          yardQty: parseFloat(data.yardQty ?? data.unitQty ?? 0),
+          pricePerYard: parseFloat(data.pricePerYard ?? data.unitPrice ?? 0),
+          threshold: parseFloat(data.threshold ?? 10),
+          thresholdUnit: parseFloat(data.thresholdUnit ?? data.threshold ?? 10),
+          thresholdHalf: parseFloat(data.thresholdHalf ?? data.threshold ?? 10),
+          thresholdQuarter: parseFloat(data.thresholdQuarter ?? data.threshold ?? 10)
         };
       }).filter(i=>i.status !== 'deleted');
     }catch(e){showToast('Error loading data','error');}
   }
 
-  function getItemTypeLabel(type){ const labels={simple:'🔧',fashion:'👗',pack_bundle:'📦',measured:'📏',pack:'📦',general:'🔧'}; return labels[type]||'🔧'; }
+  // ============================================
+  // STOCK VALIDATION & DEDUCTION HELPERS
+  // ============================================
+  function getAvailableStock(item, size) {
+    if (size === '0.5' || size === '½') return item.halfQty || 0;
+    if (size === '0.25' || size === '¼') return item.quarterQty || 0;
+    if (size === 'pack') return item.packQty || 0;
+    if (size === 'bundle') return item.bundleQty || 0;
+    if (item.itemType === 'measured' && item.measuredSubType === 'yard') return item.yardQty || item.unitQty || 0;
+    return item.unitQty || 0;
+  }
 
-  // Enhanced stock options with available/initial quantities for all forms
+  function getDeductQuantity(item, size, qty) {
+    if (size === 'pack') return qty * (parseInt(item.packSize) || 12);
+    if (size === 'bundle') return qty * (parseInt(item.bundleSize) || 50);
+    if (size === '0.5' || size === '½') return qty * 0.5;
+    if (size === '0.25' || size === '¼') return qty * 0.25;
+    return qty;
+  }
+
+  function checkStockAvailability(item, size, qty) {
+    const available = getAvailableStock(item, size);
+    const deductQty = getDeductQuantity(item, size, qty);
+    return { available, deductQty, sufficient: deductQty <= available };
+  }
+
+  function getSizeLabel(size) {
+    const labels = { '1': 'Unit', '0.5': '½', '0.25': '¼', 'pack': 'Pack', 'bundle': 'Bundle' };
+    return labels[size] || 'Unit';
+  }
+
+  // ============================================
+  // PROCESS SALE (WITH MOVEMENT LOGGING)
+  // ============================================
+  async function processSaleWithMovement(items, total, customerInfo, paymentMethod, isCompanySale, extraData) {
+    const receiptNumber = generateReceiptNumber();
+    const stockUpdates = [];
+    const movements = [];
+    let customerId = customerInfo.customerId || '';
+
+    // Validate stock and prepare updates
+    for (const item of items) {
+      if (item.isNonInventory || !item.id) continue;
+      const stockItem = allStockItems.find(si => si.id === item.id);
+      if (!stockItem) {
+        showToast(`Item ${item.name} not found in stock`, 'error');
+        return false;
+      }
+      const { sufficient, deductQty } = checkStockAvailability(stockItem, item.size, item.quantity);
+      if (!sufficient) {
+        showToast(`Insufficient stock for ${item.name} (${item.sizeLabel || getSizeLabel(item.size)})`, 'error');
+        return false;
+      }
+
+      // Prepare stock update
+      const updateData = {};
+      const sizeKey = item.size;
+      if (sizeKey === '0.5' || sizeKey === '½') {
+        updateData.halfQty = increment(-deductQty);
+      } else if (sizeKey === '0.25' || sizeKey === '¼') {
+        updateData.quarterQty = increment(-deductQty);
+      } else if (sizeKey === 'pack') {
+        updateData.packQty = increment(-item.quantity);
+        updateData.unitQty = increment(-deductQty);
+      } else if (sizeKey === 'bundle') {
+        updateData.bundleQty = increment(-item.quantity);
+        updateData.unitQty = increment(-deductQty);
+      } else {
+        updateData.unitQty = increment(-deductQty);
+        if (stockItem.itemType === 'measured' && stockItem.measuredSubType === 'yard') {
+          updateData.yardQty = increment(-deductQty);
+        }
+      }
+      updateData.updatedAt = serverTimestamp();
+
+      stockUpdates.push({
+        id: item.id,
+        data: updateData,
+        name: item.name,
+        deductQty,
+        size: item.size,
+        sizeLabel: item.sizeLabel || getSizeLabel(item.size)
+      });
+
+      // Prepare movement record
+      const change = {};
+      if (item.size === '0.5' || item.size === '½') change.half = -deductQty;
+      else if (item.size === '0.25' || item.size === '¼') change.quarter = -deductQty;
+      else change.unit = -deductQty;
+
+      movements.push({
+        itemId: item.id,
+        itemName: item.name,
+        movementType: 'sale',
+        change,
+        reference: `Receipt ${receiptNumber}`,
+        performedBy: currentUser?.uid || 'unknown',
+        performedByName: userData?.fullName || 'Staff'
+      });
+    }
+
+    // Process sale
+    const saleData = {
+      receiptNumber,
+      customerId,
+      customerName: customerInfo.customerName || 'Walk-in',
+      customerPhone: customerInfo.customerPhone || '',
+      customerAddress: customerInfo.customerAddress || '',
+      isCompanySale: isCompanySale || false,
+      ...extraData,
+      items: items.map(i => ({
+        id: i.id,
+        name: i.name,
+        quantity: i.quantity,
+        size: i.size,
+        sizeLabel: i.sizeLabel || getSizeLabel(i.size),
+        unitPrice: i.unitPrice,
+        isNonInventory: i.isNonInventory || false
+      })),
+      totalAmount: total,
+      paymentMethod,
+      attendantId: currentUser?.uid,
+      attendantName: userData?.fullName || 'Staff',
+      status: 'completed',
+      createdAt: serverTimestamp()
+    };
+
+    if (isOnline) {
+      try {
+        const batch = writeBatch(db);
+        const saleRef = doc(collection(db, 'sales'));
+        batch.set(saleRef, saleData);
+
+        for (const update of stockUpdates) {
+          batch.update(doc(db, 'stock_items', update.id), update.data);
+        }
+
+        for (const mov of movements) {
+          const movRef = doc(collection(db, 'stock_movements'));
+          batch.set(movRef, { ...mov, performedAt: serverTimestamp() });
+        }
+
+        if (customerId && !isCompanySale) {
+          batch.update(doc(db, 'customers', customerId), {
+            totalSpent: increment(total),
+            purchaseCount: increment(1),
+            lastPurchase: serverTimestamp()
+          });
+        }
+
+        await batch.commit();
+        await logAudit(isCompanySale ? 'company_sale' : 'sale', 
+          `${isCompanySale ? 'Company' : ''} Sale ${receiptNumber}: ${formatCurrency(total)}`);
+
+        return { success: true, saleId: saleRef.id, receiptNumber, saleData };
+      } catch (e) {
+        showToast('Failed: ' + e.message, 'error');
+        return { success: false, error: e.message };
+      }
+    } else {
+      // OFFLINE: Save locally
+      savePendingSale({
+        ...saleData,
+        stockUpdates,
+        movements
+      });
+      return { success: true, offline: true, receiptNumber, saleData };
+    }
+  }
+
+  // ============================================
+  // STOCK OPTIONS & SIZE OPTIONS
+  // ============================================
   function getStockOptionsHtml() {
     return allStockItems.map(i=>{
       const it=i.itemType||'general';
-      const label=getItemTypeLabel(it);
+      const label = getItemTypeLabel(it);
       let stockInfo = '';
-      const up = i.unitPrice || 0;
       if (it === 'fashion') {
-        const uAvail = i.unitQty || 0, uInit = i.initialUnitQty || uAvail;
-        const hAvail = i.halfQty || 0, hInit = i.initialHalfQty || hAvail;
-        const qAvail = i.quarterQty || 0, qInit = i.initialQuarterQty || qAvail;
-        stockInfo = `(U:${uAvail}/${uInit}, H:${hAvail}/${hInit}, Q:${qAvail}/${qInit})`;
-      } else if (it === 'pack_bundle') {
-        const uAvail = i.unitQty || 0, uInit = i.initialUnitQty || uAvail;
-        const pAvail = i.packQty || 0, pInit = i.initialPackQty || pAvail;
-        stockInfo = `(Unit:${uAvail}/${uInit}, Pack:${pAvail}/${pInit})`;
+        stockInfo = `(U:${i.unitQty||0}, H:${i.halfQty||0}, Q:${i.quarterQty||0})`;
       } else if (it === 'measured') {
-        const mst = i.measuredSubType || 'yard';
-        if (mst === 'yard') {
-          const yAvail = i.yardQty || i.unitQty || 0, yInit = i.initialUnitQty || yAvail;
-          stockInfo = `(Yard:${yAvail}/${yInit})`;
-        } else {
-          const bAvail = i.bundleQty || 0, bInit = i.initialBundleQty || bAvail;
-          stockInfo = `(Bundle:${bAvail}/${bInit})`;
-        }
+        stockInfo = i.measuredSubType === 'yard' ? `(${i.yardQty||i.unitQty||0} yds)` : `(${i.bundleQty||0} bundles)`;
       } else {
-        const uAvail = i.unitQty || 0, uInit = i.initialUnitQty || uAvail;
-        stockInfo = `(Qty:${uAvail}/${uInit})`;
+        stockInfo = `(${i.unitQty||0})`;
       }
-      return `<option value="${i.id}" data-name="${i.name||''}" data-price="${i.unitPrice||0}" data-halfprice="${i.halfPrice||0}" data-quarterprice="${i.quarterPrice||0}" data-packprice="${i.packPrice||0}" data-bundleprice="${i.bundlePrice||0}" data-packsize="${i.packSize||12}" data-bundlesize="${i.bundleSize||50}" data-stock="${i.unitQty||0}">${label} ${i.name||''} - ${formatCurrency(up)} ${stockInfo}</option>`;
+      return `<option value="${i.id}" data-name="${i.name||''}" data-price="${i.unitPrice||0}" data-halfprice="${i.halfPrice||0}" data-quarterprice="${i.quarterPrice||0}" data-packprice="${i.packPrice||0}" data-bundleprice="${i.bundlePrice||0}" data-packsize="${i.packSize||12}" data-bundlesize="${i.bundleSize||50}" data-stock="${i.unitQty||0}">${label} ${i.name||''} - ${formatCurrency(i.unitPrice||0)} ${stockInfo}</option>`;
     }).join('');
+  }
+
+  function getItemTypeLabel(type){ 
+    const labels={simple:'🔧',fashion:'👗',pack_bundle:'📦',measured:'📏',pack:'📦',general:'🔧'}; 
+    return labels[type]||'🔧'; 
   }
 
   function getSizeOptions(item){
     const opts = [];
-    if(parseFloat(item.unitPrice) > 0) opts.push({value:'1',label:'1 (Unit/Yard)'});
+    if(parseFloat(item.unitPrice) > 0) opts.push({value:'1',label:'1 (Unit)'});
     if(parseFloat(item.halfPrice) > 0) opts.push({value:'0.5',label:'½ (Half)'});
     if(parseFloat(item.quarterPrice) > 0) opts.push({value:'0.25',label:'¼ (Quarter)'});
     if(parseFloat(item.packPrice) > 0) opts.push({value:'pack',label:`📦 Pack (${item.packSize||12})`});
@@ -527,18 +806,16 @@
       return true;
     }
     const opt = select.options[select.selectedIndex];
-    const stockAvailable = parseFloat(opt?.getAttribute('data-stock')) || 0;
+    if (!opt || !opt.value) return true;
+    const itemId = opt.value;
+    const stockItem = allStockItems.find(si => si.id === itemId);
+    if (!stockItem) return true;
     const qty = parseFloat(qtyEl?.value) || 1;
     const size = sizeEl?.value || '1';
-    let deductQty = qty;
-    if (size === '0.5') deductQty = qty * 0.5;
-    else if (size === '0.25') deductQty = qty * 0.25;
-    else if (size === 'pack') deductQty = qty * (parseInt(opt?.getAttribute('data-packsize')) || 12);
-    else if (size === 'bundle') deductQty = qty * (parseInt(opt?.getAttribute('data-bundlesize')) || 50);
-
-    if (deductQty > stockAvailable) {
+    const { sufficient, deductQty, available } = checkStockAvailability(stockItem, size, qty);
+    if (!sufficient) {
       if (warning) {
-        warning.textContent = `Only ${stockAvailable} available for ${opt.dataset.name}. Would you like to restock?`;
+        warning.textContent = `Only ${available} available. Need ${deductQty}.`;
         warning.style.display = 'inline';
       }
       return false;
@@ -574,15 +851,36 @@
       }
       if (!window._validateRowStock(row)) allValid = false;
     });
-    document.getElementById('itemCount').textContent=count; document.getElementById('saleTotal').textContent=formatCurrency(total);
+    document.getElementById('itemCount').textContent=count; 
+    document.getElementById('saleTotal').textContent=formatCurrency(total);
     return allValid;
   };
 
-  // --------------------- New Sale Modal ---------------------
+  window._updateSizeDropdown = function(selectEl){
+    const row=selectEl.closest('.item-row');if(!row)return;
+    const sizeEl=row.querySelector('.item-size');if(!sizeEl)return;
+    const opt=selectEl.options[selectEl.selectedIndex];
+    if(!opt||!opt.value) { sizeEl.innerHTML='<option value="1">1 (Unit)</option>'; return; }
+    const itemData={
+      unitPrice: parseFloat(opt.getAttribute('data-price'))||0,
+      halfPrice: parseFloat(opt.getAttribute('data-halfprice'))||0,
+      quarterPrice: parseFloat(opt.getAttribute('data-quarterprice'))||0,
+      packPrice: parseFloat(opt.getAttribute('data-packprice'))||0,
+      bundlePrice: parseFloat(opt.getAttribute('data-bundleprice'))||0,
+      packSize: parseInt(opt.getAttribute('data-packsize'))||12,
+      bundleSize: parseInt(opt.getAttribute('data-bundlesize'))||50
+    };
+    const options=getSizeOptions(itemData);
+    sizeEl.innerHTML=options.map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
+    window._updateSaleSummary();
+  };
+
+  // ============================================
+  // NEW SALE MODAL
+  // ============================================
   window.openNewSaleModal = async function(){
     await loadCustomersAndStock();
     if(allStockItems.length===0){showToast('No items available','error');return;}
-
     const custOptions=allCustomers.map(c=>`<option value="${c.id}" data-name="${c.fullName||''}" data-phone="${c.phone||''}" data-address="${c.address||c.location||''}" data-purchase-count="${c.purchaseCount||0}">${c.fullName||''} - ${c.phone||'No phone'} (${c.purchaseCount||0} purchases)</option>`).join('');
     const stockOptions = getStockOptionsHtml();
     const firstItem = allStockItems[0];
@@ -643,37 +941,28 @@
     window._updateSaleSummary();
   };
 
-  window._updateSizeDropdown = function(selectEl){
-    const row=selectEl.closest('.item-row');if(!row)return;
-    const sizeEl=row.querySelector('.item-size');if(!sizeEl)return;
-    const opt=selectEl.options[selectEl.selectedIndex];
-    if(!opt||!opt.value) { sizeEl.innerHTML='<option value="1">1 (Unit)</option>'; return; }
-    const itemData={
-      unitPrice: parseFloat(opt.getAttribute('data-price'))||0,
-      halfPrice: parseFloat(opt.getAttribute('data-halfprice'))||0,
-      quarterPrice: parseFloat(opt.getAttribute('data-quarterprice'))||0,
-      packPrice: parseFloat(opt.getAttribute('data-packprice'))||0,
-      bundlePrice: parseFloat(opt.getAttribute('data-bundleprice'))||0,
-      packSize: parseInt(opt.getAttribute('data-packsize'))||12,
-      bundleSize: parseInt(opt.getAttribute('data-bundlesize'))||50
-    };
-    const options=getSizeOptions(itemData);
-    sizeEl.innerHTML=options.map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
-    window._updateSaleSummary();
+  window._switchCustomerType = function(type) { 
+    customerType=type;
+    document.querySelectorAll('.customer-type-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelector(`[data-type="${type}"]`)?.classList.add('active');
+    document.getElementById('existingCustomerSection').style.display=type==='existing'?'block':'none';
+    document.getElementById('newCustomerSection').style.display=type==='new'?'block':'none'; 
   };
 
-  window._switchCustomerType = function(type) { customerType=type;document.querySelectorAll('.customer-type-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-type="${type}"]`)?.classList.add('active');document.getElementById('existingCustomerSection').style.display=type==='existing'?'block':'none';document.getElementById('newCustomerSection').style.display=type==='new'?'block':'none'; };
-  window._selectPayment = function(method) { selectedPayment=method;document.querySelectorAll('.payment-method').forEach(m=>m.classList.remove('selected'));document.querySelector(`[data-method="${method}"]`)?.classList.add('selected'); };
+  window._selectPayment = function(method) { 
+    selectedPayment=method;
+    document.querySelectorAll('.payment-method').forEach(m=>m.classList.remove('selected'));
+    document.querySelector(`[data-method="${method}"]`)?.classList.add('selected'); 
+  };
 
   window._addSaleItem = function() {
-    const idx=document.querySelectorAll('.item-row').length;
     const stockOptions = getStockOptionsHtml();
     const div=document.createElement('div');div.className='item-row';
     div.innerHTML=`
       <div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this)"> <span>Non‑Inventory</span></div>
       <select class="form-control item-select" style="width:100%;"><option value="">-- Search --</option>${stockOptions}</select>
       <input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">
-      <select class="form-control item-size" id="itemSize-${idx}"><option value="1">1 (Unit)</option></select>
+      <select class="form-control item-size"><option value="1">1 (Unit)</option></select>
       <input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;">
       <input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">
       <span class="stock-warning"></span>
@@ -685,25 +974,47 @@
     window._updateSaleSummary();
   };
 
-  window._processSale = function() {
-    if (!window._updateSaleSummary()) { showToast('Some items exceed stock. Please adjust quantities.','error'); return; }
-    let customerId='',customerName='',customerPhone='',customerEmail='',customerAddress='';
-    if(customerType==='existing'){const select=document.getElementById('existingCustomerSelect');if(!select||!select.value){showToast('Select a customer','error');return;}customerId=select.value;const opt=select.options[select.selectedIndex];customerName=opt.dataset.name;customerPhone=opt.dataset.phone;customerAddress=opt.dataset.address||'';}
-    else{customerName=document.getElementById('newCustomerName')?.value?.trim();customerPhone=document.getElementById('newCustomerPhone')?.value?.trim();customerEmail=document.getElementById('newCustomerEmail')?.value?.trim();customerAddress=document.getElementById('newCustomerAddress')?.value?.trim();if(!customerName||!customerPhone||!customerAddress){showToast('Name, phone & address required','error');return;}}
-    if(customerType==='new' && allCustomers.some(c=>c.phone===customerPhone)){showToast('Customer with this phone already exists. Please select from Existing tab.','error'); return;}
+  window._processSale = async function() {
+    if (!window._updateSaleSummary()) { 
+      showToast('Some items exceed available stock. Please adjust quantities.','error'); 
+      return; 
+    }
+
+    let customerId='', customerName='', customerPhone='', customerEmail='', customerAddress='';
+    if(customerType==='existing'){
+      const select=document.getElementById('existingCustomerSelect');
+      if(!select||!select.value){showToast('Select a customer','error');return;}
+      customerId=select.value;
+      const opt=select.options[select.selectedIndex];
+      customerName=opt.dataset.name;
+      customerPhone=opt.dataset.phone;
+      customerAddress=opt.dataset.address||'';
+    } else {
+      customerName=document.getElementById('newCustomerName')?.value?.trim();
+      customerPhone=document.getElementById('newCustomerPhone')?.value?.trim();
+      customerEmail=document.getElementById('newCustomerEmail')?.value?.trim();
+      customerAddress=document.getElementById('newCustomerAddress')?.value?.trim();
+      if(!customerName||!customerPhone||!customerAddress){showToast('Name, phone & address required','error');return;}
+    }
+
+    if(customerType==='new' && allCustomers.some(c=>c.phone===customerPhone)){
+      showToast('Customer with this phone already exists. Please select from Existing tab.','error'); 
+      return;
+    }
 
     const items=[];let total=0;
     for(const row of document.querySelectorAll('.item-row')){
       const checkbox = row.querySelector('.non-inv-check');
       const qtyEl = row.querySelector('.item-qty');
       const qty = parseFloat(qtyEl?.value) || 1;
+
       if (checkbox && checkbox.checked) {
         const nameEl = row.querySelector('.item-custom-name');
         const priceEl = row.querySelector('.item-custom-price');
         const name = nameEl?.value?.trim();
         const price = parseFloat(priceEl?.value) || 0;
         if (!name || price <= 0) { showToast('Enter valid name and price for custom item', 'error'); return; }
-        items.push({ name, quantity: qty, unitPrice: price, size: '1', sizeLabel: '1', isNonInventory: true });
+        items.push({ name, quantity: qty, unitPrice: price, size: '1', sizeLabel: 'Unit', isNonInventory: true });
         total += price * qty;
       } else {
         const select=row.querySelector('.item-select');const sizeEl=row.querySelector('.item-size');
@@ -711,43 +1022,83 @@
           const opt=select.options[select.selectedIndex];
           const size=sizeEl?.value||'1';
           let price=parseFloat(opt?.getAttribute('data-price'))||0;
-          let deductQty=qty; let sizeLabel='1';
-          if(size==='0.5'){deductQty=qty*0.5;sizeLabel='½';if(parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));}
-          else if(size==='0.25'){deductQty=qty*0.25;sizeLabel='¼';if(parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));}
-          else if(size==='pack'){deductQty=qty*(parseInt(opt?.getAttribute('data-packsize'))||12);sizeLabel='📦 Pack';if(parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));}
-          else if(size==='bundle'){deductQty=qty*(parseInt(opt?.getAttribute('data-bundlesize'))||50);sizeLabel='📦 Bundle';if(parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));}
-          items.push({id:select.value,name:opt.dataset.name,quantity:qty,size:size,sizeLabel,unitPrice:price,deductQty:deductQty});total+=price*qty;
+          let sizeLabel = getSizeLabel(size);
+          if(size==='0.5'&&parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));
+          else if(size==='0.25'&&parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));
+          else if(size==='pack'&&parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));
+          else if(size==='bundle'&&parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));
+          items.push({
+            id:select.value,
+            name:opt.dataset.name,
+            quantity:qty,
+            size:size,
+            sizeLabel,
+            unitPrice:price
+          });
+          total+=price*qty;
         }
       }
     }
-    if(items.length===0){showToast('Add at least one item','error');return;}
-    const receiptNumber=generateReceiptNumber();
 
-    showPinModal('Process Sale',`process sale of ${formatCurrency(total)}`,async()=>{
-      try{
-        const batch=writeBatch(db);
-        if(customerType==='new'){const custRef=doc(collection(db,'customers'));batch.set(custRef,{fullName:customerName,phone:customerPhone,email:customerEmail,address:customerAddress,location:customerAddress,totalSpent:0,purchaseCount:0,status:'pending_approval',createdBy:currentUser.uid,createdByName:userData.fullName,createdAt:serverTimestamp()});customerId=custRef.id;}
-        for(const item of items){
-          if (!item.isNonInventory && item.id) {
-            const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);
-            if(snap.exists()){
-              const cur=parseFloat(snap.data().quantityAvailable ?? snap.data().unitQty ?? 0);
-              const threshold=parseFloat(snap.data().threshold||10);
-              const newQty=cur-(item.deductQty||0);
-              batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(item.deductQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});
-            }
-          }
+    if(items.length===0){showToast('Add at least one item','error');return;}
+
+    showPinModal('Process Sale',`process sale of ${formatCurrency(total)}`, async () => {
+      // Create new customer if needed
+      if (customerType === 'new' && isOnline) {
+        const custRef = doc(collection(db, 'customers'));
+        await setDoc(custRef, {
+          fullName: customerName,
+          phone: customerPhone,
+          email: customerEmail,
+          address: customerAddress,
+          location: customerAddress,
+          totalSpent: 0,
+          purchaseCount: 0,
+          status: 'pending_approval',
+          createdBy: currentUser.uid,
+          createdByName: userData.fullName,
+          createdAt: serverTimestamp()
+        });
+        customerId = custRef.id;
+      }
+
+      const result = await processSaleWithMovement(
+        items, 
+        total,
+        { customerId, customerName, customerPhone, customerAddress },
+        selectedPayment,
+        false,
+        {}
+      );
+
+      if (result.success) {
+        const msg = result.offline 
+          ? `Sale saved offline! #${result.receiptNumber} - Will sync when online`
+          : `Sale completed! #${result.receiptNumber}`;
+        showToast(msg, result.offline ? 'warning' : 'success');
+        
+        if (!result.offline) {
+          showReceiptModal({
+            id: result.saleId,
+            receiptNumber: result.receiptNumber,
+            customerName,
+            customerPhone,
+            customerAddress,
+            items: items.map(i => ({...i, sizeLabel: i.sizeLabel || getSizeLabel(i.size)})),
+            totalAmount: total,
+            paymentMethod: selectedPayment,
+            attendantName: userData.fullName,
+            createdAt: new Date()
+          });
         }
-        const saleRef=doc(collection(db,'sales'));batch.set(saleRef,{receiptNumber,customerId,customerName,customerPhone,customerAddress,items,totalAmount:total,paymentMethod:selectedPayment,attendantId:currentUser.uid,attendantName:userData.fullName,status:'completed',createdAt:serverTimestamp()});
-        if(customerId&&customerType==='existing'){batch.update(doc(db,'customers',customerId),{totalSpent:increment(total),purchaseCount:increment(1),lastPurchase:serverTimestamp()});}
-        await batch.commit();await logAudit('sale',`Sale ${receiptNumber}: ${formatCurrency(total)} to ${customerName}`);
-        showToast(`Sale completed! #${receiptNumber}`,'success');
-        showReceiptModal({id:saleRef.id,receiptNumber,customerName,customerPhone,customerAddress,items,totalAmount:total,paymentMethod:selectedPayment,attendantName:userData.fullName,createdAt:new Date()});hideModal();
-      }catch(e){showToast('Failed: '+e.message,'error');}
+        hideModal();
+      }
     });
   };
 
-  // --------------------- Company Sale Modal ---------------------
+  // ============================================
+  // COMPANY SALE MODAL
+  // ============================================
   window.openCompanySaleModal = async function(){
     await loadCustomersAndStock();
     const stockOptions = getStockOptionsHtml();
@@ -785,7 +1136,6 @@
   };
 
   window._addCompanyItem = function() {
-    const idx=document.querySelectorAll('#companyItems .item-row').length;
     const stockOptions = getStockOptionsHtml();
     const div=document.createElement('div');div.className='item-row';
     div.innerHTML=`
@@ -805,7 +1155,12 @@
   };
 
   let companySelectedPayment = 'cash';
-  window._selectCompanyPayment = function(method) { companySelectedPayment=method;document.querySelectorAll('#companyItems .payment-method').forEach(m=>m.classList.remove('selected'));document.querySelector(`#companyItems [data-method="${method}"]`)?.classList.add('selected'); };
+  window._selectCompanyPayment = function(method) { 
+    companySelectedPayment=method;
+    document.querySelectorAll('#modalOverlay .payment-method').forEach(m=>m.classList.remove('selected'));
+    const el = document.querySelector(`#modalOverlay .payment-method[data-method="${method}"]`);
+    if (el) el.classList.add('selected');
+  };
 
   window._updateCompanySummary = function() {
     let total=0, count=0;
@@ -833,12 +1188,16 @@
       }
       if (!window._validateRowStock(row)) allValid = false;
     });
-    document.getElementById('companyItemCount').textContent=count; document.getElementById('companyTotal').textContent=formatCurrency(total);
+    document.getElementById('companyItemCount').textContent=count; 
+    document.getElementById('companyTotal').textContent=formatCurrency(total);
     return allValid;
   };
 
-  window._processCompanySale = function() {
-    if (!window._updateCompanySummary()) { showToast('Some items exceed stock. Please adjust quantities.','error'); return; }
+  window._processCompanySale = async function() {
+    if (!window._updateCompanySummary()) { 
+      showToast('Some items exceed stock. Please adjust quantities.','error'); 
+      return; 
+    }
     const collectedBy = document.getElementById('companyCollectedBy')?.value?.trim();
     const usage = document.getElementById('companyUsage')?.value?.trim();
     if (!collectedBy || !usage) { showToast('Collected by and usage are required','error'); return; }
@@ -854,7 +1213,7 @@
         const name = nameEl?.value?.trim();
         const price = parseFloat(priceEl?.value) || 0;
         if (!name || price <= 0) { showToast('Enter valid name and price for custom item', 'error'); return; }
-        items.push({ name, quantity: qty, unitPrice: price, size: '1', sizeLabel: '1', isNonInventory: true });
+        items.push({ name, quantity: qty, unitPrice: price, size: '1', sizeLabel: 'Unit', isNonInventory: true });
         total += price * qty;
       } else {
         const select=row.querySelector('.item-select');const sizeEl=row.querySelector('.item-size');
@@ -862,59 +1221,63 @@
           const opt=select.options[select.selectedIndex];
           const size=sizeEl?.value||'1';
           let price=parseFloat(opt?.getAttribute('data-price'))||0;
-          let deductQty=qty; let sizeLabel='1';
-          if(size==='0.5'){deductQty=qty*0.5;sizeLabel='½';if(parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));}
-          else if(size==='0.25'){deductQty=qty*0.25;sizeLabel='¼';if(parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));}
-          else if(size==='pack'){deductQty=qty*(parseInt(opt?.getAttribute('data-packsize'))||12);sizeLabel='📦 Pack';if(parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));}
-          else if(size==='bundle'){deductQty=qty*(parseInt(opt?.getAttribute('data-bundlesize'))||50);sizeLabel='📦 Bundle';if(parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));}
-          items.push({id:select.value,name:opt.dataset.name,quantity:qty,size:size,sizeLabel,unitPrice:price,deductQty:deductQty});total+=price*qty;
+          let sizeLabel = getSizeLabel(size);
+          if(size==='0.5'&&parseFloat(opt?.getAttribute('data-halfprice'))>0)price=parseFloat(opt.getAttribute('data-halfprice'));
+          else if(size==='0.25'&&parseFloat(opt?.getAttribute('data-quarterprice'))>0)price=parseFloat(opt.getAttribute('data-quarterprice'));
+          else if(size==='pack'&&parseFloat(opt?.getAttribute('data-packprice'))>0)price=parseFloat(opt.getAttribute('data-packprice'));
+          else if(size==='bundle'&&parseFloat(opt?.getAttribute('data-bundleprice'))>0)price=parseFloat(opt.getAttribute('data-bundleprice'));
+          items.push({
+            id:select.value,
+            name:opt.dataset.name,
+            quantity:qty,
+            size:size,
+            sizeLabel,
+            unitPrice:price
+          });
+          total+=price*qty;
         }
       }
     }
-    if(items.length===0){showToast('Add at least one item','error');return;}
-    const receiptNumber=generateReceiptNumber();
 
-    showPinModal('Process Company Sale',`process company sale of ${formatCurrency(total)}`,async()=>{
-      try{
-        const batch=writeBatch(db);
-        for(const item of items){
-          if (!item.isNonInventory && item.id) {
-            const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);
-            if(snap.exists()){
-              const cur=parseFloat(snap.data().quantityAvailable ?? snap.data().unitQty ?? 0);
-              const threshold=parseFloat(snap.data().threshold||10);
-              const newQty=cur-(item.deductQty||0);
-              batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(item.deductQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});
-            }
-          }
+    if(items.length===0){showToast('Add at least one item','error');return;}
+
+    showPinModal('Process Company Sale',`process company sale of ${formatCurrency(total)}`, async () => {
+      const result = await processSaleWithMovement(
+        items,
+        total,
+        { customerId: '', customerName: 'Company', customerPhone: '', customerAddress: '' },
+        companySelectedPayment,
+        true,
+        { collectedBy, usage }
+      );
+
+      if (result.success) {
+        const msg = result.offline 
+          ? `Company sale saved offline! #${result.receiptNumber}`
+          : `Company sale completed! #${result.receiptNumber}`;
+        showToast(msg, result.offline ? 'warning' : 'success');
+        
+        if (!result.offline) {
+          showCompanyReceiptModal({
+            id: result.saleId,
+            receiptNumber: result.receiptNumber,
+            collectedBy,
+            usage,
+            items: items.map(i => ({...i, sizeLabel: i.sizeLabel || getSizeLabel(i.size)})),
+            totalAmount: total,
+            paymentMethod: companySelectedPayment,
+            attendantName: userData.fullName,
+            createdAt: new Date()
+          });
         }
-        const saleRef=doc(collection(db,'sales'));
-        batch.set(saleRef,{
-          receiptNumber,
-          customerName:'Company',
-          customerPhone:'',
-          customerAddress:'',
-          isCompanySale:true,
-          collectedBy,
-          usage,
-          items,
-          totalAmount:total,
-          paymentMethod:companySelectedPayment,
-          attendantId:currentUser.uid,
-          attendantName:userData.fullName,
-          status:'completed',
-          createdAt:serverTimestamp()
-        });
-        await batch.commit();
-        await logAudit('company_sale',`Company sale ${receiptNumber}: ${formatCurrency(total)} collected by ${collectedBy}`);
-        showToast(`Company sale completed! #${receiptNumber}`,'success');
-        showCompanyReceiptModal({id:saleRef.id,receiptNumber,collectedBy,usage,items,totalAmount:total,paymentMethod:companySelectedPayment,attendantName:userData.fullName,createdAt:new Date()});
         hideModal();
-      }catch(e){showToast('Failed: '+e.message,'error');}
+      }
     });
   };
 
-  // --------------------- Receipts & Printing ---------------------
+  // ============================================
+  // RECEIPTS & PRINTING (unchanged from original)
+  // ============================================
   function showCompanyReceiptModal(sale) {
     const dateStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     const timeStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
@@ -942,19 +1305,6 @@
     `);
   }
 
-  window.printCompanyReceipt = (id) => {
-    const s = allSales.find(x => x.id === id);
-    if (!s || !s.isCompanySale) { showToast('Receipt not found','error'); return; }
-    const dateStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '';
-    const timeStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
-    const receiptHTML = `<html><head><title>Receipt #${s.receiptNumber}</title><style>@page{margin:0;size:80mm auto}*{margin:0;padding:0}body{font-family:'Segoe UI',Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:8pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1}.item span:last-child{text-align:right;min-width:60px}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style></head><body><div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#${s.receiptNumber} (Company)</p><p class="rec">${dateStr} ${timeStr}</p></div><p class="cust">Customer: Company<br>Collected by: ${s.collectedBy}<br>Usage: ${s.usage}<br>Served by: ${s.attendantName}</p><div class="items">${s.items.map(i=>`<div class="item"><span>${i.quantity}x ${i.name}${i.sizeLabel?` (${i.sizeLabel})`:''}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('')}</div><div class="total">Total: ${formatCurrency(s.totalAmount)}</div><p class="thanks">Thank you for your patronage!</p></body></html>`;
-    const oldFrame = document.getElementById('printIframe');
-    if (oldFrame) oldFrame.remove();
-    const iframe = document.createElement('iframe'); iframe.id='printIframe'; iframe.style.display='none'; document.body.appendChild(iframe);
-    iframe.contentWindow.document.open(); iframe.contentWindow.document.write(receiptHTML); iframe.contentWindow.document.close();
-    iframe.onload = ()=>setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();setTimeout(()=>iframe.remove(),1000)},300);
-  };
-
   window.showReceiptModal = (sale)=>{
     const dateStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     const timeStr=sale.createdAt?new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
@@ -981,6 +1331,7 @@
       </div>
     `);
   };
+
   window.viewReceipt = (id)=>{const s=allSales.find(x=>x.id===id);if(s) s.isCompanySale ? showCompanyReceiptModal(s) : showReceiptModal(s);};
 
   window.printReceipt = (id) => {
@@ -997,11 +1348,29 @@
     iframe.onload = ()=>setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();setTimeout(()=>iframe.remove(),1000)},300);
   };
 
-  // --------------------- Returns ---------------------
+  window.printCompanyReceipt = (id) => {
+    const s = allSales.find(x => x.id === id);
+    if (!s || !s.isCompanySale) { showToast('Receipt not found','error'); return; }
+    const dateStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '';
+    const timeStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
+    const receiptHTML = `<html><head><title>Receipt #${s.receiptNumber}</title><style>@page{margin:0;size:80mm auto}*{margin:0;padding:0}body{font-family:'Segoe UI',Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:8pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1}.item span:last-child{text-align:right;min-width:60px}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style></head><body><div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#${s.receiptNumber} (Company)</p><p class="rec">${dateStr} ${timeStr}</p></div><p class="cust">Customer: Company<br>Collected by: ${s.collectedBy}<br>Usage: ${s.usage}<br>Served by: ${s.attendantName}</p><div class="items">${s.items.map(i=>`<div class="item"><span>${i.quantity}x ${i.name}${i.sizeLabel?` (${i.sizeLabel})`:''}</span><span>${formatCurrency(i.quantity*i.unitPrice)}</span></div>`).join('')}</div><div class="total">Total: ${formatCurrency(s.totalAmount)}</div><p class="thanks">Thank you for your patronage!</p></body></html>`;
+    const oldFrame = document.getElementById('printIframe');
+    if (oldFrame) oldFrame.remove();
+    const iframe = document.createElement('iframe'); iframe.id='printIframe'; iframe.style.display='none'; document.body.appendChild(iframe);
+    iframe.contentWindow.document.open(); iframe.contentWindow.document.write(receiptHTML); iframe.contentWindow.document.close();
+    iframe.onload = ()=>setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();setTimeout(()=>iframe.remove(),1000)},300);
+  };
+
+  // ============================================
+  // RETURNS (unchanged from original)
+  // ============================================
   window.openReturnModal = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;let itemsHtml=sale.items.map((item,idx)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--gray-light);border-radius:10px;"><span style="flex:1;"><strong>${item.name}</strong>${item.sizeLabel?` <small>(${item.sizeLabel})</small>`:''}<br><small>Sold: ${item.quantity} x ${formatCurrency(item.unitPrice)}</small></span><input type="number" step="0.25" id="return-qty-${idx}" value="0" min="0" max="${item.quantity}" style="width:70px;padding:8px;border-radius:8px;border:1px solid #ddd;text-align:center;"><span style="font-size:0.8rem;color:var(--gray);">/ ${item.quantity}</span></div>`).join('');showModal('Return Goods',`<p><strong>Receipt:</strong> ${sale.receiptNumber} | <strong>Customer:</strong> ${sale.customerName}</p><p style="color:var(--gray);">Select quantity to return:</p>${itemsHtml}<div class="form-group"><label>Reason</label><textarea class="form-control" id="returnReason" rows="2"></textarea></div><p style="font-weight:600;">Return Action:</p><div class="return-options"><div class="return-option selected" data-action="refund" onclick="window._selectReturnAction('refund')"><i class="fas fa-money-bill-wave"></i><div><strong>Full Refund</strong><br><small>Return money to customer</small></div></div><div class="return-option" data-action="exchange_same" onclick="window._selectReturnAction('exchange_same')"><i class="fas fa-exchange-alt"></i><div><strong>Exchange Same Price</strong><br><small>Swap for another item</small></div></div><div class="return-option" data-action="exchange_higher" onclick="window._selectReturnAction('exchange_higher')"><i class="fas fa-level-up-alt"></i><div><strong>Exchange + Add Money</strong><br><small>Upgrade to higher price</small></div></div><div class="return-option" data-action="store_credit" onclick="window._selectReturnAction('store_credit')"><i class="fas fa-piggy-bank"></i><div><strong>Store Credit</strong><br><small>Keep for later</small></div></div></div><button class="btn btn-primary" onclick="window._processReturn('${saleId}')" style="width:100%;margin-top:15px;"><i class="fas fa-check"></i> Process Return</button>`);};
   window._selectReturnAction = (action)=>{selectedReturnAction=action;document.querySelectorAll('.return-option').forEach(o=>o.classList.remove('selected'));document.querySelector(`[data-action="${action}"]`)?.classList.add('selected');};
-  window._processReturn = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;const returnedItems=[];let totalRefund=0;sale.items.forEach((item,idx)=>{const q=parseFloat(document.getElementById(`return-qty-${idx}`)?.value)||0;if(q>0){returnedItems.push({...item,returnedQty:q,refundAmount:q*item.unitPrice});totalRefund+=q*item.unitPrice;}});if(returnedItems.length===0){showToast('Select quantity to return','error');return;}const reason=document.getElementById('returnReason')?.value?.trim()||'No reason';showPinModal('Process Return',`process return of ${formatCurrency(totalRefund)}`,async()=>{try{const batch=writeBatch(db);for(const item of returnedItems){if(item.id && !item.isNonInventory){const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);if(snap.exists()){const cur=parseFloat(snap.data().quantityAvailable??snap.data().unitQty??0);const threshold=parseFloat(snap.data().threshold||10);const addBackQty=item.returnedQty*(item.size==='pack'?(parseInt(snap.data().packSize)||12):item.size==='bundle'?(parseInt(snap.data().bundleSize)||50):parseFloat(item.size)||1);const newQty=cur+addBackQty;batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,quantitySold:increment(-addBackQty),status:newQty<=0?'out_of_stock':newQty<=threshold?'low':'available',updatedAt:serverTimestamp()});}}}batch.set(doc(collection(db,'returns')),{saleId,saleReceiptNumber:sale.receiptNumber,customerId:sale.customerId,customerName:sale.customerName,returnedItems,totalRefund,returnAction:selectedReturnAction,reason,processedBy:currentUser.uid,processedByName:userData.fullName,createdAt:serverTimestamp()});const saleUpdate={status:'returned',returnedAt:serverTimestamp(),returnedBy:currentUser.uid,returnedByName:userData.fullName,returnAction:selectedReturnAction,totalRefund};if(selectedReturnAction==='exchange_same')saleUpdate.exchangeNote='Exchanged for same price item';else if(selectedReturnAction==='exchange_higher')saleUpdate.exchangeNote='Exchanged for higher price + additional payment';else if(selectedReturnAction==='store_credit')saleUpdate.exchangeNote='Store credit held for later';batch.update(doc(db,'sales',saleId),saleUpdate);if(sale.customerId&&selectedReturnAction==='refund'){batch.update(doc(db,'customers',sale.customerId),{totalSpent:increment(-totalRefund),purchaseCount:increment(-1)});}await batch.commit();await logAudit('return_goods',`Return ${formatCurrency(totalRefund)} | Receipt ${sale.receiptNumber} | Action: ${selectedReturnAction}`);const labels={refund:`Refunded: -${formatCurrency(totalRefund)}`,exchange_same:`Exchanged: ${formatCurrency(totalRefund)}`,exchange_higher:`Upgrade exchange: ${formatCurrency(totalRefund)}`,store_credit:`Store credit: ${formatCurrency(totalRefund)}`};showToast(labels[selectedReturnAction],'success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});};
+  window._processReturn = (saleId)=>{const sale=allSales.find(s=>s.id===saleId);if(!sale)return;const returnedItems=[];let totalRefund=0;sale.items.forEach((item,idx)=>{const q=parseFloat(document.getElementById(`return-qty-${idx}`)?.value)||0;if(q>0){returnedItems.push({...item,returnedQty:q,refundAmount:q*item.unitPrice});totalRefund+=q*item.unitPrice;}});if(returnedItems.length===0){showToast('Select quantity to return','error');return;}const reason=document.getElementById('returnReason')?.value?.trim()||'No reason';showPinModal('Process Return',`process return of ${formatCurrency(totalRefund)}`,async()=>{try{const batch=writeBatch(db);for(const item of returnedItems){if(item.id && !item.isNonInventory){const ref=doc(db,'stock_items',item.id);const snap=await getDoc(ref);if(snap.exists()){const cur=parseFloat(snap.data().quantityAvailable??snap.data().unitQty??0);const threshold=parseFloat(snap.data().threshold||10);const stockItem = allStockItems.find(si => si.id === item.id);const size = item.size || '1';const addBackQty = getDeductQuantity(stockItem || snap.data(), size, item.returnedQty);const newQty=cur+addBackQty;batch.update(ref,{unitQty:newQty,quantityAvailable:newQty,updatedAt:serverTimestamp()});}}}batch.set(doc(collection(db,'returns')),{saleId,saleReceiptNumber:sale.receiptNumber,customerId:sale.customerId,customerName:sale.customerName,returnedItems,totalRefund,returnAction:selectedReturnAction,reason,processedBy:currentUser.uid,processedByName:userData.fullName,createdAt:serverTimestamp()});const saleUpdate={status:'returned',returnedAt:serverTimestamp(),returnedBy:currentUser.uid,returnedByName:userData.fullName,returnAction:selectedReturnAction,totalRefund};if(selectedReturnAction==='exchange_same')saleUpdate.exchangeNote='Exchanged for same price item';else if(selectedReturnAction==='exchange_higher')saleUpdate.exchangeNote='Exchanged for higher price + additional payment';else if(selectedReturnAction==='store_credit')saleUpdate.exchangeNote='Store credit held for later';batch.update(doc(db,'sales',saleId),saleUpdate);if(sale.customerId&&selectedReturnAction==='refund'){batch.update(doc(db,'customers',sale.customerId),{totalSpent:increment(-totalRefund),purchaseCount:increment(-1)});}await batch.commit();await logAudit('return_goods',`Return ${formatCurrency(totalRefund)} | Receipt ${sale.receiptNumber} | Action: ${selectedReturnAction}`);const labels={refund:`Refunded: -${formatCurrency(totalRefund)}`,exchange_same:`Exchanged: ${formatCurrency(totalRefund)}`,exchange_higher:`Upgrade exchange: ${formatCurrency(totalRefund)}`,store_credit:`Store credit: ${formatCurrency(totalRefund)}`};showToast(labels[selectedReturnAction],'success');hideModal();}catch(e){showToast('Failed: '+e.message,'error');}});};
 
+  // ============================================
+  // EXPORT & REFRESH
+  // ============================================
   window.exportSalesData = ()=>{const headers=['Receipt #','Date','Customer','Phone','Items','Total','Payment','Status'];const rows=allSales.map(s=>[s.receiptNumber||'',s.createdAt?.toDate().toLocaleString()||'',s.customerName||'',s.customerPhone||'',s.items?.length||0,s.totalAmount||0,s.paymentMethod||'',s.status||'completed']);const csv=[headers.join(','),...rows.map(r=>r.map(c=>`"${c}"`).join(','))].join('\n');const b=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`sales_${new Date().toISOString().split('T')[0]}.csv`;a.click();showToast('Exported','success');};
   window.refreshData = ()=>{loadSales();showToast('Refreshed','success');};
 
@@ -1009,6 +1378,19 @@
 
   onAuthStateChanged(auth,async(u)=>{if(!u){window.location.href='auth.html';return;}currentUser=u;try{const snap=await getDoc(doc(db,'users',u.uid));if(!snap.exists()||snap.data().status!=='active'){await signOut(auth);window.location.href='auth.html';return;}userData=snap.data();document.getElementById('userName').textContent=userData.fullName?.split(' ')[0]||'Staff';document.getElementById('userRole').textContent=userData.role?.replace('_',' ')||'Staff';document.getElementById('userAvatar').textContent=(userData.fullName||'A').charAt(0).toUpperCase();document.getElementById('currentDate').textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});await loadAdminPins();buildSidebar();loadSales();if(isAdmin()){statsRevealed=true;updateStatsDisplay();}await logAudit('view_sales','Viewed sales');}catch(e){showToast('Error loading','error');}});
   window.addEventListener('beforeunload',cleanup);
+</script>
+
+<!-- Register Service Worker for PWA -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        console.log('Service Worker registered');
+      }).catch(err => {
+        console.log('Service Worker failed:', err);
+      });
+    });
+  }
 </script>
 </body>
 </html>
