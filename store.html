@@ -111,9 +111,9 @@
     .wholesale-pack-size-box { background:var(--primary-soft); border:2px solid var(--primary); border-radius:14px; padding:16px; margin-bottom:16px; text-align:center; }
     .wholesale-pack-size-box label { font-weight:700; color:var(--primary); }
     .wholesale-pack-size-box input { font-size:1.3rem; font-weight:700; text-align:center; }
-    .mixed-wholesale-info { background:var(--gray-light); border-radius:12px; padding:12px; margin:12px 0; font-size:0.8rem; }
-    .mixed-wholesale-info .progress-bar { height:8px; background:#e5e7eb; border-radius:4px; margin:8px 0; overflow:hidden; }
-    .mixed-wholesale-info .progress-fill { height:100%; background:var(--primary); border-radius:4px; transition:width 0.3s; }
+    .mixed-wholesale-info { background:var(--gray-light); border-radius:12px; padding:12px; margin:12px 0; font-size:0.8rem; border:2px solid transparent; transition:border-color 0.3s; }
+    .mixed-wholesale-info .progress-bar { height:10px; background:#e5e7eb; border-radius:5px; margin:8px 0; overflow:hidden; }
+    .mixed-wholesale-info .progress-fill { height:100%; background:var(--primary); border-radius:5px; transition:width 0.3s, background 0.3s; }
     .measured-sub-toggle { display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; }
     .measured-sub-btn { flex:1; min-width:100px; padding:14px 12px; border:2px solid rgba(0,0,0,0.08); border-radius:16px; background:white; cursor:pointer; font-weight:600; font-size:0.85rem; font-family:'Poppins',sans-serif; transition:all 0.2s; text-align:center; }
     .measured-sub-btn i { display:block; font-size:1.5rem; margin-bottom:6px; color:var(--primary); }
@@ -174,7 +174,7 @@
       <button class="tab" data-tab="wholesale"><i class="fas fa-tags"></i> Wholesale Sales</button>
     </div>
 
-    <!-- STORE STOCK PANEL (No more Bulk Size/Cost columns) -->
+    <!-- STORE STOCK PANEL -->
     <div id="stockPanel" class="page-view active">
       <div class="filter-bar">
         <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search store items..."></div>
@@ -188,7 +188,7 @@
       </div>
     </div>
 
-    <!-- INCOMING INVENTORY PANEL (unchanged from previous) -->
+    <!-- INCOMING INVENTORY PANEL -->
     <div id="incomingPanel" class="page-view">
       <div class="tabs-container" style="margin-bottom:16px;">
         <button class="tab active" data-incoming-tab="general"><i class="fas fa-cube"></i> General</button>
@@ -243,7 +243,6 @@
   let storeItems = [], wholesaleSales = [], categories = [], allCustomers = [], incomingItems = [], allInventoryItems = [];
   let currentTab = 'stock', incomingTab = 'general', storeValueRevealed = false;
   let wholesaleCustomerType = 'existing', wholesalePayment = 'cash';
-  let wholesalePackSize = 50; // Default, user can change per sale
   let measuredSubType = 'yard';
 
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
@@ -329,7 +328,6 @@
     }
   }
 
-  // ==================== RENDER STORE STOCK (Simplified - no bulk columns) ====================
   function renderStoreStock() {
     const search=(document.getElementById('searchInput')?.value||'').toLowerCase(), cat=document.getElementById('categoryFilter')?.value||'all';
     let filtered=[...storeItems];
@@ -476,9 +474,10 @@
     const tbody = document.getElementById('wholesaleTable');
     if(!wholesaleSales.length){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-tags"></i><p>No wholesale sales yet.</p></div></td></tr>';return;}
     tbody.innerHTML = wholesaleSales.map(s => {
-      const packSize = s.wholesalePackSize || s.packSize || 50;
-      const totalPieces = s.items?.reduce((sum, i) => sum + (i.pieces || i.quantity || 0), 0) || 0;
-      return `<tr><td>${formatDate(s.createdAt)}</td><td><span class="badge badge-info">${s.receiptNumber||'N/A'}</span></td><td>${s.customerName||'Walk-in'}</td><td><span class="badge badge-purple">${packSize} pcs/pack</span></td><td>${s.items?.length||0} items</td><td style="font-weight:600;">${totalPieces} pcs</td><td><strong>${formatCurrency(s.totalAmount)}</strong></td><td><span class="badge badge-success">${s.paymentMethod||'cash'}</span></td><td><button class="btn btn-sm btn-outline" onclick="viewWholesaleReceipt('${s.id}')"><i class="fas fa-receipt"></i></button></td></tr>`;
+      const packSize = s.wholesalePackSize || 50;
+      const totalPieces = s.totalPieces || s.items?.reduce((sum, i) => sum + (i.pieces || 0), 0) || 0;
+      const exceededBadge = s.exceededPackSize ? ' <span class="badge badge-warning">+'+s.extraPieces+' extra</span>' : '';
+      return `<tr><td>${formatDate(s.createdAt)}</td><td><span class="badge badge-info">${s.receiptNumber||'N/A'}</span></td><td>${s.customerName||'Walk-in'}</td><td><span class="badge badge-purple">${packSize} pcs</span></td><td>${s.items?.length||0} items</td><td style="font-weight:600;">${totalPieces} pcs${exceededBadge}</td><td><strong>${formatCurrency(s.totalAmount)}</strong></td><td><span class="badge badge-success">${s.paymentMethod||'cash'}</span></td><td><button class="btn btn-sm btn-outline" onclick="viewWholesaleReceipt('${s.id}')"><i class="fas fa-receipt"></i></button></td></tr>`;
     }).join('');
   }
 
@@ -505,7 +504,7 @@
 
   async function loadCustomers() { try { const snap = await getDocs(query(collection(db,'customers'), where('status','==','approved'))); allCustomers = snap.docs.map(d=>({id:d.id,...d.data()})); } catch(e) { allCustomers=[]; } }
 
-  // ==================== ADD STORE ITEM (Simplified - no bulk fields) ====================
+  // ==================== ADD STORE ITEM ====================
   window.openAddStoreItemModal = async function() {
     const invSnap = await getDocs(collection(db,'stock_items'));
     const invItems = invSnap.docs.map(d => ({id:d.id, ...d.data()}));
@@ -518,9 +517,7 @@
 
     showModal('Add Store Item', `
       <div class="form-group"><label>Select Inventory Item (Optional)</label>
-        <select class="form-control" id="storeLinkedInventory" style="width:100%;" onchange="populateFromInventory()">
-          ${invOptions}
-        </select>
+        <select class="form-control" id="storeLinkedInventory" style="width:100%;" onchange="populateFromInventory()">${invOptions}</select>
         <p style="font-size:0.7rem;color:var(--gray);">Pick an existing inventory item to auto‑fill details.</p>
       </div>
       <div class="form-row">
@@ -581,7 +578,7 @@
     });
   };
 
-  // ==================== RESTOCK (unchanged from previous, uses unitsPerBulk) ====================
+  // ==================== RESTOCK ====================
   window.openRestockModal = async function(storeItemId) {
     const item = storeItems.find(i => i.id === storeItemId);
     if (!item) return;
@@ -777,7 +774,7 @@
     });
   };
 
-  // ==================== EDIT / DELETE (Simplified) ====================
+  // ==================== EDIT / DELETE ====================
   window.openEditStoreItem = function(id) {
     const item = storeItems.find(i => i.id === id);
     if (!item) return;
@@ -807,7 +804,7 @@
     });
   };
 
-  // ==================== WHOLESALE SALE WITH FLEXIBLE PACK SIZE & MIXED ITEMS ====================
+  // ==================== WHOLESALE SALE WITH PACK SIZE VALIDATION ====================
   window.openWholesaleSaleModal = async function() {
     await loadCustomers();
     const availableItems = storeItems.filter(i => (i.unitQty||0) > 0);
@@ -828,9 +825,9 @@
       <div id="wsNewSection" style="display:none;"><div class="form-row"><div class="form-group"><label>Full Name *</label><input class="form-control" id="wsNewName"></div><div class="form-group"><label>Phone *</label><input class="form-control" id="wsNewPhone"></div></div><div class="form-group"><label>Address</label><input class="form-control" id="wsNewAddress"></div></div>
       
       <div class="wholesale-pack-size-box">
-        <label>📦 Wholesale Pack Size (pieces per pack)</label>
+        <label>📦 Wholesale Pack Size (pieces required for wholesale price)</label>
         <input type="number" class="form-control" id="wsPackSize" value="50" min="1" style="font-size:1.5rem;text-align:center;" onchange="updateWSTotal()">
-        <p style="font-size:0.75rem;color:var(--gray);margin-top:4px;">Customer must buy this many pieces total (can mix items)</p>
+        <p style="font-size:0.75rem;color:var(--gray);margin-top:4px;">Customer must buy at least this many pieces total (can mix items)</p>
       </div>
 
       <div id="wsItems">
@@ -843,7 +840,7 @@
       </div>
       <button class="btn btn-outline btn-sm" onclick="addWSItem()"><i class="fas fa-plus"></i> Add Item</button>
 
-      <div class="mixed-wholesale-info">
+      <div class="mixed-wholesale-info" id="mixedWholesaleInfo">
         <div style="display:flex;justify-content:space-between;">
           <span>Total Pieces Selected:</span>
           <span id="wsTotalPieces" style="font-weight:700;">0</span>
@@ -855,7 +852,7 @@
         <div class="progress-bar">
           <div class="progress-fill" id="wsProgressFill" style="width:0%;"></div>
         </div>
-        <p id="wsStatusMsg" style="font-size:0.75rem;color:var(--danger);text-align:center;margin-top:4px;">Need 50 more pieces to qualify</p>
+        <p id="wsStatusMsg" style="font-size:0.75rem;color:var(--danger);text-align:center;margin-top:4px;"><i class="fas fa-exclamation-circle"></i> Need <strong>50</strong> more pieces to qualify for wholesale</p>
       </div>
 
       <div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;">
@@ -870,6 +867,13 @@
       $('#wsExistingCustomer').select2({placeholder:'Search customer...',allowClear:true,width:'100%',dropdownParent:$('#modalOverlay')});
       bindWSEvents();
     }, 150);
+  };
+
+  window._switchWSType = function(type) {
+    wholesaleCustomerType = type;
+    document.querySelectorAll('.customer-type-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.type === type));
+    document.getElementById('wsExistingSection').style.display = type === 'existing' ? 'block' : 'none';
+    document.getElementById('wsNewSection').style.display = type === 'new' ? 'block' : 'none';
   };
 
   function bindWSEvents() {
@@ -940,16 +944,30 @@
     document.getElementById('wsTotal').textContent = formatCurrency(totalAmount);
 
     const progress = Math.min((totalPieces / packSize) * 100, 100);
-    document.getElementById('wsProgressFill').style.width = progress + '%';
-    
-    const remaining = packSize - totalPieces;
+    const progressFill = document.getElementById('wsProgressFill');
     const statusMsg = document.getElementById('wsStatusMsg');
-    if (remaining <= 0) {
-      statusMsg.textContent = '✅ Wholesale requirement met!';
-      statusMsg.style.color = 'var(--success)';
-    } else {
-      statusMsg.textContent = `Need ${remaining} more pieces to qualify for wholesale`;
+    const mixedInfo = document.getElementById('mixedWholesaleInfo');
+    
+    progressFill.style.width = progress + '%';
+    
+    if (totalPieces < packSize) {
+      const remaining = packSize - totalPieces;
+      statusMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> Need <strong>${remaining}</strong> more pieces to qualify for wholesale`;
       statusMsg.style.color = 'var(--danger)';
+      progressFill.style.background = 'var(--primary)';
+      if (mixedInfo) mixedInfo.style.borderColor = 'var(--danger)';
+    } else if (totalPieces === packSize) {
+      statusMsg.innerHTML = `<i class="fas fa-check-circle"></i> <strong>Perfect!</strong> Exactly ${packSize} pieces — wholesale requirement met`;
+      statusMsg.style.color = 'var(--success)';
+      progressFill.style.background = 'var(--success)';
+      if (mixedInfo) mixedInfo.style.borderColor = 'var(--success)';
+    } else {
+      const extra = totalPieces - packSize;
+      statusMsg.innerHTML = `<i class="fas fa-exclamation-triangle"></i> You've picked <strong>${extra} extra piece(s)</strong> beyond the wholesale pack size of ${packSize}`;
+      statusMsg.style.color = 'var(--warning)';
+      progressFill.style.background = 'var(--warning)';
+      progressFill.style.width = '100%';
+      if (mixedInfo) mixedInfo.style.borderColor = 'var(--warning)';
     }
   }
 
@@ -1002,12 +1020,24 @@
     });
 
     if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
+    
     if (totalPieces < packSize) {
       showToast(`Wholesale requires ${packSize} pieces. You've selected ${totalPieces}. Add ${packSize - totalPieces} more.`, 'error');
       return;
     }
+    
+    if (totalPieces > packSize) {
+      const extra = totalPieces - packSize;
+      if (!confirm(`⚠️ You've selected ${totalPieces} pieces, which is ${extra} more than the wholesale pack size of ${packSize}.\n\nThis means you're giving the customer ${extra} extra pieces at the wholesale price.\n\nContinue anyway?`)) {
+        return;
+      }
+    }
 
-    showPinModal('Process Wholesale Sale', `sell ${totalPieces} pieces for ${formatCurrency(totalAmount)}`, async () => {
+    const actionMsg = totalPieces > packSize 
+      ? `sell ${totalPieces} pieces (${totalPieces - packSize} extra) for ${formatCurrency(totalAmount)}`
+      : `sell ${totalPieces} pieces for ${formatCurrency(totalAmount)}`;
+
+    showPinModal('Process Wholesale Sale', actionMsg, async () => {
       try {
         const batch = writeBatch(db);
         const receiptNumber = 'WSL-' + Date.now().toString().slice(-8);
@@ -1031,17 +1061,23 @@
         batch.set(doc(collection(db,'wholesale_sales')), {
           receiptNumber, customerId, customerName, customerPhone,
           items, wholesalePackSize: packSize,
-          totalPieces, totalAmount, paymentMethod: wholesalePayment,
+          totalPieces, totalAmount, 
+          exceededPackSize: totalPieces > packSize,
+          extraPieces: totalPieces > packSize ? totalPieces - packSize : 0,
+          paymentMethod: wholesalePayment,
           attendantId: currentUser?.uid, attendantName: userData?.fullName||'Staff',
           createdAt: serverTimestamp(), status: 'completed'
         });
         await batch.commit();
-        await logAudit('wholesale_sale', `Wholesale ${receiptNumber}: ${totalPieces} pcs for ${formatCurrency(totalAmount)}`);
+        await logAudit('wholesale_sale', `Wholesale ${receiptNumber}: ${totalPieces} pcs (pack size: ${packSize}) for ${formatCurrency(totalAmount)}${totalPieces > packSize ? ' (EXCEEDED)' : ''}`);
         showToast(`Wholesale sale completed! #${receiptNumber}`, 'success');
         showWholesaleReceiptModal({
           receiptNumber, customerName, customerPhone,
           items, wholesalePackSize: packSize,
-          totalPieces, totalAmount, paymentMethod: wholesalePayment,
+          totalPieces, totalAmount, 
+          exceededPackSize: totalPieces > packSize,
+          extraPieces: totalPieces > packSize ? totalPieces - packSize : 0,
+          paymentMethod: wholesalePayment,
           attendantName: userData?.fullName||'Staff',
           createdAt: new Date()
         });
@@ -1054,6 +1090,11 @@
     const dateStr = sale.createdAt ? new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     const timeStr = sale.createdAt ? new Date(sale.createdAt.toDate?sale.createdAt.toDate():sale.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     const itemsHtml = sale.items.map(i => `<div class="receipt-item"><span>${i.pieces} pcs × ${i.name}</span><span>${formatCurrency(i.pieces*i.unitPrice)}</span></div>`).join('');
+    
+    const exceededNote = sale.exceededPackSize 
+      ? `<p style="color:var(--warning);font-size:0.8rem;text-align:center;margin:8px 0;font-weight:600;">⚠️ Pack size exceeded by ${sale.extraPieces} piece(s)</p>`
+      : '';
+    
     showModal('Receipt', `
       <div class="receipt-container">
         <div class="receipt-header">
@@ -1064,9 +1105,10 @@
           <p class="addr" style="font-weight:bold;">📞 0807 734 0294</p>
           <p class="rec" style="margin-top:6px;">#${sale.receiptNumber} (Wholesale)</p>
           <p class="rec">${dateStr} ${timeStr}</p>
-          <p class="rec">Pack Size: ${sale.wholesalePackSize} pieces</p>
+          <p class="rec">Pack Size: ${sale.wholesalePackSize} pieces | Sold: ${sale.totalPieces} pieces</p>
         </div>
         <p class="cust-info"><strong>Customer:</strong> ${sale.customerName}<br><strong>Payment:</strong> ${sale.paymentMethod}<br><strong>Served by:</strong> ${sale.attendantName}</p>
+        ${exceededNote}
         <div class="receipt-items">${itemsHtml}</div>
         <div class="receipt-total"><span>Total (${sale.totalPieces} pcs):</span><span>${formatCurrency(sale.totalAmount)}</span></div>
         <p class="thanks">Thank you for your patronage!</p>
@@ -1089,7 +1131,10 @@
     if (!s) return;
     const dateStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '';
     const timeStr = s.createdAt ? new Date(s.createdAt.toDate?s.createdAt.toDate():s.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
-    const receiptHTML = `<html><head><title>Receipt #${s.receiptNumber}</title><style>@page{margin:0;size:80mm auto}*{margin:0;padding:0}body{font-family:'Segoe UI',Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:8pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1}.item span:last-child{text-align:right;min-width:60px}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style></head><body><div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#${s.receiptNumber} (Wholesale)</p><p class="rec">${dateStr} ${timeStr}</p><p class="rec">Pack Size: ${s.wholesalePackSize} pieces</p></div><p class="cust">Customer: ${s.customerName}<br>Payment: ${s.paymentMethod}<br>Served by: ${s.attendantName}</p><div class="items">${s.items.map(i=>`<div class="item"><span>${i.pieces} pcs × ${i.name}</span><span>${formatCurrency(i.pieces*i.unitPrice)}</span></div>`).join('')}</div><div class="total">Total (${s.totalPieces} pcs): ${formatCurrency(s.totalAmount)}</div><p class="thanks">Thank you for your patronage!</p></body></html>`;
+    const exceededNote = s.exceededPackSize 
+      ? `<p style="color:#f59e0b;font-size:8pt;text-align:center;margin:3px 0;font-weight:bold;">⚠️ Pack size exceeded by ${s.extraPieces} piece(s)</p>`
+      : '';
+    const receiptHTML = `<html><head><title>Receipt #${s.receiptNumber}</title><style>@page{margin:0;size:80mm auto}*{margin:0;padding:0}body{font-family:'Segoe UI',Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:8pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1}.item span:last-child{text-align:right;min-width:60px}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style></head><body><div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#${s.receiptNumber} (Wholesale)</p><p class="rec">${dateStr} ${timeStr}</p><p class="rec">Pack Size: ${s.wholesalePackSize} pcs | Sold: ${s.totalPieces} pcs</p></div><p class="cust">Customer: ${s.customerName}<br>Payment: ${s.paymentMethod}<br>Served by: ${s.attendantName}</p>${exceededNote}<div class="items">${s.items.map(i=>`<div class="item"><span>${i.pieces} pcs × ${i.name}</span><span>${formatCurrency(i.pieces*i.unitPrice)}</span></div>`).join('')}</div><div class="total">Total (${s.totalPieces} pcs): ${formatCurrency(s.totalAmount)}</div><p class="thanks">Thank you for your patronage!</p></body></html>`;
     const oldFrame = document.getElementById('printIframe');
     if (oldFrame) oldFrame.remove();
     const iframe = document.createElement('iframe'); iframe.id='printIframe'; iframe.style.display='none'; document.body.appendChild(iframe);
@@ -1103,11 +1148,11 @@
       <div style="font-size:0.9rem; line-height:1.6;">
         <h4>🏬 Store Stock</h4>
         <p>Store items track <strong>total unit quantity</strong> and <strong>cost per unit</strong>. No fixed bulk sizes — wholesale pack size is defined per sale.</p>
-        <h4>🏷️ Wholesale Sales (Flexible)</h4>
+        <h4>🏷️ Wholesale Sales (Flexible Pack Size)</h4>
         <p><strong>1. Set pack size</strong> — Define how many pieces the customer must buy (e.g., 50 pieces).</p>
         <p><strong>2. Mix items</strong> — Pick 30 white stone + 20 green stone = 50 pieces. The progress bar shows how close you are to the target.</p>
-        <p><strong>3. Price per piece</strong> — Set wholesale price per piece for each item (auto-fills from unit cost).</p>
-        <p>System validates total pieces meet the wholesale pack size before allowing the sale.</p>
+        <p><strong>3. Warnings</strong> — Red if below pack size (sale blocked), green when exactly matched, yellow when exceeded (confirmation required).</p>
+        <p><strong>4. Price per piece</strong> — Set wholesale price per piece for each item (auto-fills from unit cost).</p>
         <h4>✅ Inventory Safety</h4>
         <p>Wholesale deducts exact piece counts from store stock. Incoming restock still works for transferring to sellable inventory.</p>
       </div>
