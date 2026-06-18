@@ -41,6 +41,26 @@
     }
     .offline-banner.show { display: block; }
 
+    .debug-panel {
+      position: fixed; bottom: 20px; right: 20px;
+      background: #1a1a2e; color: #fff; padding: 16px;
+      border-radius: 16px; font-size: 0.75rem; z-index: 5000;
+      display: none; max-width: 400px; max-height: 60vh;
+      overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      font-family: monospace; line-height: 1.5;
+    }
+    .debug-panel.show { display: block; }
+    .debug-panel h4 { color: var(--primary); margin-bottom: 8px; font-size: 0.85rem; }
+    .debug-panel .debug-item { margin-bottom: 4px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .debug-panel .debug-ok { color: var(--success); }
+    .debug-panel .debug-warn { color: var(--warning); }
+    .debug-panel .debug-error { color: var(--danger); }
+    .debug-panel button {
+      background: var(--primary); color: white; border: none;
+      padding: 6px 12px; border-radius: 8px; cursor: pointer;
+      font-size: 0.7rem; margin-top: 8px; font-family: 'Poppins', sans-serif;
+    }
+
     .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); color:white; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000; border-right:1px solid rgba(255,77,166,0.2); }
     .sidebar::-webkit-scrollbar { width:4px; } .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); } .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
     .sidebar-header { padding:24px 18px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,77,166,0.2); position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); }
@@ -202,6 +222,13 @@
   <i class="fas fa-wifi"></i> You are offline — sales saved locally, will sync when reconnected
 </div>
 
+<!-- Debug Panel -->
+<div class="debug-panel" id="debugPanel">
+  <h4>🐞 Debug Info</h4>
+  <div id="debugContent">Loading...</div>
+  <button onclick="document.getElementById('debugPanel').classList.remove('show')">Close</button>
+</div>
+
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header"><div class="logo-icon">✨</div><div class="logo-text"><span>Omo</span>creations</div><button class="close-sidebar" onclick="closeSidebar()"><i class="fas fa-times"></i></button></div>
@@ -213,6 +240,7 @@
   <header class="top-bar">
     <div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">Sales & Transactions</h1></div>
     <div style="display:flex;align-items:center;gap:12px;">
+      <button class="btn btn-outline btn-sm" onclick="toggleDebugPanel()" title="Debug Info"><i class="fas fa-bug"></i> Debug</button>
       <span id="syncStatus" style="font-size:0.75rem;color:var(--gray);"></span>
       <button class="btn btn-outline btn-sm" onclick="navigateTo('history.html')"><i class="fas fa-history"></i> History</button>
       <span class="current-date" id="currentDate"></span>
@@ -307,6 +335,7 @@
   let adminPins = new Set();
   let isOnline = navigator.onLine;
   let offlineSales = JSON.parse(localStorage.getItem('offlineSales') || '[]');
+  let pendingCustomers = JSON.parse(localStorage.getItem('pendingCustomers') || '[]');
 
   // ============================================
   // SAFE NUMBER PARSING
@@ -320,6 +349,189 @@
   }
 
   // ============================================
+  // DEBUG PANEL
+  // ============================================
+  window.toggleDebugPanel = function() {
+    var panel = document.getElementById('debugPanel');
+    panel.classList.toggle('show');
+    if (panel.classList.contains('show')) {
+      updateDebugPanel();
+    }
+  };
+
+  function updateDebugPanel() {
+    var content = document.getElementById('debugContent');
+    var html = '';
+    
+    // Connection status
+    html += '<div class="debug-item"><strong>Connection:</strong> <span class="' + (isOnline ? 'debug-ok' : 'debug-error') + '">' + (isOnline ? '✅ Online' : '❌ Offline') + '</span></div>';
+    
+    // Offline sales queue
+    html += '<div class="debug-item"><strong>Offline Sales Queue:</strong> ' + offlineSales.length + ' pending</div>';
+    
+    // Pending customers
+    html += '<div class="debug-item"><strong>Pending Customers:</strong> ' + pendingCustomers.length + ' queued</div>';
+    
+    // List pending customers
+    if (pendingCustomers.length > 0) {
+      html += '<div class="debug-item" style="margin-top:8px;"><strong>Queued Customers:</strong></div>';
+      pendingCustomers.forEach(function(c, idx) {
+        html += '<div class="debug-item" style="padding-left:8px;">' + (idx+1) + '. ' + c.fullName + ' (' + c.phone + ') - <span class="' + (c._synced ? 'debug-ok' : 'debug-warn') + '">' + (c._synced ? 'Synced' : 'Pending') + '</span></div>';
+      });
+    }
+    
+    // Offline sales details
+    if (offlineSales.length > 0) {
+      html += '<div class="debug-item" style="margin-top:8px;"><strong>Offline Sales:</strong></div>';
+      offlineSales.forEach(function(s, idx) {
+        html += '<div class="debug-item" style="padding-left:8px;">' + (idx+1) + '. ' + (s.receiptNumber || 'N/A') + ' - ' + (s.customerName || 'Walk-in') + ' | Has new customer: ' + (s._newCustomer ? 'Yes' : 'No') + '</div>';
+      });
+    }
+    
+    // Last sync attempt
+    var lastSync = localStorage.getItem('lastSyncAttempt');
+    if (lastSync) {
+      html += '<div class="debug-item"><strong>Last Sync Attempt:</strong> ' + new Date(parseInt(lastSync)).toLocaleTimeString() + '</div>';
+    }
+    
+    // Sync errors
+    var syncErrors = JSON.parse(localStorage.getItem('syncErrors') || '[]');
+    if (syncErrors.length > 0) {
+      html += '<div class="debug-item debug-error" style="margin-top:8px;"><strong>Sync Errors (' + syncErrors.length + '):</strong></div>';
+      syncErrors.slice(-3).forEach(function(err) {
+        html += '<div class="debug-item debug-error" style="padding-left:8px;font-size:0.65rem;">' + err + '</div>';
+      });
+    }
+    
+    html += '<button onclick="window._retrySync()" style="margin-top:8px;">🔄 Retry Sync Now</button>';
+    html += '<button onclick="window._clearSyncErrors()" style="margin-top:4px;">🗑️ Clear Errors</button>';
+    
+    content.innerHTML = html;
+  }
+
+  window._retrySync = function() {
+    syncOfflineSales();
+    syncPendingCustomers();
+    updateDebugPanel();
+    showToast('Retry triggered', 'info');
+  };
+
+  window._clearSyncErrors = function() {
+    localStorage.setItem('syncErrors', '[]');
+    updateDebugPanel();
+    showToast('Errors cleared', 'success');
+  };
+
+  // ============================================
+  // CUSTOMER SYNC (Immediate, even when offline)
+  // ============================================
+  function savePendingCustomer(customerData) {
+    // Check for duplicates
+    var exists = pendingCustomers.some(function(c) {
+      return c.phone === customerData.phone && c.fullName === customerData.fullName;
+    });
+    if (!exists) {
+      customerData._queuedAt = new Date().toISOString();
+      customerData._synced = false;
+      pendingCustomers.push(customerData);
+      localStorage.setItem('pendingCustomers', JSON.stringify(pendingCustomers));
+    }
+    // Try to sync immediately
+    trySyncCustomerToFirestore(customerData);
+  }
+
+  async function trySyncCustomerToFirestore(customerData) {
+    try {
+      // Check if customer already exists
+      var existingQuery = query(collection(db, 'customers'), where('phone', '==', customerData.phone));
+      var existingSnap = await getDocs(existingQuery);
+      
+      if (!existingSnap.empty) {
+        // Customer already exists, mark as synced
+        var existingId = existingSnap.docs[0].id;
+        markCustomerSynced(customerData.phone, existingId);
+        console.log('Customer already exists:', customerData.fullName);
+        return existingId;
+      }
+      
+      // Create new customer
+      var custRef = doc(collection(db, 'customers'));
+      await setDoc(custRef, {
+        ...customerData,
+        createdAt: serverTimestamp()
+      });
+      
+      // Mark as synced
+      markCustomerSynced(customerData.phone, custRef.id);
+      console.log('Customer synced immediately:', customerData.fullName, custRef.id);
+      return custRef.id;
+    } catch (e) {
+      console.warn('Cannot sync customer now (offline):', e.message);
+      // Will be synced later via syncPendingCustomers
+      return null;
+    }
+  }
+
+  function markCustomerSynced(phone, firestoreId) {
+    pendingCustomers.forEach(function(c) {
+      if (c.phone === phone) {
+        c._synced = true;
+        c._firestoreId = firestoreId;
+      }
+    });
+    localStorage.setItem('pendingCustomers', JSON.stringify(pendingCustomers));
+  }
+
+  async function syncPendingCustomers() {
+    if (pendingCustomers.length === 0) return;
+    
+    var unsynced = pendingCustomers.filter(function(c) { return !c._synced; });
+    if (unsynced.length === 0) return;
+    
+    console.log('Syncing ' + unsynced.length + ' pending customers...');
+    
+    for (var i = 0; i < unsynced.length; i++) {
+      var c = unsynced[i];
+      try {
+        // Check if already exists
+        var existingQuery = query(collection(db, 'customers'), where('phone', '==', c.phone));
+        var existingSnap = await getDocs(existingQuery);
+        
+        if (!existingSnap.empty) {
+          markCustomerSynced(c.phone, existingSnap.docs[0].id);
+          continue;
+        }
+        
+        var custRef = doc(collection(db, 'customers'));
+        var cleanData = Object.assign({}, c);
+        delete cleanData._queuedAt;
+        delete cleanData._synced;
+        delete cleanData._firestoreId;
+        await setDoc(custRef, {
+          ...cleanData,
+          createdAt: serverTimestamp()
+        });
+        
+        markCustomerSynced(c.phone, custRef.id);
+        console.log('Customer synced:', c.fullName);
+      } catch (e) {
+        console.error('Failed to sync customer:', c.fullName, e.message);
+        var errors = JSON.parse(localStorage.getItem('syncErrors') || '[]');
+        errors.push('Customer sync failed: ' + c.fullName + ' - ' + e.message);
+        localStorage.setItem('syncErrors', JSON.stringify(errors.slice(-20)));
+      }
+    }
+    
+    // Clean up synced customers older than 1 hour
+    var oneHourAgo = new Date(Date.now() - 3600000).toISOString();
+    pendingCustomers = pendingCustomers.filter(function(c) {
+      return !c._synced || c._queuedAt > oneHourAgo;
+    });
+    localStorage.setItem('pendingCustomers', JSON.stringify(pendingCustomers));
+    updateDebugPanel();
+  }
+
+  // ============================================
   // ONLINE/OFFLINE DETECTION
   // ============================================
   window.addEventListener('online', function() {
@@ -327,12 +539,17 @@
     document.getElementById('offlineBanner').classList.remove('show');
     document.getElementById('syncStatus').textContent = '';
     syncOfflineSales();
+    syncPendingCustomers();
+    updateDebugPanel();
+    showToast('Back online! Syncing...', 'success');
   });
 
   window.addEventListener('offline', function() {
     isOnline = false;
     document.getElementById('offlineBanner').classList.add('show');
     document.getElementById('syncStatus').textContent = '⚠️ Offline';
+    updateDebugPanel();
+    showToast('You are offline. Sales will sync when reconnected.', 'warning');
   });
 
   if (!navigator.onLine) {
@@ -349,24 +566,42 @@
     localStorage.setItem('offlineSales', JSON.stringify(offlineSales));
     allSales.unshift(saleData);
     renderSales();
+    updateDebugPanel();
   }
 
   async function syncOfflineSales() {
     if (!isOnline || offlineSales.length === 0) return;
+    
+    localStorage.setItem('lastSyncAttempt', Date.now().toString());
+    
     var toSync = offlineSales.slice();
     offlineSales = [];
     localStorage.setItem('offlineSales', JSON.stringify(offlineSales));
+    
     showToast('Syncing ' + toSync.length + ' offline sale(s)...', 'warning');
+    
     for (var i = 0; i < toSync.length; i++) {
       var saleData = toSync[i];
       try {
         var batch = writeBatch(db);
         var customerId = saleData.customerId || '';
+        
+        // Handle new customer
         if (saleData._newCustomer && saleData._customerData) {
-          var custRef = doc(collection(db, 'customers'));
-          batch.set(custRef, Object.assign({}, saleData._customerData, { createdAt: serverTimestamp() }));
-          customerId = custRef.id;
+          // Check if customer was already synced
+          var syncedCustomer = pendingCustomers.find(function(c) {
+            return c.phone === saleData._customerData.phone && c._synced && c._firestoreId;
+          });
+          
+          if (syncedCustomer) {
+            customerId = syncedCustomer._firestoreId;
+          } else {
+            var custRef = doc(collection(db, 'customers'));
+            batch.set(custRef, Object.assign({}, saleData._customerData, { createdAt: serverTimestamp() }));
+            customerId = custRef.id;
+          }
         }
+        
         var collectionName = saleData._type === 'wholesale' ? 'wholesale_sales' : 'sales';
         var saleRef = doc(collection(db, collectionName));
         var cleanData = Object.assign({}, saleData);
@@ -375,12 +610,14 @@
         cleanData.customerId = customerId;
         cleanData.createdAt = serverTimestamp();
         batch.set(saleRef, cleanData);
+        
         if (saleData._stockUpdates) {
           for (var j = 0; j < saleData._stockUpdates.length; j++) {
             var update = saleData._stockUpdates[j];
             batch.update(doc(db, update.collection, update.id), update.data);
           }
         }
+        
         if (saleData._movements) {
           for (var k = 0; k < saleData._movements.length; k++) {
             var mov = saleData._movements[k];
@@ -388,18 +625,30 @@
             batch.set(movRef, Object.assign({}, mov, { performedAt: serverTimestamp() }));
           }
         }
+        
         await batch.commit();
+        
         var syncedSale = allSales.find(function(s) { return s._localId === saleData._localId; });
         if (syncedSale) { syncedSale.id = saleRef.id; syncedSale._synced = true; }
+        
+        console.log('Synced sale:', saleData.receiptNumber, 'Customer ID:', customerId);
       } catch (e) {
         console.error('Sync failed:', e);
         offlineSales.push(saleData);
         localStorage.setItem('offlineSales', JSON.stringify(offlineSales));
+        
+        var errors = JSON.parse(localStorage.getItem('syncErrors') || '[]');
+        errors.push('Sale sync failed: ' + (saleData.receiptNumber || 'N/A') + ' - ' + e.message);
+        localStorage.setItem('syncErrors', JSON.stringify(errors.slice(-20)));
+        
         showToast('Some sales failed to sync. Will retry.', 'error');
+        updateDebugPanel();
         return;
       }
     }
+    
     renderSales();
+    updateDebugPanel();
     showToast('All offline sales synced!', 'success');
   }
 
@@ -692,7 +941,7 @@
   }
 
   // ============================================
-  // STOCK HELPERS (FIXED: Half/Quarter are 1:1)
+  // STOCK HELPERS
   // ============================================
   function getAvailableStock(item, size) {
     if (size === '0.5' || size === '½' || size === 'half') return safeNumber(item.halfQty, 0);
@@ -702,11 +951,9 @@
     return safeNumber(item.unitQty, 0);
   }
 
-  // FIXED: Half and Quarter deduct 1:1 (no multiplication)
   function getDeductQuantity(item, size, qty) {
     if (size === 'pack') return qty * (parseInt(item.packSize) || 12);
     if (size === 'bundle') return qty * (parseInt(item.bundleSize) || 50);
-    // Half and Quarter are separate stock columns — 1 sale = 1 deduction
     return qty;
   }
 
@@ -751,13 +998,29 @@
   }
 
   // ============================================
-  // PROCESS SALE (FIXED: 1:1 deduction for half/quarter)
+  // PROCESS SALE (With immediate customer sync)
   // ============================================
   function processSaleCommon(items, total, customerInfo, paymentMethod, isCompanySale, extraData, saleType) {
     var receiptNumber = generateReceiptNumber(saleType === 'wholesale' ? 'WSL' : 'RCP');
     var stockUpdates = [];
     var movements = [];
     var customerId = customerInfo.customerId || '';
+
+    // IMMEDIATE CUSTOMER SYNC — Try to save customer right now, even if offline
+    if (customerInfo._isNew && customerInfo._customerData) {
+      // Save to pending queue (will retry if offline)
+      savePendingCustomer(customerInfo._customerData);
+      
+      // If online, also save directly to Firestore
+      if (isOnline) {
+        saveSaleToFirestoreCustomerOnly(customerInfo._customerData).then(function(cid) {
+          if (cid) {
+            customerId = cid;
+            console.log('Customer saved immediately:', customerInfo._customerData.fullName);
+          }
+        });
+      }
+    }
 
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
@@ -773,21 +1036,16 @@
       } else {
         var stockItem = allStockItems.find(function(si) { return si.id === item.id; });
         if (!stockItem) continue;
-
         var size = item.size || '1';
         var qty = item.quantity || 1;
         var available = getAvailableStock(stockItem, size);
         var deductQty = getDeductQuantity(stockItem, size, qty);
-
         if (deductQty > available) {
           showToast('Insufficient stock for ' + item.name + ' (' + (item.sizeLabel || getSizeLabel(size)) + '). Available: ' + available + ', Need: ' + deductQty, 'error');
           return null;
         }
-
         var updateData = { updatedAt: serverTimestamp() };
         var change = {};
-
-        // FIXED: Direct 1:1 deduction for each stock column
         if (size === '0.5' || size === '½' || size === 'half') {
           updateData.halfQty = safeNumber(stockItem.halfQty, 0) - qty;
           change.half = -qty;
@@ -806,7 +1064,6 @@
           updateData.unitQty = safeNumber(stockItem.unitQty, 0) - qty;
           change.unit = -qty;
         }
-
         stockUpdates.push({ collection: 'stock_items', id: item.id, data: updateData });
         movements.push({ itemId: item.id, itemName: item.name, movementType: 'sale', change: change, reference: 'Receipt ' + receiptNumber, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff' });
       }
@@ -820,16 +1077,7 @@
       isCompanySale: isCompanySale || false,
       items: items.map(function(it) {
         var sz = it.size || '1';
-        return {
-          id: it.id,
-          name: it.name,
-          quantity: it.quantity || it.pieces,
-          pieces: it.pieces,
-          size: sz,
-          sizeLabel: it.sizeLabel || getSizeLabel(sz),
-          unitPrice: it.unitPrice,
-          isNonInventory: it.isNonInventory || false
-        };
+        return { id: it.id, name: it.name, quantity: it.quantity || it.pieces, pieces: it.pieces, size: sz, sizeLabel: it.sizeLabel || getSizeLabel(sz), unitPrice: it.unitPrice, isNonInventory: it.isNonInventory || false };
       }),
       totalAmount: total, paymentMethod: paymentMethod,
       attendantId: currentUser ? currentUser.uid : '',
@@ -848,6 +1096,21 @@
       saveOfflineSale(saleData);
     }
     return saleData;
+  }
+
+  async function saveSaleToFirestoreCustomerOnly(customerData) {
+    try {
+      var existingQuery = query(collection(db, 'customers'), where('phone', '==', customerData.phone));
+      var existingSnap = await getDocs(existingQuery);
+      if (!existingSnap.empty) return existingSnap.docs[0].id;
+      
+      var custRef = doc(collection(db, 'customers'));
+      await setDoc(custRef, { ...customerData, createdAt: serverTimestamp() });
+      return custRef.id;
+    } catch (e) {
+      console.warn('Customer save failed:', e.message);
+      return null;
+    }
   }
 
   async function saveSaleToFirestore(saleData, customerInfo) {
@@ -956,7 +1219,6 @@
     window._updateSaleSummary();
   };
 
-  // FIXED: Validation checks the correct stock column
   window._validateRowStock = function(row) {
     var checkbox = row.querySelector('.non-inv-check');
     var warning = row.querySelector('.stock-warning');
@@ -1398,6 +1660,8 @@
       await loadAdminPins(); buildSidebar(); loadSales();
       if (statsRevealed) { updateStatsDisplay(); updateAttendantStats(); }
       if (isOnline && offlineSales.length > 0) { syncOfflineSales(); }
+      if (isOnline && pendingCustomers.length > 0) { syncPendingCustomers(); }
+      updateDebugPanel();
       await logAudit('view_sales', 'Viewed sales');
     } catch (e) { showToast('Error loading', 'error'); }
   });
