@@ -689,6 +689,13 @@
     return prefix + '-' + Date.now().toString().slice(-8) + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
   }
 
+  function formatDateTime(d) {
+    if (!d) return 'Unknown';
+    if (typeof d === 'string') return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    var date = d.toDate ? d.toDate() : new Date(d);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
   function showToast(msg, type) {
     type = type || 'success';
     var c = document.getElementById('toastContainer'); if (!c) return;
@@ -944,7 +951,6 @@
         var unitQty = safeNumber(data.unitQty || data.quantityAvailable, 0);
         var packSize = parseInt(data.packSize || 12);
         var bundleSize = parseInt(data.bundleSize || 50);
-        // FIX: Calculate pack/bundle availability from unitQty if the dedicated field is 0
         var packQty = safeNumber(data.packQty, 0) || Math.floor(unitQty / packSize);
         var bundleQty = safeNumber(data.bundleQty, 0) || Math.floor(unitQty / bundleSize);
         return {
@@ -970,7 +976,7 @@
   }
 
   // ============================================
-  // STOCK HELPERS (FIXED for pack/bundle)
+  // STOCK HELPERS
   // ============================================
   function getAvailableStock(item, size) {
     if (size === '0.5' || size === '½' || size === 'half') return safeNumber(item.halfQty, 0);
@@ -996,7 +1002,7 @@
     return labels[type] || '🔧';
   }
 
-  // UPDATE 4: Updated getStockOptionsHtml to show calculated pack/bundle availability
+  // UPDATE 4: Updated getStockOptionsHtml
   function getStockOptionsHtml() {
     return allStockItems.map(function(i) {
       var label = getItemTypeLabel(i.itemType || 'general');
@@ -1033,7 +1039,7 @@
   }
 
   // ============================================
-  // PROCESS SALE (FIXED: double-click lock + pack/bundle unitQty deduction)
+  // PROCESS SALE (FIXED: double-click lock + pack/bundle unitQty deduction + no duplicate customer)
   // ============================================
   // UPDATE 5: Fix processSaleCommon — Double-Click Lock
   function processSaleCommon(items, total, customerInfo, paymentMethod, isCompanySale, extraData, saleType) {
@@ -1048,14 +1054,9 @@
     var movements = [];
     var customerId = customerInfo.customerId || '';
 
-    // IMMEDIATE CUSTOMER SYNC
+    // FIX: Prevent duplicate customer creation - only queue, let saveSaleToFirestore handle creation
     if (customerInfo._isNew && customerInfo._customerData) {
       savePendingCustomer(customerInfo._customerData);
-      if (isOnline) {
-        saveSaleToFirestoreCustomerOnly(customerInfo._customerData).then(function(cid) {
-          if (cid) { customerId = cid; }
-        });
-      }
     }
 
     for (var i = 0; i < items.length; i++) {
@@ -1089,12 +1090,12 @@
         } else if (size === '0.25' || size === '¼' || size === 'quarter') {
           updateData.quarterQty = safeNumber(stockItem.quarterQty, 0) - qty;
           change.quarter = -qty;
-        // UPDATE 7: Fix Pack Deduction in processSaleCommon
+        // UPDATE 7: Fix Pack Deduction
         } else if (size === 'pack') {
           updateData.packQty = safeNumber(stockItem.packQty, 0) - qty;
           updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
           change.unit = -deductQty;
-        // UPDATE 8: Fix Bundle Deduction in processSaleCommon
+        // UPDATE 8: Fix Bundle Deduction
         } else if (size === 'bundle') {
           updateData.bundleQty = safeNumber(stockItem.bundleQty, 0) - qty;
           updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
@@ -1123,11 +1124,13 @@
       attendantName: userData ? (userData.fullName || 'Staff') : 'Staff',
       status: 'completed', _type: saleType,
       _stockUpdates: stockUpdates, _movements: movements,
-      _localId: 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6)
+      _localId: 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      _newCustomer: customerInfo._isNew,
+      _customerData: customerInfo._customerData || null
     };
     if (extraData) Object.assign(saleData, extraData);
 
-    // UPDATE 6: Fix processSaleCommon — Release Lock
+    // UPDATE 6: Release lock before saving
     isProcessingSale = false;
 
     if (isOnline) {
@@ -1140,30 +1143,31 @@
     return saleData;
   }
 
-  async function saveSaleToFirestoreCustomerOnly(customerData) {
-    try {
-      var existingQuery = query(collection(db, 'customers'), where('phone', '==', customerData.phone));
-      var existingSnap = await getDocs(existingQuery);
-      if (!existingSnap.empty) return existingSnap.docs[0].id;
-      var custRef = doc(collection(db, 'customers'));
-      await setDoc(custRef, { ...customerData, createdAt: serverTimestamp() });
-      return custRef.id;
-    } catch (e) { return null; }
-  }
-
   async function saveSaleToFirestore(saleData, customerInfo) {
     try {
       var batch = writeBatch(db);
       var customerId = saleData.customerId || '';
+      
+      // FIX: Create customer only once, check if already synced
       if (customerInfo._isNew && customerInfo._customerData) {
-        var custRef = doc(collection(db, 'customers'));
-        batch.set(custRef, Object.assign({}, customerInfo._customerData, { createdAt: serverTimestamp() }));
-        customerId = custRef.id;
+        var alreadyCreated = pendingCustomers.find(function(c) {
+          return c.phone === customerInfo._customerData.phone && c._synced && c._firestoreId;
+        });
+        if (alreadyCreated) {
+          customerId = alreadyCreated._firestoreId;
+        } else {
+          var custRef = doc(collection(db, 'customers'));
+          batch.set(custRef, Object.assign({}, customerInfo._customerData, { createdAt: serverTimestamp(), status: 'pending_approval' }));
+          customerId = custRef.id;
+          markCustomerSynced(customerInfo._customerData.phone, custRef.id);
+        }
       }
+      
       var collectionName = saleData._type === 'wholesale' ? 'wholesale_sales' : 'sales';
       var saleRef = doc(collection(db, collectionName));
       var cleanData = Object.assign({}, saleData);
       delete cleanData._type; delete cleanData._stockUpdates; delete cleanData._movements; delete cleanData._localId;
+      delete cleanData._newCustomer; delete cleanData._customerData;
       cleanData.customerId = customerId;
       cleanData.createdAt = serverTimestamp();
       batch.set(saleRef, cleanData);
@@ -1195,7 +1199,7 @@
   }
 
   // ============================================
-  // NEW SALE MODAL (FIXED: button ID for disable)
+  // NEW SALE MODAL
   // ============================================
   window.openNewSaleModal = async function() {
     await loadCustomersAndStock();
@@ -1214,7 +1218,7 @@
       '<button type="button" class="btn btn-outline btn-sm" onclick="window._addSaleItem()"><i class="fas fa-plus"></i> Add Item</button>' +
       '<div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods"><div class="payment-method selected" data-method="cash" onclick="window._selectPayment(\'cash\')">💵 Cash</div><div class="payment-method" data-method="transfer" onclick="window._selectPayment(\'transfer\')">🏦 Transfer</div><div class="payment-method" data-method="pos" onclick="window._selectPayment(\'pos\')">💳 POS</div></div></div>' +
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div>' +
-      // UPDATE 11: Add id="processSaleBtn" to the Process Sale Button
+      // UPDATE 11: Added id="processSaleBtn"
       '<button class="btn btn-primary" id="processSaleBtn" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>'
     );
 
@@ -1330,7 +1334,7 @@
     return allValid;
   };
 
-  // UPDATE 9 & 10: _processSale with button disable/enable logic
+  // UPDATES 9 & 10: _processSale with button disable/enable + FIX 3: force stats refresh
   window._processSale = function() {
     if (!window._updateSaleSummary()) { showToast('Some items exceed available stock. Please adjust quantities.', 'error'); return; }
     var customerId = '', customerName = '', customerPhone = '', customerEmail = '', customerAddress = '';
@@ -1389,7 +1393,13 @@
     showPinModal('Process Sale', 'process sale of ' + formatCurrency(total), function() {
       var customerInfo = { customerId: customerId, customerName: customerName, customerPhone: customerPhone, customerAddress: customerAddress, _isNew: isNewCustomer, _customerData: customerData };
       var result = processSaleCommon(items, total, customerInfo, selectedPayment, false, {}, 'regular');
-      if (result) { showToast('Sale completed! #' + result.receiptNumber, 'success'); showReceiptModal(result); hideModal(); }
+      if (result) { 
+        showToast('Sale completed! #' + result.receiptNumber, 'success'); 
+        showReceiptModal(result); 
+        hideModal();
+        // FIX 3: Force refresh stats after sale
+        setTimeout(function() { updateStats(); }, 500);
+      }
       if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale'; }
     });
   };
@@ -1508,7 +1518,13 @@
     showPinModal('Process Company Sale', 'process company sale of ' + formatCurrency(total), function() {
       var customerInfo = { customerId: '', customerName: 'Company', customerPhone: '', customerAddress: '' };
       var result = processSaleCommon(items, total, customerInfo, companySelectedPayment, true, { collectedBy: collectedBy, usage: usage }, 'regular');
-      if (result) { showToast('Company sale completed! #' + result.receiptNumber, 'success'); showReceiptModal(result); hideModal(); }
+      if (result) { 
+        showToast('Company sale completed! #' + result.receiptNumber, 'success'); 
+        showReceiptModal(result); 
+        hideModal(); 
+        // FIX 3: Force refresh stats
+        setTimeout(function() { updateStats(); }, 500);
+      }
     });
   };
 
@@ -1617,7 +1633,13 @@
     showPinModal('Process Wholesale Sale', 'sell ' + totalPieces + ' pieces for ' + formatCurrency(totalAmount), function() {
       var customerInfo = { customerId: customerId, customerName: customerName, customerPhone: customerPhone, customerAddress: '', _isNew: isNewCustomer, _customerData: customerData };
       var result = processSaleCommon(items, totalAmount, customerInfo, wholesalePayment, false, { wholesalePackSize: packSize, totalPieces: totalPieces, exceededPackSize: totalPieces > packSize, extraPieces: totalPieces > packSize ? totalPieces - packSize : 0 }, 'wholesale');
-      if (result) { showToast('Wholesale sale completed! #' + result.receiptNumber, 'success'); showReceiptModal(result); hideModal(); }
+      if (result) { 
+        showToast('Wholesale sale completed! #' + result.receiptNumber, 'success'); 
+        showReceiptModal(result); 
+        hideModal(); 
+        // FIX 3: Force refresh stats
+        setTimeout(function() { updateStats(); }, 500);
+      }
     });
   };
 
@@ -1656,7 +1678,7 @@
   window.printReceiptModal = function(id) { hideModal(); setTimeout(function() { window.printReceipt(id); }, 300); };
 
   // ============================================
-  // RETURNS - UPDATE 12: Replace the Entire openReturnModal Function
+  // RETURNS - UPDATE 12: Enhanced openReturnModal
   // ============================================
   window.openReturnModal = function(saleId) {
     var sale = allSales.find(function(s) { return (s.id || s._localId) === saleId; });
@@ -1752,7 +1774,7 @@
     window._updateReturnTotal();
   };
 
-  // UPDATE 13: Add Return Helper Functions
+  // UPDATE 13: Return Helper Functions
   window._returnAll = function() {
     document.querySelectorAll('.return-qty-input').forEach(function(input) {
       input.value = input.max;
@@ -1816,7 +1838,7 @@
     }
   };
 
-  // UPDATE 14: Replace the _processReturn Function
+  // UPDATE 14: New _processReturn
   window._processReturn = function(saleId) {
     var sale = allSales.find(function(s) { return (s.id || s._localId) === saleId; }); 
     if (!sale) return;
@@ -1861,7 +1883,7 @@
     }
   };
 
-  // UPDATE 15: Add processReturnFinal Function
+  // UPDATE 15: processReturnFinal
   async function processReturnFinal(sale, returnedItems, totalRefund, reason, action, refundMethod, condition) {
     try {
       var batch = writeBatch(db);
@@ -1949,12 +1971,14 @@
       };
       showToast(labels[action] + ' | Stock restored and movements logged', 'success');
       hideModal();
+      // FIX: Refresh stats after return
+      setTimeout(function() { updateStats(); }, 500);
     } catch (e) {
       showToast('Return failed: ' + e.message, 'error');
     }
   }
 
-  // UPDATE 16: Add Exchange System Functions
+  // UPDATE 16: Exchange System Functions
   async function openExchangePicker(sale, returnedItems, totalRefund, reason, action) {
     await loadCustomersAndStock();
     var stockOptions = getStockOptionsHtml();
@@ -2238,6 +2262,8 @@
       
       showExchangeReceipt({ receiptNumber: newReceiptNumber, originalReceiptNumber: sale.receiptNumber, customerName: sale.customerName, returnedItems: returnedItems, exchangeItems: exchangeSaleItems, totalRefund: totalRefund, exchangeTotal: exchangeTotal, difference: difference, differenceType: differenceType, paymentMethod: exchangeState.exchangePayment, attendantName: userData ? (userData.fullName || 'Staff') : 'Staff' });
       showToast('Exchange completed! #' + newReceiptNumber, 'success');
+      // FIX: Refresh stats after exchange
+      setTimeout(function() { updateStats(); }, 500);
     } catch (e) { showToast('Exchange failed: ' + e.message, 'error'); }
   };
 
@@ -2263,13 +2289,6 @@
   window.refreshData = function() { loadSales(); showToast('Refreshed', 'success'); };
 
   document.getElementById('salesSearchInput').addEventListener('input', renderSales);
-
-  function formatDateTime(d) {
-    if (!d) return 'Unknown';
-    if (typeof d === 'string') return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    var date = d.toDate ? d.toDate() : new Date(d);
-    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-  }
 
   onAuthStateChanged(auth, async function(u) {
     if (!u) { window.location.href = 'auth.html'; return; }
