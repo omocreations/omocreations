@@ -222,7 +222,6 @@
   <i class="fas fa-wifi"></i> You are offline — sales saved locally, will sync when reconnected
 </div>
 
-<!-- Debug Panel -->
 <div class="debug-panel" id="debugPanel">
   <h4>🐞 Debug Info</h4>
   <div id="debugContent">Loading...</div>
@@ -336,6 +335,7 @@
   let isOnline = navigator.onLine;
   let offlineSales = JSON.parse(localStorage.getItem('offlineSales') || '[]');
   let pendingCustomers = JSON.parse(localStorage.getItem('pendingCustomers') || '[]');
+  let isProcessingSale = false;
 
   // ============================================
   // SAFE NUMBER PARSING
@@ -916,22 +916,32 @@
     try {
       var custSnap = await getDocs(query(collection(db, 'customers'), where('status', '==', 'approved')));
       allCustomers = custSnap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+
       var stockSnap = await getDocs(collection(db, 'stock_items'));
       allStockItems = stockSnap.docs.map(function(d) {
         var data = d.data();
+        var unitQty = safeNumber(data.unitQty || data.quantityAvailable, 0);
+        var packSize = parseInt(data.packSize || 12);
+        var bundleSize = parseInt(data.bundleSize || 50);
+        var packQty = safeNumber(data.packQty, 0);
+        var bundleQty = safeNumber(data.bundleQty, 0);
+        // FIX: Calculate pack/bundle availability from unitQty if the dedicated field is 0
+        if (packQty === 0 && packSize > 0) { packQty = Math.floor(unitQty / packSize); }
+        if (bundleQty === 0 && bundleSize > 0) { bundleQty = Math.floor(unitQty / bundleSize); }
         return {
           id: d.id, name: data.name || '', category: data.category || '', itemType: data.itemType || 'general',
-          unitQty: safeNumber(data.unitQty || data.quantityAvailable, 0),
+          unitQty: unitQty,
           unitPrice: safeNumber(data.unitPrice, 0),
           halfQty: safeNumber(data.halfQty, 0), halfPrice: safeNumber(data.halfPrice, 0),
           quarterQty: safeNumber(data.quarterQty, 0), quarterPrice: safeNumber(data.quarterPrice, 0),
-          packSize: parseInt(data.packSize || 12), packQty: safeNumber(data.packQty, 0), packPrice: safeNumber(data.packPrice, 0),
-          bundleSize: parseInt(data.bundleSize || 50), bundleQty: safeNumber(data.bundleQty, 0), bundlePrice: safeNumber(data.bundlePrice, 0),
+          packSize: packSize, packQty: packQty, packPrice: safeNumber(data.packPrice, 0),
+          bundleSize: bundleSize, bundleQty: bundleQty, bundlePrice: safeNumber(data.bundlePrice, 0),
           measuredSubType: data.measuredSubType || 'yard',
           yardQty: safeNumber(data.yardQty, 0), pricePerYard: safeNumber(data.pricePerYard, 0),
           threshold: safeNumber(data.threshold, 10)
         };
       });
+
       var storeSnap = await getDocs(collection(db, 'store_items'));
       allStoreItems = storeSnap.docs.map(function(d) {
         var data = d.data();
@@ -941,7 +951,7 @@
   }
 
   // ============================================
-  // STOCK HELPERS
+  // STOCK HELPERS (FIXED for pack/bundle)
   // ============================================
   function getAvailableStock(item, size) {
     if (size === '0.5' || size === '½' || size === 'half') return safeNumber(item.halfQty, 0);
@@ -967,16 +977,22 @@
     return labels[type] || '🔧';
   }
 
+  // FIX: Updated getStockOptionsHtml to show calculated pack/bundle availability
   function getStockOptionsHtml() {
     return allStockItems.map(function(i) {
       var label = getItemTypeLabel(i.itemType || 'general');
       var stockInfo = '';
+      var unitQty = i.unitQty || 0;
+      var packQty = i.packQty || 0;
+      var bundleQty = i.bundleQty || 0;
       if (i.itemType === 'fashion') {
-        stockInfo = '(U:' + (i.unitQty||0) + ', H:' + (i.halfQty||0) + ', Q:' + (i.quarterQty||0) + ')';
+        stockInfo = '(U:' + unitQty + ', H:' + (i.halfQty||0) + ', Q:' + (i.quarterQty||0) + ')';
+      } else if (i.itemType === 'pack_bundle') {
+        stockInfo = '(Units:' + unitQty + ', Packs:' + packQty + ')';
       } else {
-        stockInfo = '(' + (i.unitQty||0) + ')';
+        stockInfo = '(' + unitQty + ')';
       }
-      return '<option value="' + i.id + '" data-name="' + (i.name||'') + '" data-price="' + (i.unitPrice||0) + '" data-halfprice="' + (i.halfPrice||0) + '" data-quarterprice="' + (i.quarterPrice||0) + '" data-packprice="' + (i.packPrice||0) + '" data-bundleprice="' + (i.bundlePrice||0) + '" data-packsize="' + (i.packSize||12) + '" data-bundlesize="' + (i.bundleSize||50) + '" data-stock="' + (i.unitQty||0) + '" data-halfstock="' + (i.halfQty||0) + '" data-quarterstock="' + (i.quarterQty||0) + '" data-packstock="' + (i.packQty||0) + '" data-bundlestock="' + (i.bundleQty||0) + '">' + label + ' ' + (i.name||'') + ' - ' + formatCurrency(i.unitPrice||0) + ' ' + stockInfo + '</option>';
+      return '<option value="' + i.id + '" data-name="' + (i.name||'') + '" data-price="' + (i.unitPrice||0) + '" data-halfprice="' + (i.halfPrice||0) + '" data-quarterprice="' + (i.quarterPrice||0) + '" data-packprice="' + (i.packPrice||0) + '" data-bundleprice="' + (i.bundlePrice||0) + '" data-packsize="' + (i.packSize||12) + '" data-bundlesize="' + (i.bundleSize||50) + '" data-stock="' + unitQty + '" data-halfstock="' + (i.halfQty||0) + '" data-quarterstock="' + (i.quarterQty||0) + '" data-packstock="' + packQty + '" data-bundlestock="' + bundleQty + '">' + label + ' ' + (i.name||'') + ' - ' + formatCurrency(i.unitPrice||0) + ' ' + stockInfo + '</option>';
     }).join('');
   }
 
@@ -998,26 +1014,27 @@
   }
 
   // ============================================
-  // PROCESS SALE (With immediate customer sync)
+  // PROCESS SALE (FIXED: double-click lock + pack/bundle unitQty deduction)
   // ============================================
   function processSaleCommon(items, total, customerInfo, paymentMethod, isCompanySale, extraData, saleType) {
+    // FIX: Prevent double processing
+    if (isProcessingSale) {
+      showToast('Processing in progress... Please wait.', 'warning');
+      return null;
+    }
+    isProcessingSale = true;
+
     var receiptNumber = generateReceiptNumber(saleType === 'wholesale' ? 'WSL' : 'RCP');
     var stockUpdates = [];
     var movements = [];
     var customerId = customerInfo.customerId || '';
 
-    // IMMEDIATE CUSTOMER SYNC — Try to save customer right now, even if offline
+    // IMMEDIATE CUSTOMER SYNC
     if (customerInfo._isNew && customerInfo._customerData) {
-      // Save to pending queue (will retry if offline)
       savePendingCustomer(customerInfo._customerData);
-      
-      // If online, also save directly to Firestore
       if (isOnline) {
         saveSaleToFirestoreCustomerOnly(customerInfo._customerData).then(function(cid) {
-          if (cid) {
-            customerId = cid;
-            console.log('Customer saved immediately:', customerInfo._customerData.fullName);
-          }
+          if (cid) { customerId = cid; }
         });
       }
     }
@@ -1028,8 +1045,8 @@
 
       if (saleType === 'wholesale') {
         var storeItem = allStoreItems.find(function(si) { return si.id === item.id; });
-        if (!storeItem) { showToast('Store item not found: ' + item.name, 'error'); return null; }
-        if (item.pieces > (storeItem.unitQty || 0)) { showToast('Insufficient store stock for ' + item.name, 'error'); return null; }
+        if (!storeItem) { showToast('Store item not found: ' + item.name, 'error'); isProcessingSale = false; return null; }
+        if (item.pieces > (storeItem.unitQty || 0)) { showToast('Insufficient store stock for ' + item.name, 'error'); isProcessingSale = false; return null; }
         var newStoreQty = (storeItem.unitQty || 0) - item.pieces;
         stockUpdates.push({ collection: 'store_items', id: item.id, data: { unitQty: newStoreQty, updatedAt: serverTimestamp() } });
         movements.push({ itemId: item.id, itemName: item.name, movementType: 'wholesale_sale', change: { unit: -item.pieces }, reference: 'Receipt ' + receiptNumber, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff' });
@@ -1042,6 +1059,7 @@
         var deductQty = getDeductQuantity(stockItem, size, qty);
         if (deductQty > available) {
           showToast('Insufficient stock for ' + item.name + ' (' + (item.sizeLabel || getSizeLabel(size)) + '). Available: ' + available + ', Need: ' + deductQty, 'error');
+          isProcessingSale = false;
           return null;
         }
         var updateData = { updatedAt: serverTimestamp() };
@@ -1053,12 +1071,18 @@
           updateData.quarterQty = safeNumber(stockItem.quarterQty, 0) - qty;
           change.quarter = -qty;
         } else if (size === 'pack') {
-          updateData.packQty = safeNumber(stockItem.packQty, 0) - qty;
-          updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
+          // FIX: Deduct from BOTH packQty AND unitQty
+          var newPackQty = safeNumber(stockItem.packQty, 0) - qty;
+          var newUnitQtyAfterPack = safeNumber(stockItem.unitQty, 0) - deductQty;
+          updateData.packQty = newPackQty;
+          updateData.unitQty = newUnitQtyAfterPack;
           change.unit = -deductQty;
         } else if (size === 'bundle') {
-          updateData.bundleQty = safeNumber(stockItem.bundleQty, 0) - qty;
-          updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
+          // FIX: Deduct from BOTH bundleQty AND unitQty
+          var newBundleQty = safeNumber(stockItem.bundleQty, 0) - qty;
+          var newUnitQtyAfterBundle = safeNumber(stockItem.unitQty, 0) - deductQty;
+          updateData.bundleQty = newBundleQty;
+          updateData.unitQty = newUnitQtyAfterBundle;
           change.unit = -deductQty;
         } else {
           updateData.unitQty = safeNumber(stockItem.unitQty, 0) - qty;
@@ -1088,6 +1112,9 @@
     };
     if (extraData) Object.assign(saleData, extraData);
 
+    // FIX: Release lock before saving
+    isProcessingSale = false;
+
     if (isOnline) {
       saveSaleToFirestore(saleData, customerInfo);
     } else {
@@ -1103,14 +1130,10 @@
       var existingQuery = query(collection(db, 'customers'), where('phone', '==', customerData.phone));
       var existingSnap = await getDocs(existingQuery);
       if (!existingSnap.empty) return existingSnap.docs[0].id;
-      
       var custRef = doc(collection(db, 'customers'));
       await setDoc(custRef, { ...customerData, createdAt: serverTimestamp() });
       return custRef.id;
-    } catch (e) {
-      console.warn('Customer save failed:', e.message);
-      return null;
-    }
+    } catch (e) { return null; }
   }
 
   async function saveSaleToFirestore(saleData, customerInfo) {
@@ -1149,7 +1172,6 @@
       await logAudit(saleData._type === 'wholesale' ? 'wholesale_sale' : 'sale', 'Sale ' + saleData.receiptNumber + ': ' + formatCurrency(saleData.totalAmount));
       return saleRef.id;
     } catch (e) {
-      console.error('Failed to save sale:', e);
       saleData.createdAt = new Date().toISOString();
       saleData._synced = false;
       saveOfflineSale(saleData);
@@ -1158,11 +1180,12 @@
   }
 
   // ============================================
-  // NEW SALE MODAL
+  // NEW SALE MODAL (FIXED: button ID for disable)
   // ============================================
   window.openNewSaleModal = async function() {
     await loadCustomersAndStock();
     if (allStockItems.length === 0) { showToast('No items available', 'error'); return; }
+
     var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + (c.fullName||'') + '" data-phone="' + (c.phone||'') + '" data-address="' + (c.address||c.location||'') + '">' + (c.fullName||'') + ' - ' + (c.phone||'No phone') + ' (' + (c.purchaseCount||0) + ' purchases)</option>'; }).join('');
     var stockOptions = getStockOptionsHtml();
     var firstItem = allStockItems[0];
@@ -1176,8 +1199,10 @@
       '<button type="button" class="btn btn-outline btn-sm" onclick="window._addSaleItem()"><i class="fas fa-plus"></i> Add Item</button>' +
       '<div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods"><div class="payment-method selected" data-method="cash" onclick="window._selectPayment(\'cash\')">💵 Cash</div><div class="payment-method" data-method="transfer" onclick="window._selectPayment(\'transfer\')">🏦 Transfer</div><div class="payment-method" data-method="pos" onclick="window._selectPayment(\'pos\')">💳 POS</div></div></div>' +
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div>' +
-      '<button class="btn btn-primary" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>'
+      // FIX: Added id="processSaleBtn" for disable functionality
+      '<button class="btn btn-primary" id="processSaleBtn" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>'
     );
+
     setTimeout(function() {
       $('#existingCustomerSelect').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
       var firstSelect = $('.item-select').first();
@@ -1290,6 +1315,7 @@
     return allValid;
   };
 
+  // FIX: _processSale with button disable on click
   window._processSale = function() {
     if (!window._updateSaleSummary()) { showToast('Some items exceed available stock. Please adjust quantities.', 'error'); return; }
     var customerId = '', customerName = '', customerPhone = '', customerEmail = '', customerAddress = '';
@@ -1341,10 +1367,17 @@
       }
     });
     if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
+
+    // FIX: Disable button immediately to prevent double-click
+    var btn = document.getElementById('processSaleBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...'; }
+
     showPinModal('Process Sale', 'process sale of ' + formatCurrency(total), function() {
       var customerInfo = { customerId: customerId, customerName: customerName, customerPhone: customerPhone, customerAddress: customerAddress, _isNew: isNewCustomer, _customerData: customerData };
       var result = processSaleCommon(items, total, customerInfo, selectedPayment, false, {}, 'regular');
       if (result) { showToast('Sale completed! #' + result.receiptNumber, 'success'); showReceiptModal(result); hideModal(); }
+      // FIX: Re-enable button
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale'; }
     });
   };
 
@@ -1355,6 +1388,7 @@
     await loadCustomersAndStock();
     var stockOptions = getStockOptionsHtml();
     var firstSizeOpts = allStockItems.length ? getSizeOptions(allStockItems[0]).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
+
     showModal('Sell to Company',
       '<p style="font-weight:600;margin-bottom:10px;">🏢 Customer: <span style="color:var(--primary);">Company</span></p>' +
       '<div class="form-group"><label>Collected By *</label><input type="text" class="form-control" id="companyCollectedBy" placeholder="Full name of person collecting"></div>' +
@@ -1365,6 +1399,7 @@
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="companyItemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="companyTotal">₦0</span></div></div>' +
       '<button class="btn btn-primary" onclick="window._processCompanySale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Company Sale</button>'
     );
+
     setTimeout(function() {
       var firstSelect = $('.item-select').first();
       firstSelect.select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { window._updateSizeDropdown(this); window._updateCompanySummary(); });
@@ -1376,6 +1411,7 @@
 
   var companySelectedPayment = 'cash';
   window._selectCompanyPayment = function(method) { companySelectedPayment = method; document.querySelectorAll('#modalOverlay .payment-method').forEach(function(m) { m.classList.remove('selected'); }); var el = document.querySelector('#modalOverlay .payment-method[data-method="' + method + '"]'); if (el) el.classList.add('selected'); };
+
   window._addCompanyItem = function() {
     var stockOptions = getStockOptionsHtml();
     var div = document.createElement('div'); div.className = 'item-row';
@@ -1423,6 +1459,7 @@
     var collectedBy = document.getElementById('companyCollectedBy')?.value?.trim();
     var usage = document.getElementById('companyUsage')?.value?.trim();
     if (!collectedBy || !usage) { showToast('Collected by and usage are required', 'error'); return; }
+
     var items = [], total = 0;
     document.querySelectorAll('#companyItems .item-row').forEach(function(row) {
       var checkbox = row.querySelector('.non-inv-check');
@@ -1454,6 +1491,7 @@
       }
     });
     if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
+
     showPinModal('Process Company Sale', 'process company sale of ' + formatCurrency(total), function() {
       var customerInfo = { customerId: '', customerName: 'Company', customerPhone: '', customerAddress: '' };
       var result = processSaleCommon(items, total, customerInfo, companySelectedPayment, true, { collectedBy: collectedBy, usage: usage }, 'regular');
@@ -1468,8 +1506,10 @@
     await loadCustomersAndStock();
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
     if (!availableItems.length) { showToast('No store stock available for wholesale', 'error'); return; }
+
     var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + (c.fullName||'') + '" data-phone="' + (c.phone||'') + '">' + (c.fullName||'') + ' - ' + (c.phone||'No phone') + '</option>'; }).join('');
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + (i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + (i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
+
     showModal('New Wholesale Sale',
       '<div class="customer-type-toggle"><button class="customer-type-btn active" data-type="existing" onclick="window._switchWSType(\'existing\')"><i class="fas fa-users"></i> Existing</button><button class="customer-type-btn" data-type="new" onclick="window._switchWSType(\'new\')"><i class="fas fa-user-plus"></i> New</button></div>' +
       '<div id="wsExistingSection"><div class="form-group"><label>Search Customer</label><select class="form-control" id="wsExistingCustomer" style="width:100%;"><option value="">-- Search --</option>' + custOptions + '</select></div></div>' +
@@ -1482,23 +1522,35 @@
       '<div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;"><button class="btn btn-outline ws-pay selected" data-m="cash" onclick="window._selWS(\'cash\')">💵 Cash</button><button class="btn btn-outline ws-pay" data-m="transfer" onclick="window._selWS(\'transfer\')">🏦 Transfer</button></div></div>' +
       '<button class="btn btn-primary" onclick="window._processWS()" style="width:100%;margin-top:12px;"><i class="fas fa-check-circle"></i> Complete Wholesale Sale</button>'
     );
-    setTimeout(function() { $('#wsExistingCustomer').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }); window._bindWSEvents(); }, 150);
+
+    setTimeout(function() {
+      $('#wsExistingCustomer').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
+      window._bindWSEvents();
+    }, 150);
   };
 
   var wholesaleCustomerType = 'existing', wholesalePayment = 'cash';
   window._switchWSType = function(type) { wholesaleCustomerType = type; document.querySelectorAll('.customer-type-btn').forEach(function(btn) { btn.classList.toggle('active', btn.dataset.type === type); }); document.getElementById('wsExistingSection').style.display = type === 'existing' ? 'block' : 'none'; document.getElementById('wsNewSection').style.display = type === 'new' ? 'block' : 'none'; };
   window._selWS = function(m) { wholesalePayment = m; document.querySelectorAll('.ws-pay').forEach(function(b) { b.classList.remove('selected'); }); document.querySelector('.ws-pay[data-m="' + m + '"]').classList.add('selected'); };
+
   window._addWSItem = function() {
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + (i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + (i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
     var div = document.createElement('div'); div.className = 'ws-item-row'; div.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center;';
     div.innerHTML = '<select class="form-control ws-select" style="flex:2;"><option value="">-- Select Item --</option>' + storeOptions + '</select><input type="number" class="form-control ws-qty" value="0" min="0" style="flex:0.8;" placeholder="Pieces"><input type="number" class="form-control ws-price" placeholder="Price/pc ₦" step="0.01" style="flex:1;"><button class="btn btn-sm btn-danger" onclick="this.closest(\'.ws-item-row\').remove();window._updateWSTotal();"><i class="fas fa-times"></i></button>';
     document.getElementById('wsItems').appendChild(div);
-    div.querySelector('.ws-select').addEventListener('change', function() { var opt = this.options[this.selectedIndex]; var priceInput = div.querySelector('.ws-price'); if (opt && opt.value && (!priceInput.value || parseFloat(priceInput.value) === 0)) priceInput.value = parseFloat(opt.getAttribute('data-cost')) || 0; window._updateWSTotal(); });
+    div.querySelector('.ws-select').addEventListener('change', function() {
+      var opt = this.options[this.selectedIndex];
+      var priceInput = div.querySelector('.ws-price');
+      if (opt && opt.value && (!priceInput.value || parseFloat(priceInput.value) === 0)) priceInput.value = parseFloat(opt.getAttribute('data-cost')) || 0;
+      window._updateWSTotal();
+    });
     div.querySelectorAll('.ws-qty,.ws-price').forEach(function(el) { el.addEventListener('change', window._updateWSTotal); el.addEventListener('input', window._updateWSTotal); });
     window._updateWSTotal();
   };
+
   window._bindWSEvents = function() { document.querySelectorAll('.ws-select,.ws-qty,.ws-price').forEach(function(el) { el.addEventListener('change', window._updateWSTotal); el.addEventListener('input', window._updateWSTotal); }); window._updateWSTotal(); };
+
   window._updateWSTotal = function() {
     var packSize = parseInt(document.getElementById('wsPackSize')?.value) || 50;
     var totalPieces = 0, totalAmount = 0;
@@ -1516,20 +1568,24 @@
     else if (totalPieces === packSize) { statusMsg.innerHTML = '✅ <strong>Perfect!</strong> Wholesale requirement met'; statusMsg.style.color = 'var(--success)'; }
     else { statusMsg.innerHTML = '⚠️ <strong>' + (totalPieces - packSize) + ' extra piece(s)</strong> beyond pack size'; statusMsg.style.color = 'var(--warning)'; }
   };
+
   window._processWS = function() {
     var packSize = parseInt(document.getElementById('wsPackSize')?.value) || 50;
     var customerId = '', customerName = '', customerPhone = '', isNewCustomer = false, customerData = null;
     if (wholesaleCustomerType === 'existing') {
       var select = document.getElementById('wsExistingCustomer');
       if (!select || !select.value) { showToast('Select a customer', 'error'); return; }
-      customerId = select.value; var opt = select.options[select.selectedIndex];
+      customerId = select.value;
+      var opt = select.options[select.selectedIndex];
       customerName = opt.getAttribute('data-name') || ''; customerPhone = opt.getAttribute('data-phone') || '';
     } else {
-      customerName = document.getElementById('wsNewName')?.value?.trim(); customerPhone = document.getElementById('wsNewPhone')?.value?.trim();
+      customerName = document.getElementById('wsNewName')?.value?.trim();
+      customerPhone = document.getElementById('wsNewPhone')?.value?.trim();
       if (!customerName || !customerPhone) { showToast('Customer name & phone required', 'error'); return; }
       isNewCustomer = true;
       customerData = { fullName: customerName, phone: customerPhone, address: document.getElementById('wsNewAddress')?.value?.trim() || '', status: 'pending_approval', createdBy: currentUser.uid, createdByName: userData.fullName };
     }
+
     var items = [], totalPieces = 0, totalAmount = 0;
     document.querySelectorAll('.ws-item-row').forEach(function(row) {
       var sel = row.querySelector('.ws-select'); var qtyEl = row.querySelector('.ws-qty'); var priceEl = row.querySelector('.ws-price');
@@ -1544,6 +1600,7 @@
     if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
     if (totalPieces < packSize) { showToast('Wholesale requires ' + packSize + ' pieces. You\'ve selected ' + totalPieces, 'error'); return; }
     if (totalPieces > packSize) { if (!confirm('You\'ve selected ' + totalPieces + ' pieces (' + (totalPieces - packSize) + ' extra). Continue?')) return; }
+
     showPinModal('Process Wholesale Sale', 'sell ' + totalPieces + ' pieces for ' + formatCurrency(totalAmount), function() {
       var customerInfo = { customerId: customerId, customerName: customerName, customerPhone: customerPhone, customerAddress: '', _isNew: isNewCustomer, _customerData: customerData };
       var result = processSaleCommon(items, totalAmount, customerInfo, wholesalePayment, false, { wholesalePackSize: packSize, totalPieces: totalPieces, exceededPackSize: totalPieces > packSize, extraPieces: totalPieces > packSize ? totalPieces - packSize : 0 }, 'wholesale');
@@ -1562,6 +1619,7 @@
     var title = isWholesale ? 'Wholesale Receipt' : (sale.isCompanySale ? 'Company Receipt' : 'Receipt');
     var extraInfo = sale.isCompanySale ? '<p class="cust-info"><strong>Collected by:</strong> ' + (sale.collectedBy || '') + '<br><strong>Usage:</strong> ' + (sale.usage || '') + '</p>' : '';
     var wholesaleInfo = isWholesale ? '<p class="rec">Pack Size: ' + (sale.wholesalePackSize || 50) + ' pcs | Sold: ' + (sale.totalPieces || 0) + ' pcs</p>' : '';
+
     showModal(title,
       '<div class="receipt-container"><div class="receipt-header"><h2 style="font-weight:bold;">✨ OmoCreations ✨</h2><p class="addr" style="font-weight:bold;">3 Oyebo Street, Abiola Way</p><p class="addr" style="font-weight:bold;">Behind Laroy Suite, Abeokuta 111101</p><p class="addr" style="font-weight:bold;">Ogun State, Nigeria</p><p class="addr" style="font-weight:bold;">📞 0807 734 0294</p><p class="rec" style="margin-top:6px;">#' + (sale.receiptNumber || 'N/A') + '</p><p class="rec">' + dateStr + ' ' + timeStr + '</p>' + wholesaleInfo + '</div><p class="cust-info"><strong>Customer:</strong> ' + (sale.customerName || 'Walk-in') + '<br><strong>Served by:</strong> ' + (sale.attendantName || 'Staff') + '</p>' + extraInfo + '<div class="receipt-items">' + itemsHtml + '</div><div class="receipt-total"><span>Total:</span><span>' + formatCurrency(sale.totalAmount) + '</span></div><p class="thanks">Thank you for your patronage!</p></div>' +
       '<div style="display:flex;gap:10px;margin-top:20px;"><button class="btn btn-primary" onclick="printReceiptModal(\'' + (sale.id || sale._localId) + '\')" style="flex:1;"><i class="fas fa-print"></i> Print</button><button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button></div>'
@@ -1601,7 +1659,9 @@
       '<button class="btn btn-primary" onclick="window._processReturn(\'' + saleId + '\')" style="width:100%;margin-top:15px;"><i class="fas fa-check"></i> Process Return</button>'
     );
   };
+
   window._selectReturnAction = function(action) { selectedReturnAction = action; document.querySelectorAll('.return-option').forEach(function(o) { o.classList.remove('selected'); }); document.querySelector('[data-action="' + action + '"]').classList.add('selected'); };
+
   window._processReturn = function(saleId) {
     var sale = allSales.find(function(s) { return (s.id || s._localId) === saleId; }); if (!sale) return;
     var returnedItems = [], totalRefund = 0;
