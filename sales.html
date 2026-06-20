@@ -204,6 +204,11 @@
     .toast { background:white; color:var(--dark); padding:14px 20px; border-radius:50px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px; font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease; border-left:4px solid var(--primary); transition:all 0.3s ease; }
     .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); } .toast.warning { border-left-color:var(--warning); } .toast i { font-size:1.1rem; }
 
+    /* UPDATE 17: CSS for return items */
+    .return-item-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; padding:14px; background:var(--gray-light); border-radius:12px; flex-wrap:wrap; }
+    .return-condition-btn { padding:6px 14px !important; font-size:0.7rem !important; }
+    .return-condition-btn.active { border-color:var(--primary) !important; background:var(--primary-soft) !important; color:var(--primary) !important; }
+
     @media (max-width:1400px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:768px) {
       .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; } .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); }
@@ -333,9 +338,24 @@
   let statsRevealed = false, selectedReturnAction = 'refund';
   let adminPins = new Set();
   let isOnline = navigator.onLine;
+  // UPDATE 1: Add Processing Lock Variable
+  let isProcessingSale = false;
+  // UPDATE 2: Add Exchange State Variable
+  let selectedRefundMethod = 'cash';
+  let selectedReturnCondition = 'resellable';
+  let exchangeState = { 
+    originalSale: null, 
+    returnedItems: [], 
+    totalRefund: 0, 
+    exchangeItems: [], 
+    exchangeTotal: 0, 
+    difference: 0, 
+    differenceType: '', 
+    exchangePayment: 'cash', 
+    reason: '' 
+  };
   let offlineSales = JSON.parse(localStorage.getItem('offlineSales') || '[]');
   let pendingCustomers = JSON.parse(localStorage.getItem('pendingCustomers') || '[]');
-  let isProcessingSale = false;
 
   // ============================================
   // SAFE NUMBER PARSING
@@ -920,14 +940,13 @@
       var stockSnap = await getDocs(collection(db, 'stock_items'));
       allStockItems = stockSnap.docs.map(function(d) {
         var data = d.data();
+        // UPDATE 3: Fix Pack/Bundle Availability Calculation
         var unitQty = safeNumber(data.unitQty || data.quantityAvailable, 0);
         var packSize = parseInt(data.packSize || 12);
         var bundleSize = parseInt(data.bundleSize || 50);
-        var packQty = safeNumber(data.packQty, 0);
-        var bundleQty = safeNumber(data.bundleQty, 0);
         // FIX: Calculate pack/bundle availability from unitQty if the dedicated field is 0
-        if (packQty === 0 && packSize > 0) { packQty = Math.floor(unitQty / packSize); }
-        if (bundleQty === 0 && bundleSize > 0) { bundleQty = Math.floor(unitQty / bundleSize); }
+        var packQty = safeNumber(data.packQty, 0) || Math.floor(unitQty / packSize);
+        var bundleQty = safeNumber(data.bundleQty, 0) || Math.floor(unitQty / bundleSize);
         return {
           id: d.id, name: data.name || '', category: data.category || '', itemType: data.itemType || 'general',
           unitQty: unitQty,
@@ -977,7 +996,7 @@
     return labels[type] || '🔧';
   }
 
-  // FIX: Updated getStockOptionsHtml to show calculated pack/bundle availability
+  // UPDATE 4: Updated getStockOptionsHtml to show calculated pack/bundle availability
   function getStockOptionsHtml() {
     return allStockItems.map(function(i) {
       var label = getItemTypeLabel(i.itemType || 'general');
@@ -1016,8 +1035,8 @@
   // ============================================
   // PROCESS SALE (FIXED: double-click lock + pack/bundle unitQty deduction)
   // ============================================
+  // UPDATE 5: Fix processSaleCommon — Double-Click Lock
   function processSaleCommon(items, total, customerInfo, paymentMethod, isCompanySale, extraData, saleType) {
-    // FIX: Prevent double processing
     if (isProcessingSale) {
       showToast('Processing in progress... Please wait.', 'warning');
       return null;
@@ -1070,19 +1089,15 @@
         } else if (size === '0.25' || size === '¼' || size === 'quarter') {
           updateData.quarterQty = safeNumber(stockItem.quarterQty, 0) - qty;
           change.quarter = -qty;
+        // UPDATE 7: Fix Pack Deduction in processSaleCommon
         } else if (size === 'pack') {
-          // FIX: Deduct from BOTH packQty AND unitQty
-          var newPackQty = safeNumber(stockItem.packQty, 0) - qty;
-          var newUnitQtyAfterPack = safeNumber(stockItem.unitQty, 0) - deductQty;
-          updateData.packQty = newPackQty;
-          updateData.unitQty = newUnitQtyAfterPack;
+          updateData.packQty = safeNumber(stockItem.packQty, 0) - qty;
+          updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
           change.unit = -deductQty;
+        // UPDATE 8: Fix Bundle Deduction in processSaleCommon
         } else if (size === 'bundle') {
-          // FIX: Deduct from BOTH bundleQty AND unitQty
-          var newBundleQty = safeNumber(stockItem.bundleQty, 0) - qty;
-          var newUnitQtyAfterBundle = safeNumber(stockItem.unitQty, 0) - deductQty;
-          updateData.bundleQty = newBundleQty;
-          updateData.unitQty = newUnitQtyAfterBundle;
+          updateData.bundleQty = safeNumber(stockItem.bundleQty, 0) - qty;
+          updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
           change.unit = -deductQty;
         } else {
           updateData.unitQty = safeNumber(stockItem.unitQty, 0) - qty;
@@ -1112,7 +1127,7 @@
     };
     if (extraData) Object.assign(saleData, extraData);
 
-    // FIX: Release lock before saving
+    // UPDATE 6: Fix processSaleCommon — Release Lock
     isProcessingSale = false;
 
     if (isOnline) {
@@ -1199,7 +1214,7 @@
       '<button type="button" class="btn btn-outline btn-sm" onclick="window._addSaleItem()"><i class="fas fa-plus"></i> Add Item</button>' +
       '<div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods"><div class="payment-method selected" data-method="cash" onclick="window._selectPayment(\'cash\')">💵 Cash</div><div class="payment-method" data-method="transfer" onclick="window._selectPayment(\'transfer\')">🏦 Transfer</div><div class="payment-method" data-method="pos" onclick="window._selectPayment(\'pos\')">💳 POS</div></div></div>' +
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div>' +
-      // FIX: Added id="processSaleBtn" for disable functionality
+      // UPDATE 11: Add id="processSaleBtn" to the Process Sale Button
       '<button class="btn btn-primary" id="processSaleBtn" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>'
     );
 
@@ -1315,7 +1330,7 @@
     return allValid;
   };
 
-  // FIX: _processSale with button disable on click
+  // UPDATE 9 & 10: _processSale with button disable/enable logic
   window._processSale = function() {
     if (!window._updateSaleSummary()) { showToast('Some items exceed available stock. Please adjust quantities.', 'error'); return; }
     var customerId = '', customerName = '', customerPhone = '', customerEmail = '', customerAddress = '';
@@ -1368,7 +1383,6 @@
     });
     if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
 
-    // FIX: Disable button immediately to prevent double-click
     var btn = document.getElementById('processSaleBtn');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...'; }
 
@@ -1376,7 +1390,6 @@
       var customerInfo = { customerId: customerId, customerName: customerName, customerPhone: customerPhone, customerAddress: customerAddress, _isNew: isNewCustomer, _customerData: customerData };
       var result = processSaleCommon(items, total, customerInfo, selectedPayment, false, {}, 'regular');
       if (result) { showToast('Sale completed! #' + result.receiptNumber, 'success'); showReceiptModal(result); hideModal(); }
-      // FIX: Re-enable button
       if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale'; }
     });
   };
@@ -1643,53 +1656,599 @@
   window.printReceiptModal = function(id) { hideModal(); setTimeout(function() { window.printReceipt(id); }, 300); };
 
   // ============================================
-  // RETURNS
+  // RETURNS - UPDATE 12: Replace the Entire openReturnModal Function
   // ============================================
   window.openReturnModal = function(saleId) {
     var sale = allSales.find(function(s) { return (s.id || s._localId) === saleId; });
     if (!sale) return;
-    if (sale._type === 'wholesale') { showToast('Wholesale returns not supported yet', 'error'); return; }
+    
+    if (sale.status === 'returned') {
+      showToast('This sale has already been returned', 'error');
+      return;
+    }
+    
+    if (sale._type === 'wholesale') {
+      showToast('Wholesale returns: Please process via inventory adjustment', 'warning');
+      return;
+    }
+
+    var saleDate = sale.createdAt ? (sale.createdAt.toDate ? sale.createdAt.toDate() : new Date(sale.createdAt)) : new Date();
+    var daysSinceSale = Math.floor((new Date() - saleDate) / (1000 * 60 * 60 * 24));
+    if (daysSinceSale > 30) {
+      showToast('This sale is ' + daysSinceSale + ' days old. Returns limited to 30 days.', 'error');
+      return;
+    }
+
+    var saleDateStr = sale.createdAt ? formatDateTime(sale.createdAt) : 'Unknown';
+    
     var itemsHtml = sale.items.map(function(item, idx) {
-      return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--gray-light);border-radius:10px;"><span style="flex:1;"><strong>' + item.name + '</strong>' + (item.sizeLabel ? ' <small>(' + item.sizeLabel + ')</small>' : '') + '<br><small>Sold: ' + item.quantity + ' x ' + formatCurrency(item.unitPrice) + '</small></span><input type="number" step="1" id="return-qty-' + idx + '" value="0" min="0" max="' + item.quantity + '" style="width:70px;padding:8px;border-radius:8px;border:1px solid #ddd;text-align:center;"><span style="font-size:0.8rem;color:var(--gray);">/ ' + item.quantity + '</span></div>';
+      return '<div class="return-item-row">' +
+        '<div style="flex:2;min-width:150px;">' +
+          '<strong>' + item.name + '</strong>' +
+          (item.sizeLabel ? ' <small style="color:var(--gray);">(' + item.sizeLabel + ')</small>' : '') +
+          '<br><small style="color:var(--gray);">Sold: ' + item.quantity + ' × ' + formatCurrency(item.unitPrice) + ' = ' + formatCurrency(item.quantity * item.unitPrice) + '</small>' +
+        '</div>' +
+        '<div style="flex:1;min-width:120px;display:flex;align-items:center;gap:8px;">' +
+          '<input type="number" class="form-control return-qty-input" id="return-qty-' + idx + '" value="' + item.quantity + '" min="0" max="' + item.quantity + '" style="width:80px;text-align:center;padding:10px;" onchange="window._updateReturnTotal()" oninput="window._updateReturnTotal()">' +
+          '<span style="font-size:0.8rem;color:var(--gray);white-space:nowrap;">/ ' + item.quantity + '</span>' +
+          '<button class="btn btn-sm btn-outline" onclick="document.getElementById(\'return-qty-' + idx + '\').value=' + item.quantity + ';window._updateReturnTotal();" title="Return All" style="padding:4px 8px;font-size:0.65rem;"><i class="fas fa-check-double"></i></button>' +
+        '</div>' +
+        '<div style="flex:0.5;min-width:80px;text-align:right;">' +
+          '<span class="return-item-amount" id="return-amount-' + idx + '" style="font-weight:700;color:var(--danger);">' + formatCurrency(item.quantity * item.unitPrice) + '</span>' +
+        '</div>' +
+      '</div>';
     }).join('');
+
     showModal('Return Goods',
-      '<p><strong>Receipt:</strong> ' + sale.receiptNumber + ' | <strong>Customer:</strong> ' + sale.customerName + '</p><p style="color:var(--gray);">Select quantity to return:</p>' + itemsHtml +
-      '<div class="form-group"><label>Reason</label><textarea class="form-control" id="returnReason" rows="2"></textarea></div><p style="font-weight:600;">Return Action:</p>' +
-      '<div class="return-options"><div class="return-option selected" data-action="refund" onclick="window._selectReturnAction(\'refund\')"><i class="fas fa-money-bill-wave"></i><div><strong>Full Refund</strong><br><small>Return money to customer</small></div></div><div class="return-option" data-action="exchange_same" onclick="window._selectReturnAction(\'exchange_same\')"><i class="fas fa-exchange-alt"></i><div><strong>Exchange Same Price</strong></div></div><div class="return-option" data-action="exchange_higher" onclick="window._selectReturnAction(\'exchange_higher\')"><i class="fas fa-level-up-alt"></i><div><strong>Exchange + Add Money</strong></div></div><div class="return-option" data-action="store_credit" onclick="window._selectReturnAction(\'store_credit\')"><i class="fas fa-piggy-bank"></i><div><strong>Store Credit</strong></div></div></div>' +
-      '<button class="btn btn-primary" onclick="window._processReturn(\'' + saleId + '\')" style="width:100%;margin-top:15px;"><i class="fas fa-check"></i> Process Return</button>'
+      '<div style="background:var(--primary-soft);padding:16px;border-radius:14px;margin-bottom:16px;">' +
+        '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">' +
+          '<div><strong style="font-size:0.75rem;color:var(--gray);">Receipt</strong><br><span class="badge badge-info" style="font-size:0.85rem;">#' + sale.receiptNumber + '</span></div>' +
+          '<div><strong style="font-size:0.75rem;color:var(--gray);">Customer</strong><br><span style="font-weight:600;">' + (sale.customerName || 'Walk-in') + '</span></div>' +
+          '<div><strong style="font-size:0.75rem;color:var(--gray);">Date</strong><br><span>' + saleDateStr + '</span></div>' +
+          '<div><strong style="font-size:0.75rem;color:var(--gray);">Attendant</strong><br><span>' + (sale.attendantName || 'Staff') + '</span></div>' +
+        '</div>' +
+      '</div>' +
+      '<p style="font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;">' +
+        '<i class="fas fa-box-open" style="color:var(--primary);"></i> Items to Return' +
+        '<button class="btn btn-sm btn-outline" onclick="window._returnAll()" style="margin-left:auto;font-size:0.7rem;"><i class="fas fa-check-double"></i> Return All</button>' +
+      '</p>' +
+      '<div id="returnItemsContainer">' + itemsHtml + '</div>' +
+      '<div style="background:rgba(239,68,68,0.08);padding:14px;border-radius:12px;margin:16px 0;text-align:center;">' +
+        '<span style="font-size:0.75rem;color:var(--gray);">Total Refund</span><br>' +
+        '<span id="returnTotalAmount" style="font-size:1.8rem;font-weight:800;color:var(--danger);">' + formatCurrency(sale.totalAmount) + '</span>' +
+      '</div>' +
+      '<div id="refundMethodSection">' +
+        '<div class="form-group"><label><i class="fas fa-money-bill-wave"></i> Refund Method</label>' +
+          '<div class="payment-methods">' +
+            '<div class="payment-method selected" data-method="cash" onclick="window._selectRefundMethod(\'cash\')">💵 Cash</div>' +
+            '<div class="payment-method" data-method="transfer" onclick="window._selectRefundMethod(\'transfer\')">🏦 Transfer</div>' +
+            '<div class="payment-method" data-method="pos" onclick="window._selectRefundMethod(\'pos\')">💳 POS</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="form-group"><label><i class="fas fa-comment"></i> Reason for Return *</label>' +
+        '<textarea class="form-control" id="returnReason" rows="2" placeholder="e.g., Damaged, Wrong item, Customer changed mind..."></textarea>' +
+      '</div>' +
+      '<div class="form-group"><label><i class="fas fa-clipboard-check"></i> Item Condition</label>' +
+        '<div style="display:flex;gap:10px;">' +
+          '<button class="btn btn-outline btn-sm return-condition-btn active" data-condition="resellable" onclick="window._selectReturnCondition(\'resellable\')">✅ Resellable</button>' +
+          '<button class="btn btn-outline btn-sm return-condition-btn" data-condition="damaged" onclick="window._selectReturnCondition(\'damaged\')">⚠️ Damaged</button>' +
+          '<button class="btn btn-outline btn-sm return-condition-btn" data-condition="expired" onclick="window._selectReturnCondition(\'expired\')">❌ Expired</button>' +
+        '</div>' +
+      '</div>' +
+      '<p style="font-weight:600;margin-bottom:8px;"><i class="fas fa-redo"></i> Return Action</p>' +
+      '<div class="return-options">' +
+        '<div class="return-option selected" data-action="refund" onclick="window._selectReturnAction(\'refund\')"><i class="fas fa-money-bill-wave"></i><div><strong>Full Refund</strong><br><small>Return money to customer</small></div></div>' +
+        '<div class="return-option" data-action="exchange_same" onclick="window._selectReturnAction(\'exchange_same\')"><i class="fas fa-exchange-alt"></i><div><strong>Exchange Same Price</strong><br><small>Swap for another item</small></div></div>' +
+        '<div class="return-option" data-action="exchange_higher" onclick="window._selectReturnAction(\'exchange_higher\')"><i class="fas fa-level-up-alt"></i><div><strong>Exchange + Add Money</strong><br><small>Upgrade to higher price</small></div></div>' +
+        '<div class="return-option" data-action="store_credit" onclick="window._selectReturnAction(\'store_credit\')"><i class="fas fa-piggy-bank"></i><div><strong>Store Credit</strong><br><small>Keep for later purchase</small></div></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;margin-top:20px;">' +
+        '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Cancel</button>' +
+        '<button class="btn btn-warning" onclick="window._processReturn(\'' + saleId + '\')" style="flex:2;" id="processReturnBtn"><i class="fas fa-check"></i> Process Return</button>' +
+      '</div>'
     );
+    
+    window._updateReturnTotal();
   };
 
-  window._selectReturnAction = function(action) { selectedReturnAction = action; document.querySelectorAll('.return-option').forEach(function(o) { o.classList.remove('selected'); }); document.querySelector('[data-action="' + action + '"]').classList.add('selected'); };
+  // UPDATE 13: Add Return Helper Functions
+  window._returnAll = function() {
+    document.querySelectorAll('.return-qty-input').forEach(function(input) {
+      input.value = input.max;
+    });
+    window._updateReturnTotal();
+  };
 
+  window._updateReturnTotal = function() {
+    var total = 0;
+    document.querySelectorAll('.return-item-row').forEach(function(row, idx) {
+      var qtyInput = document.getElementById('return-qty-' + idx);
+      var amountSpan = document.getElementById('return-amount-' + idx);
+      if (qtyInput && amountSpan) {
+        var qty = parseFloat(qtyInput.value) || 0;
+        var maxQty = parseFloat(qtyInput.max) || 1;
+        var price = 0;
+        var priceText = row.querySelector('small')?.textContent || '';
+        var priceMatch = priceText.match(/= ₦([\d,]+)/);
+        if (priceMatch) {
+          var totalPrice = parseFloat(priceMatch[1].replace(/,/g, ''));
+          price = totalPrice / maxQty;
+        }
+        var amount = qty * price;
+        amountSpan.textContent = formatCurrency(amount);
+        amountSpan.style.color = qty > 0 ? 'var(--danger)' : 'var(--gray)';
+        total += amount;
+      }
+    });
+    document.getElementById('returnTotalAmount').textContent = formatCurrency(total);
+  };
+
+  window._selectRefundMethod = function(method) {
+    selectedRefundMethod = method;
+    document.querySelectorAll('#refundMethodSection .payment-method').forEach(function(m) {
+      m.classList.remove('selected');
+    });
+    var el = document.querySelector('#refundMethodSection .payment-method[data-method="' + method + '"]');
+    if (el) el.classList.add('selected');
+  };
+
+  window._selectReturnCondition = function(condition) {
+    selectedReturnCondition = condition;
+    document.querySelectorAll('.return-condition-btn').forEach(function(b) {
+      b.classList.remove('active');
+    });
+    var el = document.querySelector('.return-condition-btn[data-condition="' + condition + '"]');
+    if (el) el.classList.add('active');
+  };
+
+  window._selectReturnAction = function(action) {
+    selectedReturnAction = action;
+    document.querySelectorAll('.return-option').forEach(function(o) {
+      o.classList.remove('selected');
+    });
+    var el = document.querySelector('[data-action="' + action + '"]');
+    if (el) el.classList.add('selected');
+    
+    var refundSection = document.getElementById('refundMethodSection');
+    if (refundSection) {
+      refundSection.style.display = action === 'refund' ? 'block' : 'none';
+    }
+  };
+
+  // UPDATE 14: Replace the _processReturn Function
   window._processReturn = function(saleId) {
-    var sale = allSales.find(function(s) { return (s.id || s._localId) === saleId; }); if (!sale) return;
+    var sale = allSales.find(function(s) { return (s.id || s._localId) === saleId; }); 
+    if (!sale) return;
+    
+    if (sale.status === 'returned') {
+      showToast('This sale has already been returned', 'error');
+      return;
+    }
+    
+    if (sale._type === 'wholesale') {
+      showToast('Wholesale returns not supported here', 'warning');
+      return;
+    }
+    
     var returnedItems = [], totalRefund = 0;
-    sale.items.forEach(function(item, idx) { var q = parseFloat(document.getElementById('return-qty-' + idx)?.value) || 0; if (q > 0) { returnedItems.push(Object.assign({}, item, { returnedQty: q, refundAmount: q * item.unitPrice })); totalRefund += q * item.unitPrice; } });
-    if (returnedItems.length === 0) { showToast('Select quantity to return', 'error'); return; }
+    sale.items.forEach(function(item, idx) {
+      var q = parseFloat(document.getElementById('return-qty-' + idx)?.value) || 0;
+      if (q > 0 && q <= (item.quantity || 1)) {
+        returnedItems.push(Object.assign({}, item, { returnedQty: q, refundAmount: q * item.unitPrice }));
+        totalRefund += q * item.unitPrice;
+      }
+    });
+    
+    if (returnedItems.length === 0) { showToast('Select valid quantity to return', 'error'); return; }
     var reason = document.getElementById('returnReason')?.value?.trim() || 'No reason';
-    showPinModal('Process Return', 'process return of ' + formatCurrency(totalRefund), async function() {
-      try {
-        var batch = writeBatch(db);
-        for (var i = 0; i < returnedItems.length; i++) {
-          var item = returnedItems[i];
-          if (item.id && !item.isNonInventory) {
-            var ref = doc(db, 'stock_items', item.id);
-            var stockItem = allStockItems.find(function(si) { return si.id === item.id; });
-            var size = item.size || '1';
-            var addBackQty = getDeductQuantity(stockItem || {}, size, item.returnedQty);
-            var currentUnitQty = stockItem ? safeNumber(stockItem.unitQty, 0) : 0;
-            batch.update(ref, { unitQty: currentUnitQty + addBackQty, updatedAt: serverTimestamp() });
+    
+    exchangeState.originalSale = sale;
+    exchangeState.returnedItems = returnedItems;
+    exchangeState.totalRefund = totalRefund;
+    exchangeState.reason = reason;
+    
+    if (selectedReturnAction === 'refund') {
+      showPinModal('Process Refund', 'process refund of ' + formatCurrency(totalRefund), function() {
+        processReturnFinal(sale, returnedItems, totalRefund, reason, 'refund', selectedRefundMethod, selectedReturnCondition);
+      });
+    } else if (selectedReturnAction === 'exchange_same' || selectedReturnAction === 'exchange_higher') {
+      openExchangePicker(sale, returnedItems, totalRefund, reason, selectedReturnAction);
+    } else if (selectedReturnAction === 'store_credit') {
+      showPinModal('Process Store Credit', 'issue store credit of ' + formatCurrency(totalRefund), function() {
+        processReturnFinal(sale, returnedItems, totalRefund, reason, 'store_credit', 'credit', selectedReturnCondition);
+      });
+    }
+  };
+
+  // UPDATE 15: Add processReturnFinal Function
+  async function processReturnFinal(sale, returnedItems, totalRefund, reason, action, refundMethod, condition) {
+    try {
+      var batch = writeBatch(db);
+      var movements = [];
+      
+      for (var i = 0; i < returnedItems.length; i++) {
+        var item = returnedItems[i];
+        if (item.id && !item.isNonInventory) {
+          var ref = doc(db, 'stock_items', item.id);
+          var stockItem = allStockItems.find(function(si) { return si.id === item.id; });
+          if (!stockItem) {
+            showToast('Item "' + item.name + '" no longer exists in inventory.', 'error');
+            return;
+          }
+          
+          var size = item.size || '1';
+          var qty = item.returnedQty;
+          var deductQty = getDeductQuantity(stockItem, size, qty);
+          var updateData = { updatedAt: serverTimestamp() };
+          var change = {};
+          
+          if (size === '0.5' || size === '½' || size === 'half') {
+            updateData.halfQty = safeNumber(stockItem.halfQty, 0) + qty;
+            change.half = +qty;
+          } else if (size === '0.25' || size === '¼' || size === 'quarter') {
+            updateData.quarterQty = safeNumber(stockItem.quarterQty, 0) + qty;
+            change.quarter = +qty;
+          } else if (size === 'pack') {
+            updateData.packQty = safeNumber(stockItem.packQty, 0) + qty;
+            updateData.unitQty = safeNumber(stockItem.unitQty, 0) + deductQty;
+            change.unit = +deductQty;
+          } else if (size === 'bundle') {
+            updateData.bundleQty = safeNumber(stockItem.bundleQty, 0) + qty;
+            updateData.unitQty = safeNumber(stockItem.unitQty, 0) + deductQty;
+            change.unit = +deductQty;
+          } else {
+            updateData.unitQty = safeNumber(stockItem.unitQty, 0) + qty;
+            change.unit = +qty;
+          }
+          
+          batch.update(ref, updateData);
+          movements.push({
+            itemId: item.id, itemName: item.name, movementType: 'return',
+            change: change, reference: 'Return - Receipt ' + sale.receiptNumber,
+            performedBy: currentUser ? currentUser.uid : 'unknown',
+            performedByName: userData ? (userData.fullName || 'Staff') : 'Staff'
+          });
+        }
+      }
+      
+      for (var j = 0; j < movements.length; j++) {
+        var movRef = doc(collection(db, 'stock_movements'));
+        batch.set(movRef, Object.assign({}, movements[j], { performedAt: serverTimestamp() }));
+      }
+      
+      batch.set(doc(collection(db, 'returns')), {
+        saleId: sale.id, saleReceiptNumber: sale.receiptNumber,
+        customerId: sale.customerId, customerName: sale.customerName,
+        returnedItems: returnedItems, totalRefund: totalRefund,
+        returnAction: action, reason: reason, condition: condition,
+        refundMethod: refundMethod,
+        processedBy: currentUser.uid, processedByName: userData.fullName,
+        createdAt: serverTimestamp()
+      });
+      
+      batch.update(doc(db, 'sales', sale.id), {
+        status: 'returned', returnedAt: serverTimestamp(),
+        returnedBy: currentUser.uid, returnedByName: userData.fullName,
+        returnAction: action, totalRefund: totalRefund
+      });
+      
+      if (sale.customerId && action === 'refund') {
+        batch.update(doc(db, 'customers', sale.customerId), {
+          totalSpent: increment(-totalRefund),
+          purchaseCount: increment(-1)
+        });
+      }
+      
+      await batch.commit();
+      await logAudit('return_goods', action + ' ' + formatCurrency(totalRefund) + ' | Receipt ' + sale.receiptNumber);
+      
+      var labels = {
+        refund: 'Refunded: -' + formatCurrency(totalRefund),
+        store_credit: 'Store credit: ' + formatCurrency(totalRefund)
+      };
+      showToast(labels[action] + ' | Stock restored and movements logged', 'success');
+      hideModal();
+    } catch (e) {
+      showToast('Return failed: ' + e.message, 'error');
+    }
+  }
+
+  // UPDATE 16: Add Exchange System Functions
+  async function openExchangePicker(sale, returnedItems, totalRefund, reason, action) {
+    await loadCustomersAndStock();
+    var stockOptions = getStockOptionsHtml();
+    var firstItem = allStockItems[0];
+    var firstSizeOpts = firstItem ? getSizeOptions(firstItem).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
+    var returnedNames = returnedItems.map(function(i) { return i.name; }).join(', ');
+    var diffLabel = action === 'exchange_higher' ? 'Exchange + Add Money' : 'Exchange Same Price';
+    
+    showModal(diffLabel,
+      '<div style="background:var(--primary-soft);padding:16px;border-radius:14px;margin-bottom:16px;">' +
+        '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">' +
+          '<div><strong style="font-size:0.75rem;color:var(--gray);">Returning</strong><br><span style="font-weight:600;">' + returnedNames + '</span></div>' +
+          '<div><strong style="font-size:0.75rem;color:var(--gray);">Return Value</strong><br><span style="font-weight:700;color:var(--danger);font-size:1.2rem;">' + formatCurrency(totalRefund) + '</span></div>' +
+        '</div>' +
+      '</div>' +
+      '<p style="font-weight:600;margin-bottom:8px;"><i class="fas fa-exchange-alt"></i> Select Items to Exchange For</p>' +
+      '<div id="exchangeItems">' +
+        '<div class="item-row">' +
+          '<select class="form-control exchange-item-select" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
+          '<select class="form-control exchange-item-size" style="flex:0.8;min-width:90px;">' + firstSizeOpts + '</select>' +
+          '<input type="number" class="form-control exchange-item-qty" value="1" min="1" style="flex:0.5;min-width:60px;">' +
+          '<span class="stock-warning"></span>' +
+          '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.item-row\').remove();window._updateExchangeTotal();"><i class="fas fa-times"></i></button>' +
+        '</div>' +
+      '</div>' +
+      '<button type="button" class="btn btn-outline btn-sm" onclick="window._addExchangeItem()"><i class="fas fa-plus"></i> Add Item</button>' +
+      '<div style="background:var(--gray-light);padding:14px;border-radius:12px;margin:16px 0;">' +
+        '<div class="summary-row"><span>Return Value:</span><span style="color:var(--danger);">' + formatCurrency(totalRefund) + '</span></div>' +
+        '<div class="summary-row"><span>Exchange Items:</span><span id="exchangeItemsTotal">₦0</span></div>' +
+        '<div class="summary-row total" id="exchangeDifferenceRow" style="display:none;">' +
+          '<span id="exchangeDiffLabel">Difference:</span>' +
+          '<span id="exchangeDiffAmount" style="font-weight:800;"></span>' +
+        '</div>' +
+      '</div>' +
+      '<div id="exchangePaymentSection" style="display:none;">' +
+        '<div class="form-group"><label><i class="fas fa-money-bill-wave"></i> Additional Payment Method</label>' +
+          '<div class="payment-methods">' +
+            '<div class="payment-method selected" data-method="cash" onclick="window._selectExchangePayment(\'cash\')">💵 Cash</div>' +
+            '<div class="payment-method" data-method="transfer" onclick="window._selectExchangePayment(\'transfer\')">🏦 Transfer</div>' +
+            '<div class="payment-method" data-method="pos" onclick="window._selectExchangePayment(\'pos\')">💳 POS</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div id="exchangeRefundSection" style="display:none;">' +
+        '<div class="form-group"><label><i class="fas fa-hand-holding-usd"></i> Refund Method for Difference</label>' +
+          '<div class="payment-methods">' +
+            '<div class="payment-method selected" data-method="cash" onclick="window._selectExchangePayment(\'cash\')">💵 Cash</div>' +
+            '<div class="payment-method" data-method="transfer" onclick="window._selectExchangePayment(\'transfer\')">🏦 Transfer</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<p style="font-size:0.8rem;color:var(--primary);margin-top:8px;"><i class="fas fa-info-circle"></i> ' + 
+        (action === 'exchange_higher' ? 'Customer can pick items worth more and pay the difference, or pick items worth less and receive a refund.' : 'Customer can pick items of equal or lesser value.') + 
+      '</p>' +
+      '<div style="display:flex;gap:10px;margin-top:20px;">' +
+        '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Cancel</button>' +
+        '<button class="btn btn-primary" onclick="window._confirmExchange()" style="flex:2;" id="confirmExchangeBtn"><i class="fas fa-check-circle"></i> Confirm Exchange</button>' +
+      '</div>'
+    );
+    
+    setTimeout(function() {
+      $('.exchange-item-select').first().select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { window._updateExchangeSizeDropdown(this); window._updateExchangeTotal(); });
+      $('.exchange-item-qty').on('input', window._updateExchangeTotal);
+      $('.exchange-item-size').on('change', window._updateExchangeTotal);
+      window._updateExchangeTotal();
+    }, 150);
+  };
+
+  window._addExchangeItem = function() {
+    var stockOptions = getStockOptionsHtml();
+    var div = document.createElement('div'); div.className = 'item-row';
+    div.innerHTML = '<select class="form-control exchange-item-select" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select><select class="form-control exchange-item-size" style="flex:0.8;min-width:90px;"><option value="1">1 (Unit)</option></select><input type="number" class="form-control exchange-item-qty" value="1" min="1" style="flex:0.5;min-width:60px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.closest(\'.item-row\').remove();window._updateExchangeTotal();"><i class="fas fa-times"></i></button>';
+    document.getElementById('exchangeItems').appendChild(div);
+    $(div).find('.exchange-item-select').select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { window._updateExchangeSizeDropdown(this); window._updateExchangeTotal(); });
+    $(div).find('.exchange-item-qty').on('input', window._updateExchangeTotal);
+    $(div).find('.exchange-item-size').on('change', window._updateExchangeTotal);
+    window._updateExchangeTotal();
+  };
+
+  window._updateExchangeSizeDropdown = function(selectEl) {
+    var row = selectEl.closest('.item-row'); if (!row) return;
+    var sizeEl = row.querySelector('.exchange-item-size'); if (!sizeEl) return;
+    var opt = selectEl.options[selectEl.selectedIndex];
+    if (!opt || !opt.value) { sizeEl.innerHTML = '<option value="1">1 (Unit)</option>'; return; }
+    var itemData = {
+      unitPrice: parseFloat(opt.getAttribute('data-price')) || 0,
+      halfPrice: parseFloat(opt.getAttribute('data-halfprice')) || 0,
+      quarterPrice: parseFloat(opt.getAttribute('data-quarterprice')) || 0,
+      packPrice: parseFloat(opt.getAttribute('data-packprice')) || 0,
+      bundlePrice: parseFloat(opt.getAttribute('data-bundleprice')) || 0,
+      packSize: parseInt(opt.getAttribute('data-packsize')) || 12,
+      bundleSize: parseInt(opt.getAttribute('data-bundlesize')) || 50
+    };
+    var options = getSizeOptions(itemData);
+    sizeEl.innerHTML = options.map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('');
+    window._updateExchangeTotal();
+  };
+
+  window._updateExchangeTotal = function() {
+    var exchangeTotal = 0;
+    document.querySelectorAll('#exchangeItems .item-row').forEach(function(row) {
+      var select = row.querySelector('.exchange-item-select');
+      var sizeEl = row.querySelector('.exchange-item-size');
+      var qtyEl = row.querySelector('.exchange-item-qty');
+      if (select && select.value && qtyEl) {
+        var opt = select.options[select.selectedIndex];
+        var size = sizeEl ? (sizeEl.value || '1') : '1';
+        var qty = parseFloat(qtyEl.value) || 1;
+        var price = parseFloat(opt && opt.getAttribute('data-price')) || 0;
+        if (size === '0.5' && parseFloat(opt && opt.getAttribute('data-halfprice')) > 0) price = parseFloat(opt.getAttribute('data-halfprice'));
+        else if (size === '0.25' && parseFloat(opt && opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
+        else if (size === 'pack' && parseFloat(opt && opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
+        else if (size === 'bundle' && parseFloat(opt && opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
+        exchangeTotal += price * qty;
+      }
+    });
+    
+    document.getElementById('exchangeItemsTotal').textContent = formatCurrency(exchangeTotal);
+    
+    var diff = exchangeTotal - exchangeState.totalRefund;
+    var diffRow = document.getElementById('exchangeDifferenceRow');
+    var diffLabel = document.getElementById('exchangeDiffLabel');
+    var diffAmount = document.getElementById('exchangeDiffAmount');
+    var paymentSection = document.getElementById('exchangePaymentSection');
+    var refundSection = document.getElementById('exchangeRefundSection');
+    
+    if (Math.abs(diff) > 0.01) {
+      diffRow.style.display = 'flex';
+      if (diff > 0) {
+        diffLabel.textContent = 'Additional Payment Required:';
+        diffAmount.textContent = formatCurrency(diff);
+        diffAmount.style.color = 'var(--primary)';
+        paymentSection.style.display = 'block';
+        refundSection.style.display = 'none';
+        exchangeState.differenceType = 'customer_pays';
+      } else {
+        diffLabel.textContent = 'Refund to Customer:';
+        diffAmount.textContent = formatCurrency(Math.abs(diff));
+        diffAmount.style.color = 'var(--danger)';
+        paymentSection.style.display = 'none';
+        refundSection.style.display = 'block';
+        exchangeState.differenceType = 'refund_customer';
+      }
+      exchangeState.difference = Math.abs(diff);
+    } else {
+      diffRow.style.display = 'none';
+      paymentSection.style.display = 'none';
+      refundSection.style.display = 'none';
+      exchangeState.difference = 0;
+      exchangeState.differenceType = '';
+    }
+    
+    exchangeState.exchangeTotal = exchangeTotal;
+  };
+
+  window._selectExchangePayment = function(method) {
+    exchangeState.exchangePayment = method;
+    document.querySelectorAll('#exchangePaymentSection .payment-method, #exchangeRefundSection .payment-method').forEach(function(m) {
+      m.classList.remove('selected');
+    });
+    var els = document.querySelectorAll('#exchangePaymentSection .payment-method[data-method="' + method + '"], #exchangeRefundSection .payment-method[data-method="' + method + '"]');
+    els.forEach(function(el) { el.classList.add('selected'); });
+  };
+
+  window._confirmExchange = function() {
+    var exchangeItems = [];
+    document.querySelectorAll('#exchangeItems .item-row').forEach(function(row) {
+      var select = row.querySelector('.exchange-item-select');
+      var sizeEl = row.querySelector('.exchange-item-size');
+      var qtyEl = row.querySelector('.exchange-item-qty');
+      if (select && select.value && qtyEl) {
+        var opt = select.options[select.selectedIndex];
+        var size = sizeEl ? (sizeEl.value || '1') : '1';
+        var qty = parseFloat(qtyEl.value) || 1;
+        var price = parseFloat(opt && opt.getAttribute('data-price')) || 0;
+        var sizeLabel = getSizeLabel(size);
+        if (size === '0.5' && parseFloat(opt && opt.getAttribute('data-halfprice')) > 0) price = parseFloat(opt.getAttribute('data-halfprice'));
+        else if (size === '0.25' && parseFloat(opt && opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
+        else if (size === 'pack' && parseFloat(opt && opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
+        else if (size === 'bundle' && parseFloat(opt && opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
+        
+        var stockItem = allStockItems.find(function(si) { return si.id === select.value; });
+        if (stockItem) {
+          var available = getAvailableStock(stockItem, size);
+          var deductQty = getDeductQuantity(stockItem, size, qty);
+          if (deductQty > available) {
+            showToast('Insufficient stock for ' + opt.dataset.name + ' (' + sizeLabel + '). Available: ' + available, 'error');
+            return;
           }
         }
-        batch.set(doc(collection(db, 'returns')), { saleId: sale.id, saleReceiptNumber: sale.receiptNumber, customerId: sale.customerId, customerName: sale.customerName, returnedItems: returnedItems, totalRefund: totalRefund, returnAction: selectedReturnAction, reason: reason, processedBy: currentUser.uid, processedByName: userData.fullName, createdAt: serverTimestamp() });
-        batch.update(doc(db, 'sales', sale.id), { status: 'returned', returnedAt: serverTimestamp(), returnedBy: currentUser.uid, returnedByName: userData.fullName, returnAction: selectedReturnAction, totalRefund: totalRefund });
-        await batch.commit();
-        var labels = { refund: 'Refunded: -' + formatCurrency(totalRefund), exchange_same: 'Exchanged: ' + formatCurrency(totalRefund), exchange_higher: 'Upgrade exchange: ' + formatCurrency(totalRefund), store_credit: 'Store credit: ' + formatCurrency(totalRefund) };
-        showToast(labels[selectedReturnAction], 'success'); hideModal();
-      } catch (e) { showToast('Failed: ' + e.message, 'error'); }
+        
+        exchangeItems.push({ id: select.value, name: opt.dataset.name, quantity: qty, size: size, sizeLabel: sizeLabel, unitPrice: price });
+      }
+    });
+    
+    if (exchangeItems.length === 0) { showToast('Select at least one item to exchange for', 'error'); return; }
+    
+    if (selectedReturnAction === 'exchange_same' && exchangeState.differenceType === 'refund_customer') {
+      showToast('For same-price exchange, selected items cannot be less than return value. Use "Exchange + Add Money" instead.', 'error');
+      return;
+    }
+    
+    var actionLabel = 'exchange_' + (exchangeState.differenceType === 'customer_pays' ? 'higher' : (exchangeState.differenceType === 'refund_customer' ? 'lower' : 'same'));
+    var confirmMsg = 'Confirm exchange of ' + formatCurrency(exchangeState.totalRefund) + ' for ' + formatCurrency(exchangeState.exchangeTotal);
+    if (exchangeState.differenceType === 'customer_pays') {
+      confirmMsg += '. Customer pays additional ' + formatCurrency(exchangeState.difference) + ' via ' + exchangeState.exchangePayment;
+    } else if (exchangeState.differenceType === 'refund_customer') {
+      confirmMsg += '. Refund ' + formatCurrency(exchangeState.difference) + ' to customer via ' + exchangeState.exchangePayment;
+    }
+    
+    showPinModal('Confirm Exchange', confirmMsg, function() {
+      processExchangeFinal(
+        exchangeState.originalSale, exchangeState.returnedItems, exchangeState.totalRefund,
+        exchangeItems, exchangeState.exchangeTotal, exchangeState.difference, exchangeState.differenceType,
+        exchangeState.reason, actionLabel, selectedReturnCondition
+      );
     });
   };
+
+  async function processExchangeFinal(sale, returnedItems, totalRefund, exchangeItems, exchangeTotal, difference, differenceType, reason, actionLabel, condition) {
+    try {
+      var batch = writeBatch(db);
+      var movements = [];
+      var newReceiptNumber = generateReceiptNumber('EXC');
+      
+      for (var i = 0; i < returnedItems.length; i++) {
+        var item = returnedItems[i];
+        if (item.id && !item.isNonInventory) {
+          var ref = doc(db, 'stock_items', item.id);
+          var stockItem = allStockItems.find(function(si) { return si.id === item.id; });
+          if (stockItem) {
+            var size = item.size || '1'; var qty = item.returnedQty;
+            var deductQty = getDeductQuantity(stockItem, size, qty);
+            var updateData = { updatedAt: serverTimestamp() }; var change = {};
+            if (size === '0.5' || size === '½' || size === 'half') { updateData.halfQty = safeNumber(stockItem.halfQty, 0) + qty; change.half = +qty; }
+            else if (size === '0.25' || size === '¼' || size === 'quarter') { updateData.quarterQty = safeNumber(stockItem.quarterQty, 0) + qty; change.quarter = +qty; }
+            else if (size === 'pack') { updateData.packQty = safeNumber(stockItem.packQty, 0) + qty; updateData.unitQty = safeNumber(stockItem.unitQty, 0) + deductQty; change.unit = +deductQty; }
+            else if (size === 'bundle') { updateData.bundleQty = safeNumber(stockItem.bundleQty, 0) + qty; updateData.unitQty = safeNumber(stockItem.unitQty, 0) + deductQty; change.unit = +deductQty; }
+            else { updateData.unitQty = safeNumber(stockItem.unitQty, 0) + qty; change.unit = +qty; }
+            batch.update(ref, updateData);
+            movements.push({ itemId: item.id, itemName: item.name, movementType: 'return', change: change, reference: 'Exchange Return - Receipt ' + sale.receiptNumber, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff' });
+          }
+        }
+      }
+      
+      var exchangeSaleItems = [];
+      for (var j = 0; j < exchangeItems.length; j++) {
+        var exItem = exchangeItems[j];
+        if (exItem.id && !exItem.isNonInventory) {
+          var exRef = doc(db, 'stock_items', exItem.id);
+          var exStockItem = allStockItems.find(function(si) { return si.id === exItem.id; });
+          if (exStockItem) {
+            var exSize = exItem.size || '1'; var exQty = exItem.quantity || 1;
+            var exDeductQty = getDeductQuantity(exStockItem, exSize, exQty);
+            var exUpdateData = { updatedAt: serverTimestamp() }; var exChange = {};
+            if (exSize === 'pack') { exUpdateData.packQty = safeNumber(exStockItem.packQty, 0) - exQty; exUpdateData.unitQty = safeNumber(exStockItem.unitQty, 0) - exDeductQty; exChange.unit = -exDeductQty; }
+            else if (exSize === 'bundle') { exUpdateData.bundleQty = safeNumber(exStockItem.bundleQty, 0) - exQty; exUpdateData.unitQty = safeNumber(exStockItem.unitQty, 0) - exDeductQty; exChange.unit = -exDeductQty; }
+            else if (exSize === '0.5' || exSize === '½') { exUpdateData.halfQty = safeNumber(exStockItem.halfQty, 0) - exQty; exChange.half = -exQty; }
+            else if (exSize === '0.25' || exSize === '¼') { exUpdateData.quarterQty = safeNumber(exStockItem.quarterQty, 0) - exQty; exChange.quarter = -exQty; }
+            else { exUpdateData.unitQty = safeNumber(exStockItem.unitQty, 0) - exQty; exChange.unit = -exQty; }
+            batch.update(exRef, exUpdateData);
+            movements.push({ itemId: exItem.id, itemName: exItem.name, movementType: 'sale', change: exChange, reference: 'Exchange Sale - Receipt ' + newReceiptNumber, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff' });
+          }
+          exchangeSaleItems.push({ id: exItem.id, name: exItem.name, quantity: exItem.quantity, size: exItem.size, sizeLabel: exItem.sizeLabel, unitPrice: exItem.unitPrice });
+        }
+      }
+      
+      for (var k = 0; k < movements.length; k++) {
+        var movRef = doc(collection(db, 'stock_movements'));
+        batch.set(movRef, Object.assign({}, movements[k], { performedAt: serverTimestamp() }));
+      }
+      
+      batch.update(doc(db, 'sales', sale.id), { status: 'returned', returnedAt: serverTimestamp(), returnedBy: currentUser.uid, returnedByName: userData.fullName, returnAction: actionLabel, totalRefund: totalRefund, exchangeReceiptNumber: newReceiptNumber });
+      
+      var exchangeSaleRef = doc(collection(db, 'sales'));
+      batch.set(exchangeSaleRef, { receiptNumber: newReceiptNumber, customerId: sale.customerId, customerName: sale.customerName, customerPhone: sale.customerPhone || '', items: exchangeSaleItems, totalAmount: exchangeTotal, paymentMethod: differenceType === 'customer_pays' ? exchangeState.exchangePayment : 'exchange', isExchange: true, exchangeType: actionLabel, originalReceiptNumber: sale.receiptNumber, returnedValue: totalRefund, difference: difference, differenceType: differenceType, attendantId: currentUser ? currentUser.uid : '', attendantName: userData ? (userData.fullName || 'Staff') : 'Staff', status: 'completed', createdAt: serverTimestamp() });
+      batch.set(doc(collection(db, 'returns')), { saleId: sale.id, saleReceiptNumber: sale.receiptNumber, customerId: sale.customerId, customerName: sale.customerName, returnedItems: returnedItems, exchangeItems: exchangeSaleItems, totalRefund: totalRefund, exchangeTotal: exchangeTotal, difference: difference, differenceType: differenceType, exchangeReceiptNumber: newReceiptNumber, returnAction: actionLabel, reason: reason, condition: condition, refundMethod: exchangeState.exchangePayment, processedBy: currentUser.uid, processedByName: userData.fullName, createdAt: serverTimestamp() });
+      
+      await batch.commit();
+      await logAudit('exchange', 'Exchange ' + formatCurrency(totalRefund) + ' → ' + formatCurrency(exchangeTotal) + ' | Original: ' + sale.receiptNumber + ' | New: ' + newReceiptNumber);
+      
+      showExchangeReceipt({ receiptNumber: newReceiptNumber, originalReceiptNumber: sale.receiptNumber, customerName: sale.customerName, returnedItems: returnedItems, exchangeItems: exchangeSaleItems, totalRefund: totalRefund, exchangeTotal: exchangeTotal, difference: difference, differenceType: differenceType, paymentMethod: exchangeState.exchangePayment, attendantName: userData ? (userData.fullName || 'Staff') : 'Staff' });
+      showToast('Exchange completed! #' + newReceiptNumber, 'success');
+    } catch (e) { showToast('Exchange failed: ' + e.message, 'error'); }
+  };
+
+  function showExchangeReceipt(exchange) {
+    var dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    var timeStr = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    var returnedHtml = exchange.returnedItems.map(function(i) { return '<div class="receipt-item"><span>↩ ' + i.returnedQty + 'x ' + i.name + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:var(--success);">+' + formatCurrency(i.returnedQty * i.unitPrice) + '</span></div>'; }).join('');
+    var exchangeHtml = exchange.exchangeItems.map(function(i) { return '<div class="receipt-item"><span>↪ ' + (i.quantity || 1) + 'x ' + i.name + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span>' + formatCurrency((i.quantity || 1) * i.unitPrice) + '</span></div>'; }).join('');
+    var diffHtml = ''; if (exchange.differenceType === 'customer_pays') { diffHtml = '<div class="receipt-item"><span><strong>Additional Payment (' + exchange.paymentMethod + ')</strong></span><span><strong>' + formatCurrency(exchange.difference) + '</strong></span></div>'; } else if (exchange.differenceType === 'refund_customer') { diffHtml = '<div class="receipt-item"><span><strong>Refund to Customer (' + exchange.paymentMethod + ')</strong></span><span style="color:var(--danger);"><strong>-' + formatCurrency(exchange.difference) + '</strong></span></div>'; }
+    showModal('Exchange Receipt', '<div class="receipt-container"><div class="receipt-header"><h2 style="font-weight:bold;">✨ OmoCreations ✨</h2><p class="addr" style="font-weight:bold;">3 Oyebo Street, Abiola Way</p><p class="addr" style="font-weight:bold;">Behind Laroy Suite, Abeokuta 111101</p><p class="addr" style="font-weight:bold;">Ogun State, Nigeria</p><p class="addr" style="font-weight:bold;">📞 0807 734 0294</p><p class="rec" style="margin-top:6px;"># ' + exchange.receiptNumber + ' (Exchange)</p><p class="rec">Original: #' + exchange.originalReceiptNumber + '</p><p class="rec">' + dateStr + ' ' + timeStr + '</p></div><p class="cust-info"><strong>Customer:</strong> ' + (exchange.customerName || 'Walk-in') + '<br><strong>Served by:</strong> ' + (exchange.attendantName || 'Staff') + '</p><p style="font-weight:600;color:var(--success);margin-top:10px;">↩ Items Returned</p><div class="receipt-items">' + returnedHtml + '</div><div class="receipt-total"><span>Return Value:</span><span style="color:var(--success);">' + formatCurrency(exchange.totalRefund) + '</span></div><p style="font-weight:600;color:var(--primary);margin-top:10px;">↪ Items Exchanged For</p><div class="receipt-items">' + exchangeHtml + '</div>' + diffHtml + '<div class="receipt-total"><span>Exchange Total:</span><span>' + formatCurrency(exchange.exchangeTotal) + '</span></div><p class="thanks">Thank you for your patronage!</p></div><div style="display:flex;gap:10px;margin-top:20px;"><button class="btn btn-primary" onclick="printReceipt(\'' + exchange.receiptNumber + '\')" style="flex:1;"><i class="fas fa-print"></i> Print</button><button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button></div>');
+  }
 
   // ============================================
   // EXPORT & REFRESH
@@ -1704,6 +2263,13 @@
   window.refreshData = function() { loadSales(); showToast('Refreshed', 'success'); };
 
   document.getElementById('salesSearchInput').addEventListener('input', renderSales);
+
+  function formatDateTime(d) {
+    if (!d) return 'Unknown';
+    if (typeof d === 'string') return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    var date = d.toDate ? d.toDate() : new Date(d);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
 
   onAuthStateChanged(auth, async function(u) {
     if (!u) { window.location.href = 'auth.html'; return; }
