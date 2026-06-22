@@ -75,7 +75,7 @@
     .sidebar-footer { padding:20px; border-top:1px solid rgba(255,77,166,0.2); position:sticky; bottom:0; background:linear-gradient(0deg,#0f0f1a 0%,transparent 100%); }
     .user-profile { display:flex; align-items:center; gap:12px; } .user-avatar { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); display:flex; align-items:center; justify-content:center; font-weight:700; color:white; flex-shrink:0; font-size:1.1rem; }
     .user-details { white-space:nowrap; } .user-details h4 { font-size:0.85rem; font-weight:600; } .user-details p { font-size:0.7rem; opacity:0.6; }
-    .sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:999; display:none; } .sidebar-overlay.active { display:block; }
+    .sidebar-overlay { position:fixed; top:0; right:0; bottom:0; left:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:999; display:none; } .sidebar-overlay.active { display:block; }
 
     .main-content { flex:1; margin-left:var(--sidebar-width); transition:margin-left 0.3s ease; min-height:100vh; width:calc(100% - var(--sidebar-width)); }
     .top-bar { height:var(--header-height); background:rgba(255,255,255,0.98); backdrop-filter:blur(12px); padding:0 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,77,166,0.15); position:sticky; top:0; z-index:50; }
@@ -94,7 +94,7 @@
     .stat-sub { font-size:0.65rem; color:var(--gray); margin-top:4px; }
 
     .stat-card.value-locked .stat-value { filter:blur(8px); user-select:none; cursor:pointer; position:relative; }
-    .stat-card.value-locked .stat-value::after { content:'\f023'; font-family:'Font Awesome 6 Free'; font-weight:900; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--gray); filter:none; }
+    .stat-card.value-locked .stat-value::after { content:'\f023'; font-family:'Font Awesome 6 Free'; font-weight:900; position:absolute; top:0; right:0; bottom:0; left:0; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--gray); filter:none; }
     .stat-card .value-hint { font-size:0.6rem; color:var(--primary); text-align:center; cursor:pointer; margin-top:2px; display:none; }
     .stat-card.value-locked .value-hint { display:block; }
 
@@ -140,7 +140,7 @@
     .btn-danger { background:var(--danger); color:white; border:none; }
     .btn-warning { background:var(--warning); color:white; border:none; }
 
-    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:2000; padding:16px; }
+    .modal-overlay { position:fixed; top:0; right:0; bottom:0; left:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:2000; padding:16px; }
     .modal-overlay.active { display:flex; }
     .modal { background:white; border-radius:28px; padding:28px; max-width:750px; width:100%; max-height:85vh; overflow-y:auto; animation:fadeInUp 0.3s ease; }
     .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
@@ -663,7 +663,8 @@
         
         showToast('Some sales failed to sync. Will retry.', 'error');
         updateDebugPanel();
-        return;
+        // 🔴 CRITICAL FIX: removed 'return' so remaining sales keep processing
+        continue;
       }
     }
     
@@ -694,6 +695,14 @@
     if (typeof d === 'string') return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     var date = d.toDate ? d.toDate() : new Date(d);
     return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // 🟡 MEDIUM FIX: add missing formatDate function
+  function formatDate(d) {
+    if (!d) return 'Unknown';
+    if (typeof d === 'string') return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    var date = d.toDate ? d.toDate() : new Date(d);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
   function showToast(msg, type) {
@@ -760,7 +769,11 @@
       '<button class="nav-item" onclick="navigateTo(\'audit.html\')"><i class="fas fa-history"></i><span>Audit</span></button>' +
       '</div>' : '') +
       '<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>';
-    document.getElementById('logoutBtn')?.addEventListener('click', async function() { try { await logAudit('logout'); } catch (e) {} await signOut(auth); window.location.href = 'auth.html'; });
+    // 🔴 CRITICAL FIX: replace optional chaining
+    var logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', async function() { try { await logAudit('logout'); } catch (e) {} await signOut(auth); window.location.href = 'auth.html'; });
+    }
   }
 
   async function verifySalePin(pin) {
@@ -1130,15 +1143,16 @@
     };
     if (extraData) Object.assign(saleData, extraData);
 
-    // UPDATE 6: Release lock before saving
-    isProcessingSale = false;
-
+    // 🔴 CRITICAL FIX: Release lock only after save completes (online) or synchronously (offline)
     if (isOnline) {
-      saveSaleToFirestore(saleData, customerInfo);
+      saveSaleToFirestore(saleData, customerInfo).finally(function() {
+        isProcessingSale = false;
+      });
     } else {
       saleData.createdAt = new Date().toISOString();
       saleData._synced = false;
       saveOfflineSale(saleData);
+      isProcessingSale = false;
     }
     return saleData;
   }
@@ -1346,10 +1360,15 @@
       var opt = select.options[select.selectedIndex];
       customerName = opt.dataset.name; customerPhone = opt.dataset.phone; customerAddress = opt.dataset.address || '';
     } else {
-      customerName = document.getElementById('newCustomerName')?.value?.trim();
-      customerPhone = document.getElementById('newCustomerPhone')?.value?.trim();
-      customerEmail = document.getElementById('newCustomerEmail')?.value?.trim();
-      customerAddress = document.getElementById('newCustomerAddress')?.value?.trim();
+      // 🔴 CRITICAL FIX: replace optional chaining with safe checks
+      var nameEl = document.getElementById('newCustomerName');
+      var phoneEl = document.getElementById('newCustomerPhone');
+      var emailEl = document.getElementById('newCustomerEmail');
+      var addrEl = document.getElementById('newCustomerAddress');
+      customerName = nameEl ? nameEl.value.trim() : '';
+      customerPhone = phoneEl ? phoneEl.value.trim() : '';
+      customerEmail = emailEl ? emailEl.value.trim() : '';
+      customerAddress = addrEl ? addrEl.value.trim() : '';
       if (!customerName || !customerPhone || !customerAddress) { showToast('Name, phone & address required', 'error'); return; }
       if (allCustomers.some(function(c) { return c.phone === customerPhone; })) { showToast('Customer with this phone already exists', 'error'); return; }
       isNewCustomer = true;
@@ -1397,8 +1416,8 @@
         showToast('Sale completed! #' + result.receiptNumber, 'success'); 
         showReceiptModal(result); 
         hideModal();
-        // FIX 3: Force refresh stats after sale
-        setTimeout(function() { updateStats(); }, 500);
+        // 🟡 MEDIUM FIX: increased timeout for better stats update reliability
+        setTimeout(function() { updateStats(); }, 1500);
       }
       if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale'; }
     });
@@ -1479,8 +1498,11 @@
 
   window._processCompanySale = function() {
     if (!window._updateCompanySummary()) { showToast('Some items exceed stock. Please adjust quantities.', 'error'); return; }
-    var collectedBy = document.getElementById('companyCollectedBy')?.value?.trim();
-    var usage = document.getElementById('companyUsage')?.value?.trim();
+    // 🔴 CRITICAL FIX: replace optional chaining with safe checks
+    var collectedByEl = document.getElementById('companyCollectedBy');
+    var usageEl = document.getElementById('companyUsage');
+    var collectedBy = collectedByEl ? collectedByEl.value.trim() : '';
+    var usage = usageEl ? usageEl.value.trim() : '';
     if (!collectedBy || !usage) { showToast('Collected by and usage are required', 'error'); return; }
 
     var items = [], total = 0;
@@ -1522,8 +1544,8 @@
         showToast('Company sale completed! #' + result.receiptNumber, 'success'); 
         showReceiptModal(result); 
         hideModal(); 
-        // FIX 3: Force refresh stats
-        setTimeout(function() { updateStats(); }, 500);
+        // 🟡 MEDIUM FIX: increased timeout
+        setTimeout(function() { updateStats(); }, 1500);
       }
     });
   };
@@ -1560,7 +1582,7 @@
 
   var wholesaleCustomerType = 'existing', wholesalePayment = 'cash';
   window._switchWSType = function(type) { wholesaleCustomerType = type; document.querySelectorAll('.customer-type-btn').forEach(function(btn) { btn.classList.toggle('active', btn.dataset.type === type); }); document.getElementById('wsExistingSection').style.display = type === 'existing' ? 'block' : 'none'; document.getElementById('wsNewSection').style.display = type === 'new' ? 'block' : 'none'; };
-  window._selWS = function(m) { wholesalePayment = m; document.querySelectorAll('.ws-pay').forEach(function(b) { b.classList.remove('selected'); }); document.querySelector('.ws-pay[data-m="' + m + '"]').classList.add('selected'); };
+  window._selWS = function(m) { wholesalePayment = m; document.querySelectorAll('.ws-pay').forEach(function(b) { b.classList.remove('selected'); }); var el = document.querySelector('.ws-pay[data-m="' + m + '"]'); if (el) el.classList.add('selected'); };
 
   window._addWSItem = function() {
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
@@ -1581,7 +1603,9 @@
   window._bindWSEvents = function() { document.querySelectorAll('.ws-select,.ws-qty,.ws-price').forEach(function(el) { el.addEventListener('change', window._updateWSTotal); el.addEventListener('input', window._updateWSTotal); }); window._updateWSTotal(); };
 
   window._updateWSTotal = function() {
-    var packSize = parseInt(document.getElementById('wsPackSize')?.value) || 50;
+    // 🔴 CRITICAL FIX: replace optional chaining with safe checks
+    var packSizeEl = document.getElementById('wsPackSize');
+    var packSize = packSizeEl ? parseInt(packSizeEl.value) || 50 : 50;
     var totalPieces = 0, totalAmount = 0;
     document.querySelectorAll('.ws-item-row').forEach(function(row) {
       var sel = row.querySelector('.ws-select'); var qtyEl = row.querySelector('.ws-qty'); var priceEl = row.querySelector('.ws-price');
@@ -1599,7 +1623,8 @@
   };
 
   window._processWS = function() {
-    var packSize = parseInt(document.getElementById('wsPackSize')?.value) || 50;
+    var packSizeEl = document.getElementById('wsPackSize');
+    var packSize = packSizeEl ? parseInt(packSizeEl.value) || 50 : 50;
     var customerId = '', customerName = '', customerPhone = '', isNewCustomer = false, customerData = null;
     if (wholesaleCustomerType === 'existing') {
       var select = document.getElementById('wsExistingCustomer');
@@ -1608,11 +1633,15 @@
       var opt = select.options[select.selectedIndex];
       customerName = opt.getAttribute('data-name') || ''; customerPhone = opt.getAttribute('data-phone') || '';
     } else {
-      customerName = document.getElementById('wsNewName')?.value?.trim();
-      customerPhone = document.getElementById('wsNewPhone')?.value?.trim();
+      // 🔴 CRITICAL FIX: replace optional chaining with safe checks
+      var nameEl = document.getElementById('wsNewName');
+      var phoneEl = document.getElementById('wsNewPhone');
+      var addrEl = document.getElementById('wsNewAddress');
+      customerName = nameEl ? nameEl.value.trim() : '';
+      customerPhone = phoneEl ? phoneEl.value.trim() : '';
       if (!customerName || !customerPhone) { showToast('Customer name & phone required', 'error'); return; }
       isNewCustomer = true;
-      customerData = { fullName: customerName, phone: customerPhone, address: document.getElementById('wsNewAddress')?.value?.trim() || '', status: 'pending_approval', createdBy: currentUser.uid, createdByName: userData.fullName };
+      customerData = { fullName: customerName, phone: customerPhone, address: addrEl ? addrEl.value.trim() : '', status: 'pending_approval', createdBy: currentUser.uid, createdByName: userData.fullName };
     }
 
     var items = [], totalPieces = 0, totalAmount = 0;
@@ -1637,8 +1666,8 @@
         showToast('Wholesale sale completed! #' + result.receiptNumber, 'success'); 
         showReceiptModal(result); 
         hideModal(); 
-        // FIX 3: Force refresh stats
-        setTimeout(function() { updateStats(); }, 500);
+        // 🟡 MEDIUM FIX: increased timeout
+        setTimeout(function() { updateStats(); }, 1500);
       }
     });
   };
@@ -1791,7 +1820,9 @@
         var qty = parseFloat(qtyInput.value) || 0;
         var maxQty = parseFloat(qtyInput.max) || 1;
         var price = 0;
-        var priceText = row.querySelector('small')?.textContent || '';
+        // 🔴 CRITICAL FIX: replace optional chaining with safe check
+        var smallEl = row.querySelector('small');
+        var priceText = smallEl ? smallEl.textContent : '';
         var priceMatch = priceText.match(/= ₦([\d,]+)/);
         if (priceMatch) {
           var totalPrice = parseFloat(priceMatch[1].replace(/,/g, ''));
@@ -1855,7 +1886,9 @@
     
     var returnedItems = [], totalRefund = 0;
     sale.items.forEach(function(item, idx) {
-      var q = parseFloat(document.getElementById('return-qty-' + idx)?.value) || 0;
+      // 🔴 CRITICAL FIX: replace optional chaining with safe check
+      var qtyInput = document.getElementById('return-qty-' + idx);
+      var q = qtyInput ? parseFloat(qtyInput.value) || 0 : 0;
       if (q > 0 && q <= (item.quantity || 1)) {
         returnedItems.push(Object.assign({}, item, { returnedQty: q, refundAmount: q * item.unitPrice }));
         totalRefund += q * item.unitPrice;
@@ -1863,7 +1896,10 @@
     });
     
     if (returnedItems.length === 0) { showToast('Select valid quantity to return', 'error'); return; }
-    var reason = document.getElementById('returnReason')?.value?.trim() || 'No reason';
+    // 🔴 CRITICAL FIX: replace optional chaining with safe check
+    var reasonEl = document.getElementById('returnReason');
+    var reason = reasonEl ? reasonEl.value.trim() : '';
+    reason = reason || 'No reason';
     
     exchangeState.originalSale = sale;
     exchangeState.returnedItems = returnedItems;
@@ -1971,8 +2007,8 @@
       };
       showToast(labels[action] + ' | Stock restored and movements logged', 'success');
       hideModal();
-      // FIX: Refresh stats after return
-      setTimeout(function() { updateStats(); }, 500);
+      // 🟡 MEDIUM FIX: increased timeout
+      setTimeout(function() { updateStats(); }, 1500);
     } catch (e) {
       showToast('Return failed: ' + e.message, 'error');
     }
@@ -2262,8 +2298,8 @@
       
       showExchangeReceipt({ receiptNumber: newReceiptNumber, originalReceiptNumber: sale.receiptNumber, customerName: sale.customerName, returnedItems: returnedItems, exchangeItems: exchangeSaleItems, totalRefund: totalRefund, exchangeTotal: exchangeTotal, difference: difference, differenceType: differenceType, paymentMethod: exchangeState.exchangePayment, attendantName: userData ? (userData.fullName || 'Staff') : 'Staff' });
       showToast('Exchange completed! #' + newReceiptNumber, 'success');
-      // FIX: Refresh stats after exchange
-      setTimeout(function() { updateStats(); }, 500);
+      // 🟡 MEDIUM FIX: increased timeout
+      setTimeout(function() { updateStats(); }, 1500);
     } catch (e) { showToast('Exchange failed: ' + e.message, 'error'); }
   };
 
