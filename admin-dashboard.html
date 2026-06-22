@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#ff4da6">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -115,7 +118,8 @@
     .user-details p { font-size: 0.7rem; opacity: 0.6; }
 
     .sidebar-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
       backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
       z-index: 999; display: none;
     }
@@ -169,7 +173,7 @@
     .stats-grid-2 .stat-card:nth-child(1){animation-delay:0.25s}.stats-grid-2 .stat-card:nth-child(2){animation-delay:0.30s}
     .stats-grid-2 .stat-card:nth-child(3){animation-delay:0.35s}.stats-grid-2 .stat-card:nth-child(4){animation-delay:0.40s}
 
-    /* Quick Actions – now 10 columns */
+    /* Quick Actions */
     .quick-actions { display: grid; grid-template-columns: repeat(10, 1fr); gap: 14px; margin-bottom: 28px; }
     .quick-action {
       background: white; padding: 16px 12px; border-radius: 18px; text-align: center;
@@ -265,6 +269,17 @@
     .toast.success { border-left-color: var(--success); } .toast.error { border-left-color: var(--danger); }
     .toast i { font-size: 1.1rem; }
 
+    /* Fix for Chromebook: replace inset with expanded form */
+    .stat-card.value-locked .stat-value::after {
+      content: '\f023';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; color: var(--gray); filter: none;
+    }
+
     @media (max-width: 1400px) {
       .stats-grid, .stats-grid-2 { grid-template-columns: repeat(3, 1fr); }
       .quick-actions { grid-template-columns: repeat(5, 1fr); }
@@ -325,7 +340,7 @@
 
   <div class="content-wrapper">
 
-    <!-- Quick Actions (now 10 items) -->
+    <!-- Quick Actions -->
     <div class="quick-actions">
       <div class="quick-action" onclick="navigateTo('staff-management.html')"><i class="fas fa-user-check"></i><h4>Staff Mgmt</h4><span class="action-badge" id="staffPendingBadge">0</span></div>
       <div class="quick-action" onclick="navigateTo('inventory.html')"><i class="fas fa-boxes"></i><h4>Inventory</h4></div>
@@ -427,9 +442,9 @@
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
 
-  function showToast(msg, type='success') { const c = document.getElementById('toastContainer'); if (!c) return; const t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`; c.appendChild(t); setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(100%)'; t.style.transition='all 0.3s ease'; setTimeout(()=>t.remove(),300); }, 3000); }
-  async function logAudit(action, note) { try { await addDoc(collection(db, 'audit_logs'), { actionType: action, performedBy: currentUser?.uid||'unknown', performedByName: userData?.fullName||'Admin', performedAt: serverTimestamp(), note: note||'' }); } catch(e){} }
-  function cleanup() { unsubscribes.forEach(u=>u()); unsubscribes=[]; }
+  function showToast(msg, type) { type = type || 'success'; const c = document.getElementById('toastContainer'); if (!c) return; const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + '"></i> ' + msg; c.appendChild(t); setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = 'all 0.3s ease'; setTimeout(function() { t.remove(); }, 300); }, 3000); }
+  async function logAudit(action, note) { try { await addDoc(collection(db, 'audit_logs'), { actionType: action, performedBy: (currentUser && currentUser.uid) || 'unknown', performedByName: (userData && userData.fullName) || 'Admin', performedAt: serverTimestamp(), note: note || '' }); } catch(e){} }
+  function cleanup() { unsubscribes.forEach(function(u) { u(); }); unsubscribes = []; }
 
   window.toggleSidebar = function() {
     const s = document.getElementById('sidebar'), o = document.getElementById('sidebarOverlay');
@@ -440,9 +455,8 @@
   };
   window.closeSidebar = function() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow = ''; };
 
-  function isAdmin() { return userData?.role === 'admin' || userData?.role === 'super_admin'; }
+  function isAdmin() { return userData && (userData.role === 'admin' || userData.role === 'super_admin'); }
 
-  // --- Updated Sidebar with Make Admin, Kiosk, and Kiosk Settings ---
   function buildSidebar() {
     const nav = document.getElementById('sidebarNav'); if (!nav) return;
     nav.innerHTML = `
@@ -477,7 +491,7 @@
       </div>
       <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
     `;
-    document.getElementById('logoutBtn')?.addEventListener('click', async () => { await signOut(auth); window.location.href = 'auth.html'; });
+    document.getElementById('logoutBtn').addEventListener('click', async function() { await signOut(auth); window.location.href = 'auth.html'; });
   }
 
   function updateBadge(id, count) { const el = document.getElementById(id); if (el) { el.textContent = count; if (count > 0) el.classList.add('show'); else el.classList.remove('show'); } }
@@ -495,48 +509,47 @@
     const now = new Date(); const thisMonth = now.getMonth(); const thisYear = now.getFullYear();
 
     // Users
-    unsubscribes.push(onSnapshot(collection(db, 'users'), (snap) => {
-      const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const staff = users.filter(u => ['staff','attendant','attendant_chief','admin','super_admin'].includes(u.role));
-      const active = staff.filter(u => u.status === 'active');
-      const pending = users.filter(u => u.status === 'pending_approval');
-      monthlySalaries = active.reduce((s, u) => s + (u.baseSalary || 0), 0);
+    unsubscribes.push(onSnapshot(collection(db, 'users'), function(snap) {
+      const users = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+      const staff = users.filter(function(u) { return ['staff','attendant','attendant_chief','admin','super_admin'].indexOf(u.role) !== -1; });
+      const active = staff.filter(function(u) { return u.status === 'active'; });
+      const pending = users.filter(function(u) { return u.status === 'pending_approval'; });
+      monthlySalaries = active.reduce(function(s, u) { return s + (u.baseSalary || 0); }, 0);
       document.getElementById('totalStaff').textContent = staff.length;
-      document.getElementById('activeStaff').textContent = `${active.length} active`;
+      document.getElementById('activeStaff').textContent = active.length + ' active';
       updateBadge('staffPendingBadge', pending.length); updateBadge('navStaffBadge', pending.length);
       updateMoneyDisplay();
       const ptBody = document.getElementById('pendingStaffTable');
       if (ptBody) {
         const disp = pending.slice(0, 5);
-        ptBody.innerHTML = disp.length === 0 ? '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-check-circle"></i><p>No pending approvals</p></div></td></tr>' : disp.map(u => `<tr><td><strong>${u.fullName||'-'}</strong></td><td>${u.email||'-'}</td><td>${u.phone||'-'}</td><td>${formatDate(u.createdAt)}</td><td><select id="role-${u.id}" style="padding:4px 8px;border-radius:6px;border:1px solid #ddd;font-size:0.8rem;max-width:110px;"><option value="staff">Staff</option><option value="attendant">Attendant</option><option value="attendant_chief">Chief Att.</option></select></td><td><input type="number" id="salary-${u.id}" value="${u.baseSalary||50000}" style="width:70px;padding:4px;border-radius:6px;border:1px solid #ddd;font-size:0.8rem;"></td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-success" onclick="approveStaff('${u.id}')"><i class="fas fa-check"></i></button><button class="btn btn-sm btn-danger" onclick="rejectStaff('${u.id}')"><i class="fas fa-times"></i></button></div></td></tr>`).join('');
+        ptBody.innerHTML = disp.length === 0 ? '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-check-circle"></i><p>No pending approvals</p></div></td></tr>' : disp.map(function(u) { return '<tr><td><strong>' + (u.fullName || '-') + '</strong></td><td>' + (u.email || '-') + '</td><td>' + (u.phone || '-') + '</td><td>' + formatDate(u.createdAt) + '</td><td><select id="role-' + u.id + '" style="padding:4px 8px;border-radius:6px;border:1px solid #ddd;font-size:0.8rem;max-width:110px;"><option value="staff">Staff</option><option value="attendant">Attendant</option><option value="attendant_chief">Chief Att.</option></select></td><td><input type="number" id="salary-' + u.id + '" value="' + (u.baseSalary || 50000) + '" style="width:70px;padding:4px;border-radius:6px;border:1px solid #ddd;font-size:0.8rem;"></td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-success" onclick="approveStaff(\'' + u.id + '\')"><i class="fas fa-check"></i></button><button class="btn btn-sm btn-danger" onclick="rejectStaff(\'' + u.id + '\')"><i class="fas fa-times"></i></button></div></td></tr>'; }).join('');
       }
     }));
 
     // Stock items
-    unsubscribes.push(onSnapshot(collection(db, 'stock_items'), (snap) => {
-      const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      document.getElementById('totalStock').textContent = items.reduce((s, i) => s + (i.quantityAvailable || 0), 0);
-      document.getElementById('stockStatus').textContent = `${items.length} items`;
+    unsubscribes.push(onSnapshot(collection(db, 'stock_items'), function(snap) {
+      const items = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+      document.getElementById('totalStock').textContent = items.reduce(function(s, i) { return s + (i.quantityAvailable || 0); }, 0);
+      document.getElementById('stockStatus').textContent = items.length + ' items';
     }));
 
     // Store items
-    unsubscribes.push(onSnapshot(collection(db, 'store_items'), (snap) => {
-      const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      document.getElementById('totalStoreItems').textContent = items.reduce((s, i) => s + (i.bulkQty || 0), 0);
+    unsubscribes.push(onSnapshot(collection(db, 'store_items'), function(snap) {
+      const items = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+      document.getElementById('totalStoreItems').textContent = items.reduce(function(s, i) { return s + (i.bulkQty || 0); }, 0);
     }));
 
     // Tools & Machines
-    unsubscribes.push(onSnapshot(collection(db, 'tools_machines'), (snap) => {
-      const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const available = items.filter(i => i.status !== 'sold');
-      const totalValue = available.reduce((s, i) => s + (i.price || 0), 0);
+    unsubscribes.push(onSnapshot(collection(db, 'tools_machines'), function(snap) {
+      const items = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+      const available = items.filter(function(i) { return i.status !== 'sold'; });
+      const totalValue = available.reduce(function(s, i) { return s + (i.price || 0); }, 0);
       document.getElementById('totalMachineItems').textContent = items.length;
-      document.getElementById('machineStatus').textContent = `${available.length} available, ${items.length - available.length} sold`;
+      document.getElementById('machineStatus').textContent = available.length + ' available, ' + (items.length - available.length) + ' sold';
       document.getElementById('totalMachineValue').textContent = formatCurrency(totalValue);
       
-      // Calculate monthly machine revenue
       monthlyMachineRevenue = 0;
-      items.forEach(i => {
+      items.forEach(function(i) {
         if (i.status === 'sold' && i.soldDate) {
           const dt = i.soldDate.toDate ? i.soldDate.toDate() : new Date(i.soldDate);
           if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) {
@@ -548,76 +561,78 @@
     }));
 
     // Sales
-    unsubscribes.push(onSnapshot(collection(db, 'sales'), (snap) => {
-      monthlyRevenue = 0; const sales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      sales.forEach(s => { if (s.status === 'returned') return; const dt = s.createdAt?.toDate ? s.createdAt.toDate() : new Date(s.createdAt || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyRevenue += s.totalAmount || 0; });
+    unsubscribes.push(onSnapshot(collection(db, 'sales'), function(snap) {
+      monthlyRevenue = 0; const sales = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+      sales.forEach(function(s) { if (s.status === 'returned') return; const dt = s.createdAt && s.createdAt.toDate ? s.createdAt.toDate() : new Date(s.createdAt || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyRevenue += s.totalAmount || 0; });
       updateMoneyDisplay();
       const tbody = document.getElementById('recentSalesTable');
       if (tbody) {
-        const recent = sales.filter(s => s.status !== 'returned').sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).slice(0, 5);
-        tbody.innerHTML = recent.length === 0 ? '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-receipt"></i><p>No sales yet</p></div></td></tr>' : recent.map(s => `<tr><td>${formatTime(s.createdAt)}</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.customerName||'Walk-in'}</td><td>${formatCurrency(s.totalAmount)}</td><td><span class="badge badge-info">Retail</span></td></tr>`).join('');
+        const recent = sales.filter(function(s) { return s.status !== 'returned'; }).sort(function(a, b) { return (b.createdAt && b.createdAt.seconds || 0) - (a.createdAt && a.createdAt.seconds || 0); }).slice(0, 5);
+        tbody.innerHTML = recent.length === 0 ? '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-receipt"></i><p>No sales yet</p></div></td></tr>' : recent.map(function(s) { return '<tr><td>' + formatTime(s.createdAt) + '</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (s.customerName || 'Walk-in') + '</td><td>' + formatCurrency(s.totalAmount) + '</td><td><span class="badge badge-info">Retail</span></td></tr>'; }).join('');
       }
     }));
 
     // Wholesale sales
-    unsubscribes.push(onSnapshot(collection(db, 'wholesale_sales'), (snap) => {
-      monthlyWholesale = 0; snap.docs.forEach(d => { const s = d.data(); const dt = s.createdAt?.toDate ? s.createdAt.toDate() : new Date(s.createdAt || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyWholesale += s.totalAmount || 0; });
+    unsubscribes.push(onSnapshot(collection(db, 'wholesale_sales'), function(snap) {
+      monthlyWholesale = 0; snap.docs.forEach(function(d) { const s = d.data(); const dt = s.createdAt && s.createdAt.toDate ? s.createdAt.toDate() : new Date(s.createdAt || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyWholesale += s.totalAmount || 0; });
       updateMoneyDisplay();
     }));
 
     // Returns
-    unsubscribes.push(onSnapshot(collection(db, 'returns'), (snap) => {
-      monthlyRefunds = 0; snap.docs.forEach(d => { const r = d.data(); if (r.returnAction === 'refund') { const dt = r.createdAt?.toDate ? r.createdAt.toDate() : new Date(r.createdAt || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyRefunds += r.totalRefund || 0; } });
+    unsubscribes.push(onSnapshot(collection(db, 'returns'), function(snap) {
+      monthlyRefunds = 0; snap.docs.forEach(function(d) { const r = d.data(); if (r.returnAction === 'refund') { const dt = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate() : new Date(r.createdAt || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyRefunds += r.totalRefund || 0; } });
       updateMoneyDisplay();
     }));
 
     // Purchase requests
-    unsubscribes.push(onSnapshot(collection(db, 'purchase_requests'), (snap) => {
-      monthlyInvPurchases = 0; const purchases = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      purchases.forEach(p => { if (p.status === 'purchased') { const dt = p.purchasedAt?.toDate ? p.purchasedAt.toDate() : new Date(p.purchasedAt || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyInvPurchases += p.receivedItems?.reduce((s, i) => s + ((i.received || i.suggested) * (i.price || i.unitPrice)), 0) || 0; } });
+    unsubscribes.push(onSnapshot(collection(db, 'purchase_requests'), function(snap) {
+      monthlyInvPurchases = 0; const purchases = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+      purchases.forEach(function(p) { if (p.status === 'purchased') { const dt = p.purchasedAt && p.purchasedAt.toDate ? p.purchasedAt.toDate() : new Date(p.purchasedAt || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyInvPurchases += (p.receivedItems || []).reduce(function(s, i) { return s + ((i.received || i.suggested) * (i.price || i.unitPrice)); }, 0) || 0; } });
       updateMoneyDisplay();
     }));
 
     // Store purchases
-    unsubscribes.push(onSnapshot(collection(db, 'store_purchases'), (snap) => {
-      monthlyStorePurchases = 0; snap.docs.forEach(d => { const p = d.data(); const dt = p.date?.toDate ? p.date.toDate() : new Date(p.date || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyStorePurchases += p.totalCost || 0; });
+    unsubscribes.push(onSnapshot(collection(db, 'store_purchases'), function(snap) {
+      monthlyStorePurchases = 0; snap.docs.forEach(function(d) { const p = d.data(); const dt = p.date && p.date.toDate ? p.date.toDate() : new Date(p.date || 0); if (dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) monthlyStorePurchases += p.totalCost || 0; });
       updateMoneyDisplay();
     }));
 
     // Combined recent purchases
-    unsubscribes.push(onSnapshot(query(collection(db, 'purchase_requests'), orderBy('createdAt', 'desc'), limit(5)), (snap1) => {
-      onSnapshot(query(collection(db, 'store_purchases'), orderBy('date', 'desc'), limit(5)), (snap2) => {
-        const inv = snap1.docs.map(d => ({ id: d.id, type: 'Inventory', date: d.data().createdAt, ...d.data() }));
-        const store = snap2.docs.map(d => ({ id: d.id, type: 'Store', date: d.data().date, ...d.data() }));
-        const all = [...inv, ...store].sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0)).slice(0, 5);
+    unsubscribes.push(onSnapshot(query(collection(db, 'purchase_requests'), orderBy('createdAt', 'desc'), limit(5)), function(snap1) {
+      onSnapshot(query(collection(db, 'store_purchases'), orderBy('date', 'desc'), limit(5)), function(snap2) {
+        const inv = snap1.docs.map(function(d) { return { id: d.id, type: 'Inventory', date: d.data().createdAt, ...d.data() }; });
+        const store = snap2.docs.map(function(d) { return { id: d.id, type: 'Store', date: d.data().date, ...d.data() }; });
+        const all = inv.concat(store).sort(function(a, b) { return (b.date && b.date.seconds || 0) - (a.date && a.date.seconds || 0); }).slice(0, 5);
         const tbody = document.getElementById('recentPurchasesTable');
         if (tbody) {
-          tbody.innerHTML = all.length === 0 ? '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-truck"></i><p>No purchases yet</p></div></td></tr>' : all.map(p => {
-            const total = p.type === 'Inventory' ? p.items?.reduce((s, i) => s + ((i.suggested || 0) * (i.price || i.unitPrice || 0)), 0) || 0 : p.totalCost || 0;
-            return `<tr><td>${formatDate(p.date)}</td><td><span class="badge badge-${p.type==='Inventory'?'info':'purple'}" style="background:${p.type==='Store'?'rgba(139,92,246,0.1)':'rgba(59,130,246,0.1)'};color:${p.type==='Store'?'#8b5cf6':'#3b82f6'};">${p.type}</span></td><td>${p.supplier||'-'}</td><td>${formatCurrency(total)}</td></tr>`;
+          tbody.innerHTML = all.length === 0 ? '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-truck"></i><p>No purchases yet</p></div></td></tr>' : all.map(function(p) {
+            const total = p.type === 'Inventory' ? (p.items || []).reduce(function(s, i) { return s + ((i.suggested || 0) * (i.price || i.unitPrice || 0)); }, 0) || 0 : p.totalCost || 0;
+            return '<tr><td>' + formatDate(p.date) + '</td><td><span class="badge badge-' + (p.type === 'Inventory' ? 'info' : 'purple') + '" style="background:' + (p.type === 'Store' ? 'rgba(139,92,246,0.1)' : 'rgba(59,130,246,0.1)') + ';color:' + (p.type === 'Store' ? '#8b5cf6' : '#3b82f6') + ';">' + p.type + '</span></td><td>' + (p.supplier || '-') + '</td><td>' + formatCurrency(total) + '</td></tr>';
           }).join('');
         }
       });
     }));
 
     // Audit logs
-    unsubscribes.push(onSnapshot(query(collection(db, 'audit_logs'), orderBy('performedAt', 'desc'), limit(8)), (snap) => {
+    unsubscribes.push(onSnapshot(query(collection(db, 'audit_logs'), orderBy('performedAt', 'desc'), limit(8)), function(snap) {
       const tbody = document.getElementById('auditTable'); if (!tbody) return;
       if (snap.empty) { tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><i class="fas fa-history"></i><p>No activity yet</p></div></td></tr>'; return; }
-      tbody.innerHTML = ''; snap.forEach(d => { const a = d.data(); tbody.innerHTML += `<tr><td>${formatTime(a.performedAt)}</td><td><span class="badge badge-info">${a.actionType||'action'}</span></td><td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.performedByName||(a.performedBy?.slice(0,8))||'System'}</td></tr>`; });
+      tbody.innerHTML = ''; snap.forEach(function(d) { const a = d.data(); tbody.innerHTML += '<tr><td>' + formatTime(a.performedAt) + '</td><td><span class="badge badge-info">' + (a.actionType || 'action') + '</span></td><td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (a.performedByName || (a.performedBy ? a.performedBy.slice(0,8) : 'System')) + '</td></tr>'; });
     }));
 
-    setTimeout(() => loadAlerts(), 1500);
+    setTimeout(function() { loadAlerts(); }, 1500);
   }
 
-  window.approveStaff = async (uid) => {
-    const role = document.getElementById(`role-${uid}`)?.value || 'staff';
-    const salary = parseFloat(document.getElementById(`salary-${uid}`)?.value) || 50000;
-    try { await updateDoc(doc(db, 'users', uid), { role, baseSalary: salary, status: 'active', approvedBy: currentUser?.uid, approvedByName: userData?.fullName || 'Admin', approvedAt: serverTimestamp() }); showToast('Staff approved!', 'success'); } catch (e) { showToast('Failed', 'error'); }
+  window.approveStaff = async function(uid) {
+    var roleEl = document.getElementById('role-' + uid);
+    var salaryEl = document.getElementById('salary-' + uid);
+    var role = (roleEl && roleEl.value) || 'staff';
+    var salary = parseFloat(salaryEl && salaryEl.value) || 50000;
+    try { await updateDoc(doc(db, 'users', uid), { role: role, baseSalary: salary, status: 'active', approvedBy: (currentUser && currentUser.uid), approvedByName: (userData && userData.fullName) || 'Admin', approvedAt: serverTimestamp() }); showToast('Staff approved!', 'success'); } catch (e) { showToast('Failed', 'error'); }
   };
-  window.rejectStaff = async (uid) => {
-    const reason = prompt('Rejection reason:') || 'No reason';
-    try { await updateDoc(doc(db, 'users', uid), { status: 'rejected', rejectedBy: currentUser?.uid, rejectedByName: userData?.fullName || 'Admin', rejectedAt: serverTimestamp(), rejectionReason: reason }); showToast('Staff rejected', 'info'); } catch (e) { showToast('Failed', 'error'); }
+  window.rejectStaff = async function(uid) {
+    var reason = prompt('Rejection reason:') || 'No reason';
+    try { await updateDoc(doc(db, 'users', uid), { status: 'rejected', rejectedBy: (currentUser && currentUser.uid), rejectedByName: (userData && userData.fullName) || 'Admin', rejectedAt: serverTimestamp(), rejectionReason: reason }); showToast('Staff rejected', 'info'); } catch (e) { showToast('Failed', 'error'); }
   };
 
   async function loadAlerts() {
@@ -625,31 +640,33 @@
       const alerts = [];
       const stockSnap = await getDocs(query(collection(db, 'stock_items'), where('status', 'in', ['low', 'out_of_stock'])));
       const out = [], low = [];
-      stockSnap.forEach(doc => { const i = doc.data(); if (i.status === 'out_of_stock') out.push(i.name); else low.push(i.name); });
-      if (out.length) alerts.push({ type: 'danger', icon: 'exclamation-triangle', text: `${out.length} item(s) out of stock`, link: 'inventory.html' });
-      if (low.length) alerts.push({ type: 'warning', icon: 'box', text: `${low.length} item(s) running low`, link: 'inventory.html' });
+      stockSnap.forEach(function(doc) { const i = doc.data(); if (i.status === 'out_of_stock') out.push(i.name); else low.push(i.name); });
+      if (out.length) alerts.push({ type: 'danger', icon: 'exclamation-triangle', text: out.length + ' item(s) out of stock', link: 'inventory.html' });
+      if (low.length) alerts.push({ type: 'warning', icon: 'box', text: low.length + ' item(s) running low', link: 'inventory.html' });
       const storeSnap = await getDocs(query(collection(db, 'store_items'), where('status', 'in', ['low', 'out_of_stock'])));
-      if (!storeSnap.empty) alerts.push({ type: 'warning', icon: 'warehouse', text: `${storeSnap.size} store item(s) need restock`, link: 'store.html' });
-      const pendingUsers = (await getDocs(query(collection(db, 'users'), where('status', '==', 'pending_approval')))).size;
-      if (pendingUsers > 0) alerts.push({ type: 'warning', icon: 'user-clock', text: `${pendingUsers} staff awaiting approval`, link: 'staff-management.html' });
-      const pendingPurchases = (await getDocs(query(collection(db, 'purchase_requests'), where('status', '==', 'pending_approval')))).size;
-      if (pendingPurchases > 0) alerts.push({ type: 'warning', icon: 'shopping-cart', text: `${pendingPurchases} purchase request(s) pending`, link: 'purchases.html' });
+      if (!storeSnap.empty) alerts.push({ type: 'warning', icon: 'warehouse', text: storeSnap.size + ' store item(s) need restock', link: 'store.html' });
+      var pendingUsersSnap = await getDocs(query(collection(db, 'users'), where('status', '==', 'pending_approval')));
+      var pendingUsers = pendingUsersSnap.size;
+      if (pendingUsers > 0) alerts.push({ type: 'warning', icon: 'user-clock', text: pendingUsers + ' staff awaiting approval', link: 'staff-management.html' });
+      var pendingPurchasesSnap = await getDocs(query(collection(db, 'purchase_requests'), where('status', '==', 'pending_approval')));
+      var pendingPurchases = pendingPurchasesSnap.size;
+      if (pendingPurchases > 0) alerts.push({ type: 'warning', icon: 'shopping-cart', text: pendingPurchases + ' purchase request(s) pending', link: 'purchases.html' });
       const container = document.getElementById('alertsContainer');
       if (!alerts.length) { container.innerHTML = '<div class="empty-state"><i class="far fa-bell"></i><p>All systems normal — no alerts</p></div>'; return; }
-      container.innerHTML = alerts.map(a => `<div class="alert-item ${a.type}" onclick="navigateTo('${a.link}')"><i class="fas fa-${a.icon}"></i><div class="alert-content"><p>${a.text}</p><small>Click to view</small></div></div>`).join('');
+      container.innerHTML = alerts.map(function(a) { return '<div class="alert-item ' + a.type + '" onclick="navigateTo(\'' + a.link + '\')"><i class="fas fa-' + a.icon + '"></i><div class="alert-content"><p>' + a.text + '</p><small>Click to view</small></div></div>'; }).join('');
     } catch (e) { console.warn('Alerts error:', e.message); }
   }
 
-  window.refreshAlerts = function () { showToast('Refreshing...', 'success'); loadAlerts(); };
+  window.refreshAlerts = function() { showToast('Refreshing...', 'success'); loadAlerts(); };
 
-  onAuthStateChanged(auth, async (u) => {
+  onAuthStateChanged(auth, async function(u) {
     if (!u) { window.location.href = 'auth.html'; return; }
     currentUser = u;
     try {
       const snap = await getDoc(doc(db, 'users', u.uid));
       if (!snap.exists() || (snap.data().role !== 'admin' && snap.data().role !== 'super_admin')) { await signOut(auth); window.location.href = 'auth.html'; return; }
       userData = snap.data();
-      document.getElementById('userName').textContent = userData.fullName?.split(' ')[0] || 'Admin';
+      document.getElementById('userName').textContent = (userData.fullName ? userData.fullName.split(' ')[0] : 'Admin');
       document.getElementById('userRole').textContent = userData.role === 'super_admin' ? 'Super Admin' : 'Admin';
       document.getElementById('userAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
       document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
