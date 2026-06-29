@@ -57,17 +57,10 @@
       border-radius:12px; display:flex; align-items:center; justify-content:center;
       font-size:1.3rem; font-weight:700; flex-shrink:0; animation:flameRing 2s ease-in-out infinite;
     }
-    .logo-text { font-size:1.25rem; font-weight:800; font-family:'Playfair Display',serif; white-space:nowrap; }
-    .logo-text span { color:var(--primary); }
-    .sidebar-nav { padding:20px 12px; display:flex; flex-direction:column; }
-    .nav-section { margin-bottom:20px; }
+    .logo-text { font-size:1.25rem; font-weight:800; font-family:'Playfair Display',serif; white-space:nowrap; } .logo-text span { color:var(--primary); }
+    .sidebar-nav { padding:20px 12px; display:flex; flex-direction:column; } .nav-section { margin-bottom:20px; }
     .nav-section-title { font-size:0.65rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.4); padding:8px 14px 6px; font-weight:600; white-space:nowrap; }
-    .nav-item {
-      display:flex; align-items:center; gap:14px; padding:12px 14px; border-radius:12px;
-      color:rgba(255,255,255,0.7); cursor:pointer; border:none; background:none;
-      width:100%; font-size:0.9rem; font-weight:500; text-align:left; margin-bottom:3px;
-      transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; text-decoration:none;
-    }
+    .nav-item { display:flex; align-items:center; gap:14px; padding:12px 14px; border-radius:12px; color:rgba(255,255,255,0.7); cursor:pointer; border:none; background:none; width:100%; font-size:0.9rem; font-weight:500; text-align:left; margin-bottom:3px; transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; text-decoration:none; }
     .nav-item i { width:22px; font-size:1.1rem; text-align:center; flex-shrink:0; }
     .nav-item:hover { background:rgba(255,77,166,0.15); color:white; transform:translateX(5px); }
     .nav-item.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; box-shadow:0 5px 15px rgba(255,77,166,0.3); }
@@ -76,19 +69,13 @@
     .sidebar-footer { padding:20px; border-top:1px solid rgba(255,77,166,0.2); position:sticky; bottom:0; background:linear-gradient(0deg,#0f0f1a 0%,transparent 100%); }
     .user-profile { display:flex; align-items:center; gap:12px; }
     .user-avatar { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); display:flex; align-items:center; justify-content:center; font-weight:700; color:white; flex-shrink:0; font-size:1.1rem; }
-    .user-details { white-space:nowrap; }
-    .user-details h4 { font-size:0.85rem; font-weight:600; }
-    .user-details p { font-size:0.7rem; opacity:0.6; }
-    .sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:999; display:none; }
-    .sidebar-overlay.active { display:block; }
+    .user-details { white-space:nowrap; } .user-details h4 { font-size:0.85rem; font-weight:600; } .user-details p { font-size:0.7rem; opacity:0.6; }
+    .sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:999; display:none; } .sidebar-overlay.active { display:block; }
 
     .main-content { flex:1; margin-left:var(--sidebar-width); transition:margin-left 0.3s ease; min-height:100vh; width:calc(100% - var(--sidebar-width)); }
     .top-bar { height:var(--header-height); background:rgba(255,255,255,0.98); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); padding:0 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,77,166,0.15); position:sticky; top:0; z-index:50; }
-    .top-bar-left { display:flex; align-items:center; gap:14px; }
-    .menu-toggle { background:none; border:none; font-size:1.3rem; color:var(--gray); cursor:pointer; padding:10px; border-radius:10px; transition:all 0.2s; display:none; align-items:center; justify-content:center; }
-    .menu-toggle:hover { background:var(--primary-soft); color:var(--primary); }
-    .page-title { font-size:1.5rem; font-weight:700; color:var(--dark); font-family:'Playfair Display',serif; }
-    .current-date { color:var(--gray); font-size:0.85rem; white-space:nowrap; }
+    .top-bar-left { display:flex; align-items:center; gap:14px; } .menu-toggle { background:none; border:none; font-size:1.3rem; color:var(--gray); cursor:pointer; padding:10px; border-radius:10px; transition:all 0.2s; display:none; align-items:center; justify-content:center; } .menu-toggle:hover { background:var(--primary-soft); color:var(--primary); }
+    .page-title { font-size:1.5rem; font-weight:700; color:var(--dark); font-family:'Playfair Display',serif; } .current-date { color:var(--gray); font-size:0.85rem; white-space:nowrap; }
     .content-wrapper { padding:28px; max-width:900px; margin:0 auto; }
 
     .settings-card { background:white; border-radius:24px; padding:28px; margin-bottom:24px; box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(255,77,166,0.08); }
@@ -112,23 +99,6 @@
     .btn-primary:hover { transform:translateY(-1px); box-shadow:0 8px 18px rgba(255,77,166,0.3); }
     .btn-outline { border:1.5px solid rgba(255,77,166,0.3); color:var(--primary); background:transparent; width:100%; justify-content:center; margin-top:12px; }
     .btn-sm { padding:8px 16px; font-size:0.8rem; width:auto; }
-    .btn-success { background:var(--success); color:white; border:none; }
-    .btn-danger { background:var(--danger); color:white; border:none; }
-    .info-box { background:var(--primary-soft); border-radius:16px; padding:20px; margin-top:20px; }
-    .info-box h4 { font-size:0.9rem; margin-bottom:10px; color:var(--dark); }
-    .info-box ul { list-style:none; }
-    .info-box li { font-size:0.8rem; color:var(--gray); padding:5px 0; display:flex; align-items:center; gap:8px; }
-
-    .attendance-photos { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:15px; margin-top:15px; }
-    .photo-card { background:var(--gray-light); border-radius:16px; overflow:hidden; }
-    .photo-card img { width:100%; height:140px; object-fit:cover; display:block; cursor:pointer; }
-    .photo-info { padding:10px 12px; }
-    .photo-info h4 { font-size:0.8rem; font-weight:600; margin-bottom:4px; }
-    .photo-info p { font-size:0.7rem; color:var(--gray); }
-    .photo-badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:0.65rem; font-weight:600; margin-top:4px; }
-    .photo-badge.on-time { background:#d1fae5; color:var(--success); }
-    .photo-badge.late { background:#fee2e2; color:var(--danger); }
-    .photo-badge.early { background:#fee2e2; color:var(--danger); }
 
     /* Admin PINs table */
     .pins-table { width:100%; border-collapse:collapse; margin-top:12px; }
@@ -136,7 +106,12 @@
     .pins-table td { padding:12px; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
     .pins-table tr:hover { background:var(--primary-soft); }
     .pin-display { font-family:monospace; font-size:1.1rem; letter-spacing:4px; font-weight:700; }
-    .pin-masked { font-family:monospace; font-size:1.1rem; letter-spacing:4px; color:var(--gray); }
+    .badge { padding:5px 12px; border-radius:40px; font-size:0.7rem; font-weight:600; display:inline-block; white-space:nowrap; }
+
+    .info-box { background:var(--primary-soft); border-radius:16px; padding:20px; margin-top:20px; }
+    .info-box h4 { font-size:0.9rem; margin-bottom:10px; color:var(--dark); }
+    .info-box ul { list-style:none; }
+    .info-box li { font-size:0.8rem; color:var(--gray); padding:5px 0; display:flex; align-items:center; gap:8px; }
 
     .debug-panel { background:#1a1a2e; color:#10b981; border-radius:12px; padding:15px; margin-bottom:15px; font-family:monospace; font-size:0.75rem; max-height:200px; overflow-y:auto; display:none; }
     .debug-panel.show { display:block; }
@@ -146,8 +121,7 @@
 
     .toast-container { position:fixed; bottom:24px; right:24px; z-index:3000; display:flex; flex-direction:column; gap:10px; }
     .toast { background:white; color:var(--dark); padding:14px 20px; border-radius:50px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px; font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease; border-left:4px solid var(--primary); transition:all 0.3s ease; }
-    .toast.success { border-left-color:var(--success); }
-    .toast.error { border-left-color:var(--danger); }
+    .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); } .toast.warning { border-left-color:var(--warning); }
     .toast i { font-size:1.1rem; }
 
     .pin-wrapper { position: relative; display: inline-block; }
@@ -228,18 +202,17 @@
     <div class="settings-card">
       <div class="settings-header">
         <h2><i class="fas fa-key"></i> Admin PINs Management</h2>
-        <p>These are the PINs of all active admins. <strong>Attendants can use ANY of these PINs</strong> to authorize sensitive actions (like processing returns, viewing revenue, etc.).</p>
+        <p>Each admin must set their PIN on their <strong>own profile page</strong> (staff-management.html). After they set it, click <strong>"Sync All Admin PINs Now"</strong> to push them to the central collection that attendants can use.</p>
       </div>
       
-      <div style="background:var(--primary-soft);border-radius:14px;padding:16px;margin-bottom:20px;">
+      <div style="background:rgba(245,158,11,0.1);border-left:4px solid var(--warning);border-radius:14px;padding:16px;margin-bottom:20px;">
         <div style="display:flex;align-items:center;gap:10px;">
-          <i class="fas fa-info-circle" style="color:var(--primary);font-size:1.3rem;"></i>
+          <i class="fas fa-exclamation-triangle" style="color:var(--warning);font-size:1.3rem;"></i>
           <div>
-            <strong style="color:var(--dark);">How It Works</strong>
+            <strong style="color:var(--dark);">⚠️ Important: Admins Must Set Their Own PINs</strong>
             <p style="font-size:0.8rem;color:var(--gray);margin-top:2px;">
-              Each admin sets their own PIN on their profile page. All active admin PINs are synced to a central collection. 
-              When an attendant needs to authorize an action, they can enter <strong>any admin's PIN</strong>. 
-              If you have 4 admins, the attendant can use any of those 4 PINs.
+              The "Synced 0 PINs from 3 admins" message means the admin user documents don't have <code>adminPin</code> or <code>attendantPin</code> fields set. 
+              Each admin needs to go to their profile and set a 4-digit PIN. Until then, only the <strong>Master Fallback PIN</strong> below will work.
             </p>
           </div>
         </div>
@@ -259,49 +232,52 @@
               <th>Status</th>
               <th>Admin PIN</th>
               <th>Attendant PIN</th>
+              <th>Has PIN Set?</th>
               <th>Last Updated</th>
             </tr>
           </thead>
           <tbody id="adminPinsBody">
-            <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--gray);">Loading admin PINs...</td></tr>
+            <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray);">Loading admin PINs...</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="info-box" style="margin-top:16px;">
-        <h4><i class="fas fa-lightbulb"></i> PIN Usage Summary</h4>
+        <h4><i class="fas fa-lightbulb"></i> How PINs Work</h4>
         <ul>
           <li><i class="fas fa-check-circle" style="color:var(--success);"></i> <strong id="activePinCount">0</strong> active admin PINs available for attendants</li>
-          <li><i class="fas fa-shield-alt" style="color:var(--primary);"></i> Attendants can use any of these PINs for: processing sales, returns, exchanges, viewing revenue</li>
-          <li><i class="fas fa-lock" style="color:var(--warning);"></i> Some actions require <strong>admin-only</strong> PIN (not attendant PIN) — see sales page for details</li>
+          <li><i class="fas fa-user-cog" style="color:var(--primary);"></i> Admins set their PINs on their <strong>profile page</strong> (not here)</li>
+          <li><i class="fas fa-sync-alt" style="color:var(--info);"></i> After setting PINs, click <strong>Sync</strong> to push them to the central collection</li>
+          <li><i class="fas fa-key" style="color:var(--warning);"></i> The <strong>Master Fallback PIN</strong> below works until admins set their individual PINs</li>
+          <li><i class="fas fa-users" style="color:var(--success);"></i> Attendants can use <strong>any admin's PIN</strong> to authorize actions</li>
         </ul>
       </div>
     </div>
 
     <!-- Cloudinary Settings -->
     <div class="settings-card">
-      <div class="settings-header"><h2><i class="fas fa-cloud-upload-alt"></i> Cloudinary Configuration</h2><p>Your Cloudinary account for storing attendance photos. Images are uploaded to Cloudinary and only URLs are stored in Firestore.</p></div>
-      <div class="form-group"><label>Cloudinary Cloud Name</label><input type="text" id="cloudinaryCloudName" class="form-control" value="dw80fw9un" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;font-family:'Poppins',sans-serif;"><p class="hint">Found in your Cloudinary Dashboard.</p></div>
-      <div class="form-group"><label>Upload Preset (Unsigned)</label><input type="text" id="cloudinaryUploadPreset" class="form-control" value="kiosk_attendance" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;font-family:'Poppins',sans-serif;"><p class="hint">Unsigned upload preset for kiosk photo uploads.</p></div>
+      <div class="settings-header"><h2><i class="fas fa-cloud-upload-alt"></i> Cloudinary Configuration</h2><p>Your Cloudinary account for storing attendance photos.</p></div>
+      <div class="form-group"><label>Cloudinary Cloud Name</label><input type="text" id="cloudinaryCloudName" class="form-control" value="dw80fw9un" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;font-family:'Poppins',sans-serif;"></div>
+      <div class="form-group"><label>Upload Preset (Unsigned)</label><input type="text" id="cloudinaryUploadPreset" class="form-control" value="kiosk_attendance" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;font-family:'Poppins',sans-serif;"></div>
     </div>
 
     <!-- Attendance Settings -->
     <div class="settings-card">
-      <div class="settings-header"><h2><i class="fas fa-clock"></i> Attendance Time Settings</h2><p>Configure check-in and check-out times.</p></div>
-      <div class="form-group"><label><i class="fas fa-sign-in-alt"></i> Check-In Time (Latest arrival)</label><div class="time-input-group"><div class="time-input"><input type="number" id="checkInHour" min="0" max="23" value="9"> <span>:</span> <input type="number" id="checkInMinute" min="0" max="59" value="0"></div><span style="color:var(--gray);">AM</span></div><p class="hint">Staff arriving after this time are marked LATE.</p></div>
-      <div class="form-group"><label><i class="fas fa-sign-out-alt"></i> Check-Out Time (Earliest departure)</label><div class="time-input-group"><div class="time-input"><input type="number" id="checkOutHour" min="0" max="23" value="18"> <span>:</span> <input type="number" id="checkOutMinute" min="0" max="59" value="0"></div><span style="color:var(--gray);">PM</span></div><p class="hint">Staff leaving before this time are marked EARLY DEPARTURE.</p></div>
+      <div class="settings-header"><h2><i class="fas fa-clock"></i> Attendance Time Settings</h2></div>
+      <div class="form-group"><label><i class="fas fa-sign-in-alt"></i> Check-In Time</label><div class="time-input-group"><div class="time-input"><input type="number" id="checkInHour" min="0" max="23" value="9"> <span>:</span> <input type="number" id="checkInMinute" min="0" max="59" value="0"></div><span style="color:var(--gray);">AM</span></div></div>
+      <div class="form-group"><label><i class="fas fa-sign-out-alt"></i> Check-Out Time</label><div class="time-input-group"><div class="time-input"><input type="number" id="checkOutHour" min="0" max="23" value="18"> <span>:</span> <input type="number" id="checkOutMinute" min="0" max="59" value="0"></div><span style="color:var(--gray);">PM</span></div></div>
       <div class="divider"></div>
       <div class="settings-header"><h2><i class="fas fa-coins"></i> Penalty Settings</h2></div>
       <div class="penalty-group"><div class="penalty-item"><label>Late Penalty</label><input type="number" id="latePenalty" value="5" min="1" max="50"></div><div class="penalty-item"><label>Early Departure</label><input type="number" id="earlyPenalty" value="5" min="1" max="50"></div><div class="penalty-item"><label>Absent Penalty</label><input type="number" id="absentPenalty" value="10" min="1" max="50"></div></div>
       <div class="divider"></div>
-      <div class="settings-header"><h2><i class="fas fa-shield-alt"></i> Fallback Master PIN</h2></div>
+      <div class="settings-header"><h2><i class="fas fa-shield-alt"></i> Master Fallback PIN</h2></div>
       <div class="form-group">
-        <label>Master Admin PIN (Fallback Only)</label>
+        <label>Master Admin PIN (Works until admins set their own PINs)</label>
         <div class="pin-wrapper">
           <input type="password" id="adminPin" class="form-control" maxlength="4" value="1234" style="width:150px;padding:12px;border-radius:12px;border:1px solid #ddd;font-family:'Poppins',sans-serif;">
           <i class="fas fa-eye pin-eye-btn" id="toggleSettingsPinEye" onclick="toggleSettingsPinVisibility()" title="Show/Hide PIN"></i>
         </div>
-        <p class="hint">This is the fallback PIN used only if no admin PINs are synced. Attendants can use <strong>any admin's PIN</strong> from the table above.</p>
+        <p class="hint">This PIN is always accepted. It's the <strong>fallback</strong> — use it until admins set their individual PINs on their profile pages.</p>
       </div>
       <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> Save All Settings</button>
       <button class="btn btn-outline" onclick="window.open('kiosk.html','_blank')"><i class="fas fa-desktop"></i> Open Kiosk Terminal</button>
@@ -311,10 +287,10 @@
     <div class="settings-card">
       <div class="settings-header">
         <h2><i class="fas fa-images"></i> Today's Attendance Photos</h2>
-        <p>Photos captured by the kiosk today with time and staff name. <button onclick="loadTodayPhotos()" style="background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;font-size:0.8rem;">↻ Refresh</button></p>
+        <button onclick="loadTodayPhotos()" style="background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;font-size:0.8rem;">↻ Refresh</button>
       </div>
       <div id="attendancePhotosContainer">
-        <div style="text-align:center;padding:30px;"><div style="width:32px;height:32px;border:3px solid var(--primary-soft);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 15px;"></div><p style="color:var(--gray);">Loading photos...</p></div>
+        <div style="text-align:center;padding:30px;color:var(--gray);"><p>Loading photos...</p></div>
       </div>
     </div>
 
@@ -378,12 +354,11 @@
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
 
   // ============================================
-  // ADMIN PINS SYNC SYSTEM
+  // ADMIN PINS SYNC - FIXED
   // ============================================
   async function loadAdminPins() {
-    debugLog('Loading admin PINs from Firestore...');
+    debugLog('Loading admin PINs from users collection...');
     try {
-      // Get all active admins from users collection
       const adminsQuery = query(
         collection(db, 'users'),
         where('role', 'in', ['admin', 'super_admin']),
@@ -404,20 +379,24 @@
           updatedAt: data.updatedAt || data.createdAt
         };
         allAdminPins.push(adminInfo);
+        
+        // Debug: Log what we found
+        debugLog(`Admin: ${adminInfo.fullName} | adminPin: ${adminInfo.adminPin || '(empty)'} | attendantPin: ${adminInfo.attendantPin || '(empty)'}`);
       });
 
       debugLog(`Found ${allAdminPins.length} active admins`);
       renderAdminPinsTable();
       
-      // Also load the synced PINs from admin_pins collection
+      // Load last sync time
       const syncedQuery = query(collection(db, 'admin_pins'));
       const syncedSnap = await getDocs(syncedQuery);
       
       if (!syncedSnap.empty) {
         const syncedData = syncedSnap.docs[0].data();
-        document.getElementById('lastSyncTime').textContent = 
-          syncedData.syncedAt ? new Date(syncedData.syncedAt.seconds * 1000).toLocaleString() : 'Unknown';
-        debugLog(`Last sync: ${document.getElementById('lastSyncTime').textContent}`);
+        if (syncedData.syncedAt) {
+          document.getElementById('lastSyncTime').textContent = 
+            new Date(syncedData.syncedAt.seconds * 1000).toLocaleString();
+        }
       }
     } catch (e) {
       debugLog(`Error loading admin PINs: ${e.message}`, 'error');
@@ -430,7 +409,7 @@
     if (!tbody) return;
 
     if (allAdminPins.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--gray);">No active admins found. Add admins via Staff Management.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray);">No active admins found. Add admins via Staff Management.</td></tr>';
       document.getElementById('activePinCount').textContent = '0';
       return;
     }
@@ -438,23 +417,24 @@
     tbody.innerHTML = allAdminPins.map(function(admin) {
       const hasAdminPin = admin.adminPin && admin.adminPin.length >= 4;
       const hasAttendantPin = admin.attendantPin && admin.attendantPin.length >= 4;
+      const hasAnyPin = hasAdminPin || hasAttendantPin;
       const roleBadge = admin.role === 'super_admin' 
         ? '<span class="badge" style="background:rgba(139,92,246,0.1);color:#8b5cf6;">Super Admin</span>'
-        : '<span class="badge" style="background:rgba(59,130,246,0.1);color:var(--info);">Admin</span>';
+        : '<span class="badge" style="background:rgba(59,130,246,0.1);color:#3b82f6;">Admin</span>';
       
       return '<tr>' +
         '<td><strong>' + (admin.fullName || 'Unknown') + '</strong></td>' +
         '<td>' + roleBadge + '</td>' +
-        '<td><span class="badge" style="background:rgba(16,185,129,0.1);color:var(--success);">Active</span></td>' +
-        '<td>' + (hasAdminPin ? '<span class="pin-display">' + admin.adminPin + '</span>' : '<span style="color:var(--danger);">⚠️ Not Set</span>') + '</td>' +
+        '<td><span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;">Active</span></td>' +
+        '<td>' + (hasAdminPin ? '<span class="pin-display">' + admin.adminPin + '</span>' : '<span style="color:#ef4444;">⚠️ Not Set</span>') + '</td>' +
         '<td>' + (hasAttendantPin ? '<span class="pin-display">' + admin.attendantPin + '</span>' : '<span style="color:var(--gray);">—</span>') + '</td>' +
+        '<td>' + (hasAnyPin ? '<span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;">✅ Yes</span>' : '<span class="badge" style="background:rgba(239,68,68,0.1);color:#ef4444;">❌ No</span>') + '</td>' +
         '<td style="font-size:0.75rem;color:var(--gray);">' + (admin.updatedAt ? new Date(admin.updatedAt.seconds * 1000).toLocaleDateString() : '—') + '</td>' +
         '</tr>';
     }).join('');
 
-    // Count admins with valid PINs
     const activePinCount = allAdminPins.filter(function(a) { 
-      return a.adminPin && a.adminPin.length >= 4; 
+      return (a.adminPin && a.adminPin.length >= 4) || (a.attendantPin && a.attendantPin.length >= 4);
     }).length;
     document.getElementById('activePinCount').textContent = activePinCount;
   }
@@ -474,12 +454,19 @@
       const adminsSnap = await getDocs(adminsQuery);
       
       let syncedCount = 0;
-      const pinSet = new Set(); // Store unique PINs
+      const pinSet = new Set();
       
+      // First, delete all existing PIN docs to avoid stale data
+      const existingPinsSnap = await getDocs(collection(db, 'admin_pins'));
+      existingPinsSnap.forEach(function(d) {
+        batch.delete(d.ref);
+      });
+      
+      // Now write fresh PINs
       adminsSnap.forEach(function(d) {
         const data = d.data();
+        debugLog(`Checking ${data.fullName}: adminPin="${data.adminPin || ''}", attendantPin="${data.attendantPin || ''}"`);
         
-        // Store admin PIN
         if (data.adminPin && data.adminPin.length >= 4) {
           const pinRef = doc(collection(db, 'admin_pins'), d.id + '_admin');
           batch.set(pinRef, {
@@ -494,7 +481,6 @@
           syncedCount++;
         }
         
-        // Store attendant PIN if it exists
         if (data.attendantPin && data.attendantPin.length >= 4) {
           const pinRef = doc(collection(db, 'admin_pins'), d.id + '_attendant');
           batch.set(pinRef, {
@@ -510,7 +496,27 @@
         }
       });
 
-      // Store the synced timestamp
+      // Also add the master fallback PIN
+      const kioskSnap = await getDoc(doc(db, 'system_settings', 'kiosk'));
+      if (kioskSnap.exists()) {
+        const masterPin = kioskSnap.data().adminPin;
+        if (masterPin && masterPin.length >= 4) {
+          const masterRef = doc(collection(db, 'admin_pins'), '_master_fallback');
+          batch.set(masterRef, {
+            pin: masterPin,
+            type: 'master_fallback',
+            userId: 'system',
+            fullName: 'Master Fallback PIN',
+            role: 'system',
+            syncedAt: serverTimestamp()
+          });
+          pinSet.add(masterPin);
+          syncedCount++;
+          debugLog(`Added master fallback PIN: ${masterPin}`);
+        }
+      }
+
+      // Store sync metadata
       const syncMetaRef = doc(collection(db, 'admin_pins'), '_sync_meta');
       batch.set(syncMetaRef, {
         syncedAt: serverTimestamp(),
@@ -523,10 +529,9 @@
       await batch.commit();
       
       document.getElementById('lastSyncTime').textContent = new Date().toLocaleString();
-      debugLog(`Synced ${syncedCount} PINs (${pinSet.size} unique) from ${adminsSnap.size} admins`);
-      showToast(`Synced ${pinSet.size} unique PINs from ${adminsSnap.size} admins!`, 'success');
+      debugLog(`Synced ${syncedCount} PINs (${pinSet.size} unique) from ${adminsSnap.size} admins + master fallback`);
+      showToast(`Synced ${pinSet.size} unique PINs! ✅`, 'success');
       
-      // Reload the table
       await loadAdminPins();
     } catch (e) {
       debugLog(`Sync failed: ${e.message}`, 'error');
@@ -542,7 +547,6 @@
     const snap = await getDoc(doc(db, 'system_settings', 'kiosk'));
     if(snap.exists()) {
       const s = snap.data();
-      debugLog(`Settings loaded: checkIn=${s.checkInHour}:${s.checkInMinute}, checkOut=${s.checkOutHour}:${s.checkOutMinute}`);
       document.getElementById('checkInHour').value = s.checkInHour || 9;
       document.getElementById('checkInMinute').value = s.checkInMinute || 0;
       document.getElementById('checkOutHour').value = s.checkOutHour || 18;
@@ -553,8 +557,6 @@
       document.getElementById('adminPin').value = s.adminPin || '1234';
       document.getElementById('cloudinaryCloudName').value = s.cloudinaryCloudName || 'dw80fw9un';
       document.getElementById('cloudinaryUploadPreset').value = s.cloudinaryUploadPreset || 'kiosk_attendance';
-    } else {
-      debugLog('No settings found, using defaults', 'warn');
     }
   }
 
@@ -587,7 +589,7 @@
       updatedAt: serverTimestamp(),
       updatedBy: currentUser?.uid
     };
-    debugLog('Saving settings: ' + JSON.stringify(settings, null, 2));
+    debugLog('Saving settings...');
     await setDoc(doc(db, 'system_settings', 'kiosk'), settings);
     debugLog('Settings saved successfully!');
     showToast('All settings saved!', 'success');
@@ -596,113 +598,59 @@
     await window.syncAllAdminPins();
   };
 
-  // ============================================
-  // TODAY'S PHOTOS
-  // ============================================
   window.loadTodayPhotos = async function() {
     const container = document.getElementById('attendancePhotosContainer');
     const today = new Date().toISOString().split('T')[0];
     
-    debugLog(`Loading photos for date: ${today}`);
-    container.innerHTML = '<div style="text-align:center;padding:30px;"><div style="width:32px;height:32px;border:3px solid var(--primary-soft);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 15px;"></div><p style="color:var(--gray);">Loading photos...</p></div>';
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray);"><p>Loading photos...</p></div>';
     
     try {
       const q = query(collection(db, 'kiosk_photos'), where('date', '==', today));
       const snap = await getDocs(q);
-      debugLog(`Query returned ${snap.size} photos`);
       
       if (snap.empty) {
-        container.innerHTML = `
-          <div style="text-align:center;padding:30px;color:var(--gray);">
-            <i class="fas fa-camera" style="font-size:2.5rem;margin-bottom:12px;display:block;opacity:0.5;"></i>
-            <p><strong>No attendance photos today</strong></p>
-            <p style="font-size:0.8rem;margin-top:5px;">Photos will appear here when staff check in/out via the kiosk.</p>
-            <button onclick="loadTodayPhotos()" style="margin-top:15px;padding:8px 20px;background:var(--primary);color:white;border:none;border-radius:20px;cursor:pointer;font-family:'Poppins',sans-serif;">🔄 Refresh</button>
-          </div>
-        `;
+        container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray);"><i class="fas fa-camera" style="font-size:2.5rem;margin-bottom:12px;display:block;opacity:0.5;"></i><p>No attendance photos today</p></div>';
         return;
       }
       
       const photos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       photos.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
       
-      let html = '<div class="attendance-photos">';
-      photos.forEach(p => {
-        const time = p.timestamp?.toDate ? p.timestamp.toDate().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : '-';
-        const typeLabel = p.type === 'checkin' ? 'Check-in' : 'Check-out';
-        html += `
-          <div class="photo-card">
-            <img src="${p.photoUrl}" onclick="window.open('${p.photoUrl}')" alt="${p.staffName || 'Staff'}" 
-                 onerror="this.style.display='none';this.parentNode.querySelector('.photo-error').style.display='flex';">
-            <div class="photo-error" style="display:none;height:140px;align-items:center;justify-content:center;background:#f0f0f0;color:var(--gray);font-size:0.7rem;text-align:center;">
-              Image not available
-            </div>
-            <div class="photo-info">
-              <h4>${p.staffName || 'Unknown'}</h4>
-              <p>${typeLabel}: ${time}</p>
-              <span class="photo-badge on-time">${typeLabel}</span>
-            </div>
-          </div>
-        `;
-      });
-      html += '</div>';
-      container.innerHTML = html;
-      debugLog('Photos rendered successfully!');
-      
+      container.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:15px;">' +
+        photos.map(p => {
+          const time = p.timestamp?.toDate ? p.timestamp.toDate().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : '-';
+          return `<div style="background:var(--gray-light);border-radius:16px;overflow:hidden;">
+            <img src="${p.photoUrl}" style="width:100%;height:140px;object-fit:cover;cursor:pointer;" onclick="window.open('${p.photoUrl}')" alt="${p.staffName||'Staff'}">
+            <div style="padding:10px;"><strong>${p.staffName||'Unknown'}</strong><br><small>${p.type==='checkin'?'Check-in':'Check-out'}: ${time}</small></div>
+          </div>`;
+        }).join('') + '</div>';
     } catch (e) {
-      debugLog(`ERROR: ${e.code} - ${e.message}`, 'error');
-      console.error('Full error:', e);
-      
-      let errorMsg = e.message || 'Unknown error';
-      let retryBtn = '<button onclick="loadTodayPhotos()" style="margin-top:15px;padding:8px 20px;background:var(--primary);color:white;border:none;border-radius:20px;cursor:pointer;">Retry</button>';
-      
-      if (e.code === 'failed-precondition' || (e.message && e.message.includes('index'))) {
-        const indexMatch = e.message.match(/https:\/\/console\.firebase\.google\.com[^\s)]+/);
-        const indexLink = indexMatch ? indexMatch[0] : '#';
-        errorMsg = 'Database index required.';
-        retryBtn = `<a href="${indexLink}" target="_blank" style="display:inline-block;padding:10px 20px;background:var(--primary);color:white;border-radius:40px;text-decoration:none;font-weight:600;font-size:0.85rem;">Create Index</a>`;
-      }
-      
-      container.innerHTML = `
-        <div style="text-align:center;padding:30px;">
-          <i class="fas fa-exclamation-circle" style="font-size:2rem;color:var(--danger);margin-bottom:10px;display:block;"></i>
-          <p style="color:var(--gray);margin-bottom:10px;"><strong>Failed to load photos</strong></p>
-          <p style="font-size:0.8rem;color:var(--gray);">${errorMsg}</p>
-          ${retryBtn}
-        </div>
-      `;
+      container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray);"><p>Failed to load photos: ' + e.message + '</p></div>';
     }
   };
 
-  // ============================================
-  // INIT
-  // ============================================
   onAuthStateChanged(auth, async (u) => {
-    if(!u){debugLog('Not logged in, redirecting...');window.location.href='auth.html';return;} 
+    if(!u){window.location.href='auth.html';return;} 
     currentUser=u;
-    debugLog(`Logged in as UID: ${u.uid}`);
     
     const snap = await getDoc(doc(db,'users',u.uid));
     if(!snap.exists()||(snap.data().role!=='admin'&&snap.data().role!=='super_admin')){
-      debugLog('Not admin, redirecting...','warn');
       window.location.href='auth.html';return;
     }
     const data = snap.data();
-    debugLog(`User: ${data.fullName} (${data.role})`);
     
     document.getElementById('userName').textContent = data.fullName?.split(' ')[0]||'Admin';
     document.getElementById('userRole').textContent = data.role==='super_admin'?'Super Admin':'Admin';
     document.getElementById('userAvatar').textContent = (data.fullName||'A').charAt(0).toUpperCase();
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     
-    await loadAdminPins();
     await loadSettings();
+    await loadAdminPins();
     await loadTodayPhotos();
     debugLog('✅ Kiosk settings page fully loaded');
   });
 
   document.getElementById('logoutBtn').addEventListener('click',async()=>{
-    debugLog('Logging out...');
     await signOut(auth);window.location.href='auth.html';
   });
 </script>
