@@ -35,6 +35,8 @@
       --warning: #f59e0b;
       --danger: #ef4444;
       --info: #3b82f6;
+      --return-bg: rgba(239, 68, 68, 0.08);
+      --borrow-bg: rgba(245, 158, 11, 0.1);
       --sidebar-width: 280px;
       --header-height: 70px;
     }
@@ -54,7 +56,8 @@
     }
 
     @keyframes flameRing {
-      0%, 100% {
+      0%,
+      100% {
         box-shadow: 0 0 0 0 rgba(255, 77, 166, 0.4);
       }
       50% {
@@ -84,6 +87,32 @@
       }
     }
 
+    @keyframes pulse {
+      0%,
+      100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .offline-banner {
+      background: var(--warning);
+      color: white;
+      text-align: center;
+      padding: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: none;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .offline-banner.show {
+      display: block;
+    }
+
     .sidebar {
       width: var(--sidebar-width);
       min-width: var(--sidebar-width);
@@ -103,11 +132,9 @@
     .sidebar::-webkit-scrollbar {
       width: 4px;
     }
-
     .sidebar::-webkit-scrollbar-track {
       background: rgba(255, 255, 255, 0.05);
     }
-
     .sidebar::-webkit-scrollbar-thumb {
       background: var(--primary);
       border-radius: 10px;
@@ -160,7 +187,6 @@
       font-family: 'Playfair Display', serif;
       white-space: nowrap;
     }
-
     .logo-text span {
       color: var(--primary);
     }
@@ -170,11 +196,9 @@
       display: flex;
       flex-direction: column;
     }
-
     .nav-section {
       margin-bottom: 20px;
     }
-
     .nav-section-title {
       font-size: 0.65rem;
       text-transform: uppercase;
@@ -184,7 +208,6 @@
       font-weight: 600;
       white-space: nowrap;
     }
-
     .nav-item {
       display: flex;
       align-items: center;
@@ -205,31 +228,26 @@
       white-space: nowrap;
       text-decoration: none;
     }
-
     .nav-item i {
       width: 22px;
       font-size: 1.1rem;
       text-align: center;
       flex-shrink: 0;
     }
-
     .nav-item:hover {
       background: rgba(255, 77, 166, 0.15);
       color: white;
       transform: translateX(5px);
     }
-
     .nav-item.active {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: white;
       box-shadow: 0 5px 15px rgba(255, 77, 166, 0.3);
     }
-
     .nav-item.logout {
       color: rgba(239, 68, 68, 0.7);
       margin-top: auto;
     }
-
     .nav-item.logout:hover {
       background: rgba(239, 68, 68, 0.15);
       color: #ef4444;
@@ -242,13 +260,11 @@
       bottom: 0;
       background: linear-gradient(0deg, #0f0f1a 0%, transparent 100%);
     }
-
     .user-profile {
       display: flex;
       align-items: center;
       gap: 12px;
     }
-
     .user-avatar {
       width: 44px;
       height: 44px;
@@ -262,16 +278,13 @@
       flex-shrink: 0;
       font-size: 1.1rem;
     }
-
     .user-details {
       white-space: nowrap;
     }
-
     .user-details h4 {
       font-size: 0.85rem;
       font-weight: 600;
     }
-
     .user-details p {
       font-size: 0.7rem;
       opacity: 0.6;
@@ -285,7 +298,6 @@
       z-index: 999;
       display: none;
     }
-
     .sidebar-overlay.active {
       display: block;
     }
@@ -311,13 +323,11 @@
       top: 0;
       z-index: 50;
     }
-
     .top-bar-left {
       display: flex;
       align-items: center;
       gap: 14px;
     }
-
     .menu-toggle {
       background: none;
       border: none;
@@ -331,19 +341,16 @@
       align-items: center;
       justify-content: center;
     }
-
     .menu-toggle:hover {
       background: var(--primary-soft);
       color: var(--primary);
     }
-
     .page-title {
       font-size: 1.5rem;
       font-weight: 700;
       color: var(--dark);
       font-family: 'Playfair Display', serif;
     }
-
     .current-date {
       color: var(--gray);
       font-size: 0.85rem;
@@ -361,7 +368,6 @@
       gap: 16px;
       margin-bottom: 24px;
     }
-
     .stat-card {
       background: white;
       padding: 18px 16px;
@@ -372,34 +378,27 @@
       animation: fadeInUp 0.5s ease forwards;
       opacity: 0;
     }
-
     .stat-card:nth-child(1) {
       animation-delay: 0.05s;
     }
-
     .stat-card:nth-child(2) {
-      animation-delay: 0.10s;
+      animation-delay: 0.1s;
     }
-
     .stat-card:nth-child(3) {
       animation-delay: 0.15s;
     }
-
     .stat-card:nth-child(4) {
-      animation-delay: 0.20s;
+      animation-delay: 0.2s;
     }
-
     .stat-card:hover {
       transform: translateY(-5px);
       box-shadow: 0 12px 24px rgba(255, 77, 166, 0.15);
     }
-
     .stat-header {
       display: flex;
       justify-content: space-between;
       margin-bottom: 12px;
     }
-
     .stat-header span {
       font-size: 0.65rem;
       color: var(--gray);
@@ -407,7 +406,6 @@
       font-weight: 600;
       letter-spacing: 1px;
     }
-
     .stat-icon {
       width: 36px;
       height: 36px;
@@ -418,13 +416,17 @@
       justify-content: center;
       color: var(--primary);
     }
-
     .stat-value {
       font-size: 1.8rem;
       font-weight: 800;
       color: var(--dark);
       font-family: 'Playfair Display', serif;
       line-height: 1;
+    }
+    .stat-sub {
+      font-size: 0.65rem;
+      color: var(--gray);
+      margin-top: 4px;
     }
 
     .stat-card.value-locked .stat-value {
@@ -433,7 +435,6 @@
       cursor: pointer;
       position: relative;
     }
-
     .stat-card.value-locked .stat-value::after {
       content: '\f023';
       font-family: 'Font Awesome 6 Free';
@@ -447,7 +448,6 @@
       color: var(--gray);
       filter: none;
     }
-
     .stat-card .value-hint {
       font-size: 0.6rem;
       color: var(--primary);
@@ -456,7 +456,6 @@
       margin-top: 2px;
       display: none;
     }
-
     .stat-card.value-locked .value-hint {
       display: block;
     }
@@ -472,7 +471,6 @@
       gap: 12px;
       flex-wrap: wrap;
     }
-
     .lowstock-banner i {
       color: var(--warning);
       font-size: 1.3rem;
@@ -484,13 +482,11 @@
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-
     .search-wrapper {
       flex: 1;
       min-width: 200px;
       position: relative;
     }
-
     .search-wrapper i {
       position: absolute;
       left: 14px;
@@ -498,7 +494,6 @@
       transform: translateY(-50%);
       color: var(--gray);
     }
-
     .search-input {
       width: 100%;
       padding: 12px 16px 12px 42px;
@@ -508,7 +503,6 @@
       outline: none;
       font-family: 'Poppins', sans-serif;
     }
-
     .search-input:focus {
       border-color: var(--primary);
     }
@@ -534,7 +528,6 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
       flex-wrap: wrap;
     }
-
     .tab {
       padding: 12px 20px;
       border-radius: 16px;
@@ -550,12 +543,10 @@
       transition: all 0.2s;
       font-family: 'Poppins', sans-serif;
     }
-
     .tab:hover {
       background: var(--primary-soft);
       color: var(--primary);
     }
-
     .tab.active {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: white;
@@ -569,7 +560,6 @@
       border: 1px solid rgba(255, 77, 166, 0.08);
       margin-bottom: 24px;
     }
-
     .panel-header {
       display: flex;
       justify-content: space-between;
@@ -578,7 +568,6 @@
       flex-wrap: wrap;
       gap: 10px;
     }
-
     .panel-header h3 {
       font-size: 1.1rem;
       font-weight: 700;
@@ -587,7 +576,6 @@
       gap: 10px;
       color: var(--dark);
     }
-
     .panel-header h3 i {
       color: var(--primary);
     }
@@ -597,13 +585,11 @@
       -webkit-overflow-scrolling: touch;
       border-radius: 16px;
     }
-
     .data-table {
       width: 100%;
       border-collapse: collapse;
       min-width: 1200px;
     }
-
     .data-table th {
       text-align: left;
       padding: 14px 10px;
@@ -616,19 +602,24 @@
       white-space: nowrap;
       background: white;
     }
-
     .data-table td {
       padding: 14px 10px;
       border-bottom: 1px solid rgba(0, 0, 0, 0.04);
       font-size: 0.85rem;
     }
-
     .data-table tbody tr {
       transition: background 0.2s;
     }
-
     .data-table tbody tr:hover {
       background: var(--primary-soft);
+    }
+    .data-table tbody tr.row-borrow {
+      background: var(--borrow-bg);
+      border-left: 3px solid var(--warning);
+    }
+    .data-table tbody tr.row-return {
+      background: var(--return-bg);
+      border-left: 3px solid var(--danger);
     }
 
     .badge {
@@ -639,30 +630,29 @@
       display: inline-block;
       white-space: nowrap;
     }
-
     .badge-success {
       background: rgba(16, 185, 129, 0.1);
       color: var(--success);
     }
-
     .badge-warning {
       background: rgba(245, 158, 11, 0.1);
       color: var(--warning);
     }
-
     .badge-danger {
       background: rgba(239, 68, 68, 0.1);
       color: var(--danger);
     }
-
     .badge-info {
       background: rgba(59, 130, 246, 0.1);
       color: var(--info);
     }
-
     .badge-purple {
       background: rgba(139, 92, 246, 0.1);
       color: #8b5cf6;
+    }
+    .badge-borrow {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
     }
 
     .btn {
@@ -680,40 +670,38 @@
       font-family: 'Poppins', sans-serif;
       white-space: nowrap;
     }
-
     .btn:hover {
       transform: translateY(-2px);
     }
-
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
     .btn-primary {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: white;
       border: none;
     }
-
     .btn-outline {
       border: 1.5px solid rgba(255, 77, 166, 0.3);
       color: var(--primary);
       background: transparent;
     }
-
     .btn-sm {
       padding: 6px 12px;
       font-size: 0.7rem;
     }
-
     .btn-success {
       background: var(--success);
       color: white;
       border: none;
     }
-
     .btn-danger {
       background: var(--danger);
       color: white;
       border: none;
     }
-
     .btn-warning {
       background: var(--warning);
       color: white;
@@ -723,7 +711,6 @@
     .page-view {
       display: none;
     }
-
     .page-view.active {
       display: block;
     }
@@ -739,11 +726,9 @@
       z-index: 2000;
       padding: 16px;
     }
-
     .modal-overlay.active {
       display: flex;
     }
-
     .modal {
       background: white;
       border-radius: 28px;
@@ -754,19 +739,16 @@
       overflow-y: auto;
       animation: fadeInUp 0.3s ease;
     }
-
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
     }
-
     .modal-header h3 {
       font-size: 1.2rem;
       font-weight: 700;
     }
-
     .modal-close {
       background: none;
       border: none;
@@ -776,7 +758,6 @@
       padding: 5px;
       transition: all 0.2s;
     }
-
     .modal-close:hover {
       color: var(--danger);
       transform: rotate(90deg);
@@ -785,7 +766,6 @@
     .form-group {
       margin-bottom: 18px;
     }
-
     .form-group label {
       display: block;
       font-size: 0.8rem;
@@ -793,7 +773,6 @@
       color: var(--dark);
       margin-bottom: 6px;
     }
-
     .form-control {
       width: 100%;
       padding: 12px 16px;
@@ -805,7 +784,6 @@
       font-family: 'Poppins', sans-serif;
       transition: border 0.2s;
     }
-
     .form-control:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(255, 77, 166, 0.1);
@@ -816,7 +794,6 @@
       grid-template-columns: 1fr 1fr;
       gap: 14px;
     }
-
     .form-row-3 {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -829,7 +806,6 @@
       justify-content: center;
       margin: 20px 0;
     }
-
     .pin-input {
       width: 55px;
       height: 65px;
@@ -841,7 +817,6 @@
       outline: none;
       font-family: 'Poppins', sans-serif;
     }
-
     .pin-input:focus {
       border-color: var(--primary);
     }
@@ -852,7 +827,6 @@
       margin-bottom: 15px;
       flex-wrap: wrap;
     }
-
     .measured-sub-btn {
       flex: 1;
       min-width: 100px;
@@ -867,21 +841,18 @@
       transition: all 0.2s;
       text-align: center;
     }
-
     .measured-sub-btn i {
       display: block;
       font-size: 1.5rem;
       margin-bottom: 6px;
       color: var(--primary);
     }
-
     .measured-sub-btn.active {
       border-color: var(--primary);
       background: var(--primary-soft);
       color: var(--primary);
       box-shadow: 0 4px 12px rgba(255, 77, 166, 0.2);
     }
-
     .measured-sub-btn .sub-label {
       font-size: 0.7rem;
       color: var(--gray);
@@ -894,7 +865,6 @@
       padding: 40px 20px;
       color: var(--gray);
     }
-
     .empty-state i {
       font-size: 2.5rem;
       color: var(--primary-light);
@@ -906,7 +876,6 @@
       position: relative;
       display: inline-block;
     }
-
     .export-menu {
       position: absolute;
       top: 100%;
@@ -919,11 +888,9 @@
       z-index: 50;
       overflow: hidden;
     }
-
     .export-menu.show {
       display: block;
     }
-
     .export-item {
       padding: 12px 16px;
       cursor: pointer;
@@ -933,7 +900,6 @@
       align-items: center;
       gap: 10px;
     }
-
     .export-item:hover {
       background: var(--primary-soft);
     }
@@ -947,7 +913,6 @@
       flex-direction: column;
       gap: 10px;
     }
-
     .toast {
       background: white;
       color: var(--dark);
@@ -963,17 +928,27 @@
       border-left: 4px solid var(--primary);
       transition: all 0.3s ease;
     }
-
     .toast.success {
       border-left-color: var(--success);
     }
-
     .toast.error {
       border-left-color: var(--danger);
     }
-
+    .toast.warning {
+      border-left-color: var(--warning);
+    }
+    .toast.info {
+      border-left-color: var(--info);
+    }
     .toast i {
       font-size: 1.1rem;
+    }
+
+    .movement-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
     }
 
     @media (max-width: 1400px) {
@@ -988,74 +963,58 @@
         width: 280px !important;
         min-width: 280px !important;
       }
-
       .sidebar.mobile-open {
         transform: translateX(0);
         box-shadow: 10px 0 40px rgba(0, 0, 0, 0.3);
       }
-
       .sidebar-header .close-sidebar {
         display: flex !important;
       }
-
       .menu-toggle {
         display: flex !important;
       }
-
       .main-content {
         margin-left: 0 !important;
         width: 100% !important;
       }
-
       .content-wrapper {
         padding: 16px 12px;
       }
-
       .top-bar {
         padding: 0 16px;
       }
-
       .page-title {
         font-size: 1.1rem;
       }
-
       .current-date {
         display: none;
       }
-
       .stats-grid {
         grid-template-columns: 1fr 1fr;
         gap: 10px;
       }
-
       .stat-card {
         padding: 14px 12px;
       }
-
       .stat-value {
         font-size: 1.4rem;
       }
-
       .panel {
         padding: 16px 12px;
         border-radius: 18px;
       }
-
       .data-table {
         min-width: 900px;
       }
-
       .data-table th,
       .data-table td {
         padding: 10px 6px;
         font-size: 0.75rem;
       }
-
       .modal {
         padding: 20px;
         border-radius: 20px;
       }
-
       .form-row,
       .form-row-3 {
         grid-template-columns: 1fr;
@@ -1066,7 +1025,6 @@
       .stats-grid {
         grid-template-columns: 1fr;
       }
-
       .content-wrapper {
         padding: 12px 8px;
       }
@@ -1075,6 +1033,10 @@
 </head>
 
 <body>
+
+  <div class="offline-banner" id="offlineBanner">
+    <i class="fas fa-wifi"></i> You are offline — changes will sync when reconnected
+  </div>
 
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
@@ -1103,6 +1065,7 @@
         <h1 class="page-title">Store Management</h1>
       </div>
       <div style="display: flex; align-items: center; gap: 12px;">
+        <span id="syncStatus" style="font-size:0.75rem;color:var(--gray);"></span>
         <button class="btn btn-outline btn-sm" onclick="openHelpGuide()"><i class="fas fa-question-circle"></i> Help</button>
         <span class="current-date" id="currentDate"></span>
       </div>
@@ -1114,10 +1077,12 @@
         <div class="stat-card">
           <div class="stat-header"><span>Total Store Items</span><div class="stat-icon"><i class="fas fa-boxes"></i></div></div>
           <div class="stat-value" id="totalStoreItems">0</div>
+          <div class="stat-sub" id="totalCategories">0 categories</div>
         </div>
         <div class="stat-card">
           <div class="stat-header"><span>Total Units</span><div class="stat-icon"><i class="fas fa-cubes"></i></div></div>
           <div class="stat-value" id="totalUnits">0</div>
+          <div class="stat-sub" id="borrowedUnits">0 borrowed from inventory</div>
         </div>
         <div class="stat-card value-locked" id="totalStoreValueCard">
           <div class="stat-header"><span>Store Value</span><div class="stat-icon"><i class="fas fa-naira-sign"></i></div></div>
@@ -1127,18 +1092,20 @@
         <div class="stat-card">
           <div class="stat-header"><span>Pending Incoming</span><div class="stat-icon"><i class="fas fa-truck-loading"></i></div></div>
           <div class="stat-value" id="pendingIncoming">0</div>
+          <div class="stat-sub" id="pendingPieces">0 pieces waiting</div>
         </div>
       </div>
 
       <div class="lowstock-banner" id="storeLowBanner" style="display: none;">
         <i class="fas fa-box-open"></i>
-        <div style="flex: 1;"><strong>Low Stock</strong> — <span id="storeLowMsg"></span></div>
+        <div style="flex: 1;"><strong>Low Stock Alert</strong> — <span id="storeLowMsg"></span></div>
         <button class="btn btn-sm btn-warning" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i> Buy from Third Party</button>
       </div>
 
       <div class="tabs-container">
         <button class="tab active" data-tab="stock"><i class="fas fa-warehouse"></i> Store Stock</button>
         <button class="tab" data-tab="incoming"><i class="fas fa-truck-loading"></i> Incoming Inventory</button>
+        <button class="tab" data-tab="movements"><i class="fas fa-exchange-alt"></i> Stock Movements</button>
         <button class="tab" data-tab="history"><i class="fas fa-history"></i> Wholesale History</button>
       </div>
 
@@ -1146,6 +1113,7 @@
         <div class="filter-bar">
           <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search store items..."></div>
           <select class="filter-select" id="categoryFilter"><option value="all">All Categories</option></select>
+          <select class="filter-select" id="statusFilter"><option value="all">All Status</option><option value="available">In Stock</option><option value="low">Low Stock</option><option value="out_of_stock">Out of Stock</option></select>
           <div class="export-dropdown">
             <button class="btn btn-outline" id="exportDropdownBtn"><i class="fas fa-download"></i> Export</button>
             <div class="export-menu" id="exportMenu">
@@ -1194,8 +1162,8 @@
           <div class="panel-header"><h3><i class="fas fa-cube"></i> General – Pending Incoming</h3></div>
           <div class="table-wrapper">
             <table class="data-table">
-              <thead><tr><th>Store Item</th><th>Bulk Packs</th><th>Units to Add</th><th>Target Inventory</th><th>Price</th><th>Requested By</th><th>Action</th></tr></thead>
-              <tbody id="incomingGeneralTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-cube"></i><p>No pending general items</p></div></td></tr></tbody>
+              <thead><tr><th>Store Item</th><th>Bulk Packs</th><th>Units to Add</th><th>Target Inventory</th><th>Price</th><th>Requested By</th><th>Date</th><th>Action</th></tr></thead>
+              <tbody id="incomingGeneralTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-cube"></i><p>No pending general items</p></div></td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1204,8 +1172,8 @@
           <div class="panel-header"><h3><i class="fas fa-tshirt"></i> Fashion – Pending Incoming</h3></div>
           <div class="table-wrapper">
             <table class="data-table">
-              <thead><tr><th>Store Item</th><th>Bulk Packs</th><th>Units</th><th>½</th><th>¼</th><th>Target Inventory</th><th>Prices (U/½/¼)</th><th>Requested By</th><th>Action</th></tr></thead>
-              <tbody id="incomingFashionTable"><tr><td colspan="9"><div class="empty-state"><i class="fas fa-tshirt"></i><p>No pending fashion items</p></div></td></tr></tbody>
+              <thead><tr><th>Store Item</th><th>Bulk Packs</th><th>Units</th><th>½</th><th>¼</th><th>Target Inventory</th><th>Prices (U/½/¼)</th><th>Requested By</th><th>Date</th><th>Action</th></tr></thead>
+              <tbody id="incomingFashionTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-tshirt"></i><p>No pending fashion items</p></div></td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1214,8 +1182,8 @@
           <div class="panel-header"><h3><i class="fas fa-box"></i> Pack/Bundle – Pending Incoming</h3></div>
           <div class="table-wrapper">
             <table class="data-table">
-              <thead><tr><th>Store Item</th><th>Bulk Packs</th><th>Pieces</th><th>Packs</th><th>Pack Size</th><th>Target Inventory</th><th>Prices (Unit/Pack)</th><th>Requested By</th><th>Action</th></tr></thead>
-              <tbody id="incomingPackBundleTable"><tr><td colspan="9"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr></tbody>
+              <thead><tr><th>Store Item</th><th>Bulk Packs</th><th>Pieces</th><th>Packs</th><th>Pack Size</th><th>Target Inventory</th><th>Prices (Unit/Pack)</th><th>Requested By</th><th>Date</th><th>Action</th></tr></thead>
+              <tbody id="incomingPackBundleTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1224,8 +1192,46 @@
           <div class="panel-header"><h3><i class="fas fa-ruler"></i> Measured – Pending Incoming</h3></div>
           <div class="table-wrapper">
             <table class="data-table">
-              <thead><tr><th>Store Item</th><th>Bulk Packs</th><th id="measuredColH">Yards</th><th>Target Inventory</th><th>Price</th><th>Requested By</th><th>Action</th></tr></thead>
-              <tbody id="incomingMeasuredTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-ruler"></i><p>No pending measured items</p></div></td></tr></tbody>
+              <thead><tr><th>Store Item</th><th>Bulk Packs</th><th id="measuredColH">Yards</th><th>Target Inventory</th><th>Price</th><th>Requested By</th><th>Date</th><th>Action</th></tr></thead>
+              <tbody id="incomingMeasuredTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-ruler"></i><p>No pending measured items</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="movementsPanel" class="page-view">
+        <div class="filter-bar">
+          <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="movementSearchInput" placeholder="Search by item name or reference..."></div>
+          <select class="filter-select" id="movementTypeFilter">
+            <option value="all">All Movements</option>
+            <option value="wholesale_sale">Wholesale Sales</option>
+            <option value="inventory_to_store_sale">Borrowed from Inventory</option>
+            <option value="return_restock">Return Restock</option>
+            <option value="return_damaged">Return Damaged</option>
+            <option value="incoming_transfer">Incoming Transfer</option>
+          </select>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-exchange-alt"></i> Stock Movement History</h3>
+            <button class="btn btn-outline btn-sm" onclick="refreshStore()"><i class="fas fa-sync-alt"></i> Refresh</button>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Item</th>
+                  <th>Movement Type</th>
+                  <th>Change</th>
+                  <th>Reference</th>
+                  <th>Performed By</th>
+                  <th>Condition</th>
+                </tr>
+              </thead>
+              <tbody id="movementsTable">
+                <tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading movements...</p></div></td></tr>
+              </tbody>
             </table>
           </div>
         </div>
@@ -1248,12 +1254,13 @@
                   <th>Total Pieces</th>
                   <th>Total Amount</th>
                   <th>Payment</th>
+                  <th>Borrowed</th>
                   <th>Attendant</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="wholesaleHistoryTable">
-                <tr><td colspan="10"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
+                <tr><td colspan="11"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
               </tbody>
             </table>
           </div>
@@ -1277,7 +1284,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, deleteDoc, setDoc, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, deleteDoc, setDoc, increment, writeBatch, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
@@ -1292,6 +1299,17 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // Enable offline persistence
+    try {
+      enableIndexedDbPersistence(db).then(function() {
+        console.log('Store: Offline persistence enabled');
+      }).catch(function(err) {
+        console.warn('Store: Persistence error:', err.code);
+      });
+    } catch (e) {
+      console.warn('Store: Persistence setup error:', e);
+    }
+
     let currentUser = null;
     let userData = null;
     let unsubscribes = [];
@@ -1300,10 +1318,13 @@
     let categories = [];
     let incomingItems = [];
     let allInventoryItems = [];
+    let stockMovements = [];
     let currentTab = 'stock';
     let incomingTab = 'general';
     let storeValueRevealed = false;
     let measuredSubType = 'yard';
+    let isOnline = navigator.onLine;
+    let adminPins = new Set();
 
     function safeNumber(val, fallback) {
       fallback = (typeof fallback === 'undefined') ? 0 : fallback;
@@ -1317,17 +1338,29 @@
     }
 
     function formatCurrency(n) {
-      return '₦' + (n || 0).toLocaleString();
+      return '₦' + (safeNumber(n, 0)).toLocaleString();
     }
 
     function formatDate(d) {
       if (!d) return '-';
-      const date = d.toDate ? d.toDate() : new Date(d);
-      return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: '2-digit'
-      });
+      var date;
+      if (d.toDate) date = d.toDate();
+      else if (d.seconds) date = new Date(d.seconds * 1000);
+      else if (typeof d === 'string') date = new Date(d);
+      else if (d instanceof Date) date = d;
+      else date = new Date();
+      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
+    }
+
+    function formatDateTime(d) {
+      if (!d) return '-';
+      var date;
+      if (d.toDate) date = d.toDate();
+      else if (d.seconds) date = new Date(d.seconds * 1000);
+      else if (typeof d === 'string') date = new Date(d);
+      else if (d instanceof Date) date = d;
+      else date = new Date();
+      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) + ' ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     }
 
     function navigateTo(url) {
@@ -1337,33 +1370,47 @@
 
     function showToast(msg, type) {
       type = type || 'success';
-      const c = document.getElementById('toastContainer');
+      var c = document.getElementById('toastContainer');
       if (!c) return;
-      const t = document.createElement('div');
+      var t = document.createElement('div');
       t.className = 'toast ' + type;
-      const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+      var icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle';
       t.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + msg;
       c.appendChild(t);
       setTimeout(function() {
         t.style.opacity = '0';
         t.style.transform = 'translateX(100%)';
         t.style.transition = 'all 0.3s ease';
-        setTimeout(function() {
-          t.remove();
-        }, 300);
-      }, 3500);
+        setTimeout(function() { t.remove(); }, 300);
+      }, 4000);
     }
 
-    async function logAudit(action, note) {
+    async function logAudit(action, note, extraData) {
       try {
-        await addDoc(collection(db, 'audit_logs'), {
+        var auditData = {
           actionType: action,
           performedBy: currentUser ? currentUser.uid : 'unknown',
           performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+          performedByRole: userData ? (userData.role || 'attendant') : 'unknown',
           performedAt: serverTimestamp(),
+          note: note || '',
+          deviceInfo: navigator.userAgent,
+          isOnline: isOnline
+        };
+        if (extraData) Object.assign(auditData, extraData);
+        await addDoc(collection(db, 'audit_logs'), auditData);
+      } catch (e) {
+        console.warn('Audit log failed:', e.message);
+        var localAudits = JSON.parse(localStorage.getItem('localStoreAudits') || '[]');
+        localAudits.push({
+          actionType: action,
+          performedBy: currentUser ? currentUser.uid : 'unknown',
+          performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+          performedAt: new Date().toISOString(),
           note: note || ''
         });
-      } catch (e) {}
+        localStorage.setItem('localStoreAudits', JSON.stringify(localAudits));
+      }
     }
 
     function hideModal() {
@@ -1378,15 +1425,13 @@
     }
 
     function cleanup() {
-      unsubscribes.forEach(function(u) {
-        u();
-      });
+      unsubscribes.forEach(function(u) { try { u(); } catch (e) {} });
       unsubscribes = [];
     }
 
     window.toggleSidebar = function() {
-      const s = document.getElementById('sidebar');
-      const o = document.getElementById('sidebarOverlay');
+      var s = document.getElementById('sidebar');
+      var o = document.getElementById('sidebarOverlay');
       if (s.classList.contains('mobile-open')) {
         s.classList.remove('mobile-open');
         o.classList.remove('active');
@@ -1405,52 +1450,55 @@
     };
 
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        hideModal();
-        closeSidebar();
-      }
+      if (e.key === 'Escape') { hideModal(); closeSidebar(); }
     });
 
     function isAdmin() {
       return userData && (userData.role === 'admin' || userData.role === 'super_admin');
     }
 
-    function buildSidebar() {
-      const nav = document.getElementById('sidebarNav');
-      if (!nav) return;
-      const dashboardLink = isAdmin() ? 'admin-dashboard.html' : 'attendant-dashboard.html';
-      let navHTML = '<div class="nav-section"><div class="nav-section-title">MAIN</div>';
-      navHTML += '<button class="nav-item" onclick="navigateTo(\'' + dashboardLink + '\')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>';
-      navHTML += '<button class="nav-item" onclick="navigateTo(\'inventory.html\')"><i class="fas fa-box"></i><span>Inventory</span></button>';
-      navHTML += '<button class="nav-item active"><i class="fas fa-store"></i><span>Store</span></button>';
-      navHTML += '<button class="nav-item" onclick="navigateTo(\'sales.html\')"><i class="fas fa-cash-register"></i><span>Sales</span></button>';
-      navHTML += '<button class="nav-item" onclick="navigateTo(\'purchases.html\')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>';
-      navHTML += '<button class="nav-item" onclick="navigateTo(\'customers.html\')"><i class="fas fa-users"></i><span>Customers</span></button>';
-      navHTML += '</div>';
-      if (isAdmin()) {
-        navHTML += '<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>';
-        navHTML += '<button class="nav-item" onclick="navigateTo(\'staff-management.html\')"><i class="fas fa-users-cog"></i><span>Staff</span></button>';
-        navHTML += '<button class="nav-item" onclick="navigateTo(\'approvals.html\')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>';
-        navHTML += '<button class="nav-item" onclick="navigateTo(\'announcements.html\')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>';
-        navHTML += '<button class="nav-item" onclick="navigateTo(\'orders.html\')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button>';
-        navHTML += '<button class="nav-item" onclick="navigateTo(\'finance.html\')"><i class="fas fa-chart-line"></i><span>Finance</span></button>';
-        navHTML += '<button class="nav-item" onclick="navigateTo(\'audit.html\')"><i class="fas fa-history"></i><span>Audit</span></button>';
-        navHTML += '</div>';
+    // ============================================
+    // FIXED: PIN Verification - No hardcoded PINs
+    // ============================================
+    async function verifyPin(pin, requiredRole) {
+      if (!pin || pin.length < 4) return false;
+      
+      if (requiredRole === 'admin') {
+        return adminPins.has(pin);
       }
-      navHTML += '<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>';
-      nav.innerHTML = navHTML;
-      document.getElementById('logoutBtn')?.addEventListener('click', async function() {
-        try {
-          await logAudit('logout', '');
-        } catch (e) {}
-        await signOut(auth);
-        window.location.href = 'auth.html';
-      });
+      
+      if (requiredRole === 'attendant') {
+        if (userData && pin === userData.attendantPin) return true;
+        if (adminPins.has(pin)) return true;
+        return false;
+      }
+      
+      if (adminPins.has(pin)) return true;
+      if (userData && pin === userData.attendantPin) return true;
+      return false;
     }
 
-    function showPinModal(title, action, onSuccess) {
+    async function loadAdminPins() {
+      try {
+        var snap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['admin', 'super_admin']), where('status', '==', 'active')));
+        adminPins.clear();
+        snap.forEach(function(d) {
+          var data = d.data();
+          if (data.adminPin) adminPins.add(data.adminPin);
+          if (data.attendantPin) adminPins.add(data.attendantPin);
+        });
+      } catch (e) {
+        console.error('Failed to load admin PINs:', e);
+      }
+    }
+
+    function showPinModal(title, action, onSuccess, requiredRole) {
+      requiredRole = requiredRole || 'attendant';
+      
       showModal(title,
-        '<p style="text-align: center; margin-bottom: 20px;">Enter your 4-digit PIN to ' + action + '</p>' +
+        '<p style="text-align: center; margin-bottom: 20px;">Enter your PIN to ' + action + '</p>' +
+        '<p style="text-align:center;font-size:0.7rem;color:var(--gray);margin-bottom:10px;">' + 
+        (requiredRole === 'admin' ? '🔒 Admin authorization required' : '🔑 Attendant or Admin PIN accepted') + '</p>' +
         '<div class="pin-input-container">' +
         '<input type="password" maxlength="1" class="pin-input" id="pin1">' +
         '<input type="password" maxlength="1" class="pin-input" id="pin2">' +
@@ -1459,48 +1507,95 @@
         '</div>' +
         '<button class="btn btn-primary" id="verifyPinBtn" style="width: 100%;">Verify</button>'
       );
-      document.getElementById('pin1').focus();
+      
+      var pin1El = document.getElementById('pin1');
+      if (pin1El) pin1El.focus();
+      
       document.querySelectorAll('#modalOverlay .pin-input').forEach(function(inp, i, arr) {
         inp.addEventListener('input', function(e) {
           if (e.target.value && i < arr.length - 1) arr[i + 1].focus();
         });
       });
-      document.getElementById('verifyPinBtn').onclick = function() {
-        const pin = ['pin1', 'pin2', 'pin3', 'pin4'].map(function(id) {
-          return document.getElementById(id).value;
-        }).join('');
-        if (pin === ((userData && userData.attendantPin) || '1234')) {
-          hideModal();
-          onSuccess();
-        } else {
-          showToast('Invalid PIN', 'error');
-        }
-      };
+      
+      var verifyBtn = document.getElementById('verifyPinBtn');
+      if (verifyBtn) {
+        verifyBtn.onclick = async function() {
+          var pin = '';
+          for (var i = 1; i <= 4; i++) {
+            var el = document.getElementById('pin' + i);
+            pin += el ? el.value : '';
+          }
+          var isValid = await verifyPin(pin, requiredRole);
+          if (isValid) {
+            hideModal();
+            await logAudit('pin_verified', 'PIN verified for: ' + action, { requiredRole: requiredRole });
+            onSuccess();
+          } else {
+            showToast('Invalid PIN. Please try again.', 'error');
+            await logAudit('pin_failed', 'Failed PIN attempt for: ' + action, { requiredRole: requiredRole });
+          }
+        };
+      }
     }
 
     window.revealStoreValue = function() {
       if (storeValueRevealed) return;
+      if (isAdmin()) {
+        storeValueRevealed = true;
+        updateStoreValueDisplay();
+        logAudit('reveal_store_value', 'Admin auto-revealed store value');
+        return;
+      }
       showPinModal('Unlock Store Value', 'view total store value', function() {
         storeValueRevealed = true;
         updateStoreValueDisplay();
         showToast('Store value unlocked', 'success');
-      });
+      }, 'admin');
     };
+
+    function buildSidebar() {
+      var nav = document.getElementById('sidebarNav');
+      if (!nav) return;
+      var dashboardLink = isAdmin() ? 'admin-dashboard.html' : 'attendant-dashboard.html';
+      var html = '<div class="nav-section"><div class="nav-section-title">OVERVIEW</div>';
+      html += '<button class="nav-item" onclick="navigateTo(\'' + dashboardLink + '\')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>';
+      html += (isAdmin() ? '<button class="nav-item" onclick="navigateTo(\'approvals.html\')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>' : '');
+      html += '</div><div class="nav-section"><div class="nav-section-title">OPERATIONS</div>';
+      html += '<button class="nav-item" onclick="navigateTo(\'inventory.html\')"><i class="fas fa-box"></i><span>Inventory</span></button>';
+      html += '<button class="nav-item active"><i class="fas fa-store"></i><span>Store</span></button>';
+      html += '<button class="nav-item" onclick="navigateTo(\'purchases.html\')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>';
+      html += '<button class="nav-item" onclick="navigateTo(\'customers.html\')"><i class="fas fa-users"></i><span>Customers</span></button>';
+      html += '<button class="nav-item" onclick="navigateTo(\'sales.html\')"><i class="fas fa-cash-register"></i><span>Sales</span></button>';
+      html += '</div>';
+      if (isAdmin()) {
+        html += '<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>';
+        html += '<button class="nav-item" onclick="navigateTo(\'staff-management.html\')"><i class="fas fa-users-cog"></i><span>Staff</span></button>';
+        html += '<button class="nav-item" onclick="navigateTo(\'finance.html\')"><i class="fas fa-chart-line"></i><span>Finance</span></button>';
+        html += '<button class="nav-item" onclick="navigateTo(\'audit.html\')"><i class="fas fa-history"></i><span>Audit</span></button>';
+        html += '</div>';
+      }
+      html += '<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>';
+      nav.innerHTML = html;
+      
+      var logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async function() {
+          try { await logAudit('logout', 'User logged out from store'); } catch (e) {}
+          await signOut(auth);
+          window.location.href = 'auth.html';
+        });
+      }
+    }
 
     async function loadCategories() {
       try {
-        const snap = await getDocs(collection(db, 'categories'));
+        var snap = await getDocs(collection(db, 'categories'));
         if (!snap.empty) {
-          categories = snap.docs.map(function(d) {
-            return d.data().name;
-          });
+          categories = snap.docs.map(function(d) { return d.data().name; });
         } else {
           categories = ['rhinestones', 'beads', 'bridal', 'paperstones', 'other'];
           await Promise.all(categories.map(function(c) {
-            return setDoc(doc(db, 'categories', c), {
-              name: c,
-              createdAt: serverTimestamp()
-            });
+            return setDoc(doc(db, 'categories', c), { name: c, createdAt: serverTimestamp() });
           }));
         }
       } catch (e) {
@@ -1510,45 +1605,33 @@
     }
 
     function updateCategoryDropdowns() {
-      const filterEl = document.getElementById('categoryFilter');
+      var filterEl = document.getElementById('categoryFilter');
       if (filterEl) {
         filterEl.innerHTML = '<option value="all">All Categories</option>' +
-          categories.map(function(c) {
-            return '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>';
-          }).join('');
+          categories.map(function(c) { return '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>'; }).join('');
       }
       ['storeItemCategory', 's2iNewCategory'].forEach(function(id) {
-        const el = document.getElementById(id);
+        var el = document.getElementById(id);
         if (el) {
-          el.innerHTML = categories.map(function(c) {
-            return '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>';
-          }).join('');
+          el.innerHTML = categories.map(function(c) { return '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>'; }).join('');
         }
       });
     }
 
     window.addCategoryFromModal = async function() {
-      const nameInput = document.getElementById('newCategoryInput');
-      const name = nameInput ? nameInput.value.trim().toLowerCase() : '';
-      if (!name) {
-        showToast('Enter category name', 'error');
-        return;
-      }
-      if (categories.indexOf(name) !== -1) {
-        showToast('Already exists', 'error');
-        return;
-      }
+      var nameInput = document.getElementById('newCategoryInput');
+      var name = nameInput ? nameInput.value.trim().toLowerCase() : '';
+      if (!name) { showToast('Enter category name', 'error'); return; }
+      if (categories.indexOf(name) !== -1) { showToast('Already exists', 'error'); return; }
       try {
-        await setDoc(doc(db, 'categories', name), {
-          name: name,
-          createdAt: serverTimestamp()
-        });
+        await setDoc(doc(db, 'categories', name), { name: name, createdAt: serverTimestamp() });
         categories.push(name);
         updateCategoryDropdowns();
         showToast('"' + name + '" added', 'success');
         hideModal();
+        await logAudit('add_category', 'Added category: ' + name);
       } catch (e) {
-        showToast('Failed', 'error');
+        showToast('Failed: ' + e.message, 'error');
       }
     };
 
@@ -1560,72 +1643,81 @@
     };
 
     function getStoreItemStatus(item) {
-      if (item.unitQty === 0) return 'out_of_stock';
-      if (item.unitQty <= (item.threshold || 5)) return 'low';
+      if ((item.unitQty || 0) === 0) return 'out_of_stock';
+      if ((item.unitQty || 0) <= (item.threshold || 5)) return 'low';
       return 'available';
     }
 
     function updateStoreValueDisplay() {
-      const card = document.getElementById('totalStoreValueCard');
-      const valEl = document.getElementById('totalStoreValue');
-      if (storeValueRevealed) {
+      var card = document.getElementById('totalStoreValueCard');
+      var valEl = document.getElementById('totalStoreValue');
+      if (storeValueRevealed && card && valEl) {
         card.classList.remove('value-locked');
-        const totalValue = storeItems.reduce(function(s, i) {
-          return s + (i.unitQty || 0) * (i.unitCost || 0);
-        }, 0);
+        var totalValue = storeItems.reduce(function(s, i) { return s + (i.unitQty || 0) * (i.unitCost || 0); }, 0);
         valEl.textContent = formatCurrency(totalValue);
         valEl.style.filter = 'none';
+        var hint = card.querySelector('.value-hint');
+        if (hint) hint.style.display = 'none';
       }
     }
 
     function renderStoreStock() {
-      const search = (document.getElementById('searchInput') && document.getElementById('searchInput').value || '').toLowerCase();
-      const cat = (document.getElementById('categoryFilter') && document.getElementById('categoryFilter').value || 'all');
-      let filtered = storeItems.slice();
+      var search = (document.getElementById('searchInput') && document.getElementById('searchInput').value || '').toLowerCase();
+      var cat = (document.getElementById('categoryFilter') && document.getElementById('categoryFilter').value || 'all');
+      var statusFilter = (document.getElementById('statusFilter') && document.getElementById('statusFilter').value || 'all');
+      
+      var filtered = storeItems.slice();
       if (search) {
-        filtered = filtered.filter(function(i) {
-          return (i.name || '').toLowerCase().indexOf(search) !== -1;
-        });
+        filtered = filtered.filter(function(i) { return (i.name || '').toLowerCase().indexOf(search) !== -1; });
       }
       if (cat !== 'all') {
-        filtered = filtered.filter(function(i) {
-          return (i.category || '').toLowerCase() === cat.toLowerCase();
-        });
+        filtered = filtered.filter(function(i) { return (i.category || '').toLowerCase() === cat.toLowerCase(); });
+      }
+      if (statusFilter !== 'all') {
+        filtered = filtered.filter(function(i) { return getStoreItemStatus(i) === statusFilter; });
       }
 
+      var uniqueCategories = new Set(storeItems.map(function(i) { return i.category || 'other'; }));
       document.getElementById('totalStoreItems').textContent = storeItems.length;
-      document.getElementById('totalUnits').textContent = storeItems.reduce(function(s, i) {
-        return s + (i.unitQty || 0);
+      document.getElementById('totalCategories').textContent = uniqueCategories.size + ' categories';
+      document.getElementById('totalUnits').textContent = storeItems.reduce(function(s, i) { return s + (i.unitQty || 0); }, 0).toLocaleString();
+      
+      // Count borrowed units from inventory
+      var borrowedTotal = stockMovements.filter(function(m) { return m.movementType === 'inventory_to_store_sale'; }).reduce(function(s, m) {
+        return s + Math.abs(safeNumber(m.change && m.change.unit, 0));
       }, 0);
-      document.getElementById('pendingIncoming').textContent = incomingItems.filter(function(r) {
-        return r.status === 'pending';
-      }).length;
+      document.getElementById('borrowedUnits').textContent = borrowedTotal + ' borrowed from inventory';
+      
+      document.getElementById('pendingIncoming').textContent = incomingItems.filter(function(r) { return r.status === 'pending'; }).length;
+      var pendingPieces = incomingItems.filter(function(r) { return r.status === 'pending'; }).reduce(function(s, r) { return s + (r.totalPieces || 0); }, 0);
+      document.getElementById('pendingPieces').textContent = pendingPieces + ' pieces waiting';
+      
       updateStoreValueDisplay();
 
-      const lowCount = storeItems.filter(function(i) {
-        return ['low', 'out_of_stock'].indexOf(getStoreItemStatus(i)) !== -1;
-      }).length;
-      const banner = document.getElementById('storeLowBanner');
-      banner.style.display = lowCount > 0 ? 'flex' : 'none';
-      if (lowCount > 0) {
-        document.getElementById('storeLowMsg').textContent = lowCount + ' item(s) running low.';
+      var lowCount = storeItems.filter(function(i) { return ['low', 'out_of_stock'].indexOf(getStoreItemStatus(i)) !== -1; }).length;
+      var banner = document.getElementById('storeLowBanner');
+      if (banner) {
+        banner.style.display = lowCount > 0 ? 'flex' : 'none';
+        if (lowCount > 0) {
+          document.getElementById('storeLowMsg').textContent = lowCount + ' item(s) running low. Restock from inventory or purchase more.';
+        }
       }
 
-      const tbody = document.getElementById('storeTable');
+      var tbody = document.getElementById('storeTable');
       if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-store"></i><p>No store items. Add stock to get started.</p></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-store"></i><p>No store items found. Add stock to get started.</p></div></td></tr>';
         return;
       }
 
       tbody.innerHTML = filtered.map(function(item) {
-        const st = getStoreItemStatus(item);
-        const sb = st === 'available' ? 'success' : st === 'low' ? 'warning' : 'danger';
-        const totalValue = (item.unitQty || 0) * (item.unitCost || 0);
+        var st = getStoreItemStatus(item);
+        var sb = st === 'available' ? 'success' : st === 'low' ? 'warning' : 'danger';
+        var totalValue = (item.unitQty || 0) * (item.unitCost || 0);
         return '<tr>' +
           '<td><strong>' + (item.name || '-') + '</strong></td>' +
           '<td><span class="badge badge-purple">' + (item.category || '-') + '</span></td>' +
-          '<td><span class="badge badge-info">' + (item.inventoryItemType || 'general') + '</span></td>' +
-          '<td style="font-weight: 600;">' + (item.unitQty || 0) + '</td>' +
+          '<td><span class="badge badge-info">' + (item.inventoryItemType || 'general').replace(/_/g, ' ') + '</span></td>' +
+          '<td style="font-weight: 600;">' + (item.unitQty || 0).toLocaleString() + '</td>' +
           '<td>' + formatCurrency(item.unitCost || 0) + '</td>' +
           '<td style="font-weight: 600;">' + formatCurrency(totalValue) + '</td>' +
           '<td><span class="badge badge-' + sb + '">' + st.replace(/_/g, ' ') + '</span></td>' +
@@ -1637,24 +1729,87 @@
       }).join('');
     }
 
-    function renderIncomingInventory() {
-      const pending = incomingItems.filter(function(i) {
-        return i.status === 'pending';
-      });
-      document.getElementById('pendingIncoming').textContent = pending.length;
+    function getMovementLabel(type) {
+      var labels = {
+        'wholesale_sale': '🏷️ Wholesale Sale',
+        'inventory_to_store_sale': '📦 Borrowed from Inventory',
+        'return_restock': '↩️ Return Restock',
+        'return_damaged': '⚠️ Return Damaged',
+        'incoming_transfer': '📥 Incoming Transfer',
+        'sale': '💰 Regular Sale'
+      };
+      return labels[type] || type.replace(/_/g, ' ');
+    }
 
-      const generalItems = pending.filter(function(i) {
-        return i.inventoryItemType === 'general';
+    function getMovementBadge(type) {
+      if (type === 'return_restock') return 'badge-success';
+      if (type === 'return_damaged') return 'badge-danger';
+      if (type === 'inventory_to_store_sale') return 'badge-warning';
+      if (type === 'wholesale_sale') return 'badge-info';
+      if (type === 'incoming_transfer') return 'badge-purple';
+      return 'badge-info';
+    }
+
+    function renderStockMovements() {
+      var tbody = document.getElementById('movementsTable');
+      var search = (document.getElementById('movementSearchInput') && document.getElementById('movementSearchInput').value || '').toLowerCase();
+      var typeFilter = (document.getElementById('movementTypeFilter') && document.getElementById('movementTypeFilter').value || 'all');
+      
+      var filtered = stockMovements.slice();
+      if (search) {
+        filtered = filtered.filter(function(m) {
+          return (m.itemName || '').toLowerCase().indexOf(search) !== -1 || (m.reference || '').toLowerCase().indexOf(search) !== -1;
+        });
+      }
+      if (typeFilter !== 'all') {
+        filtered = filtered.filter(function(m) { return m.movementType === typeFilter; });
+      }
+      
+      filtered.sort(function(a, b) {
+        var aTime = a.performedAt ? (a.performedAt.seconds || 0) : 0;
+        var bTime = b.performedAt ? (b.performedAt.seconds || 0) : 0;
+        return bTime - aTime;
       });
-      const fashionItems = pending.filter(function(i) {
-        return i.inventoryItemType === 'fashion';
-      });
-      const packItems = pending.filter(function(i) {
-        return i.inventoryItemType === 'pack_bundle';
-      });
-      const measuredItems = pending.filter(function(i) {
-        return i.inventoryItemType === 'measured';
-      });
+      
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-exchange-alt"></i><p>No stock movements recorded yet</p></div></td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = filtered.map(function(m) {
+        var changeText = '';
+        if (m.change) {
+          var parts = [];
+          if (m.change.unit) parts.push('Units: ' + (m.change.unit > 0 ? '+' : '') + m.change.unit);
+          if (m.change.half) parts.push('½: ' + (m.change.half > 0 ? '+' : '') + m.change.half);
+          if (m.change.quarter) parts.push('¼: ' + (m.change.quarter > 0 ? '+' : '') + m.change.quarter);
+          changeText = parts.join(', ') || '-';
+        }
+        var conditionBadge = m.condition ? ' <span class="badge badge-' + (m.condition === 'resellable' ? 'success' : 'danger') + '" style="font-size:0.6rem;">' + m.condition + '</span>' : '';
+        var rowClass = (m.movementType === 'inventory_to_store_sale') ? 'row-borrow' : (m.movementType && m.movementType.indexOf('return') !== -1 ? 'row-return' : '');
+        
+        return '<tr class="' + rowClass + '">' +
+          '<td>' + formatDateTime(m.performedAt) + '</td>' +
+          '<td><strong>' + (m.itemName || '-') + '</strong></td>' +
+          '<td><span class="badge ' + getMovementBadge(m.movementType) + '">' + getMovementLabel(m.movementType) + '</span></td>' +
+          '<td style="font-size:0.8rem;">' + changeText + '</td>' +
+          '<td style="font-size:0.8rem;">' + (m.reference || '-') + '</td>' +
+          '<td>' + (m.performedByName || '-') + '</td>' +
+          '<td>' + (conditionBadge || '<span class="badge badge-info">—</span>') + '</td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    function renderIncomingInventory() {
+      var pending = incomingItems.filter(function(i) { return i.status === 'pending'; });
+      document.getElementById('pendingIncoming').textContent = pending.length;
+      var pendingPieces = pending.reduce(function(s, r) { return s + (r.totalPieces || 0); }, 0);
+      document.getElementById('pendingPieces').textContent = pendingPieces + ' pieces waiting';
+
+      var generalItems = pending.filter(function(i) { return i.inventoryItemType === 'general'; });
+      var fashionItems = pending.filter(function(i) { return i.inventoryItemType === 'fashion'; });
+      var packItems = pending.filter(function(i) { return i.inventoryItemType === 'pack_bundle'; });
+      var measuredItems = pending.filter(function(i) { return i.inventoryItemType === 'measured'; });
 
       document.getElementById('incomingGeneralTable').innerHTML = generalItems.length ?
         generalItems.map(function(i) {
@@ -1662,13 +1817,14 @@
             '<td><strong>' + (i.storeItemName || '-') + '</strong></td>' +
             '<td>' + (i.bulkQty || 0) + '</td>' +
             '<td>' + (i.allocation && i.allocation.unit || 0) + '</td>' +
-            '<td>' + (i.targetInventoryName || '—') + '</td>' +
+            '<td>' + (i.targetInventoryName || 'New: ' + (i.targetInventoryName || i.storeItemName)) + '</td>' +
             '<td>' + formatCurrency(i.prices && i.prices.unit || 0) + '</td>' +
             '<td>' + (i.requestedByName || '-') + '</td>' +
+            '<td>' + formatDate(i.createdAt) + '</td>' +
             '<td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer(\'' + i.id + '\')"><i class="fas fa-check"></i> Confirm</button></td>' +
             '</tr>';
         }).join('') :
-        '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-cube"></i><p>No pending general items</p></div></td></tr>';
+        '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-cube"></i><p>No pending general items</p></div></td></tr>';
 
       document.getElementById('incomingFashionTable').innerHTML = fashionItems.length ?
         fashionItems.map(function(i) {
@@ -1678,13 +1834,14 @@
             '<td>' + (i.allocation && i.allocation.unit || 0) + '</td>' +
             '<td>' + (i.allocation && i.allocation.half || 0) + '</td>' +
             '<td>' + (i.allocation && i.allocation.quarter || 0) + '</td>' +
-            '<td>' + (i.targetInventoryName || '—') + '</td>' +
-            '<td>' + formatCurrency(i.prices && i.prices.unit || 0) + ' / ' + formatCurrency(i.prices && i.prices.half || 0) + ' / ' + formatCurrency(i.prices && i.prices.quarter || 0) + '</td>' +
+            '<td>' + (i.targetInventoryName || 'New: ' + (i.storeItemName || '-')) + '</td>' +
+            '<td style="font-size:0.75rem;">' + formatCurrency(i.prices && i.prices.unit || 0) + ' / ' + formatCurrency(i.prices && i.prices.half || 0) + ' / ' + formatCurrency(i.prices && i.prices.quarter || 0) + '</td>' +
             '<td>' + (i.requestedByName || '-') + '</td>' +
+            '<td>' + formatDate(i.createdAt) + '</td>' +
             '<td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer(\'' + i.id + '\')"><i class="fas fa-check"></i> Confirm</button></td>' +
             '</tr>';
         }).join('') :
-        '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-tshirt"></i><p>No pending fashion items</p></div></td></tr>';
+        '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-tshirt"></i><p>No pending fashion items</p></div></td></tr>';
 
       document.getElementById('incomingPackBundleTable').innerHTML = packItems.length ?
         packItems.map(function(i) {
@@ -1694,15 +1851,16 @@
             '<td>' + (i.allocation && i.allocation.unit || 0) + '</td>' +
             '<td>' + (i.allocation && i.allocation.pack || 0) + '</td>' +
             '<td>' + (i.packSize || 12) + '</td>' +
-            '<td>' + (i.targetInventoryName || '—') + '</td>' +
-            '<td>' + formatCurrency(i.prices && i.prices.unit || 0) + ' / ' + formatCurrency(i.prices && i.prices.pack || 0) + '</td>' +
+            '<td>' + (i.targetInventoryName || 'New: ' + (i.storeItemName || '-')) + '</td>' +
+            '<td style="font-size:0.75rem;">' + formatCurrency(i.prices && i.prices.unit || 0) + ' / ' + formatCurrency(i.prices && i.prices.pack || 0) + '</td>' +
             '<td>' + (i.requestedByName || '-') + '</td>' +
+            '<td>' + formatDate(i.createdAt) + '</td>' +
             '<td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer(\'' + i.id + '\')"><i class="fas fa-check"></i> Confirm</button></td>' +
             '</tr>';
         }).join('') :
-        '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr>';
+        '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr>';
 
-      const measuredColH = document.getElementById('measuredColH');
+      var measuredColH = document.getElementById('measuredColH');
       if (measuredItems.length && measuredItems[0].measuredSubType === 'bundle') {
         if (measuredColH) measuredColH.textContent = 'Bundles';
       } else {
@@ -1711,35 +1869,36 @@
 
       document.getElementById('incomingMeasuredTable').innerHTML = measuredItems.length ?
         measuredItems.map(function(i) {
-          const subType = i.measuredSubType || 'yard';
-          const qtyLabel = subType === 'bundle' ? (i.allocation && i.allocation.bundle || 0) : (i.allocation && i.allocation.unit || 0);
-          const priceLabel = subType === 'bundle' ? formatCurrency(i.prices && i.prices.bundle || 0) : formatCurrency(i.prices && i.prices.unit || 0);
+          var subType = i.measuredSubType || 'yard';
+          var qtyLabel = subType === 'bundle' ? (i.allocation && i.allocation.bundle || 0) : (i.allocation && i.allocation.unit || 0);
+          var priceLabel = subType === 'bundle' ? formatCurrency(i.prices && i.prices.bundle || 0) : formatCurrency(i.prices && i.prices.unit || 0);
           return '<tr>' +
             '<td><strong>' + (i.storeItemName || '-') + '</strong></td>' +
             '<td>' + (i.bulkQty || 0) + '</td>' +
             '<td>' + qtyLabel + '</td>' +
-            '<td>' + (i.targetInventoryName || '—') + '</td>' +
+            '<td>' + (i.targetInventoryName || 'New: ' + (i.storeItemName || '-')) + '</td>' +
             '<td>' + priceLabel + '</td>' +
             '<td>' + (i.requestedByName || '-') + '</td>' +
+            '<td>' + formatDate(i.createdAt) + '</td>' +
             '<td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer(\'' + i.id + '\')"><i class="fas fa-check"></i> Confirm</button></td>' +
             '</tr>';
         }).join('') :
-        '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-ruler"></i><p>No pending measured items</p></div></td></tr>';
+        '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-ruler"></i><p>No pending measured items</p></div></td></tr>';
     }
 
     function renderWholesaleHistory() {
-      const tbody = document.getElementById('wholesaleHistoryTable');
+      var tbody = document.getElementById('wholesaleHistoryTable');
       if (!wholesaleSales.length) {
-        tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-history"></i><p>No wholesale sales yet. Wholesale sales are now processed from the Sales page.</p></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><i class="fas fa-history"></i><p>No wholesale sales yet. Wholesale sales are processed from the Sales page.</p></div></td></tr>';
         return;
       }
 
       tbody.innerHTML = wholesaleSales.map(function(s) {
-        const packSize = s.wholesalePackSize || 50;
-        const totalPieces = s.totalPieces || (s.items ? s.items.reduce(function(sum, i) {
-          return sum + (i.pieces || 0);
-        }, 0) : 0);
-        const exceededBadge = s.exceededPackSize ? ' <span class="badge badge-warning">+' + s.extraPieces + ' extra</span>' : '';
+        var packSize = s.wholesalePackSize || 50;
+        var totalPieces = s.totalPieces || (s.items ? s.items.reduce(function(sum, i) { return sum + (i.pieces || 0); }, 0) : 0);
+        var exceededBadge = s.exceededPackSize ? ' <span class="badge badge-warning">+' + s.extraPieces + ' extra</span>' : '';
+        var borrowedBadge = s._borrowedItems && s._borrowedItems.length > 0 ? ' <span class="badge badge-borrow">📦 ' + s._borrowedItems.length + ' borrowed</span>' : '';
+        
         return '<tr>' +
           '<td>' + formatDate(s.createdAt) + '</td>' +
           '<td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td>' +
@@ -1749,33 +1908,41 @@
           '<td style="font-weight: 600;">' + totalPieces + ' pcs' + exceededBadge + '</td>' +
           '<td><strong>' + formatCurrency(s.totalAmount) + '</strong></td>' +
           '<td><span class="badge badge-success">' + (s.paymentMethod || 'cash') + '</span></td>' +
+          '<td>' + (borrowedBadge || '<span class="badge badge-success">None</span>') + '</td>' +
           '<td>' + (s.attendantName || '-') + '</td>' +
           '<td><button class="btn btn-sm btn-outline" onclick="viewWholesaleReceipt(\'' + s.id + '\')"><i class="fas fa-receipt"></i></button></td>' +
           '</tr>';
       }).join('');
     }
 
+    // ============================================
+    // FIXED: confirmIncomingTransfer with proper stock handling
+    // ============================================
     window.confirmIncomingTransfer = function(incomingId) {
-      const inc = incomingItems.find(function(i) {
-        return i.id === incomingId;
-      });
+      var inc = incomingItems.find(function(i) { return i.id === incomingId; });
       if (!inc) return;
-      showPinModal('Confirm Transfer', 'add to live inventory', async function() {
+      
+      showPinModal('Confirm Transfer', 'add to live inventory from store', async function() {
         try {
-          const batch = writeBatch(db);
-          const unitsToDeduct = inc.bulkQty * (inc.unitsPerBulk || 1);
+          var batch = writeBatch(db);
+          var unitsToDeduct = inc.bulkQty * (inc.unitsPerBulk || 1);
+          
+          // Deduct from store
           batch.update(doc(db, 'store_items', inc.storeItemId), {
             unitQty: increment(-unitsToDeduct),
             updatedAt: serverTimestamp()
           });
+          
+          // Delete incoming record
           batch.delete(doc(db, 'incoming_inventory', incomingId));
 
-          const inventoryRef = inc.targetInventoryId ? doc(db, 'stock_items', inc.targetInventoryId) : doc(collection(db, 'stock_items'));
+          var inventoryRef = inc.targetInventoryId ? doc(db, 'stock_items', inc.targetInventoryId) : doc(collection(db, 'stock_items'));
 
           if (!inc.targetInventoryId) {
-            const newItem = {
-              name: inc.targetInventoryName,
-              category: inc.newInventoryCategory || 'other',
+            // Create new inventory item
+            var newItem = {
+              name: inc.targetInventoryName || inc.storeItemName,
+              category: inc.newInventoryCategory || inc.storeItemCategory || 'other',
               itemType: inc.inventoryItemType,
               unitQty: (inc.allocation && inc.allocation.unit) || 0,
               halfQty: (inc.allocation && inc.allocation.half) || 0,
@@ -1785,8 +1952,10 @@
               quarterPrice: (inc.prices && inc.prices.quarter) || 0,
               packSize: inc.packSize || 12,
               packPrice: (inc.prices && inc.prices.pack) || 0,
+              packQty: (inc.allocation && inc.allocation.pack) || 0,
               bundleSize: inc.bundleSize || 50,
               bundlePrice: (inc.prices && inc.prices.bundle) || 0,
+              bundleQty: (inc.allocation && inc.allocation.bundle) || 0,
               threshold: 10,
               status: 'available',
               initialUnitQty: (inc.allocation && inc.allocation.unit) || 0,
@@ -1797,6 +1966,7 @@
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp()
             };
+            
             if (inc.inventoryItemType === 'measured') {
               newItem.measuredSubType = inc.measuredSubType || 'yard';
               newItem.measureUnit = newItem.measuredSubType;
@@ -1810,115 +1980,111 @@
             }
             batch.set(inventoryRef, newItem);
           } else {
-            const updates = {
-              updatedAt: serverTimestamp()
-            };
+            // Update existing inventory item
+            var updates = { updatedAt: serverTimestamp() };
             if (inc.allocation && inc.allocation.unit) updates.unitQty = increment(inc.allocation.unit);
             if (inc.allocation && inc.allocation.half) updates.halfQty = increment(inc.allocation.half);
             if (inc.allocation && inc.allocation.quarter) updates.quarterQty = increment(inc.allocation.quarter);
-            if (inc.allocation && inc.allocation.bundle) updates.bundleQty = increment(inc.allocation.bundle);
             if (inc.allocation && inc.allocation.pack) updates.packQty = increment(inc.allocation.pack);
+            if (inc.allocation && inc.allocation.bundle) updates.bundleQty = increment(inc.allocation.bundle);
             batch.update(inventoryRef, updates);
           }
+          
+          // Add stock movement record
+          var movRef = doc(collection(db, 'stock_movements'));
+          batch.set(movRef, {
+            itemId: inc.targetInventoryId || inventoryRef.id,
+            itemName: inc.targetInventoryName || inc.storeItemName,
+            movementType: 'incoming_transfer',
+            change: { unit: (inc.allocation && inc.allocation.unit) || 0, half: (inc.allocation && inc.allocation.half) || 0, quarter: (inc.allocation && inc.allocation.quarter) || 0 },
+            reference: 'Incoming Transfer - ' + inc.storeItemName + ' | ' + inc.bulkQty + ' packs × ' + (inc.unitsPerBulk || 1),
+            performedBy: currentUser ? currentUser.uid : 'unknown',
+            performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+            performedAt: serverTimestamp()
+          });
 
           await batch.commit();
-          await logAudit('confirm_incoming', 'Confirmed incoming: ' + inc.storeItemName + ' → ' + (inc.targetInventoryName || inc.storeItemName));
-          showToast('Inventory updated successfully!', 'success');
+          await logAudit('confirm_incoming', 'Confirmed incoming: ' + inc.storeItemName + ' → ' + (inc.targetInventoryName || inc.storeItemName), {
+            storeItemId: inc.storeItemId,
+            targetInventoryId: inc.targetInventoryId || inventoryRef.id,
+            totalPieces: inc.totalPieces,
+            inventoryType: inc.inventoryItemType
+          });
+          showToast('Inventory updated successfully! ✅', 'success');
         } catch (e) {
+          console.error('Confirm transfer failed:', e);
           showToast('Failed: ' + e.message, 'error');
         }
-      });
+      }, isAdmin() ? 'attendant' : 'admin');
     };
 
     window.openAddStoreItemModal = async function() {
-      const invSnap = await getDocs(collection(db, 'stock_items'));
-      const invItems = invSnap.docs.map(function(d) {
-        return {
-          id: d.id,
-          name: d.data().name || '',
-          category: d.data().category || '',
-          itemType: d.data().itemType || 'general'
-        };
+      var invSnap = await getDocs(collection(db, 'stock_items'));
+      var invItems = invSnap.docs.map(function(d) {
+        return { id: d.id, name: d.data().name || '', category: d.data().category || '', itemType: d.data().itemType || 'general' };
       });
 
-      const invOptions = invItems.length ?
+      var invOptions = invItems.length ?
         '<option value="">-- Select Inventory Item (Optional) --</option>' +
-        invItems.map(function(i) {
-          return '<option value="' + i.id + '" data-name="' + i.name + '" data-category="' + i.category + '" data-type="' + i.itemType + '">' + i.name + ' (' + i.itemType + ')</option>';
-        }).join('') :
+        invItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + i.name + '" data-category="' + i.category + '" data-type="' + i.itemType + '">' + i.name + ' (' + i.itemType.replace(/_/g, ' ') + ')</option>'; }).join('') :
         '<option value="">No inventory items available</option>';
 
-      const invTypes = ['general', 'fashion', 'pack_bundle', 'measured'];
-      const typeOptions = invTypes.map(function(t) {
-        return '<option value="' + t + '">' + t.replace(/_/g, ' ') + '</option>';
-      }).join('');
+      var invTypes = ['general', 'fashion', 'pack_bundle', 'measured'];
+      var typeOptions = invTypes.map(function(t) { return '<option value="' + t + '">' + t.replace(/_/g, ' ') + '</option>'; }).join('');
 
       showModal('Add Store Item',
-        '<div class="form-group"><label>Select Inventory Item (Optional)</label>' +
+        '<div class="form-group"><label>Link to Inventory Item (Optional)</label>' +
         '<select class="form-control" id="storeLinkedInventory" style="width:100%;" onchange="populateFromInventory()">' + invOptions + '</select>' +
-        '<p style="font-size:0.7rem;color:var(--gray);">Pick an existing inventory item to auto-fill details.</p></div>' +
+        '<p style="font-size:0.7rem;color:var(--gray);">Select an existing inventory item to auto-fill details.</p></div>' +
         '<div class="form-row">' +
-        '<div class="form-group"><label>Item Name *</label><input class="form-control" id="storeItemName"></div>' +
+        '<div class="form-group"><label>Item Name *</label><input class="form-control" id="storeItemName" placeholder="e.g., Stone Beads Bulk"></div>' +
         '<div class="form-group"><label>Category *</label><div style="display:flex;gap:8px;">' +
-        '<select class="form-control" id="storeItemCategory">' + categories.map(function(c) {
-          return '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>';
-        }).join('') + '</select>' +
+        '<select class="form-control" id="storeItemCategory">' + categories.map(function(c) { return '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>'; }).join('') + '</select>' +
         '<button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div>' +
         '<div class="form-row">' +
-        '<div class="form-group"><label>Total Unit Quantity *</label><input type="number" class="form-control" id="storeUnitQty" value="0" min="1"><p style="font-size:0.7rem;color:var(--gray);">Total pieces in stock</p></div>' +
-        '<div class="form-group"><label>Cost per Unit ₦ *</label><input type="number" class="form-control" id="storeUnitCost" value="0" step="0.01" min="0"><p style="font-size:0.7rem;color:var(--gray);">Your cost price per piece</p></div>' +
+        '<div class="form-group"><label>Total Unit Quantity *</label><input type="number" class="form-control" id="storeUnitQty" value="0" min="1" placeholder="e.g., 500"><p style="font-size:0.7rem;color:var(--gray);">Total pieces in stock</p></div>' +
+        '<div class="form-group"><label>Cost per Unit ₦ *</label><input type="number" class="form-control" id="storeUnitCost" value="0" step="0.01" min="0" placeholder="e.g., 50"><p style="font-size:0.7rem;color:var(--gray);">Your cost price per piece</p></div>' +
         '</div>' +
         '<div class="form-row">' +
-        '<div class="form-group"><label>Inventory Type *</label><select class="form-control" id="storeInvType">' + typeOptions + '</select></div>' +
-        '<div class="form-group"><label>Low Stock Threshold</label><input type="number" class="form-control" id="storeThreshold" value="5" min="1"></div>' +
+        '<div class="form-group"><label>Inventory Type *</label><select class="form-control" id="storeInvType">' + typeOptions + '</select><p style="font-size:0.7rem;color:var(--gray);">Determines how items split when restocking</p></div>' +
+        '<div class="form-group"><label>Low Stock Threshold</label><input type="number" class="form-control" id="storeThreshold" value="5" min="1"><p style="font-size:0.7rem;color:var(--gray);">Alert when units fall below this</p></div>' +
         '</div>' +
         '<div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addStoreItem()"><i class="fas fa-plus"></i> Add to Store</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'
       );
 
-      $('#storeLinkedInventory').select2({
-        placeholder: 'Search inventory...',
-        allowClear: true,
-        width: '100%',
-        dropdownParent: $('#modalOverlay')
-      });
+      setTimeout(function() {
+        $('#storeLinkedInventory').select2({ placeholder: 'Search inventory...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
+      }, 150);
     };
 
     window.populateFromInventory = function() {
-      const select = document.getElementById('storeLinkedInventory');
+      var select = document.getElementById('storeLinkedInventory');
       if (!select || !select.value) return;
-      const option = select.options[select.selectedIndex];
-      document.getElementById('storeItemName').value = option.getAttribute('data-name') || '';
-      document.getElementById('storeItemCategory').value = option.getAttribute('data-category') || '';
-      document.getElementById('storeInvType').value = option.getAttribute('data-type') || 'general';
+      var option = select.options[select.selectedIndex];
+      var nameEl = document.getElementById('storeItemName');
+      var catEl = document.getElementById('storeItemCategory');
+      var typeEl = document.getElementById('storeInvType');
+      if (nameEl) nameEl.value = option.getAttribute('data-name') || '';
+      if (catEl) catEl.value = option.getAttribute('data-category') || '';
+      if (typeEl) typeEl.value = option.getAttribute('data-type') || 'general';
     };
 
     window.addStoreItem = async function() {
-      const nameEl = document.getElementById('storeItemName');
-      const name = nameEl ? nameEl.value.trim() : '';
-      const categoryEl = document.getElementById('storeItemCategory');
-      const category = categoryEl ? categoryEl.value : 'other';
-      const unitQty = parseInt(document.getElementById('storeUnitQty') ? document.getElementById('storeUnitQty').value : 0) || 0;
-      const unitCost = parseFloat(document.getElementById('storeUnitCost') ? document.getElementById('storeUnitCost').value : 0) || 0;
-      const invType = document.getElementById('storeInvType') ? document.getElementById('storeInvType').value : 'general';
-      const threshold = parseInt(document.getElementById('storeThreshold') ? document.getElementById('storeThreshold').value : 5) || 5;
+      var name = (document.getElementById('storeItemName') ? document.getElementById('storeItemName').value.trim() : '');
+      var category = (document.getElementById('storeItemCategory') ? document.getElementById('storeItemCategory').value : 'other');
+      var unitQty = parseInt(document.getElementById('storeUnitQty') ? document.getElementById('storeUnitQty').value : 0) || 0;
+      var unitCost = parseFloat(document.getElementById('storeUnitCost') ? document.getElementById('storeUnitCost').value : 0) || 0;
+      var invType = (document.getElementById('storeInvType') ? document.getElementById('storeInvType').value : 'general');
+      var threshold = parseInt(document.getElementById('storeThreshold') ? document.getElementById('storeThreshold').value : 5) || 5;
 
-      if (!name) {
-        showToast('Item name required', 'error');
-        return;
-      }
-      if (unitQty <= 0) {
-        showToast('Unit quantity required', 'error');
-        return;
-      }
-      if (unitCost <= 0) {
-        showToast('Unit cost required', 'error');
-        return;
-      }
+      if (!name) { showToast('Item name required', 'error'); return; }
+      if (unitQty <= 0) { showToast('Unit quantity must be greater than 0', 'error'); return; }
+      if (unitCost <= 0) { showToast('Unit cost must be greater than 0', 'error'); return; }
 
-      showPinModal('Confirm Add', 'add store item', async function() {
+      showPinModal('Confirm Add', 'add store item: ' + name, async function() {
         try {
-          const linkedInventoryId = document.getElementById('storeLinkedInventory') ? document.getElementById('storeLinkedInventory').value : '';
-          const docData = {
+          var linkedInventoryId = document.getElementById('storeLinkedInventory') ? document.getElementById('storeLinkedInventory').value : '';
+          var docData = {
             name: name,
             category: category,
             unitQty: unitQty,
@@ -1927,76 +2093,70 @@
             threshold: threshold,
             status: unitQty <= threshold ? 'low' : 'available',
             linkedInventoryId: linkedInventoryId || null,
-            linkedInventoryName: linkedInventoryId ? (allInventoryItems.find(function(i) {
-              return i.id === linkedInventoryId;
-            }) || {}).name || '' : null,
+            linkedInventoryName: linkedInventoryId ? (allInventoryItems.find(function(i) { return i.id === linkedInventoryId; }) || {}).name || '' : null,
             createdBy: currentUser ? currentUser.uid : '',
             createdByName: userData ? (userData.fullName || 'Staff') : 'Staff',
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           };
           await addDoc(collection(db, 'store_items'), docData);
-          await logAudit('add_store_item', 'Added store item: ' + name + ' x' + unitQty + ' units');
-          showToast('Store item added', 'success');
+          await logAudit('add_store_item', 'Added store item: ' + name + ' x' + unitQty + ' @ ' + formatCurrency(unitCost), {
+            name: name, category: category, unitQty: unitQty, unitCost: unitCost, inventoryType: invType
+          });
+          showToast('Store item "' + name + '" added successfully!', 'success');
           hideModal();
         } catch (e) {
           showToast('Failed: ' + e.message, 'error');
         }
-      });
+      }, 'attendant');
     };
 
     window.openRestockModal = async function(storeItemId) {
-      const item = storeItems.find(function(i) {
-        return i.id === storeItemId;
-      });
+      var item = storeItems.find(function(i) { return i.id === storeItemId; });
       if (!item) return;
 
-      const invSnap = await getDocs(query(collection(db, 'stock_items'), where('itemType', '==', item.inventoryItemType)));
-      const invItems = invSnap.docs.map(function(d) {
-        return {
-          id: d.id,
-          name: d.data().name || '',
-          itemType: d.data().itemType || 'general',
-          measuredSubType: d.data().measuredSubType || 'yard'
-        };
+      var invSnap = await getDocs(query(collection(db, 'stock_items'), where('itemType', '==', item.inventoryItemType)));
+      var invItems = invSnap.docs.map(function(d) {
+        return { id: d.id, name: d.data().name || '', itemType: d.data().itemType || 'general', measuredSubType: d.data().measuredSubType || 'yard' };
       });
 
-      let invOptions = invItems.length ?
-        invItems.map(function(i) {
-          return '<option value="' + i.id + '">' + i.name + '</option>';
-        }).join('') :
+      var invOptions = invItems.length ?
+        invItems.map(function(i) { return '<option value="' + i.id + '">' + i.name + '</option>'; }).join('') :
         '<option value="" disabled>No existing items of this type</option>';
 
-      const isMeasured = item.inventoryItemType === 'measured';
+      var isMeasured = item.inventoryItemType === 'measured';
       measuredSubType = 'yard';
 
       showModal('Restock Inventory from: ' + item.name,
-        '<div style="background:var(--primary-soft);padding:12px;border-radius:12px;margin-bottom:16px;">' +
-        '<strong>Store Item:</strong> ' + item.name + '<br>' +
-        '<strong>Available Units:</strong> ' + (item.unitQty || 0) + '</div>' +
-        '<div class="form-group"><label>Bulk Packs to Take *</label><input type="number" class="form-control" id="s2iBulkQty" value="1" min="1"><p style="font-size:0.7rem;color:var(--gray);">How many wholesale packs to convert</p></div>' +
-        '<div class="form-group"><label>Units per Bulk Pack</label><input type="number" class="form-control" id="s2iUnitsPerBulk" value="50" min="1"><p style="font-size:0.7rem;color:var(--gray);">How many pieces in one bulk pack (e.g., 50)</p></div>' +
+        '<div style="background:var(--primary-soft);padding:14px;border-radius:14px;margin-bottom:16px;">' +
+        '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">' +
+        '<div><strong style="font-size:0.7rem;color:var(--gray);">Store Item</strong><br>' + item.name + '</div>' +
+        '<div><strong style="font-size:0.7rem;color:var(--gray);">Available</strong><br>' + (item.unitQty || 0).toLocaleString() + ' units</div>' +
+        '<div><strong style="font-size:0.7rem;color:var(--gray);">Cost/Unit</strong><br>' + formatCurrency(item.unitCost || 0) + '</div>' +
+        '</div></div>' +
+        '<div class="form-row">' +
+        '<div class="form-group"><label>Bulk Packs to Take *</label><input type="number" class="form-control" id="s2iBulkQty" value="1" min="1"><p style="font-size:0.7rem;color:var(--gray);">How many wholesale packs</p></div>' +
+        '<div class="form-group"><label>Units per Bulk Pack</label><input type="number" class="form-control" id="s2iUnitsPerBulk" value="50" min="1"><p style="font-size:0.7rem;color:var(--gray);">Pieces in one bulk pack</p></div>' +
+        '</div>' +
         '<div class="form-group"><label>Target Inventory Item</label>' +
         '<select class="form-control" id="s2iInventorySelect" style="width:100%;">' +
         '<option value="new">+ Create New Inventory Item</option>' + invOptions + '</select></div>' +
         '<div id="s2iNewItemFields">' +
-        '<div class="form-row"><div class="form-group"><label>New Item Name *</label><input class="form-control" id="s2iNewName"></div>' +
+        '<div class="form-row"><div class="form-group"><label>New Item Name *</label><input class="form-control" id="s2iNewName" value="' + item.name + '"></div>' +
         '<div class="form-group"><label>Category</label><select class="form-control" id="s2iNewCategory">' +
-        categories.map(function(c) {
-          return '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>';
-        }).join('') + '</select></div></div>' +
+        categories.map(function(c) { return '<option value="' + c + '"' + (c === item.category ? ' selected' : '') + '>' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>'; }).join('') + '</select></div></div>' +
         (isMeasured ?
           '<div class="measured-sub-toggle" id="measuredSubToggle">' +
           '<div class="measured-sub-btn active" onclick="switchMeasuredSub(\'yard\')"><i class="fas fa-ruler"></i> Yard<span class="sub-label">By yardage</span></div>' +
           '<div class="measured-sub-btn" onclick="switchMeasuredSub(\'bundle\')"><i class="fas fa-box"></i> Bundle<span class="sub-label">By bundle</span></div>' +
           '</div>' : '') +
         '</div>' +
-        '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;">' +
-        '<strong>Total Derived Pieces:</strong> <span id="s2iTotalPieces" style="font-size:1.2rem;">50</span>' +
-        '<p style="font-size:0.7rem;color:var(--gray);">Allocate these pieces to the inventory forms below</p></div>' +
+        '<div style="background:var(--gray-light);padding:14px;border-radius:12px;margin-top:12px;text-align:center;">' +
+        '<strong>Total Derived Pieces:</strong> <span id="s2iTotalPieces" style="font-size:1.2rem;font-weight:700;">50</span>' +
+        '<p style="font-size:0.7rem;color:var(--gray);">Allocate these pieces to inventory forms below</p></div>' +
         '<div id="s2iAllocation"></div>' +
-        '<p id="s2iValidationMsg" style="color:var(--danger);font-size:0.8rem;text-align:center;display:none;margin-top:10px;">Allocated pieces must equal total derived pieces.</p>' +
-        '<p style="font-size:0.75rem;color:var(--warning);margin-top:8px;"><i class="fas fa-info-circle"></i> This will be saved as <strong>Incoming Inventory</strong> for review.</p>' +
+        '<p id="s2iValidationMsg" style="color:var(--danger);font-size:0.8rem;text-align:center;display:none;margin-top:10px;">⚠️ Allocated pieces must equal total derived pieces.</p>' +
+        '<p style="font-size:0.75rem;color:var(--warning);margin-top:8px;"><i class="fas fa-info-circle"></i> This will be saved as <strong>Incoming Inventory</strong> for review before going live.</p>' +
         '<div style="display:flex;gap:10px;margin-top:16px;">' +
         '<button class="btn btn-primary" onclick="submitIncomingRestock(\'' + storeItemId + '\')"><i class="fas fa-paper-plane"></i> Send to Incoming</button>' +
         '<button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'
@@ -2005,28 +2165,30 @@
       window.switchMeasuredSub = function(subType) {
         measuredSubType = subType;
         document.querySelectorAll('#measuredSubToggle .measured-sub-btn').forEach(function(btn) {
-          btn.classList.toggle('active', btn.getAttribute('onclick') && btn.getAttribute('onclick').indexOf("'" + subType + "'") !== -1);
+          var onclick = btn.getAttribute('onclick') || '';
+          btn.classList.toggle('active', onclick.indexOf("'" + subType + "'") !== -1);
         });
         updateTotalPieces();
       };
 
-      const invType = item.inventoryItemType;
-      const bulkQtyInput = document.getElementById('s2iBulkQty');
-      const unitsPerBulkInput = document.getElementById('s2iUnitsPerBulk');
-      const totalPiecesSpan = document.getElementById('s2iTotalPieces');
-      const allocationDiv = document.getElementById('s2iAllocation');
-      const selectEl = document.getElementById('s2iInventorySelect');
-      const newFields = document.getElementById('s2iNewItemFields');
+      var invType = item.inventoryItemType;
+      var bulkQtyInput = document.getElementById('s2iBulkQty');
+      var unitsPerBulkInput = document.getElementById('s2iUnitsPerBulk');
+      var totalPiecesSpan = document.getElementById('s2iTotalPieces');
+      var allocationDiv = document.getElementById('s2iAllocation');
+      var selectEl = document.getElementById('s2iInventorySelect');
+      var newFields = document.getElementById('s2iNewItemFields');
 
       function updateTotalPieces() {
-        const bulk = parseInt(bulkQtyInput.value) || 0;
-        const perBulk = parseInt(unitsPerBulkInput.value) || 50;
-        totalPiecesSpan.textContent = bulk * perBulk;
-        renderAllocationForm(invType, bulk * perBulk);
+        var bulk = parseInt(bulkQtyInput.value) || 0;
+        var perBulk = parseInt(unitsPerBulkInput.value) || 50;
+        var total = bulk * perBulk;
+        totalPiecesSpan.textContent = total;
+        renderAllocationForm(invType, total);
       }
 
       function renderAllocationForm(type, totalPieces) {
-        let html = '';
+        var html = '';
         if (type === 'general') {
           html = '<div class="form-group"><label>Unit Quantity</label><input type="number" class="form-control s2i-qty" data-form="unit" value="' + totalPieces + '" min="0" readonly></div>' +
             '<div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="' + (item.unitCost || 0) + '" step="0.01"></div>';
@@ -2048,12 +2210,13 @@
             '<div class="form-group"><label>Pack Price ₦</label><input type="number" class="form-control" id="s2iPackPrice" value="0" step="0.01"></div></div>' +
             '<div class="form-group"><label>Pack Size (items/pack)</label><input type="number" class="form-control" id="s2iPackSize" value="12" min="1"></div>';
         } else if (type === 'measured') {
-          const sub = measuredSubType || 'yard';
+          var sub = measuredSubType || 'yard';
           if (sub === 'yard') {
             html = '<div class="form-group"><label>Yards</label><input type="number" class="form-control s2i-qty" data-form="unit" value="' + totalPieces + '" min="0" readonly></div>' +
               '<div class="form-group"><label>Price per Yard ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="' + (item.unitCost || 0) + '" step="0.01"></div>';
           } else {
-            html = '<div class="form-group"><label>Bundles</label><input type="number" class="form-control s2i-qty" data-form="bundle" value="' + Math.floor(totalPieces / 50 || 0) + '" min="0"></div>' +
+            var bundleDiv = Math.floor(totalPieces / 50) || 0;
+            html = '<div class="form-group"><label>Bundles</label><input type="number" class="form-control s2i-qty" data-form="bundle" value="' + bundleDiv + '" min="0"></div>' +
               '<div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="s2iBundlePrice" value="0" step="0.01"></div>' +
               '<div class="form-group"><label>Bundle Size (yards/bundle)</label><input type="number" class="form-control" id="s2iBundleSize" value="50" min="1"></div>';
           }
@@ -2066,20 +2229,20 @@
       }
 
       function validateAllocation() {
-        const totalPieces = parseInt(totalPiecesSpan.textContent) || 0;
-        let allocated = 0;
+        var totalPieces = parseInt(totalPiecesSpan.textContent) || 0;
+        var allocated = 0;
         document.querySelectorAll('.s2i-qty').forEach(function(inp) {
-          const qty = parseInt(inp.value) || 0;
-          const form = inp.dataset.form;
+          var qty = parseInt(inp.value) || 0;
+          var form = inp.dataset.form;
           if (form === 'half') allocated += qty;
           else if (form === 'quarter') allocated += qty;
           else if (form === 'pack') allocated += qty * (parseInt(document.getElementById('s2iPackSize') ? document.getElementById('s2iPackSize').value : 12) || 1);
           else if (form === 'bundle') allocated += qty * (parseInt(document.getElementById('s2iBundleSize') ? document.getElementById('s2iBundleSize').value : 50) || 50);
           else allocated += qty;
         });
-        const validationMsg = document.getElementById('s2iValidationMsg');
-        if (validationMsg) {
-          validationMsg.style.display = Math.abs(allocated - totalPieces) > 0.001 ? 'block' : 'none';
+        var msg = document.getElementById('s2iValidationMsg');
+        if (msg) {
+          msg.style.display = Math.abs(allocated - totalPieces) > 0.001 ? 'block' : 'none';
         }
       }
 
@@ -2088,52 +2251,47 @@
       selectEl.addEventListener('change', function() {
         newFields.style.display = selectEl.value === 'new' ? 'block' : 'none';
         if (selectEl.value !== 'new' && isMeasured) {
-          const target = invItems.find(function(i) {
-            return i.id === selectEl.value;
-          });
+          var target = invItems.find(function(i) { return i.id === selectEl.value; });
           if (target) measuredSubType = target.measuredSubType || 'yard';
         }
         updateTotalPieces();
       });
       updateTotalPieces();
+      
+      // Pre-fill new item name
+      setTimeout(function() {
+        $('#s2iInventorySelect').select2({ width: '100%', dropdownParent: $('#modalOverlay') });
+      }, 150);
     };
 
     window.submitIncomingRestock = function(storeItemId) {
-      const item = storeItems.find(function(i) {
-        return i.id === storeItemId;
-      });
+      var item = storeItems.find(function(i) { return i.id === storeItemId; });
       if (!item) return;
 
-      const bulkQty = parseInt(document.getElementById('s2iBulkQty') ? document.getElementById('s2iBulkQty').value : 0) || 0;
-      const unitsPerBulk = parseInt(document.getElementById('s2iUnitsPerBulk') ? document.getElementById('s2iUnitsPerBulk').value : 50) || 50;
-      const totalPieces = bulkQty * unitsPerBulk;
+      var bulkQty = parseInt(document.getElementById('s2iBulkQty') ? document.getElementById('s2iBulkQty').value : 0) || 0;
+      var unitsPerBulk = parseInt(document.getElementById('s2iUnitsPerBulk') ? document.getElementById('s2iUnitsPerBulk').value : 50) || 50;
+      var totalPieces = bulkQty * unitsPerBulk;
 
-      if (bulkQty <= 0) {
-        showToast('Invalid bulk quantity', 'error');
-        return;
-      }
-      if (totalPieces > (item.unitQty || 0)) {
-        showToast('Not enough stock. Available: ' + item.unitQty + ' pieces', 'error');
-        return;
-      }
+      if (bulkQty <= 0) { showToast('Invalid bulk quantity', 'error'); return; }
+      if (totalPieces > (item.unitQty || 0)) { showToast('Not enough stock. Available: ' + (item.unitQty || 0).toLocaleString() + ' pieces. Need: ' + totalPieces.toLocaleString(), 'error'); return; }
 
-      const inventoryId = document.getElementById('s2iInventorySelect') ? document.getElementById('s2iInventorySelect').value : '';
-      let inventoryName = item.name;
+      var inventoryId = document.getElementById('s2iInventorySelect') ? document.getElementById('s2iInventorySelect').value : '';
+      var inventoryName = item.name;
       if (inventoryId === 'new') {
-        const newNameEl = document.getElementById('s2iNewName');
+        var newNameEl = document.getElementById('s2iNewName');
         inventoryName = newNameEl ? newNameEl.value.trim() : '';
-        if (!inventoryName) {
-          showToast('Name required for new item', 'error');
-          return;
-        }
+        if (!inventoryName) { showToast('Name required for new inventory item', 'error'); return; }
+      } else if (inventoryId) {
+        var selectedInv = allInventoryItems.find(function(i) { return i.id === inventoryId; });
+        if (selectedInv) inventoryName = selectedInv.name || item.name;
       }
 
-      const allocation = {};
+      var allocation = {};
       document.querySelectorAll('.s2i-qty').forEach(function(inp) {
         allocation[inp.dataset.form] = parseInt(inp.value) || 0;
       });
 
-      const prices = {
+      var prices = {
         unit: parseFloat(document.getElementById('s2iUnitPrice') ? document.getElementById('s2iUnitPrice').value : 0) || 0,
         half: parseFloat(document.getElementById('s2iHalfPrice') ? document.getElementById('s2iHalfPrice').value : 0) || 0,
         quarter: parseFloat(document.getElementById('s2iQuarterPrice') ? document.getElementById('s2iQuarterPrice').value : 0) || 0,
@@ -2141,24 +2299,28 @@
         bundle: parseFloat(document.getElementById('s2iBundlePrice') ? document.getElementById('s2iBundlePrice').value : 0) || 0
       };
 
-      const packSize = parseInt(document.getElementById('s2iPackSize') ? document.getElementById('s2iPackSize').value : 12) || 12;
-      const bundleSize = parseInt(document.getElementById('s2iBundleSize') ? document.getElementById('s2iBundleSize').value : 50) || 50;
+      var packSize = parseInt(document.getElementById('s2iPackSize') ? document.getElementById('s2iPackSize').value : 12) || 12;
+      var bundleSize = parseInt(document.getElementById('s2iBundleSize') ? document.getElementById('s2iBundleSize').value : 50) || 50;
 
-      let allocatedPieces = 0;
-      for (const [form, qty] of Object.entries(allocation)) {
-        if (form === 'half') allocatedPieces += qty;
-        else if (form === 'quarter') allocatedPieces += qty;
-        else if (form === 'pack') allocatedPieces += qty * packSize;
-        else if (form === 'bundle') allocatedPieces += qty * (bundleSize || 50);
-        else allocatedPieces += qty;
+      // Validate allocation
+      var allocatedPieces = 0;
+      for (var key in allocation) {
+        if (allocation.hasOwnProperty(key)) {
+          var qty = allocation[key];
+          if (key === 'half') allocatedPieces += qty;
+          else if (key === 'quarter') allocatedPieces += qty;
+          else if (key === 'pack') allocatedPieces += qty * packSize;
+          else if (key === 'bundle') allocatedPieces += qty * bundleSize;
+          else allocatedPieces += qty;
+        }
       }
 
       if (Math.abs(allocatedPieces - totalPieces) > 0.001) {
-        showToast('Allocated pieces (' + allocatedPieces + ') must equal ' + totalPieces, 'error');
+        showToast('Allocated pieces (' + allocatedPieces + ') must equal total derived pieces (' + totalPieces + ')', 'error');
         return;
       }
 
-      const incomingData = {
+      var incomingData = {
         storeItemId: storeItemId,
         storeItemName: item.name,
         storeItemCategory: item.category,
@@ -2166,8 +2328,8 @@
         totalPieces: totalPieces,
         unitsPerBulk: unitsPerBulk,
         targetInventoryId: inventoryId === 'new' ? null : inventoryId,
-        targetInventoryName: inventoryId === 'new' ? inventoryName : null,
-        newInventoryCategory: inventoryId === 'new' ? (document.getElementById('s2iNewCategory') ? document.getElementById('s2iNewCategory').value : 'other') : null,
+        targetInventoryName: inventoryId === 'new' ? inventoryName : (allInventoryItems.find(function(i) { return i.id === inventoryId; }) || {}).name || inventoryName,
+        newInventoryCategory: inventoryId === 'new' ? (document.getElementById('s2iNewCategory') ? document.getElementById('s2iNewCategory').value : item.category || 'other') : null,
         allocation: allocation,
         prices: prices,
         packSize: packSize,
@@ -2183,22 +2345,25 @@
         incomingData.measuredSubType = measuredSubType;
       }
 
-      showPinModal('Send to Incoming Inventory', 'save for review', async function() {
+      showPinModal('Send to Incoming Inventory', 'queue for review: ' + inventoryName, async function() {
         try {
           await addDoc(collection(db, 'incoming_inventory'), incomingData);
-          await logAudit('incoming_inventory', 'Incoming: ' + item.name + ' → ' + inventoryName + ' | ' + bulkQty + ' packs × ' + unitsPerBulk);
-          showToast('Sent to Incoming Inventory for review!', 'success');
+          await logAudit('incoming_inventory_queued', 'Incoming queued: ' + item.name + ' → ' + inventoryName + ' | ' + bulkQty + ' packs × ' + unitsPerBulk + ' = ' + totalPieces + ' pieces', {
+            storeItemId: storeItemId,
+            targetInventoryId: incomingData.targetInventoryId,
+            totalPieces: totalPieces,
+            inventoryType: item.inventoryItemType
+          });
+          showToast('Sent to Incoming Inventory for review! 📥', 'success');
           hideModal();
         } catch (e) {
           showToast('Failed: ' + e.message, 'error');
         }
-      });
+      }, 'attendant');
     };
 
     window.openEditStoreItem = function(id) {
-      const item = storeItems.find(function(i) {
-        return i.id === id;
-      });
+      var item = storeItems.find(function(i) { return i.id === id; });
       if (!item) return;
 
       showModal('Edit: ' + item.name,
@@ -2207,68 +2372,69 @@
         '<div class="form-group"><label>Unit Quantity</label><input type="number" class="form-control" id="editUnitQty" value="' + (item.unitQty || 0) + '" min="0"></div>' +
         '<div class="form-group"><label>Unit Cost ₦</label><input type="number" class="form-control" id="editUnitCost" value="' + (item.unitCost || 0) + '" step="0.01" min="0"></div>' +
         '</div>' +
+        '<div class="form-row">' +
         '<div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="' + (item.threshold || 5) + '" min="1"></div>' +
+        '<div class="form-group"><label>Inventory Type</label><input class="form-control" value="' + (item.inventoryItemType || 'general').replace(/_/g, ' ') + '" readonly></div>' +
+        '</div>' +
         '<div style="display: flex; gap: 10px;">' +
-        '<button class="btn btn-primary" onclick="saveStoreEdit(\'' + id + '\')"><i class="fas fa-save"></i> Save</button>' +
+        '<button class="btn btn-primary" onclick="saveStoreEdit(\'' + id + '\')"><i class="fas fa-save"></i> Save Changes</button>' +
         '<button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'
       );
     };
 
     window.saveStoreEdit = async function(id) {
-      const unitQty = parseInt(document.getElementById('editUnitQty') ? document.getElementById('editUnitQty').value : 0) || 0;
-      const unitCost = parseFloat(document.getElementById('editUnitCost') ? document.getElementById('editUnitCost').value : 0) || 0;
-      const threshold = parseInt(document.getElementById('editThreshold') ? document.getElementById('editThreshold').value : 5) || 5;
+      var unitQty = parseInt(document.getElementById('editUnitQty') ? document.getElementById('editUnitQty').value : 0) || 0;
+      var unitCost = parseFloat(document.getElementById('editUnitCost') ? document.getElementById('editUnitCost').value : 0) || 0;
+      var threshold = parseInt(document.getElementById('editThreshold') ? document.getElementById('editThreshold').value : 5) || 5;
 
       showPinModal('Confirm Edit', 'save changes', async function() {
         try {
-          await updateDoc(doc(db, 'store_items', id), {
+          var updates = {
             unitQty: unitQty,
             unitCost: unitCost,
             threshold: threshold,
+            status: unitQty <= threshold ? 'low' : 'available',
             updatedAt: serverTimestamp()
-          });
-          showToast('Updated', 'success');
+          };
+          await updateDoc(doc(db, 'store_items', id), updates);
+          await logAudit('edit_store_item', 'Edited store item: ' + id, { unitQty: unitQty, unitCost: unitCost });
+          showToast('Updated successfully', 'success');
           hideModal();
         } catch (e) {
-          showToast('Failed', 'error');
+          showToast('Failed: ' + e.message, 'error');
         }
-      });
+      }, 'attendant');
     };
 
     window.deleteStoreItem = async function(id) {
-      if (!isAdmin()) {
-        showToast('Only admin can delete', 'error');
-        return;
-      }
-      if (!confirm('Delete this store item?')) return;
-      showPinModal('Confirm Delete', 'delete', async function() {
+      if (!isAdmin()) { showToast('Only admin can delete store items', 'error'); return; }
+      if (!confirm('Are you sure you want to permanently delete this store item? This cannot be undone.')) return;
+      
+      showPinModal('Confirm Delete', 'permanently delete this store item', async function() {
         try {
+          var item = storeItems.find(function(i) { return i.id === id; });
           await deleteDoc(doc(db, 'store_items', id));
-          showToast('Deleted', 'success');
+          await logAudit('delete_store_item', 'Deleted store item: ' + (item ? item.name : id), { storeItemId: id });
+          showToast('Store item deleted', 'success');
         } catch (e) {
-          showToast('Failed', 'error');
+          showToast('Failed: ' + e.message, 'error');
         }
-      });
+      }, 'admin');
     };
 
     window.viewWholesaleReceipt = function(id) {
-      const s = wholesaleSales.find(function(x) {
-        return x.id === id;
-      });
+      var s = wholesaleSales.find(function(x) { return x.id === id; });
       if (!s) return;
 
-      const dateStr = s.createdAt ? new Date(s.createdAt.toDate ? s.createdAt.toDate() : s.createdAt).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      }) : '';
-      const timeStr = s.createdAt ? new Date(s.createdAt.toDate ? s.createdAt.toDate() : s.createdAt).toLocaleTimeString('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit'
-      }) : '';
-      const itemsHtml = s.items.map(function(i) {
-        return '<div class="receipt-item"><span>' + (i.pieces || 0) + ' pcs × ' + i.name + '</span><span>' + formatCurrency((i.pieces || 0) * i.unitPrice) + '</span></div>';
+      var saleDate = s.createdAt ? (s.createdAt.toDate ? s.createdAt.toDate() : new Date(s.createdAt.seconds ? s.createdAt.seconds * 1000 : s.createdAt)) : new Date();
+      var dateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      var timeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      
+      var itemsHtml = (s.items || []).map(function(i) {
+        return '<div class="receipt-item"><span>' + (i.pieces || 0) + ' pcs × ' + (i.name || 'Item') + (i.borrowed ? ' <span class="borrow-badge">📦 Borrowed</span>' : '') + '</span><span>' + formatCurrency((i.pieces || 0) * (i.unitPrice || 0)) + '</span></div>';
       }).join('');
+      
+      var borrowInfo = (s._borrowedItems && s._borrowedItems.length > 0) ? '<p class="rec" style="color:#f59e0b;font-size:0.7rem;">* ' + s._borrowedItems.length + ' item(s) borrowed from inventory</p>' : '';
 
       showModal('Wholesale Receipt',
         '<div class="receipt-container">' +
@@ -2278,9 +2444,10 @@
         '<p class="addr" style="font-weight:bold;">Behind Laroy Suite, Abeokuta 111101</p>' +
         '<p class="addr" style="font-weight:bold;">Ogun State, Nigeria</p>' +
         '<p class="addr" style="font-weight:bold;">📞 0807 734 0294</p>' +
-        '<p class="rec" style="margin-top:6px;">#' + (s.receiptNumber || '') + ' (Wholesale)</p>' +
+        '<p class="rec" style="margin-top:6px;">#' + (s.receiptNumber || 'N/A') + ' (Wholesale)</p>' +
         '<p class="rec">' + dateStr + ' ' + timeStr + '</p>' +
         '<p class="rec">Pack Size: ' + (s.wholesalePackSize || 50) + ' pieces | Sold: ' + (s.totalPieces || 0) + ' pieces</p>' +
+        borrowInfo +
         '</div>' +
         '<p class="cust-info"><strong>Customer:</strong> ' + (s.customerName || 'Walk-in') + '<br><strong>Payment:</strong> ' + (s.paymentMethod || 'cash') + '<br><strong>Served by:</strong> ' + (s.attendantName || 'Staff') + '</p>' +
         '<div class="receipt-items">' + itemsHtml + '</div>' +
@@ -2292,50 +2459,52 @@
     };
 
     window.openHelpGuide = function() {
-      showModal('📖 How to Use the Store',
-        '<div style="font-size:0.9rem; line-height:1.6;">' +
+      showModal('📖 Store Management Guide',
+        '<div style="font-size:0.9rem; line-height:1.7;">' +
         '<h4>🏬 Store Stock</h4>' +
-        '<p>Store items track <strong>total unit quantity</strong> and <strong>cost per unit</strong>. Use Restock to transfer items from store to sellable inventory.</p>' +
-        '<h4>📥 Incoming Inventory</h4>' +
-        '<p>When you restock, items go to <strong>Incoming</strong> for review before being added to live inventory.</p>' +
-        '<h4>🏷️ Wholesale Sales</h4>' +
-        '<p>Wholesale sales are now processed from the <strong>Sales page</strong>. This page shows wholesale history only.</p>' +
+        '<p>Store items track <strong>bulk inventory</strong> purchased from third parties. Each item has a total unit quantity and cost per unit.</p>' +
+        '<h4>📥 Restock to Inventory</h4>' +
+        '<p>Use the <strong>Restock</strong> button to convert store items into sellable inventory. Items go to <strong>Incoming</strong> for review before being added to live inventory.</p>' +
+        '<h4>📋 Incoming Inventory</h4>' +
+        '<p>All restock requests appear here for review. Confirm to add items to live inventory. Items are organized by type: General, Fashion, Pack/Bundle, and Measured.</p>' +
+        '<h4>🔄 Stock Movements</h4>' +
+        '<p>Track all stock movements including wholesale sales, items borrowed from inventory, returns restocked, and damaged returns.</p>' +
+        '<h4>🏷️ Wholesale History</h4>' +
+        '<p>View all wholesale sales processed from the Sales page. Shows which items were borrowed from inventory.</p>' +
         '<h4>💰 Store Value</h4>' +
-        '<p>Locked by default. Click the lock and enter PIN to reveal total store value.</p>' +
+        '<p>Locked by default for security. Admins can unlock with PIN to view total store value.</p>' +
+        '<h4>⚠️ Low Stock</h4>' +
+        '<p>Items below threshold appear in the alert banner. Use "Buy from Third Party" to purchase more stock.</p>' +
         '</div>' +
         '<button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close Guide</button>'
       );
     };
 
     window.exportData = function(format) {
-      const h = ['Name', 'Category', 'Type', 'Units', 'Unit Cost', 'Total Value', 'Status'];
-      const rows = storeItems.map(function(i) {
-        return [i.name || '', i.category || '', i.inventoryItemType || 'general', i.unitQty || 0, i.unitCost || 0, (i.unitQty || 0) * (i.unitCost || 0), getStoreItemStatus(i)];
+      var h = ['Name', 'Category', 'Type', 'Units', 'Unit Cost', 'Total Value', 'Status'];
+      var rows = storeItems.map(function(i) {
+        return [i.name || '', i.category || '', (i.inventoryItemType || 'general').replace(/_/g, ' '), i.unitQty || 0, i.unitCost || 0, (i.unitQty || 0) * (i.unitCost || 0), getStoreItemStatus(i)];
       });
-      const csv = [h.join(','), ...rows.map(function(r) {
-        return r.map(function(c) {
-          return '"' + c + '"';
-        }).join(',');
-      })].join('\n');
-      const blob = new Blob([csv], {
-        type: format === 'csv' ? 'text/csv' : 'application/vnd.ms-excel'
-      });
-      const a = document.createElement('a');
+      var csv = [h.join(','), ...rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(','); })].join('\n');
+      var blob = new Blob([csv], { type: format === 'csv' ? 'text/csv' : 'application/vnd.ms-excel' });
+      var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'store_' + new Date().toISOString().split('T')[0] + '.' + format;
+      a.download = 'store_inventory_' + new Date().toISOString().split('T')[0] + '.' + format;
       a.click();
       document.getElementById('exportMenu').classList.remove('show');
-      showToast('Exported', 'success');
+      logAudit('export_store', 'Exported store data as ' + format.toUpperCase(), { itemCount: storeItems.length });
+      showToast('Exported ' + storeItems.length + ' items as ' + format.toUpperCase(), 'success');
     };
 
     window.refreshStore = function() {
       loadStore();
-      showToast('Refreshed', 'success');
+      showToast('Store data refreshed', 'success');
     };
 
     function loadStore() {
       cleanup();
 
+      // Store items
       unsubscribes.push(onSnapshot(collection(db, 'store_items'), function(snap) {
         storeItems = snap.docs.map(function(d) {
           return {
@@ -2346,45 +2515,50 @@
             unitCost: safeNumber(d.data().unitCost, 0),
             inventoryItemType: d.data().inventoryItemType || 'general',
             threshold: safeNumber(d.data().threshold, 5),
-            status: d.data().status || 'available'
+            status: d.data().status || 'available',
+            linkedInventoryId: d.data().linkedInventoryId || null,
+            linkedInventoryName: d.data().linkedInventoryName || null
           };
         });
-        storeItems.sort(function(a, b) {
-          return (a.name || '').localeCompare(b.name || '');
-        });
+        storeItems.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
         renderStoreStock();
+        if (currentTab === 'stock') renderStoreStock();
       }));
 
+      // Incoming inventory
       unsubscribes.push(onSnapshot(collection(db, 'incoming_inventory'), function(snap) {
-        incomingItems = snap.docs.map(function(d) {
-          return Object.assign({
-            id: d.id
-          }, d.data());
-        });
-        renderIncomingInventory();
+        incomingItems = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+        if (currentTab === 'incoming') renderIncomingInventory();
         renderStoreStock();
       }));
 
+      // Wholesale sales
       unsubscribes.push(onSnapshot(query(collection(db, 'wholesale_sales'), orderBy('createdAt', 'desc')), function(snap) {
-        wholesaleSales = snap.docs.map(function(d) {
-          return Object.assign({
-            id: d.id
-          }, d.data());
-        });
-        renderWholesaleHistory();
+        wholesaleSales = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+        if (currentTab === 'history') renderWholesaleHistory();
       }));
 
+      // Stock movements
+      unsubscribes.push(onSnapshot(query(collection(db, 'stock_movements'), orderBy('performedAt', 'desc')), function(snap) {
+        stockMovements = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+        if (currentTab === 'movements') renderStockMovements();
+      }));
+
+      // All inventory items (for linking)
       unsubscribes.push(onSnapshot(collection(db, 'stock_items'), function(snap) {
-        allInventoryItems = snap.docs.map(function(d) {
-          return Object.assign({
-            id: d.id
-          }, d.data());
-        });
+        allInventoryItems = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
       }));
     }
 
+    // Event listeners
     document.getElementById('searchInput').addEventListener('input', renderStoreStock);
     document.getElementById('categoryFilter').addEventListener('change', renderStoreStock);
+    document.getElementById('statusFilter').addEventListener('change', renderStoreStock);
+
+    var movementSearchInput = document.getElementById('movementSearchInput');
+    var movementTypeFilter = document.getElementById('movementTypeFilter');
+    if (movementSearchInput) movementSearchInput.addEventListener('input', renderStockMovements);
+    if (movementTypeFilter) movementTypeFilter.addEventListener('change', renderStockMovements);
 
     document.getElementById('exportDropdownBtn').addEventListener('click', function(e) {
       e.stopPropagation();
@@ -2394,74 +2568,93 @@
       document.getElementById('exportMenu').classList.remove('show');
     });
 
-    document.querySelectorAll('.tabs-container .tab').forEach(function(t) {
+    // Main tabs
+    document.querySelectorAll('.tabs-container > .tab').forEach(function(t) {
       t.addEventListener('click', function() {
         currentTab = this.dataset.tab;
-        document.querySelectorAll('.tabs-container .tab').forEach(function(x) {
-          x.classList.remove('active');
-        });
+        document.querySelectorAll('.tabs-container > .tab').forEach(function(x) { x.classList.remove('active'); });
         this.classList.add('active');
-        document.querySelectorAll('.page-view').forEach(function(p) {
-          p.classList.remove('active');
-        });
-        document.getElementById(currentTab + 'Panel').classList.add('active');
+        document.querySelectorAll('.page-view').forEach(function(p) { p.classList.remove('active'); });
+        var panel = document.getElementById(currentTab + 'Panel');
+        if (panel) panel.classList.add('active');
+        
         if (currentTab === 'stock') renderStoreStock();
         else if (currentTab === 'incoming') renderIncomingInventory();
+        else if (currentTab === 'movements') renderStockMovements();
         else if (currentTab === 'history') renderWholesaleHistory();
       });
     });
 
+    // Incoming sub-tabs
     document.querySelectorAll('[data-incoming-tab]').forEach(function(t) {
       t.addEventListener('click', function() {
         incomingTab = this.dataset.incomingTab;
-        document.querySelectorAll('[data-incoming-tab]').forEach(function(x) {
-          x.classList.remove('active');
-        });
+        document.querySelectorAll('[data-incoming-tab]').forEach(function(x) { x.classList.remove('active'); });
         this.classList.add('active');
         ['incomingGeneralPanel', 'incomingFashionPanel', 'incomingPackBundlePanel', 'incomingMeasuredPanel'].forEach(function(id) {
-          const panel = document.getElementById(id);
+          var panel = document.getElementById(id);
           if (panel) panel.style.display = 'none';
         });
-        const map = {
-          general: 'incomingGeneralPanel',
-          fashion: 'incomingFashionPanel',
-          pack_bundle: 'incomingPackBundlePanel',
-          measured: 'incomingMeasuredPanel'
-        };
-        const targetPanel = document.getElementById(map[incomingTab]);
+        var map = { general: 'incomingGeneralPanel', fashion: 'incomingFashionPanel', pack_bundle: 'incomingPackBundlePanel', measured: 'incomingMeasuredPanel' };
+        var targetPanel = document.getElementById(map[incomingTab]);
         if (targetPanel) targetPanel.style.display = 'block';
       });
     });
 
+    // Online/Offline detection
+    window.addEventListener('online', function() {
+      isOnline = true;
+      var banner = document.getElementById('offlineBanner');
+      if (banner) banner.classList.remove('show');
+      document.getElementById('syncStatus').textContent = '';
+      showToast('Back online!', 'success');
+    });
+
+    window.addEventListener('offline', function() {
+      isOnline = false;
+      var banner = document.getElementById('offlineBanner');
+      if (banner) banner.classList.add('show');
+      document.getElementById('syncStatus').textContent = '⚠️ Offline';
+      showToast('You are offline. Changes will sync when reconnected.', 'warning');
+    });
+
+    if (!navigator.onLine) {
+      isOnline = false;
+      var banner = document.getElementById('offlineBanner');
+      if (banner) banner.classList.add('show');
+      document.getElementById('syncStatus').textContent = '⚠️ Offline';
+    }
+
+    // Auth
     onAuthStateChanged(auth, async function(u) {
-      if (!u) {
-        window.location.href = 'auth.html';
-        return;
-      }
+      if (!u) { window.location.href = 'auth.html'; return; }
       currentUser = u;
       try {
-        const snap = await getDoc(doc(db, 'users', u.uid));
+        var snap = await getDoc(doc(db, 'users', u.uid));
         if (!snap.exists() || snap.data().status !== 'active') {
           await signOut(auth);
           window.location.href = 'auth.html';
           return;
         }
         userData = snap.data();
-        if (isAdmin()) storeValueRevealed = true;
+        if (isAdmin()) { storeValueRevealed = true; }
+        
         document.getElementById('userName').textContent = (userData.fullName || 'Staff').split(' ')[0];
         document.getElementById('userRole').textContent = (userData.role || '').replace('_', ' ');
         document.getElementById('userAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
-        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric'
-        });
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        
+        await loadAdminPins();
         buildSidebar();
         await loadCategories();
         loadStore();
-        await logAudit('view_store', 'Viewed store');
+        
+        if (storeValueRevealed) updateStoreValueDisplay();
+        
+        await logAudit('view_store', 'Viewed store management page');
       } catch (e) {
-        showToast('Error', 'error');
+        console.error('Init error:', e);
+        showToast('Error loading store data', 'error');
       }
     });
 
