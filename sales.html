@@ -90,12 +90,6 @@
       background: var(--warning); animation: pulse 1.5s infinite;
     }
     .draft-tab .draft-indicator.saved { background: var(--success); animation: none; }
-    .draft-add-btn {
-      padding: 8px 12px; border-radius: 8px; cursor: pointer;
-      font-size: 1rem; color: var(--primary); background: none; border: 1px dashed rgba(255,77,166,0.3);
-      transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
-    }
-    .draft-add-btn:hover { background: var(--primary-soft); }
 
     .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); color:white; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000; border-right:1px solid rgba(255,77,166,0.2); }
     .sidebar::-webkit-scrollbar { width:4px; } .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); } .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
@@ -327,9 +321,7 @@
     </div>
   </header>
 
-  <div class="draft-tabs-bar" id="draftTabsBar">
-    <button class="draft-add-btn" onclick="window._addDraftTab()" title="New Draft"><i class="fas fa-plus"></i></button>
-  </div>
+  <div class="draft-tabs-bar" id="draftTabsBar"></div>
 
   <div class="content-wrapper">
 
@@ -442,8 +434,7 @@
 
   let receiptCounter = parseInt(localStorage.getItem('receiptCounter') || '0');
 
-  // Current modal type tracker for smart auto-save
-  let currentModalType = ''; // 'sale', 'company', 'wholesale', 'return', 'exchange', 'receipt', 'pin', 'other'
+  let currentModalType = '';
 
   function safeNumber(val, fallback) {
     fallback = (typeof fallback === 'undefined') ? 0 : fallback;
@@ -475,9 +466,6 @@
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
   }
 
-  // ============================================
-  // DEBUG PANEL
-  // ============================================
   window.toggleDebugPanel = function() {
     var panel = safeGetEl('debugPanel');
     if (!panel) return;
@@ -498,7 +486,8 @@
     html += '<div class="debug-item"><strong>Active Drafts:</strong> ' + draftTabs.length + '</div>';
     html += '<div class="debug-item"><strong>Processing Lock:</strong> ' + (isProcessingSale ? '🔒 LOCKED' : '✅ Free') + '</div>';
     html += '<div class="debug-item"><strong>Return History Entries:</strong> ' + Object.keys(returnHistory).length + '</div>';
-    html += '<div class="debug-item"><strong>Current Modal Type:</strong> ' + (currentModalType || 'none') + '</div>';
+    html += '<div class="debug-item"><strong>Current Modal:</strong> ' + (currentModalType || 'none') + '</div>';
+    html += '<div class="debug-item"><strong>Stock Items Loaded:</strong> ' + allStockItems.length + '</div>';
     
     if (offlineSales.length > 0) {
       html += '<div class="debug-item" style="margin-top:8px;"><strong>Offline Sales:</strong></div>';
@@ -526,9 +515,6 @@
     showToast('Errors cleared', 'success');
   };
 
-  // ============================================
-  // CUSTOMER SYNC
-  // ============================================
   function savePendingCustomer(customerData) {
     var exists = pendingCustomers.some(function(c) {
       return c.phone === customerData.phone && c.fullName === customerData.fullName;
@@ -612,9 +598,6 @@
     updateDebugPanel();
   }
 
-  // ============================================
-  // ONLINE/OFFLINE DETECTION
-  // ============================================
   window.addEventListener('online', function() {
     isOnline = true;
     var banner = safeGetEl('offlineBanner'); if (banner) banner.classList.remove('show');
@@ -639,9 +622,6 @@
     var syncStatus = safeGetEl('syncStatus'); if (syncStatus) syncStatus.textContent = '⚠️ Offline';
   }
 
-  // ============================================
-  // OFFLINE SALES SYNC
-  // ============================================
   function saveOfflineSale(saleData) {
     offlineSales.push(saleData);
     localStorage.setItem('offlineSales', JSON.stringify(offlineSales));
@@ -737,9 +717,6 @@
     }
   }
 
-  // ============================================
-  // UTILITY FUNCTIONS
-  // ============================================
   function formatTime(d) {
     if (!d) return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     if (typeof d === 'string') return new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -831,9 +808,7 @@
     }
   }
 
-  // FIXED: Smart hideModal - only auto-save drafts for sale-type modals
   function hideModal() { 
-    // Only auto-save draft if we're in a sale-type modal
     if (activeDraftId && document.getElementById('modalOverlay').classList.contains('active')) {
       if (currentModalType === 'sale' || currentModalType === 'company' || currentModalType === 'wholesale') {
         window._saveDraftState();
@@ -842,7 +817,6 @@
     }
     var overlay = safeGetEl('modalOverlay'); 
     if (overlay) overlay.classList.remove('active');
-    // Reset modal type
     currentModalType = '';
   }
   window.hideModal = hideModal;
@@ -906,7 +880,6 @@
     }
   }
 
-  // FIXED: PIN Verification with hashed + plain-text PINs
   async function loadAdminPins() {
     try {
       const pinsSnap = await getDocs(query(collection(db, 'admin_pins'), where('isActive', '==', true)));
@@ -1127,7 +1100,6 @@
     updateAttendantStats();
   }
 
-  // FIXED: Better sale finding with flexible matching
   function findSaleByIdentifier(identifier) {
     if (!identifier) return null;
     
@@ -1185,7 +1157,6 @@
       var newCustomerBadge = s._newCustomer ? ' <span class="badge badge-warning">New</span>' : (s.customerId ? ' <span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;">Existing</span>' : '');
       var borrowBadge = hasBorrowed ? ' <span class="badge badge-borrow">📦 Borrowed</span>' : '';
       
-      // FIXED: Ensure return button uses the correct sale identifier
       var saleIdentifier = (s.id || s._localId || '').replace(/'/g, "\\'");
       
       tbody.innerHTML += '<tr class="' + rowClass + '"><td>' + formatTime(s.createdAt) + '</td><td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;">' + escapeHtml(s.customerName || 'Walk-in') + newCustomerBadge + borrowBadge + '</td><td>' + escapeHtml(s.customerPhone || '-') + '</td><td>' + (s.items ? s.items.length : 0) + ' items</td><td><strong>' + (isReturned ? '-' : '') + formatCurrency(safeNumber(s.totalAmount, 0)) + '</strong></td><td><span class="badge badge-success">' + escapeHtml(s.paymentMethod || 'cash') + '</span></td><td>' + typeBadge + '</td><td>' + statusBadge + '</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-print"></i></button>' + (!isReturned && !isWholesale && !isExchange ? '<button class="btn btn-sm btn-warning" onclick="openReturnModal(\'' + saleIdentifier + '\')"><i class="fas fa-undo"></i></button>' : '') + '</div></td></tr>';
@@ -1282,12 +1253,10 @@
           linkedInventoryName: data.linkedInventoryName || null
         };
       });
+      console.log('📦 Stock loaded: ' + allStockItems.length + ' items, ' + allStoreItems.length + ' store items');
     } catch (e) { showToast('Error loading data', 'error'); }
   }
 
-  // ============================================
-  // STOCK HELPERS
-  // ============================================
   function getAvailableStock(item, size) {
     if (size === '0.5' || size === '½' || size === 'half') return safeNumber(item.halfQty, 0);
     if (size === '0.25' || size === '¼' || size === 'quarter') return safeNumber(item.quarterQty, 0);
@@ -1329,12 +1298,6 @@
     }).join('');
   }
 
-  function getStoreOptionsHtml() {
-    return allStoreItems.map(function(i) {
-      return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>';
-    }).join('');
-  }
-
   function getSizeOptions(item) {
     var opts = [];
     if (safeNumber(item.unitPrice, 0) > 0) opts.push({ value: '1', label: '1 (Unit)' });
@@ -1347,7 +1310,7 @@
   }
 
   // ============================================
-  // DRAFT SYSTEM - FIXED
+  // DRAFT SYSTEM
   // ============================================
   function saveDraftsToStorage() {
     localStorage.setItem('draftTabs', JSON.stringify(draftTabs));
@@ -1385,13 +1348,11 @@
     };
   }
 
-  // FIXED: Save current modal state to active draft
   window._saveDraftState = function() {
     if (!activeDraftId) return;
     var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
     if (!draft) return;
 
-    // Only save if modal is open and we're in a sale-type modal
     if (!document.getElementById('modalOverlay').classList.contains('active')) return;
     if (currentModalType !== 'sale' && currentModalType !== 'company' && currentModalType !== 'wholesale') return;
 
@@ -1534,7 +1495,6 @@
     draft.updatedAt = new Date().toISOString();
     draft.isDirty = false;
     saveDraftsToStorage();
-    console.log('💾 Draft saved:', draft.label, '| Items:', draft.itemCount);
   };
 
   let autoSaveInterval = null;
@@ -1563,7 +1523,6 @@
     }
   };
 
-  // FIXED: Create new draft tab - only from the "+" button
   window._addDraftTab = function(type) {
     type = type || 'regular';
     
@@ -1585,10 +1544,8 @@
     else openNewSaleModal();
     
     startAutoSave();
-    showToast('New draft created', 'info');
   };
 
-  // FIXED: Switch to existing draft tab - restore saved data
   window._switchDraftTab = function(draftId) {
     if (activeDraftId && activeDraftId !== draftId) {
       window._saveDraftState();
@@ -1598,7 +1555,6 @@
     var draft = draftTabs.find(function(d) { return d.id === draftId; });
     if (!draft) return;
     
-    // Restore state from draft
     customerType = draft.customerType || 'existing';
     selectedPayment = draft.selectedPayment || 'cash';
     
@@ -1646,7 +1602,6 @@
     saveDraftsToStorage();
   };
 
-  // FIXED: Draft tabs bar - only shows draft tabs, no creation buttons
   function renderDraftTabs() {
     var bar = safeGetEl('draftTabsBar');
     if (!bar) return;
@@ -1686,7 +1641,6 @@
     showToast('Draft saved! ✅', 'success');
   };
 
-  // FIXED: Restore draft data into regular sale modal
   async function openNewSaleModalWithDraft(draft) {
     await loadCustomersAndStock();
     if (allStockItems.length === 0) { showToast('No items available', 'error'); return; }
@@ -1796,7 +1750,6 @@
     }, 200);
   }
 
-  // FIXED: Restore draft data into company sale modal
   async function openCompanySaleModalWithDraft(draft) {
     await loadCustomersAndStock();
     currentModalType = 'company';
@@ -1865,7 +1818,6 @@
     }, 200);
   }
 
-  // FIXED: Restore draft data into wholesale sale modal
   async function openWholesaleSaleModalWithDraft(draft) {
     await loadCustomersAndStock();
     currentModalType = 'wholesale';
@@ -1884,7 +1836,6 @@
     wholesaleCustomerType = draft.wholesaleCustomerType || 'existing';
     wholesalePayment = draft.wholesalePayment || 'cash';
 
-    // Build items HTML from draft
     var itemsHtml = '';
     if (draft.items && draft.items.length > 0) {
       draft.items.forEach(function(item) {
@@ -1930,23 +1881,6 @@
       if (draft.customerId && wholesaleCustomerType === 'existing') {
         $('#wsExistingCustomer').val(draft.customerId).trigger('change');
       }
-      
-      // Set values on each item row
-      document.querySelectorAll('.ws-item-row').forEach(function(row, idx) {
-        var savedItem = draft.items && draft.items[idx];
-        if (savedItem && savedItem.id) {
-          var sel = row.querySelector('.ws-select');
-          if (sel) {
-            // Try to select the saved item
-            for (var i = 0; i < sel.options.length; i++) {
-              if (sel.options[i].value === savedItem.id) {
-                sel.selectedIndex = i;
-                break;
-              }
-            }
-          }
-        }
-      });
       
       $('.ws-select').select2({
         placeholder: 'Search item...',
@@ -2272,12 +2206,10 @@
   // NEW SALE MODAL
   // ============================================
   window.openNewSaleModal = async function() {
-    // Save current draft if exists
     if (activeDraftId) {
       window._saveDraftState();
     }
     
-    // Auto-create a new draft for this sale
     var draft = createDraft('regular');
     draftTabs.push(draft);
     activeDraftId = draft.id;
@@ -3394,7 +3326,6 @@
     var saleDateStr = formatDateTime(sale.createdAt);
     var alreadyReturned = existingReturn.totalReturned || 0;
     
-    // FIXED: Build items list with data-price attribute for accurate calculation
     var itemsHtml = '';
     if (sale.items && sale.items.length > 0) {
       var hasAnyAvailable = false;
@@ -3492,11 +3423,11 @@
         '<div class="return-option selected" data-action="refund" onclick="window._selectReturnAction(\'refund\')">' +
           '<i class="fas fa-money-bill-wave"></i><div><strong>Refund Money</strong><br><small>Return cash/transfer to customer</small></div></div>' +
         '<div class="return-option" data-action="exchange" onclick="window._selectReturnAction(\'exchange\')">' +
-          '<i class="fas fa-exchange-alt"></i><div><strong>Exchange</strong><br><small>Swap for other items</small></div></div>' +
+          '<i class="fas fa-exchange-alt"></i><div><strong>Exchange</strong><br><small>Swap for other items (pick from stock)</small></div></div>' +
         '<div class="return-option" data-action="store_credit" onclick="window._selectReturnAction(\'store_credit\')">' +
           '<i class="fas fa-piggy-bank"></i><div><strong>Store Credit</strong><br><small>Keep as credit for future purchase</small></div></div>' +
         '<div class="return-option" data-action="replace" onclick="window._selectReturnAction(\'replace\')">' +
-          '<i class="fas fa-sync-alt"></i><div><strong>Replace Same Item</strong><br><small>Swap for same item if available</small></div></div>' +
+          '<i class="fas fa-sync-alt"></i><div><strong>Replace Same Item</strong><br><small>Swap for same item (pick alt if unavailable)</small></div></div>' +
       '</div>' +
       
       '<div id="refundMethodSection">' +
@@ -3521,7 +3452,6 @@
     }, 200);
   };
 
-  // FIXED: Uses data-unit-price attribute instead of fragile text parsing
   window._updateReturnTotal = function() {
     var total = 0;
     var itemCount = 0;
@@ -3649,15 +3579,26 @@
     var actionDescription = (needsAdminApproval ? '[ADMIN APPROVAL REQUIRED] ' : '') + 
       'process return of ' + formatCurrency(totalRefund) + ' (' + returnedItems.length + ' items)';
     
+    // Store reference to current function context
+    var processReturnFn = arguments.callee;
+    
     showPinModal('Process Return', actionDescription, function() {
       if (selectedReturnAction === 'refund') {
         processRefund(sale, returnedItems, totalRefund, reason, selectedRefundMethod);
       } else if (selectedReturnAction === 'exchange') {
-        openExchangePicker(sale, returnedItems, totalRefund, reason);
+        // FIXED: Close return modal, then open exchange picker
+        hideModal();
+        setTimeout(function() {
+          openExchangePicker(sale, returnedItems, totalRefund, reason);
+        }, 300);
       } else if (selectedReturnAction === 'store_credit') {
         processStoreCredit(sale, returnedItems, totalRefund, reason);
       } else if (selectedReturnAction === 'replace') {
-        processReplacement(sale, returnedItems, totalRefund, reason);
+        // FIXED: Close return modal, then process replacement
+        hideModal();
+        setTimeout(function() {
+          processReplacement(sale, returnedItems, totalRefund, reason);
+        }, 300);
       }
     }, pinRequiredRole);
   };
@@ -3932,30 +3873,101 @@
     }
   }
 
+  // FIXED: Process replacement - shows stock list when items unavailable
   async function processReplacement(sale, returnedItems, totalRefund, reason) {
+    // Ensure stock is loaded
+    await loadCustomersAndStock();
+    
+    // Check if the same items are available for replacement
     var unavailableItems = [];
+    var availableForReplacement = [];
     
     for (var i = 0; i < returnedItems.length; i++) {
       var item = returnedItems[i];
       if (item.id && !item.isNonInventory) {
         var stockItem = allStockItems.find(function(si) { return si.id === item.id; });
         if (!stockItem) {
-          unavailableItems.push(item.name + ' (no longer in inventory)');
+          unavailableItems.push({ name: item.name, size: item.size, qty: item.returnedQuantity, originalItem: item });
           continue;
         }
         var available = getAvailableStock(stockItem, item.size);
         var needed = getDeductQuantity(stockItem, item.size, item.returnedQuantity);
         if (needed > available) {
-          unavailableItems.push(item.name + ' (only ' + available + ' available, need ' + needed + ')');
+          unavailableItems.push({ name: item.name + ' (only ' + available + ' available, need ' + needed + ')', size: item.size, qty: item.returnedQuantity, originalItem: item });
+        } else {
+          availableForReplacement.push(item);
         }
+      } else {
+        // Non-inventory items can always be replaced
+        availableForReplacement.push(item);
       }
     }
     
     if (unavailableItems.length > 0) {
-      showToast('Cannot replace: ' + unavailableItems.join(', '), 'error');
+      // Build stock options for alternatives
+      var stockOptionsHtml = '';
+      var availableStockItems = allStockItems.filter(function(si) { return (si.unitQty || 0) > 0; });
+      
+      if (availableStockItems.length === 0) {
+        showToast('No items available in stock for replacement', 'error');
+        return;
+      }
+      
+      availableStockItems.forEach(function(si) {
+        var label = getItemTypeLabel(si.itemType || 'general');
+        stockOptionsHtml += '<option value="' + si.id + '" data-name="' + escapeHtml(si.name||'') + '" data-price="' + (si.unitPrice||0) + '" data-halfprice="' + (si.halfPrice||0) + '" data-quarterprice="' + (si.quarterPrice||0) + '" data-packprice="' + (si.packPrice||0) + '" data-bundleprice="' + (si.bundlePrice||0) + '" data-packsize="' + (si.packSize||12) + '" data-bundlesize="' + (si.bundleSize||50) + '">' + label + ' ' + escapeHtml(si.name||'') + ' - ' + formatCurrency(si.unitPrice||0) + ' (' + (si.unitQty||0) + ' avail)</option>';
+      });
+      
+      var unavailableList = unavailableItems.map(function(item) { return '<li>' + escapeHtml(item.name) + '</li>'; }).join('');
+      
+      var altItemsHtml = '';
+      unavailableItems.forEach(function(unavItem, idx) {
+        altItemsHtml += '<div class="item-row" style="margin-bottom:12px;padding:10px;background:rgba(245,158,11,0.05);border-radius:10px;">' +
+          '<span style="flex:1;min-width:140px;font-size:0.8rem;color:var(--danger);"><strong>Unavailable:</strong> ' + escapeHtml(unavItem.name.split(' (')[0]) + ' × ' + unavItem.qty + '</span>' +
+          '<select class="form-control replacement-alt-select" style="flex:2;min-width:180px;" data-alt-idx="' + idx + '"><option value="">-- Pick alternative from ' + availableStockItems.length + ' items --</option>' + stockOptionsHtml + '</select>' +
+          '<input type="number" class="form-control replacement-alt-qty" value="' + unavItem.qty + '" min="1" style="flex:0.5;min-width:60px;">' +
+        '</div>';
+      });
+      
+      currentModalType = 'exchange'; // Use exchange type for this modal
+      
+      showModal('Replace Items - Pick Alternatives',
+        '<div style="background:rgba(245,158,11,0.1);padding:14px;border-radius:12px;margin-bottom:16px;border-left:4px solid var(--warning);">' +
+          '<strong style="color:var(--warning);"><i class="fas fa-exclamation-triangle"></i> Some items are unavailable for direct replacement:</strong>' +
+          '<ul style="margin:8px 0 0 20px;font-size:0.8rem;">' + unavailableList + '</ul>' +
+          '<p style="margin-top:8px;font-size:0.75rem;color:var(--gray);">' + availableForReplacement.length + ' item(s) can be directly replaced. Pick alternatives for the unavailable ones below.</p>' +
+        '</div>' +
+        '<p style="font-weight:600;margin-bottom:8px;"><i class="fas fa-boxes"></i> Available Stock (' + availableStockItems.length + ' items)</p>' +
+        '<div id="replacementAltItems">' + altItemsHtml + '</div>' +
+        '<div style="display:flex;gap:10px;margin-top:20px;">' +
+          '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Cancel</button>' +
+          '<button class="btn btn-primary" onclick="window._processReplacementWithAlternatives(\'' + (sale.id || sale._localId || '') + '\')" style="flex:2;">' +
+            '<i class="fas fa-check-circle"></i> Replace with Alternatives</button>' +
+        '</div>'
+      );
+      
+      // Store state for alternative replacement
+      window._replacementState = {
+        sale: sale,
+        returnedItems: returnedItems,
+        availableForReplacement: availableForReplacement,
+        unavailableItems: unavailableItems,
+        totalRefund: totalRefund,
+        reason: reason
+      };
+      
+      // Initialize Select2
+      setTimeout(function() {
+        $('.replacement-alt-select').select2({ 
+          placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') 
+        });
+      }, 200);
+      
       return;
     }
     
+    // All items available - proceed with direct replacement
+    currentModalType = 'return';
     showPinModal('Process Replacement', 'replace items worth ' + formatCurrency(totalRefund), function() {
       var replacementItems = returnedItems.map(function(i) {
         return { id: i.id, name: i.name, quantity: i.returnedQuantity, size: i.size, sizeLabel: i.sizeLabel, unitPrice: i.unitPrice, isNonInventory: i.isNonInventory };
@@ -3997,17 +4009,123 @@
     }, 'attendant');
   };
 
+  // FIXED: Process replacement with alternative items from stock
+  window._processReplacementWithAlternatives = function(saleId) {
+    var state = window._replacementState;
+    if (!state) { showToast('Replacement state lost. Please try again.', 'error'); return; }
+    
+    var alternativeItems = [];
+    var allValid = true;
+    
+    document.querySelectorAll('#replacementAltItems .item-row').forEach(function(row) {
+      var select = row.querySelector('.replacement-alt-select');
+      var qtyEl = row.querySelector('.replacement-alt-qty');
+      
+      if (select && select.value && qtyEl) {
+        var opt = select.options[select.selectedIndex];
+        var qty = parseFloat(qtyEl.value) || 1;
+        var price = parseFloat(opt && opt.getAttribute('data-price')) || 0;
+        
+        var stockItem = allStockItems.find(function(si) { return si.id === select.value; });
+        if (stockItem && qty > (stockItem.unitQty || 0)) {
+          showToast('Insufficient stock for ' + (opt ? opt.getAttribute('data-name') : 'item'), 'error');
+          allValid = false;
+          return;
+        }
+        
+        alternativeItems.push({
+          id: select.value,
+          name: opt ? opt.getAttribute('data-name') || '' : '',
+          quantity: qty,
+          size: '1',
+          sizeLabel: 'Unit',
+          unitPrice: price
+        });
+      } else {
+        showToast('Please select an alternative for each unavailable item', 'error');
+        allValid = false;
+      }
+    });
+    
+    if (!allValid) return;
+    
+    // Combine available replacements with alternatives
+    var allReplacementItems = state.availableForReplacement.map(function(i) {
+      return { id: i.id, name: i.name, quantity: i.returnedQuantity, size: i.size, sizeLabel: i.sizeLabel, unitPrice: i.unitPrice, isNonInventory: i.isNonInventory };
+    }).concat(alternativeItems);
+    
+    showPinModal('Process Replacement', 'replace items worth ' + formatCurrency(state.totalRefund), function() {
+      var customerInfo = {
+        customerId: state.sale.customerId || '',
+        customerName: state.sale.customerName || 'Walk-in',
+        customerPhone: state.sale.customerPhone || '',
+        customerAddress: state.sale.customerAddress || '',
+        _isNew: false,
+        _customerData: null
+      };
+      
+      var result = processSaleCommon(allReplacementItems, 0, customerInfo, 'replacement', false, {
+        isReplacement: true,
+        originalReceiptNumber: state.sale.receiptNumber,
+        replacementReason: state.reason
+      }, 'regular');
+      
+      if (result) {
+        updateDoc(doc(db, 'sales', state.sale.id), {
+          status: 'returned',
+          returnedAt: serverTimestamp(),
+          returnAction: 'replacement',
+          replacementReceiptNumber: result.receiptNumber
+        }).catch(function() {});
+        
+        logAudit('return_replacement', 'Replacement with alternatives: Receipt ' + (state.sale.receiptNumber || '') + ' → New Receipt ' + result.receiptNumber, {
+          originalReceipt: state.sale.receiptNumber,
+          newReceipt: result.receiptNumber,
+          itemsCount: allReplacementItems.length
+        });
+        
+        showToast('Replacement processed! New receipt: #' + result.receiptNumber, 'success');
+        showReceiptModal(result);
+        hideModal();
+      }
+    }, 'attendant');
+  };
+
   // ============================================
-  // EXCHANGE PICKER - FIXED: Per-item pairing with stock dropdown
+  // EXCHANGE PICKER - FIXED: Per-item pairing with full stock dropdown
   // ============================================
   async function openExchangePicker(sale, returnedItems, totalRefund, reason) {
+    // Ensure stock is fresh
     await loadCustomersAndStock();
     currentModalType = 'exchange';
-    var stockOptions = getStockOptionsHtml();
-    var firstItem = allStockItems[0];
+    
+    // Filter to only items with stock > 0
+    var availableStockItems = allStockItems.filter(function(si) { return (si.unitQty || 0) > 0; });
+    
+    if (availableStockItems.length === 0) {
+      showToast('No items available in stock for exchange', 'error');
+      return;
+    }
+    
+    // Build stock options
+    var stockOptionsHtml = '';
+    availableStockItems.forEach(function(si) {
+      var label = getItemTypeLabel(si.itemType || 'general');
+      var unitQty = si.unitQty || 0;
+      var stockInfo = '(Units:' + unitQty;
+      if (si.halfQty > 0) stockInfo += ', Half:' + si.halfQty;
+      if (si.quarterQty > 0) stockInfo += ', Qtr:' + si.quarterQty;
+      if (si.packQty > 0) stockInfo += ', Packs:' + si.packQty;
+      if (si.bundleQty > 0) stockInfo += ', Bundles:' + si.bundleQty;
+      stockInfo += ')';
+      
+      stockOptionsHtml += '<option value="' + si.id + '" data-name="' + escapeHtml(si.name||'') + '" data-price="' + (si.unitPrice||0) + '" data-halfprice="' + (si.halfPrice||0) + '" data-quarterprice="' + (si.quarterPrice||0) + '" data-packprice="' + (si.packPrice||0) + '" data-bundleprice="' + (si.bundlePrice||0) + '" data-packsize="' + (si.packSize||12) + '" data-bundlesize="' + (si.bundleSize||50) + '" data-unitstock="' + unitQty + '" data-halfstock="' + (si.halfQty||0) + '" data-quarterstock="' + (si.quarterQty||0) + '" data-packstock="' + (si.packQty||0) + '" data-bundlestock="' + (si.bundleQty||0) + '">' + label + ' ' + escapeHtml(si.name||'') + ' - ' + formatCurrency(si.unitPrice||0) + ' ' + stockInfo + '</option>';
+    });
+    
+    var firstItem = availableStockItems[0];
     var firstSizeOpts = firstItem ? getSizeOptions(firstItem).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
     
-    // Build per-item exchange pairs
+    // Build per-item exchange pair rows
     var exchangePairsHtml = '';
     returnedItems.forEach(function(retItem, idx) {
       var returnValue = (retItem.returnedQuantity || 1) * (retItem.unitPrice || 0);
@@ -4021,9 +4139,9 @@
           '<div style="font-weight:700;color:var(--danger);">Value: ' + formatCurrency(returnValue) + '</div>' +
         '</div>' +
         '<div class="exchange-item-section">' +
-          '<label style="font-size:0.7rem;color:var(--gray);font-weight:600;">↪ Exchange for:</label>' +
+          '<label style="font-size:0.7rem;color:var(--gray);font-weight:600;">↪ Exchange for (choose from ' + availableStockItems.length + ' available items):</label>' +
           '<div class="item-row" style="margin-top:6px;">' +
-            '<select class="form-control exchange-pair-select" style="flex:2;min-width:150px;" data-pair="' + idx + '"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
+            '<select class="form-control exchange-pair-select" style="flex:2;min-width:180px;" data-pair="' + idx + '"><option value="">-- Search ' + availableStockItems.length + ' products --</option>' + stockOptionsHtml + '</select>' +
             '<select class="form-control exchange-pair-size" style="flex:0.8;min-width:90px;" data-pair="' + idx + '">' + firstSizeOpts + '</select>' +
             '<input type="number" class="form-control exchange-pair-qty" value="' + (retItem.returnedQuantity || 1) + '" min="1" style="flex:0.5;min-width:60px;" data-pair="' + idx + '">' +
           '</div>' +
@@ -4038,10 +4156,11 @@
           '<div><strong style="font-size:0.75rem;color:var(--gray);">Items Returning</strong><br><span style="font-weight:600;">' + returnedItems.length + ' items</span></div>' +
           '<div><strong style="font-size:0.75rem;color:var(--gray);">Total Return Value</strong><br><span style="font-weight:700;color:var(--danger);font-size:1.2rem;">' + formatCurrency(totalRefund) + '</span></div>' +
         '</div>' +
+        '<div style="margin-top:6px;font-size:0.7rem;color:var(--gray);"><i class="fas fa-boxes"></i> ' + availableStockItems.length + ' products available in stock for exchange</div>' +
       '</div>' +
-      '<p style="font-weight:600;margin-bottom:8px;"><i class="fas fa-exchange-alt"></i> For each returned item, pick what to exchange it with</p>' +
+      '<p style="font-weight:600;margin-bottom:8px;"><i class="fas fa-exchange-alt"></i> For each returned item, pick what to exchange it with from stock</p>' +
       '<p style="font-size:0.75rem;color:var(--gray);margin-bottom:12px;">' +
-        '💰 Exchange higher = Customer pays difference | Exchange lower = Refund difference | Same price = Even exchange</p>' +
+        '💰 Higher price = Customer pays difference | Lower price = Refund difference | Same price = Even exchange</p>' +
       '<div id="exchangePairsContainer">' + exchangePairsHtml + '</div>' +
       
       '<div style="background:var(--gray-light);padding:14px;border-radius:12px;margin:16px 0;">' +
@@ -4092,24 +4211,31 @@
       exchangePayment: 'cash'
     };
     
+    // Initialize Select2 after DOM is ready
     setTimeout(function() {
-      // Initialize Select2 on all exchange pair selects
+      // Destroy any existing instances first
+      try { $('.exchange-pair-select').select2('destroy'); } catch(e) {}
+      
       $('.exchange-pair-select').each(function() {
-        $(this).select2({ 
-          placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') 
+        var $select = $(this);
+        $select.select2({ 
+          placeholder: 'Search product...', 
+          allowClear: true, 
+          width: '100%', 
+          dropdownParent: $('#modalOverlay') 
         }).on('change', function() { 
           window._updateExchangePairSize(this); 
           window._updateExchangeTotal(); 
         });
       });
-      $('.exchange-pair-qty').on('input', window._updateExchangeTotal);
-      $('.exchange-pair-size').on('change', window._updateExchangeTotal);
+      
+      $('.exchange-pair-qty').off('input').on('input', window._updateExchangeTotal);
+      $('.exchange-pair-size').off('change').on('change', window._updateExchangeTotal);
       window._updateExchangeTotal();
-    }, 150);
+    }, 300);
   };
 
   window._updateExchangePairSize = function(selectEl) {
-    var pairIdx = selectEl.getAttribute('data-pair');
     var row = selectEl.closest('.exchange-pair-row');
     if (!row) return;
     var sizeEl = row.querySelector('.exchange-pair-size');
@@ -4130,11 +4256,9 @@
     window._updateExchangeTotal();
   };
 
-  // FIXED: Calculate per-pair differences and overall total
   window._updateExchangeTotal = function() {
     var overallExchangeTotal = 0;
     var overallReturnTotal = exchangeState.totalRefund;
-    var perPairDiffs = [];
     
     document.querySelectorAll('.exchange-pair-row').forEach(function(row) {
       var select = row.querySelector('.exchange-pair-select');
@@ -4151,7 +4275,6 @@
         var size = sizeEl ? (sizeEl.value || '1') : '1';
         var qty = parseFloat(qtyEl.value) || 1;
         var price = parseFloat(opt && opt.getAttribute('data-price')) || 0;
-        var sizeLabel = getSizeLabel(size);
         
         if (size === '0.5' && parseFloat(opt && opt.getAttribute('data-halfprice')) > 0) price = parseFloat(opt.getAttribute('data-halfprice'));
         else if (size === '0.25' && parseFloat(opt && opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
@@ -4162,11 +4285,10 @@
         overallExchangeTotal += exchangeValue;
         
         var diff = exchangeValue - returnValue;
-        perPairDiffs.push({ returnValue: returnValue, exchangeValue: exchangeValue, diff: diff });
         
         if (diffDisplay) {
           if (Math.abs(diff) < 0.01) {
-            diffDisplay.innerHTML = '<span class="exchange-diff-badge even">✅ Even Exchange (₦0 difference)</span>';
+            diffDisplay.innerHTML = '<span class="exchange-diff-badge even">✅ Even Exchange (₦0)</span>';
           } else if (diff > 0) {
             diffDisplay.innerHTML = '<span class="exchange-diff-badge customer-pays">⚠️ Customer pays +' + formatCurrency(diff) + '</span>';
           } else {
@@ -4198,7 +4320,7 @@
         if (diffAmount) { diffAmount.textContent = formatCurrency(overallDiff); diffAmount.style.color = 'var(--primary)'; }
         if (paymentSection) paymentSection.style.display = 'block';
         if (refundSection) refundSection.style.display = 'none';
-        if (actionHint) { actionHint.style.display = 'block'; actionHint.innerHTML = '👆 Customer needs to pay <strong>' + formatCurrency(overallDiff) + '</strong> additional'; actionHint.style.color = 'var(--primary)'; }
+        if (actionHint) { actionHint.style.display = 'block'; actionHint.innerHTML = '👆 Customer pays <strong>' + formatCurrency(overallDiff) + '</strong> additional'; actionHint.style.color = 'var(--primary)'; }
         exchangeState.differenceType = 'customer_pays';
       } else {
         if (diffLabel) diffLabel.textContent = 'Refund to Customer:';
@@ -4256,7 +4378,7 @@
           var available = getAvailableStock(stockItem, size);
           var deductQty = getDeductQuantity(stockItem, size, qty);
           if (deductQty > available) {
-            showToast('Insufficient stock for ' + opt.dataset.name + ' (' + sizeLabel + '). Available: ' + available, 'error');
+            showToast('Insufficient stock for ' + (opt ? opt.getAttribute('data-name') : 'item') + ' (' + sizeLabel + '). Available: ' + available, 'error');
             allValid = false;
             return;
           }
@@ -4264,7 +4386,7 @@
         
         exchangeItems.push({
           id: select.value,
-          name: opt.dataset.name,
+          name: opt ? opt.getAttribute('data-name') || '' : '',
           quantity: qty,
           size: size,
           sizeLabel: sizeLabel,
@@ -4281,7 +4403,7 @@
     
     var confirmMsg = 'Exchange ' + formatCurrency(exchangeState.totalRefund) + ' for items worth ' + formatCurrency(exchangeState.exchangeTotal);
     if (exchangeState.differenceType === 'customer_pays') {
-      confirmMsg += '. Customer pays additional ' + formatCurrency(exchangeState.difference);
+      confirmMsg += '. Customer pays ' + formatCurrency(exchangeState.difference);
     } else if (exchangeState.differenceType === 'refund_customer') {
       confirmMsg += '. Refund ' + formatCurrency(exchangeState.difference) + ' to customer';
     }
