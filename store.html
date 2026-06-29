@@ -1135,6 +1135,7 @@
                   <th>Item Name</th>
                   <th>Category</th>
                   <th>Inv. Type</th>
+                  <th>Linked Inventory</th>
                   <th>Total Units</th>
                   <th>Unit Cost</th>
                   <th>Total Value</th>
@@ -1143,7 +1144,7 @@
                 </tr>
               </thead>
               <tbody id="storeTable">
-                <tr><td colspan="8"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
+                <tr><td colspan="9"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
               </tbody>
             </table>
           </div>
@@ -1458,7 +1459,7 @@
     }
 
     // ============================================
-    // FIXED: PIN Verification - No hardcoded PINs
+    // PIN Verification - Uses all active admin PINs
     // ============================================
     async function verifyPin(pin, requiredRole) {
       if (!pin || pin.length < 4) return false;
@@ -1705,7 +1706,7 @@
 
       var tbody = document.getElementById('storeTable');
       if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-store"></i><p>No store items found. Add stock to get started.</p></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-store"></i><p>No store items found. Add stock to get started.</p></div></td></tr>';
         return;
       }
 
@@ -1713,10 +1714,15 @@
         var st = getStoreItemStatus(item);
         var sb = st === 'available' ? 'success' : st === 'low' ? 'warning' : 'danger';
         var totalValue = (item.unitQty || 0) * (item.unitCost || 0);
+        var linkedDisplay = item.linkedInventoryId 
+          ? '<span class="badge badge-info" title="' + (item.linkedInventoryName || 'Linked Item') + '">🔗 ' + (item.linkedInventoryName || 'Linked') + '</span>' 
+          : '<span style="color:var(--gray);font-size:0.7rem;">—</span>';
+        
         return '<tr>' +
           '<td><strong>' + (item.name || '-') + '</strong></td>' +
           '<td><span class="badge badge-purple">' + (item.category || '-') + '</span></td>' +
           '<td><span class="badge badge-info">' + (item.inventoryItemType || 'general').replace(/_/g, ' ') + '</span></td>' +
+          '<td>' + linkedDisplay + '</td>' +
           '<td style="font-weight: 600;">' + (item.unitQty || 0).toLocaleString() + '</td>' +
           '<td>' + formatCurrency(item.unitCost || 0) + '</td>' +
           '<td style="font-weight: 600;">' + formatCurrency(totalValue) + '</td>' +
@@ -1916,7 +1922,7 @@
     }
 
     // ============================================
-    // FIXED: confirmIncomingTransfer with proper stock handling
+    // confirmIncomingTransfer with proper stock handling
     // ============================================
     window.confirmIncomingTransfer = function(incomingId) {
       var inc = incomingItems.find(function(i) { return i.id === incomingId; });
@@ -2035,7 +2041,7 @@
       showModal('Add Store Item',
         '<div class="form-group"><label>Link to Inventory Item (Optional)</label>' +
         '<select class="form-control" id="storeLinkedInventory" style="width:100%;" onchange="populateFromInventory()">' + invOptions + '</select>' +
-        '<p style="font-size:0.7rem;color:var(--gray);">Select an existing inventory item to auto-fill details.</p></div>' +
+        '<p style="font-size:0.7rem;color:var(--gray);">Select an existing inventory item to auto-fill details and enable wholesale borrowing.</p></div>' +
         '<div class="form-row">' +
         '<div class="form-group"><label>Item Name *</label><input class="form-control" id="storeItemName" placeholder="e.g., Stone Beads Bulk"></div>' +
         '<div class="form-group"><label>Category *</label><div style="display:flex;gap:8px;">' +
@@ -2084,6 +2090,11 @@
       showPinModal('Confirm Add', 'add store item: ' + name, async function() {
         try {
           var linkedInventoryId = document.getElementById('storeLinkedInventory') ? document.getElementById('storeLinkedInventory').value : '';
+          var linkedInventoryName = '';
+          if (linkedInventoryId) {
+            var linkedInv = allInventoryItems.find(function(i) { return i.id === linkedInventoryId; });
+            linkedInventoryName = linkedInv ? (linkedInv.name || '') : '';
+          }
           var docData = {
             name: name,
             category: category,
@@ -2093,7 +2104,7 @@
             threshold: threshold,
             status: unitQty <= threshold ? 'low' : 'available',
             linkedInventoryId: linkedInventoryId || null,
-            linkedInventoryName: linkedInventoryId ? (allInventoryItems.find(function(i) { return i.id === linkedInventoryId; }) || {}).name || '' : null,
+            linkedInventoryName: linkedInventoryName || null,
             createdBy: currentUser ? currentUser.uid : '',
             createdByName: userData ? (userData.fullName || 'Staff') : 'Staff',
             createdAt: serverTimestamp(),
@@ -2101,7 +2112,7 @@
           };
           await addDoc(collection(db, 'store_items'), docData);
           await logAudit('add_store_item', 'Added store item: ' + name + ' x' + unitQty + ' @ ' + formatCurrency(unitCost), {
-            name: name, category: category, unitQty: unitQty, unitCost: unitCost, inventoryType: invType
+            name: name, category: category, unitQty: unitQty, unitCost: unitCost, inventoryType: invType, linkedInventoryId: linkedInventoryId
           });
           showToast('Store item "' + name + '" added successfully!', 'success');
           hideModal();
@@ -2258,7 +2269,6 @@
       });
       updateTotalPieces();
       
-      // Pre-fill new item name
       setTimeout(function() {
         $('#s2iInventorySelect').select2({ width: '100%', dropdownParent: $('#modalOverlay') });
       }, 150);
@@ -2302,7 +2312,6 @@
       var packSize = parseInt(document.getElementById('s2iPackSize') ? document.getElementById('s2iPackSize').value : 12) || 12;
       var bundleSize = parseInt(document.getElementById('s2iBundleSize') ? document.getElementById('s2iBundleSize').value : 50) || 50;
 
-      // Validate allocation
       var allocatedPieces = 0;
       for (var key in allocation) {
         if (allocation.hasOwnProperty(key)) {
@@ -2362,9 +2371,19 @@
       }, 'attendant');
     };
 
+    // ============================================
+    // FIXED: Edit Store Item with linkedInventoryId
+    // ============================================
     window.openEditStoreItem = function(id) {
       var item = storeItems.find(function(i) { return i.id === id; });
       if (!item) return;
+
+      // Build linked inventory options
+      var linkedOptions = '<option value="">-- None --</option>';
+      allInventoryItems.forEach(function(inv) {
+        var selected = inv.id === item.linkedInventoryId ? ' selected' : '';
+        linkedOptions += '<option value="' + inv.id + '"' + selected + '>' + (inv.name || '-') + ' (' + (inv.itemType || 'general').replace(/_/g, ' ') + ')</option>';
+      });
 
       showModal('Edit: ' + item.name,
         '<div class="form-group"><label>Item Name</label><input class="form-control" value="' + (item.name || '') + '" readonly></div>' +
@@ -2376,16 +2395,33 @@
         '<div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="' + (item.threshold || 5) + '" min="1"></div>' +
         '<div class="form-group"><label>Inventory Type</label><input class="form-control" value="' + (item.inventoryItemType || 'general').replace(/_/g, ' ') + '" readonly></div>' +
         '</div>' +
+        '<div class="form-group"><label>Linked Inventory Item (for wholesale borrowing)</label>' +
+        '<select class="form-control" id="editLinkedInventory" style="width:100%;">' + linkedOptions + '</select>' +
+        '<p style="font-size:0.7rem;color:var(--gray);">When store stock runs low during wholesale, borrow from this inventory item</p></div>' +
         '<div style="display: flex; gap: 10px;">' +
         '<button class="btn btn-primary" onclick="saveStoreEdit(\'' + id + '\')"><i class="fas fa-save"></i> Save Changes</button>' +
         '<button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'
       );
+
+      setTimeout(function() {
+        $('#editLinkedInventory').select2({ placeholder: 'Search inventory...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
+      }, 150);
     };
 
+    // ============================================
+    // FIXED: saveStoreEdit with linkedInventoryId
+    // ============================================
     window.saveStoreEdit = async function(id) {
       var unitQty = parseInt(document.getElementById('editUnitQty') ? document.getElementById('editUnitQty').value : 0) || 0;
       var unitCost = parseFloat(document.getElementById('editUnitCost') ? document.getElementById('editUnitCost').value : 0) || 0;
       var threshold = parseInt(document.getElementById('editThreshold') ? document.getElementById('editThreshold').value : 5) || 5;
+      
+      var linkedInventoryId = document.getElementById('editLinkedInventory') ? document.getElementById('editLinkedInventory').value : '';
+      var linkedInventoryName = '';
+      if (linkedInventoryId) {
+        var linkedInv = allInventoryItems.find(function(i) { return i.id === linkedInventoryId; });
+        linkedInventoryName = linkedInv ? (linkedInv.name || '') : '';
+      }
 
       showPinModal('Confirm Edit', 'save changes', async function() {
         try {
@@ -2393,11 +2429,13 @@
             unitQty: unitQty,
             unitCost: unitCost,
             threshold: threshold,
+            linkedInventoryId: linkedInventoryId || null,
+            linkedInventoryName: linkedInventoryName || null,
             status: unitQty <= threshold ? 'low' : 'available',
             updatedAt: serverTimestamp()
           };
           await updateDoc(doc(db, 'store_items', id), updates);
-          await logAudit('edit_store_item', 'Edited store item: ' + id, { unitQty: unitQty, unitCost: unitCost });
+          await logAudit('edit_store_item', 'Edited store item: ' + id, { unitQty: unitQty, unitCost: unitCost, linkedInventoryId: linkedInventoryId });
           showToast('Updated successfully', 'success');
           hideModal();
         } catch (e) {
@@ -2463,6 +2501,8 @@
         '<div style="font-size:0.9rem; line-height:1.7;">' +
         '<h4>🏬 Store Stock</h4>' +
         '<p>Store items track <strong>bulk inventory</strong> purchased from third parties. Each item has a total unit quantity and cost per unit.</p>' +
+        '<h4>🔗 Linked Inventory</h4>' +
+        '<p>Link a store item to its corresponding inventory item. When store stock runs low during <strong>wholesale sales</strong>, the system automatically borrows from the linked inventory item.</p>' +
         '<h4>📥 Restock to Inventory</h4>' +
         '<p>Use the <strong>Restock</strong> button to convert store items into sellable inventory. Items go to <strong>Incoming</strong> for review before being added to live inventory.</p>' +
         '<h4>📋 Incoming Inventory</h4>' +
@@ -2481,9 +2521,9 @@
     };
 
     window.exportData = function(format) {
-      var h = ['Name', 'Category', 'Type', 'Units', 'Unit Cost', 'Total Value', 'Status'];
+      var h = ['Name', 'Category', 'Type', 'Linked Inventory', 'Units', 'Unit Cost', 'Total Value', 'Status'];
       var rows = storeItems.map(function(i) {
-        return [i.name || '', i.category || '', (i.inventoryItemType || 'general').replace(/_/g, ' '), i.unitQty || 0, i.unitCost || 0, (i.unitQty || 0) * (i.unitCost || 0), getStoreItemStatus(i)];
+        return [i.name || '', i.category || '', (i.inventoryItemType || 'general').replace(/_/g, ' '), i.linkedInventoryName || '—', i.unitQty || 0, i.unitCost || 0, (i.unitQty || 0) * (i.unitCost || 0), getStoreItemStatus(i)];
       });
       var csv = [h.join(','), ...rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(','); })].join('\n');
       var blob = new Blob([csv], { type: format === 'csv' ? 'text/csv' : 'application/vnd.ms-excel' });
@@ -2504,7 +2544,6 @@
     function loadStore() {
       cleanup();
 
-      // Store items
       unsubscribes.push(onSnapshot(collection(db, 'store_items'), function(snap) {
         storeItems = snap.docs.map(function(d) {
           return {
@@ -2525,26 +2564,22 @@
         if (currentTab === 'stock') renderStoreStock();
       }));
 
-      // Incoming inventory
       unsubscribes.push(onSnapshot(collection(db, 'incoming_inventory'), function(snap) {
         incomingItems = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
         if (currentTab === 'incoming') renderIncomingInventory();
         renderStoreStock();
       }));
 
-      // Wholesale sales
       unsubscribes.push(onSnapshot(query(collection(db, 'wholesale_sales'), orderBy('createdAt', 'desc')), function(snap) {
         wholesaleSales = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
         if (currentTab === 'history') renderWholesaleHistory();
       }));
 
-      // Stock movements
       unsubscribes.push(onSnapshot(query(collection(db, 'stock_movements'), orderBy('performedAt', 'desc')), function(snap) {
         stockMovements = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
         if (currentTab === 'movements') renderStockMovements();
       }));
 
-      // All inventory items (for linking)
       unsubscribes.push(onSnapshot(collection(db, 'stock_items'), function(snap) {
         allInventoryItems = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
       }));
