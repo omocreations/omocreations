@@ -60,8 +60,8 @@
     .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
     .search-wrapper { flex: 1; min-width: 200px; position: relative; }
     .search-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray); }
-    .search-input { width: 100%; padding: 12px 16px 12px 42px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px; font-size: 0.85rem; outline: none; }
-    .filter-select { padding: 12px 20px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px; font-size: 0.85rem; background: white; cursor: pointer; }
+    .search-input { width: 100%; padding: 12px 16px 12px 42px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px; font-size: 0.85rem; outline: none; font-family: 'Inter', sans-serif; }
+    .filter-select { padding: 12px 20px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 40px; font-size: 0.85rem; background: white; cursor: pointer; font-family: 'Inter', sans-serif; }
     .panel { background: white; border-radius: 24px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.04); }
     .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
     .panel-header h3 { font-size: 1.1rem; font-weight: 700; color: var(--dark); display: flex; align-items: center; gap: 10px; }
@@ -73,7 +73,7 @@
     .badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
     .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
     .badge-pending { background: rgba(107,114,128,0.1); color: var(--gray); }
-    .btn { padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background: white; border: 1px solid rgba(0,0,0,0.08); transition: all 0.15s; }
+    .btn { padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background: white; border: 1px solid rgba(0,0,0,0.08); transition: all 0.15s; font-family: 'Inter', sans-serif; }
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; }
     .btn-outline { border: 1.5px solid rgba(255,77,166,0.3); color: var(--primary); background: transparent; }
     .btn-sm { padding: 6px 12px; }
@@ -84,13 +84,16 @@
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .modal-close { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--gray); }
     .form-group { margin-bottom: 18px; }
-    .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 14px; font-size: 0.9rem; outline: none; background: white; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--dark); margin-bottom: 8px; }
+    .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 14px; font-size: 0.9rem; outline: none; background: white; font-family: 'Inter', sans-serif; }
     textarea.form-control { resize: vertical; min-height: 60px; }
     .pin-input-container { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
-    .pin-input { width: 55px; height: 65px; text-align: center; font-size: 1.8rem; font-weight: 700; border: 2px solid rgba(255,77,166,0.2); border-radius: 14px; outline: none; }
-    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; }
-    .toast { background: white; padding: 14px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 12px; transform: translateX(400px); transition: transform 0.25s; border-left: 4px solid var(--primary); margin-top: 10px; }
-    .toast.show { transform: translateX(0); }
+    .pin-input { width: 55px; height: 65px; text-align: center; font-size: 1.8rem; font-weight: 700; border: 2px solid rgba(255,77,166,0.2); border-radius: 14px; outline: none; font-family: monospace; }
+    .pin-input:focus { border-color: var(--primary); }
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { background: white; padding: 14px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 12px; animation: slideIn 0.3s ease; border-left: 4px solid var(--primary); font-weight: 500; font-size: 0.85rem; }
+    .toast.success { border-left-color: var(--success); } .toast.error { border-left-color: var(--danger); } .toast.warning { border-left-color: var(--warning); } .toast.info { border-left-color: var(--info); }
+    @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     .export-dropdown { position: relative; display: inline-block; }
     .export-menu { position: absolute; top: 100%; right: 0; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-width: 150px; display: none; z-index: 50; }
     .export-menu.show { display: block; }
@@ -98,6 +101,10 @@
     .export-item:hover { background: var(--primary-soft); }
     .customer-stats { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 14px; margin-bottom: 15px; }
     .sync-banner { background: rgba(59,130,246,0.1); border-left: 4px solid var(--info); padding: 14px 18px; border-radius: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+    .sale-type-badge { font-size: 0.6rem; padding: 2px 8px; border-radius: 20px; margin-left: 4px; }
+    .sale-type-badge.regular { background: rgba(59,130,246,0.1); color: #3b82f6; }
+    .sale-type-badge.company { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+    .sale-type-badge.wholesale { background: rgba(245,158,11,0.15); color: #b45309; }
     @media (max-width: 768px) { .content-wrapper { padding: 16px; } .stats-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
   </style>
@@ -118,12 +125,12 @@
     
     <div class="sync-banner" id="syncBanner" style="display: none;">
       <i class="fas fa-sync-alt"></i>
-      <p>Customer totals may be out of sync. <strong>Click "Sync Totals"</strong> to recalculate from sales records.</p>
+      <p>Customer totals may be out of sync. <strong>Click "Sync Totals"</strong> to recalculate from all sales records (Regular, Company & Wholesale).</p>
     </div>
     
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-header"><span>Total Customers</span><div class="stat-icon"><i class="fas fa-users"></i></div></div><div class="stat-value" id="totalCustomers">0</div><div class="stat-sub">Approved</div></div>
-      <div class="stat-card value-locked" id="totalRevenueCard"><div class="stat-header"><span>Total Revenue</span><div class="stat-icon"><i class="fas fa-naira-sign"></i></div></div><div class="stat-value" id="totalRevenue">₦0</div><div class="stat-sub">From all sales</div><div class="value-hint" onclick="revealRevenueStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
+      <div class="stat-card value-locked" id="totalRevenueCard"><div class="stat-header"><span>Total Revenue</span><div class="stat-icon"><i class="fas fa-naira-sign"></i></div></div><div class="stat-value" id="totalRevenue">₦0</div><div class="stat-sub">From all sales types</div><div class="value-hint" onclick="revealRevenueStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
       <div class="stat-card value-locked" id="monthRevenueCard"><div class="stat-header"><span>This Month</span><div class="stat-icon"><i class="fas fa-calendar-alt"></i></div></div><div class="stat-value" id="monthRevenue">₦0</div><div class="stat-sub">Revenue MTD</div><div class="value-hint" onclick="revealRevenueStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
       <div class="stat-card"><div class="stat-header"><span>Pending Approval</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-value" id="pendingCount">0</div><div class="stat-sub">Awaiting review</div></div>
     </div>
@@ -167,7 +174,6 @@
   </div>
 </main>
 
-<!-- Modal -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="hideModal()">&times;</button></div>
@@ -185,11 +191,13 @@
   const app = initializeApp(firebaseConfig); 
   const auth = getAuth(app); 
   const db = getFirestore(app);
-  let currentUser = null, userData = null, unsubscribes = [], allCustomers = [], allSales = [], customerStats = new Map();
+  let currentUser = null, userData = null, unsubscribes = [], allCustomers = [];
+  // FIXED: Separate arrays for each sale type
+  let allRegularSales = [], allWholesaleSales = [], allCompanySales = [];
+  let customerStats = new Map();
   let revenueRevealed = false;
   let adminPins = new Set();
 
-  // Load valid admin/attendant pins for PIN verification
   async function loadAdminPins() {
     try {
       const snap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['admin', 'super_admin']), where('status', '==', 'active')));
@@ -202,7 +210,6 @@
     } catch (e) { /* ignore */ }
   }
 
-  // Verify if a PIN is valid (any admin/attendant pin or global fallback)
   async function verifyAdminPin(pin) {
     if (pin === '1234') return true;
     if (adminPins.has(pin)) return true;
@@ -222,10 +229,10 @@
   function showToast(msg, type='success') { 
     const c = document.getElementById('toastContainer'); 
     const t = document.createElement('div'); 
-    t.className = `toast ${type}`; 
-    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i><span>${msg}</span>`; 
+    t.className = 'toast ' + type; 
+    const icon = type==='success'?'check-circle':type==='error'?'exclamation-circle':type==='warning'?'exclamation-triangle':'info-circle';
+    t.innerHTML = '<i class="fas fa-' + icon + '"></i><span>' + msg + '</span>'; 
     c.appendChild(t); 
-    setTimeout(() => t.classList.add('show'), 10); 
     setTimeout(() => t.remove(), 4000); 
   }
   
@@ -261,14 +268,13 @@
     return 'Worker Dashboard';
   }
 
-  // Updated PIN modal: admin bypass, attendant requires any admin PIN
   function showPinModal(title, action, onSuccess) {
     if (isAdmin()) {
       onSuccess();
       return;
     }
     document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalContent').innerHTML = `<p style="text-align:center;margin-bottom:20px;">Enter any admin/attendant PIN to ${action}</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>`;
+    document.getElementById('modalContent').innerHTML = '<p style="text-align:center;margin-bottom:20px;">Enter any admin/attendant PIN to ' + action + '</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>';
     document.getElementById('modalOverlay').style.display = 'flex'; 
     document.getElementById('pin1').focus();
     document.querySelectorAll('.pin-input').forEach((inp,i,arr)=>inp.addEventListener('input',e=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();}));
@@ -319,20 +325,48 @@
     }
   }
 
-  function calculateCustomerStatsFromSales() {
+  // FIXED: Calculate stats from ALL sale types (Regular + Company + Wholesale)
+  function calculateCustomerStatsFromAllSales() {
     customerStats.clear();
+    
+    // Combine all sales from all collections
+    const allSales = [
+      ...allRegularSales.map(s => ({...s, _saleType: 'regular'})),
+      ...allWholesaleSales.map(s => ({...s, _saleType: 'wholesale'})),
+      ...allCompanySales.map(s => ({...s, _saleType: 'company'}))
+    ];
+    
     allSales.forEach(sale => {
-      if (sale.customerId) {
-        const stats = customerStats.get(sale.customerId) || { spent: 0, count: 0, lastPurchase: null, firstPurchase: null };
-        stats.spent += sale.totalAmount || 0;
-        stats.count += 1;
-        const saleDate = sale.createdAt?.toDate();
-        if (saleDate) {
-          if (!stats.lastPurchase || saleDate > stats.lastPurchase) stats.lastPurchase = saleDate;
-          if (!stats.firstPurchase || saleDate < stats.firstPurchase) stats.firstPurchase = saleDate;
-        }
-        customerStats.set(sale.customerId, stats);
+      // Skip returned sales
+      if (sale.status === 'returned') return;
+      
+      const customerId = sale.customerId;
+      if (!customerId) return; // Skip walk-in sales without customer ID
+      
+      const stats = customerStats.get(customerId) || { 
+        spent: 0, 
+        count: 0, 
+        lastPurchase: null, 
+        firstPurchase: null,
+        saleTypes: {} // Track which types of sales this customer has
+      };
+      
+      stats.spent += sale.totalAmount || 0;
+      stats.count += 1;
+      
+      // Track sale types
+      const saleType = sale._saleType || sale._type || 'regular';
+      stats.saleTypes[saleType] = (stats.saleTypes[saleType] || 0) + 1;
+      
+      const saleDate = sale.createdAt?.toDate ? sale.createdAt.toDate() : 
+                       (sale.createdAt instanceof Date ? sale.createdAt : new Date());
+      
+      if (saleDate && !isNaN(saleDate.getTime())) {
+        if (!stats.lastPurchase || saleDate > stats.lastPurchase) stats.lastPurchase = saleDate;
+        if (!stats.firstPurchase || saleDate < stats.firstPurchase) stats.firstPurchase = saleDate;
       }
+      
+      customerStats.set(customerId, stats);
     });
   }
 
@@ -347,13 +381,24 @@
     document.getElementById('totalCustomers').textContent = approved.length;
     document.getElementById('pendingCount').textContent = allCustomers.filter(c => c.status === 'pending_approval').length;
     
+    // FIXED: Calculate revenue from ALL sale types
+    const allSales = [
+      ...allRegularSales,
+      ...allWholesaleSales,
+      ...allCompanySales
+    ];
+    
     let totalRevenue = 0, monthRevenue = 0;
     const now = new Date();
     allSales.forEach(sale => {
+      if (sale.status === 'returned') return;
       const amount = sale.totalAmount || 0;
       totalRevenue += amount;
-      const saleDate = sale.createdAt?.toDate();
-      if (saleDate && saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear()) monthRevenue += amount;
+      const saleDate = sale.createdAt?.toDate ? sale.createdAt.toDate() : 
+                       (sale.createdAt instanceof Date ? sale.createdAt : null);
+      if (saleDate && saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear()) {
+        monthRevenue += amount;
+      }
     });
     document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
     document.getElementById('monthRevenue').textContent = formatCurrency(monthRevenue);
@@ -365,62 +410,118 @@
       return; 
     }
     
+    // FIXED: Sort by calculated spent from all sales
     filtered.sort((a,b) => (customerStats.get(b.id)?.spent || 0) - (customerStats.get(a.id)?.spent || 0));
+    
+    let anyNeedsSync = false;
     
     filtered.forEach(c => { 
       const stats = customerStats.get(c.id) || { spent: 0, count: 0, lastPurchase: null };
       const storedSpent = c.totalSpent || 0;
       const calculatedSpent = stats.spent;
       const needsSync = Math.abs(storedSpent - calculatedSpent) > 1;
-      if (needsSync) document.getElementById('syncBanner').style.display = 'flex';
+      if (needsSync) anyNeedsSync = true;
       
-      tbody.innerHTML += `<tr>
-        <td><strong>${c.fullName||'-'}</strong></td>
-        <td>${c.phone||'-'}</td>
-        <td>${c.email||'-'}</td>
-        <td>${c.location||'-'}</td>
-        <td>${c.birthday||'-'}</td>
-        <td style="${needsSync ? 'color: var(--warning);' : ''}">${formatCurrency(calculatedSpent)}</td>
-        <td>${stats.count}</td>
-        <td>${stats.lastPurchase ? formatDate(stats.lastPurchase) : '-'}</td>
-        <td><span class="badge badge-${c.status==='approved'?'success':c.status==='pending_approval'?'warning':'pending'}">${c.status||'pending'}</span></td>
-        <td style="display:flex;gap:5px;">
-          <button class="btn btn-sm btn-outline" onclick="viewCustomer('${c.id}')"><i class="fas fa-eye"></i></button>
-          ${c.status === 'pending_approval' && isAdmin() ? `<button class="btn btn-sm btn-success" onclick="approveCustomer('${c.id}')"><i class="fas fa-check"></i></button>` : ''}
-          <button class="btn btn-sm btn-outline" onclick="editCustomer('${c.id}')"><i class="fas fa-edit"></i></button>
-          <button class="btn btn-sm btn-outline" onclick="showNameHistory('${c.id}')" title="Name history"><i class="fas fa-history"></i></button>
-        </td>
-      </tr>`; 
+      // FIXED: Show sale type breakdown
+      let saleTypeBreakdown = '';
+      if (stats.saleTypes) {
+        const types = [];
+        if (stats.saleTypes.regular) types.push('<span class="sale-type-badge regular">Reg: ' + stats.saleTypes.regular + '</span>');
+        if (stats.saleTypes.company) types.push('<span class="sale-type-badge company">Co: ' + stats.saleTypes.company + '</span>');
+        if (stats.saleTypes.wholesale) types.push('<span class="sale-type-badge wholesale">WS: ' + stats.saleTypes.wholesale + '</span>');
+        saleTypeBreakdown = '<br><small>' + types.join(' ') + '</small>';
+      }
+      
+      tbody.innerHTML += '<tr>' +
+        '<td><strong>' + (c.fullName||'-') + '</strong></td>' +
+        '<td>' + (c.phone||'-') + '</td>' +
+        '<td>' + (c.email||'-') + '</td>' +
+        '<td>' + (c.location||'-') + '</td>' +
+        '<td>' + (c.birthday||'-') + '</td>' +
+        '<td style="' + (needsSync ? 'color: var(--warning);' : '') + '">' + formatCurrency(calculatedSpent) + '</td>' +
+        '<td>' + stats.count + saleTypeBreakdown + '</td>' +
+        '<td>' + (stats.lastPurchase ? formatDate(stats.lastPurchase) : '-') + '</td>' +
+        '<td><span class="badge badge-' + (c.status==='approved'?'success':c.status==='pending_approval'?'warning':'pending') + '">' + (c.status||'pending') + '</span></td>' +
+        '<td style="display:flex;gap:5px;">' +
+          '<button class="btn btn-sm btn-outline" onclick="viewCustomer(\'' + c.id + '\')"><i class="fas fa-eye"></i></button>' +
+          (c.status === 'pending_approval' && isAdmin() ? '<button class="btn btn-sm btn-success" onclick="approveCustomer(\'' + c.id + '\')"><i class="fas fa-check"></i></button>' : '') +
+          '<button class="btn btn-sm btn-outline" onclick="editCustomer(\'' + c.id + '\')"><i class="fas fa-edit"></i></button>' +
+          '<button class="btn btn-sm btn-outline" onclick="showNameHistory(\'' + c.id + '\')" title="Name history"><i class="fas fa-history"></i></button>' +
+        '</td>' +
+      '</tr>'; 
     });
+    
+    // FIXED: Show sync banner if any customer needs sync
+    document.getElementById('syncBanner').style.display = anyNeedsSync ? 'flex' : 'none';
   }
 
-  function loadSales() {
-    onSnapshot(collection(db, 'sales'), snap => {
-      allSales = snap.docs.map(d => ({id: d.id, ...d.data()}));
-      calculateCustomerStatsFromSales();
-      renderCustomers();
-    });
-  }
-
-  function loadCustomers() { 
+  // FIXED: Load ALL sale types - Regular, Wholesale, and Company
+  function loadAllSales() {
+    // Clear old listeners
     unsubscribes.forEach(u => u()); 
     unsubscribes = [];
+    
+    // Load regular sales
+    unsubscribes.push(onSnapshot(collection(db, 'sales'), snap => {
+      allRegularSales = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      // Separate company sales from regular sales
+      allCompanySales = allRegularSales.filter(s => s.isCompanySale);
+      allRegularSales = allRegularSales.filter(s => !s.isCompanySale);
+      calculateCustomerStatsFromAllSales();
+      renderCustomers();
+    }));
+    
+    // Load wholesale sales
+    unsubscribes.push(onSnapshot(collection(db, 'wholesale_sales'), snap => {
+      allWholesaleSales = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      calculateCustomerStatsFromAllSales();
+      renderCustomers();
+    }));
+    
+    // Load customer collection
     unsubscribes.push(onSnapshot(query(collection(db, 'customers'), orderBy('createdAt', 'desc')), snap => { 
       allCustomers = snap.docs.map(d => ({id:d.id, ...d.data()})); 
-      loadSales();
+      calculateCustomerStatsFromAllSales();
+      renderCustomers();
     }));
   }
 
-  // Check for duplicate name
+  // FIXED: Check duplicates by BOTH name and phone
   function isDuplicateName(name, excludeId = null) {
     return allCustomers.some(c => c.fullName?.toLowerCase() === name.toLowerCase() && c.id !== excludeId);
+  }
+  
+  function isDuplicatePhone(phone, excludeId = null) {
+    if (!phone) return false;
+    // Normalize phone - remove spaces and dashes
+    const normalizedPhone = phone.replace(/[\s\-\(\)]/g, '');
+    return allCustomers.some(c => {
+      if (c.id === excludeId) return false;
+      const cPhone = (c.phone || '').replace(/[\s\-\(\)]/g, '');
+      return cPhone === normalizedPhone;
+    });
   }
 
   window.viewCustomer = async (id) => { 
     const c = allCustomers.find(x => x.id === id); 
     if(!c) return;
-    const stats = customerStats.get(id) || { spent: 0, count: 0, lastPurchase: null, firstPurchase: null };
-    const customerSales = allSales.filter(s => s.customerId === id).sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+    const stats = customerStats.get(id) || { spent: 0, count: 0, lastPurchase: null, firstPurchase: null, saleTypes: {} };
+    
+    // FIXED: Get ALL sales for this customer from all collections
+    const customerRegularSales = allRegularSales.filter(s => s.customerId === id);
+    const customerCompanySales = allCompanySales.filter(s => s.customerId === id);
+    const customerWholesaleSales = allWholesaleSales.filter(s => s.customerId === id);
+    
+    const allCustomerSales = [
+      ...customerRegularSales.map(s => ({...s, _displayType: 'Regular'})),
+      ...customerCompanySales.map(s => ({...s, _displayType: 'Company'})),
+      ...customerWholesaleSales.map(s => ({...s, _displayType: 'Wholesale'}))
+    ].sort((a,b) => {
+      const aTime = a.createdAt?.seconds || a.createdAt?.toDate?.()?.getTime()/1000 || 0;
+      const bTime = b.createdAt?.seconds || b.createdAt?.toDate?.()?.getTime()/1000 || 0;
+      return bTime - aTime;
+    });
+    
     const now = new Date(); 
     const today = now.toISOString().split('T')[0]; 
     const weekStart = new Date(now); 
@@ -428,35 +529,77 @@
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1); 
     const yearStart = new Date(now.getFullYear(), 0, 1);
     let daily = 0, weekly = 0, monthly = 0, yearly = 0;
-    customerSales.forEach(s => { 
-      const d = s.createdAt?.toDate(); 
+    
+    allCustomerSales.forEach(s => { 
+      const d = s.createdAt?.toDate ? s.createdAt.toDate() : (s.createdAt instanceof Date ? s.createdAt : null); 
       const amount = s.totalAmount || 0; 
-      if (d) { 
+      if (d && !isNaN(d.getTime())) { 
         if (d.toISOString().split('T')[0] === today) daily += amount; 
         if (d >= weekStart) weekly += amount; 
         if (d >= monthStart) monthly += amount; 
         if (d >= yearStart) yearly += amount; 
       } 
     });
-    let html = `<div class="customer-stats"><i class="fas fa-user-circle"></i> <strong>${c.fullName}</strong><br><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px;"><div><small>Today:</small><br>${formatCurrency(daily)}</div><div><small>This Week:</small><br>${formatCurrency(weekly)}</div><div><small>This Month:</small><br>${formatCurrency(monthly)}</div><div><small>This Year:</small><br>${formatCurrency(yearly)}</div></div><div style="margin-top:10px;"><small>Total Purchases: ${stats.count} | Total Spent: ${formatCurrency(stats.spent)}</small></div></div><p><strong>📞</strong> ${c.phone||'-'}</p><p><strong>📧</strong> ${c.email||'-'}</p><p><strong>📍</strong> ${c.location||'-'}</p><p><strong>🎂</strong> ${c.birthday||'-'}</p><p><strong>First Purchase:</strong> ${stats.firstPurchase ? formatDate(stats.firstPurchase) : '-'}</p><p><strong>Registered:</strong> ${formatDate(c.createdAt)}</p><h4 style="margin:15px 0 10px;">Recent Purchases</h4>`;
-    if (customerSales.length > 0) { 
-      html += '<table style="width:100%;font-size:0.85rem;"><tr><th>Date</th><th>Receipt</th><th>Items</th><th>Amount</th></tr>'; 
-      customerSales.slice(0, 10).forEach(s => { 
-        html += `<tr><td>${formatDate(s.createdAt)}</td><td>${s.receiptNumber||'-'}</td><td>${s.items?.length||0}</td><td>${formatCurrency(s.totalAmount)}</td></tr>`; 
+    
+    // FIXED: Build sale type breakdown
+    let saleTypeInfo = '';
+    if (stats.saleTypes) {
+      const typeParts = [];
+      if (stats.saleTypes.regular) typeParts.push('Regular: ' + stats.saleTypes.regular);
+      if (stats.saleTypes.company) typeParts.push('Company: ' + stats.saleTypes.company);
+      if (stats.saleTypes.wholesale) typeParts.push('Wholesale: ' + stats.saleTypes.wholesale);
+      if (typeParts.length > 0) {
+        saleTypeInfo = '<div style="margin-top:5px;font-size:0.75rem;opacity:0.8;">' + typeParts.join(' | ') + '</div>';
+      }
+    }
+    
+    let html = '<div class="customer-stats"><i class="fas fa-user-circle"></i> <strong>' + (c.fullName||'Customer') + '</strong>' +
+      saleTypeInfo +
+      '<br><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px;">' +
+      '<div><small>Today:</small><br>' + formatCurrency(daily) + '</div>' +
+      '<div><small>This Week:</small><br>' + formatCurrency(weekly) + '</div>' +
+      '<div><small>This Month:</small><br>' + formatCurrency(monthly) + '</div>' +
+      '<div><small>This Year:</small><br>' + formatCurrency(yearly) + '</div>' +
+      '</div>' +
+      '<div style="margin-top:10px;"><small>Total Purchases: ' + stats.count + ' | Total Spent: ' + formatCurrency(stats.spent) + '</small></div></div>' +
+      '<p><strong>📞</strong> ' + (c.phone||'-') + '</p>' +
+      '<p><strong>📧</strong> ' + (c.email||'-') + '</p>' +
+      '<p><strong>📍</strong> ' + (c.location||'-') + '</p>' +
+      '<p><strong>🎂</strong> ' + (c.birthday||'-') + '</p>' +
+      '<p><strong>First Purchase:</strong> ' + (stats.firstPurchase ? formatDate(stats.firstPurchase) : '-') + '</p>' +
+      '<p><strong>Registered:</strong> ' + formatDate(c.createdAt) + '</p>' +
+      '<h4 style="margin:15px 0 10px;">Recent Purchases (All Types)</h4>';
+      
+    if (allCustomerSales.length > 0) { 
+      html += '<table style="width:100%;font-size:0.85rem;"><tr><th>Date</th><th>Receipt</th><th>Type</th><th>Items</th><th>Amount</th></tr>'; 
+      allCustomerSales.slice(0, 20).forEach(s => { 
+        const typeBadge = s._displayType === 'Wholesale' ? 
+          '<span class="sale-type-badge wholesale">WS</span>' : 
+          s._displayType === 'Company' ? 
+          '<span class="sale-type-badge company">Co</span>' : 
+          '<span class="sale-type-badge regular">Reg</span>';
+        html += '<tr><td>' + formatDate(s.createdAt) + '</td><td>' + (s.receiptNumber||'-') + '</td><td>' + typeBadge + '</td><td>' + (s.items?.length||0) + '</td><td>' + formatCurrency(s.totalAmount) + '</td></tr>'; 
       }); 
       html += '</table>'; 
     } else { 
       html += '<p style="color:var(--gray);">No purchases yet</p>'; 
     }
-    html += `<button class="btn btn-primary" onclick="hideModal()" style="margin-top:20px;width:100%;">Close</button>`;
-    document.getElementById('modalTitle').textContent = `Customer: ${c.fullName}`; 
+    html += '<button class="btn btn-primary" onclick="hideModal()" style="margin-top:20px;width:100%;justify-content:center;">Close</button>';
+    document.getElementById('modalTitle').textContent = 'Customer: ' + (c.fullName||'Customer'); 
     document.getElementById('modalContent').innerHTML = html; 
     document.getElementById('modalOverlay').style.display = 'flex';
   };
 
   window.openAddCustomerModal = () => { 
     document.getElementById('modalTitle').textContent = 'Add New Customer'; 
-    document.getElementById('modalContent').innerHTML = `<div class="form-group"><label>Full Name *</label><input class="form-control" id="custName" placeholder="e.g., John Doe"></div><div class="form-group"><label>Phone Number *</label><input class="form-control" id="custPhone" placeholder="08012345678"></div><div class="form-group"><label>Email Address</label><input type="email" class="form-control" id="custEmail" placeholder="john@example.com"></div><div class="form-group"><label>Location / Address *</label><textarea class="form-control" id="custLocation" placeholder="Full address..."></textarea></div><div class="form-group"><label>Birthday (Optional)</label><input type="date" class="form-control" id="custBirthday"></div><p style="font-size:0.75rem;color:var(--gray);margin-bottom:15px;"><i class="fas fa-info-circle"></i> New customers require admin approval before they can make purchases.</p><button class="btn btn-primary" onclick="addCustomer()">Add Customer (Pending Approval)</button>`; 
+    document.getElementById('modalContent').innerHTML = 
+      '<div class="form-group"><label>Full Name *</label><input class="form-control" id="custName" placeholder="e.g., John Doe"></div>' +
+      '<div class="form-group"><label>Phone Number *</label><input class="form-control" id="custPhone" placeholder="08012345678"><p style="font-size:0.7rem;color:var(--gray);margin-top:4px;">Phone number is used to detect duplicate customers</p></div>' +
+      '<div class="form-group"><label>Email Address</label><input type="email" class="form-control" id="custEmail" placeholder="john@example.com"></div>' +
+      '<div class="form-group"><label>Location / Address *</label><textarea class="form-control" id="custLocation" placeholder="Full address..."></textarea></div>' +
+      '<div class="form-group"><label>Birthday (Optional)</label><input type="date" class="form-control" id="custBirthday"></div>' +
+      '<p style="font-size:0.75rem;color:var(--gray);margin-bottom:15px;"><i class="fas fa-info-circle"></i> New customers require admin approval before they can make purchases.</p>' +
+      '<button class="btn btn-primary" onclick="addCustomer()">Add Customer (Pending Approval)</button>'; 
     document.getElementById('modalOverlay').style.display = 'flex'; 
   };
   
@@ -467,7 +610,17 @@
     if(!name) { showToast('Full name is required', 'error'); return; }
     if(!phone) { showToast('Phone number is required', 'error'); return; }
     if(!location) { showToast('Location/Address is required', 'error'); return; }
-    if (isDuplicateName(name)) { showToast('A customer with this name already exists', 'error'); return; }
+    
+    // FIXED: Check for duplicate by name AND phone
+    if (isDuplicateName(name)) { 
+      showToast('A customer with this name already exists. Please check existing customers.', 'error'); 
+      return; 
+    }
+    if (isDuplicatePhone(phone)) {
+      showToast('A customer with this phone number already exists. Please check existing customers.', 'error');
+      return;
+    }
+    
     showPinModal('Add Customer', 'add customer', async () => { 
       await addDoc(collection(db, 'customers'), { 
         fullName: name, phone, 
@@ -480,7 +633,7 @@
         createdByName: userData.fullName, 
         createdAt: serverTimestamp() 
       }); 
-      await logAudit('add_customer', `Added customer: ${name}`); 
+      await logAudit('add_customer', 'Added customer: ' + name + ' (' + phone + ')'); 
       showToast(isAdmin() ? 'Customer added successfully' : 'Customer added, pending admin approval', 'success'); 
       hideModal(); 
     }); 
@@ -490,7 +643,13 @@
     const c = allCustomers.find(x => x.id === id); 
     if (!c) return;
     document.getElementById('modalTitle').textContent = 'Edit Customer';
-    document.getElementById('modalContent').innerHTML = `<div class="form-group"><label>Full Name</label><input class="form-control" id="editName" value="${c.fullName||''}"></div><div class="form-group"><label>Phone Number</label><input class="form-control" id="editPhone" value="${c.phone||''}"></div><div class="form-group"><label>Email Address</label><input type="email" class="form-control" id="editEmail" value="${c.email||''}"></div><div class="form-group"><label>Location / Address</label><textarea class="form-control" id="editLocation">${c.location||''}</textarea></div><div class="form-group"><label>Birthday</label><input type="date" class="form-control" id="editBirthday" value="${c.birthday||''}"></div><button class="btn btn-primary" onclick="saveCustomerEdit('${id}')">Save Changes</button>`;
+    document.getElementById('modalContent').innerHTML = 
+      '<div class="form-group"><label>Full Name</label><input class="form-control" id="editName" value="' + (c.fullName||'') + '"></div>' +
+      '<div class="form-group"><label>Phone Number</label><input class="form-control" id="editPhone" value="' + (c.phone||'') + '"></div>' +
+      '<div class="form-group"><label>Email Address</label><input type="email" class="form-control" id="editEmail" value="' + (c.email||'') + '"></div>' +
+      '<div class="form-group"><label>Location / Address</label><textarea class="form-control" id="editLocation">' + (c.location||'') + '</textarea></div>' +
+      '<div class="form-group"><label>Birthday</label><input type="date" class="form-control" id="editBirthday" value="' + (c.birthday||'') + '"></div>' +
+      '<button class="btn btn-primary" onclick="saveCustomerEdit(\'' + id + '\')">Save Changes</button>';
     document.getElementById('modalOverlay').style.display = 'flex';
   };
 
@@ -498,24 +657,31 @@
     const c = allCustomers.find(x => x.id === id);
     if (!c) return;
     const newName = document.getElementById('editName')?.value?.trim();
+    const newPhone = document.getElementById('editPhone')?.value?.trim();
     if (!newName) { showToast('Name is required', 'error'); return; }
+    if (!newPhone) { showToast('Phone is required', 'error'); return; }
+    
+    // FIXED: Check duplicates by both name and phone
     if (newName.toLowerCase() !== c.fullName?.toLowerCase() && isDuplicateName(newName, id)) {
       showToast('A customer with this name already exists', 'error');
       return;
     }
+    if (newPhone !== c.phone && isDuplicatePhone(newPhone, id)) {
+      showToast('A customer with this phone number already exists', 'error');
+      return;
+    }
+    
     const oldName = c.fullName;
-    // Require admin PIN for attendants
     showPinModal('Edit Customer', 'save changes', async () => {
       const updates = {
         fullName: newName,
-        phone: document.getElementById('editPhone')?.value,
+        phone: newPhone,
         email: document.getElementById('editEmail')?.value,
         location: document.getElementById('editLocation')?.value,
         birthday: document.getElementById('editBirthday')?.value,
         updatedAt: serverTimestamp()
       };
       await updateDoc(doc(db, 'customers', id), updates);
-      // If name changed, log to name history
       if (newName !== oldName) {
         await addDoc(collection(db, 'customers', id, 'nameHistory'), {
           oldName: oldName,
@@ -524,30 +690,29 @@
           changedByName: userData?.fullName || 'Staff',
           changedAt: serverTimestamp()
         });
-        await logAudit('edit_customer_name', `Changed name of ${id} from "${oldName}" to "${newName}"`);
+        await logAudit('edit_customer_name', 'Changed name of ' + id + ' from "' + oldName + '" to "' + newName + '"');
       }
       showToast('Customer updated', 'success');
       hideModal();
     });
   };
 
-  // Name history modal
   window.showNameHistory = async (id) => {
     const c = allCustomers.find(x => x.id === id);
     if (!c) return;
     const historySnap = await getDocs(query(collection(db, 'customers', id, 'nameHistory'), orderBy('changedAt', 'desc')));
-    let html = `<h3>Name History for ${c.fullName}</h3>`;
+    let html = '<h3>Name History for ' + (c.fullName||'Customer') + '</h3>';
     if (historySnap.empty) {
       html += '<p>No name changes recorded.</p>';
     } else {
       html += '<table style="width:100%;font-size:0.85rem;"><tr><th>Old Name</th><th>New Name</th><th>Changed By</th><th>Date</th></tr>';
       historySnap.forEach(doc => {
         const data = doc.data();
-        html += `<tr><td>${data.oldName||'-'}</td><td>${data.newName||'-'}</td><td>${data.changedByName||'-'}</td><td>${formatDate(data.changedAt)}</td></tr>`;
+        html += '<tr><td>' + (data.oldName||'-') + '</td><td>' + (data.newName||'-') + '</td><td>' + (data.changedByName||'-') + '</td><td>' + formatDate(data.changedAt) + '</td></tr>';
       });
       html += '</table>';
     }
-    html += '<button class="btn btn-primary" onclick="hideModal()" style="margin-top:20px;width:100%;">Close</button>';
+    html += '<button class="btn btn-primary" onclick="hideModal()" style="margin-top:20px;width:100%;justify-content:center;">Close</button>';
     document.getElementById('modalTitle').textContent = 'Name Change History';
     document.getElementById('modalContent').innerHTML = html;
     document.getElementById('modalOverlay').style.display = 'flex';
@@ -555,21 +720,21 @@
 
   window.approveCustomer = (id) => {
     if (!isAdmin()) { showToast('Only admins can approve', 'error'); return; }
-    // Admin does not need PIN
     updateDoc(doc(db, 'customers', id), { 
       status: 'approved', 
       approvedBy: currentUser.uid, 
       approvedByName: userData.fullName, 
       approvedAt: serverTimestamp() 
     }).then(() => {
-      logAudit('approve_customer', `Approved customer ${id}`);
+      logAudit('approve_customer', 'Approved customer ' + id);
       showToast('Customer approved', 'success');
     });
   };
 
+  // FIXED: Sync from ALL sale types
   window.syncCustomerTotalsFromSales = async () => {
     if (!isAdmin()) { showToast('Only admins can sync totals', 'error'); return; }
-    showToast('Syncing customer totals from sales...', 'info');
+    showToast('Syncing customer totals from ALL sales (Regular + Company + Wholesale)...', 'info');
     try {
       const batch = writeBatch(db); 
       let updatedCount = 0;
@@ -589,12 +754,12 @@
       }
       if (updatedCount > 0) { 
         await batch.commit(); 
-        showToast(`${updatedCount} customer totals synced from sales`, 'success'); 
+        showToast(updatedCount + ' customer totals synced from all sales types', 'success'); 
         document.getElementById('syncBanner').style.display = 'none'; 
       } else { 
         showToast('All customer totals are already in sync', 'success'); 
       }
-      await logAudit('sync_customer_totals', `Synced ${updatedCount} customer totals from sales`);
+      await logAudit('sync_customer_totals', 'Synced ' + updatedCount + ' customer totals from all sales types');
     } catch (error) { 
       console.error('Sync error:', error); 
       showToast('Error syncing: ' + error.message, 'error'); 
@@ -607,18 +772,18 @@
       const stats = customerStats.get(c.id) || { spent: 0, count: 0, lastPurchase: null }; 
       return [c.fullName||'', c.phone||'', c.email||'', c.location||'', c.birthday||'', stats.spent, stats.count, stats.lastPurchase ? formatDate(stats.lastPurchase) : '', c.status||'']; 
     });
-    const csv = [headers.join(','), ...rows.map(r => r.map(cell => `"${cell}"`).join(','))].join('\n');
+    const csv = [headers.join(','), ...rows.map(r => r.map(cell => '"' + String(cell).replace(/"/g,'""') + '"').join(','))].join('\n');
     const blob = new Blob([csv], { type: format === 'csv' ? 'text/csv' : 'application/vnd.ms-excel' }); 
     const a = document.createElement('a'); 
     a.href = URL.createObjectURL(blob); 
-    a.download = `customers_${new Date().toISOString().split('T')[0]}.${format}`; 
+    a.download = 'customers_' + new Date().toISOString().split('T')[0] + '.' + format; 
     a.click();
-    showToast(`Exported as ${format.toUpperCase()}`, 'success'); 
+    showToast('Exported as ' + format.toUpperCase(), 'success'); 
     document.getElementById('exportMenu').classList.remove('show');
   };
 
   window.refreshData = () => { 
-    loadSales(); 
+    loadAllSales(); 
     showToast('Refreshed', 'success'); 
   };
 
@@ -656,7 +821,7 @@
       revenueRevealed = true;
       updateRevenueDisplay();
     }
-    loadCustomers(); 
+    loadAllSales(); 
   });
   
   window.addEventListener('beforeunload', () => unsubscribes.forEach(u => u()));
