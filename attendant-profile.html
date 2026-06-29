@@ -377,19 +377,17 @@
   function formatDateTime(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleString('en-GB', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   
-  function showToast(msg, type='success') { 
-    const c = document.getElementById('toastContainer'); 
-    if (!c) return;
-    const t = document.createElement('div'); 
-    t.className = `toast ${type}`; 
-    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':'exclamation-triangle'}"></i><span>${msg}</span>`; 
-    c.appendChild(t); 
-    setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(100%)'; t.style.transition='all 0.3s ease'; setTimeout(() => t.remove(), 300); }, 4000); 
+  function showToast(msg, type) {
+    type = type || 'success';
+    const c = document.getElementById('toastContainer'); if (!c) return;
+    const t = document.createElement('div'); t.className = 'toast ' + type;
+    const icon = type==='success'?'check-circle':type==='error'?'exclamation-circle':'exclamation-triangle';
+    t.innerHTML = '<i class="fas fa-' + icon + '"></i><span>' + msg + '</span>';
+    c.appendChild(t);
+    setTimeout(function(){ t.style.opacity='0'; t.style.transform='translateX(100%)'; t.style.transition='all 0.3s ease'; setTimeout(function(){ t.remove(); }, 300); }, 4000);
   }
   
-  window.hideModal = function() { 
-    document.getElementById('modalOverlay').classList.remove('active'); 
-  };
+  window.hideModal = function() { document.getElementById('modalOverlay').classList.remove('active'); };
   
   function showModal(title, content) { 
     document.getElementById('modalTitle').textContent = title; 
@@ -398,15 +396,15 @@
   }
 
   // ============================================
-  // ATTENDANT PIN SERVICE
+  // ATTENDANT PIN SERVICE (HASHED)
   // ============================================
   class AttendantPinService {
     async hashPin(pin, userId) {
       const encoder = new TextEncoder();
-      const data = encoder.encode(`${pin}_attendant_salt_${userId}_secure_hash_2024`);
+      const data = encoder.encode(pin + '_attendant_salt_' + userId + '_secure_hash_2024');
       const hashBuffer = await crypto.subtle.digest('SHA-256', data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
     }
 
     async verifyPin(inputPin, storedHash, userId) {
@@ -416,10 +414,10 @@
 
     isWeakPin(pin) {
       const weakPins = ['1234', '0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '4321', '1230', '1004', '2000', '2001', '1122', '1212', '6969'];
-      if (weakPins.includes(pin)) return true;
+      if (weakPins.indexOf(pin) !== -1) return true;
       if (new Set(pin.split('')).size === 1) return true;
       const sequential = ['0123', '1234', '2345', '3456', '4567', '5678', '6789', '7890'];
-      if (sequential.includes(pin) || sequential.includes(pin.split('').reverse().join(''))) return true;
+      if (sequential.indexOf(pin) !== -1 || sequential.indexOf(pin.split('').reverse().join('')) !== -1) return true;
       return false;
     }
 
@@ -432,7 +430,7 @@
       }
 
       try {
-        const result = await runTransaction(db, async (transaction) => {
+        const result = await runTransaction(db, async function(transaction) {
           const userRef = doc(db, 'users', userId);
           const userDoc = await transaction.get(userRef);
           
@@ -442,6 +440,7 @@
 
           const userData = userDoc.data();
           
+          // If user already has a PIN, verify the current one
           if (userData.hasAttendantPin && userData.attendantPinHash) {
             if (!currentPin || currentPin.length !== 4) {
               throw new Error('Current PIN is required to change your PIN');
@@ -453,6 +452,7 @@
           }
 
           const newPinHash = await this.hashPin(newPin, userId);
+          const wasSet = userData.hasAttendantPin || false;
           
           transaction.update(userRef, {
             attendantPinHash: newPinHash,
@@ -468,13 +468,15 @@
             userId: userId,
             userEmail: userData.email || '',
             userName: userData.fullName || '',
-            action: userData.hasAttendantPin ? 'pin_changed' : 'pin_set',
+            action: wasSet ? 'pin_changed' : 'pin_set',
             timestamp: serverTimestamp(),
             userAgent: navigator.userAgent.substring(0, 100)
           });
+
+          return { wasChanged: wasSet };
         });
 
-        return { success: true, message: 'PIN updated successfully' };
+        return { success: true, message: 'PIN updated successfully', wasChanged: result.wasChanged };
       } catch (error) {
         console.error('Set PIN error:', error);
         throw error;
@@ -488,7 +490,7 @@
 
       if (pinLockoutUntil && new Date() < pinLockoutUntil) {
         const minutesLeft = Math.ceil((pinLockoutUntil - new Date()) / 60000);
-        return { valid: false, message: `Too many attempts. Try again in ${minutesLeft} minutes.` };
+        return { valid: false, message: 'Too many attempts. Try again in ' + minutesLeft + ' minutes.' };
       }
 
       try {
@@ -498,40 +500,59 @@
         }
 
         const userData = userDoc.data();
-        if (!userData.hasAttendantPin || !userData.attendantPinHash) {
-          return { valid: false, message: 'PIN not set. Please set your PIN first.' };
-        }
-
-        const isValid = await this.verifyPin(inputPin, userData.attendantPinHash, userId);
         
-        if (isValid) {
+        // Check for new hashed PIN first
+        if (userData.hasAttendantPin && userData.attendantPinHash) {
+          const isValid = await this.verifyPin(inputPin, userData.attendantPinHash, userId);
+          
+          if (isValid) {
+            pinAttempts = 0;
+            pinLockoutUntil = null;
+            
+            updateDoc(doc(db, 'users', userId), {
+              attendantPinLastUsed: serverTimestamp()
+            }).catch(function(){});
+            
+            return { valid: true, message: 'PIN verified' };
+          }
+        }
+        
+        // Fallback: Check old plain-text attendantPin (for backward compatibility)
+        if (userData.attendantPin && userData.attendantPin === inputPin) {
           pinAttempts = 0;
           pinLockoutUntil = null;
           
-          await updateDoc(doc(db, 'users', userId), {
-            attendantPinLastUsed: serverTimestamp()
-          }).catch(() => {});
+          // Auto-migrate to hashed PIN
+          const newHash = await this.hashPin(inputPin, userId);
+          updateDoc(doc(db, 'users', userId), {
+            attendantPinHash: newHash,
+            hasAttendantPin: true,
+            attendantPinLastChanged: serverTimestamp(),
+            attendantPinVersion: 1
+          }).catch(function(){});
           
-          return { valid: true, message: 'PIN verified' };
-        } else {
-          pinAttempts++;
-          
-          await addDoc(collection(db, 'pin_failed_attempts'), {
-            userId: userId,
-            pinLastTwo: inputPin.slice(-2),
-            timestamp: serverTimestamp(),
-            type: 'attendant_pin',
-            userAgent: navigator.userAgent.substring(0, 100)
-          }).catch(() => {});
-
-          if (pinAttempts >= 5) {
-            pinLockoutUntil = new Date(Date.now() + 15 * 60 * 1000);
-            return { valid: false, message: 'Account locked for 15 minutes due to multiple failed attempts.' };
-          }
-
-          const remaining = 5 - pinAttempts;
-          return { valid: false, message: `Invalid PIN. ${remaining} attempts remaining.` };
+          return { valid: true, message: 'PIN verified (migrated to secure storage)' };
         }
+        
+        // Invalid PIN
+        pinAttempts++;
+        
+        addDoc(collection(db, 'pin_failed_attempts'), {
+          userId: userId,
+          pinLastTwo: inputPin.slice(-2),
+          timestamp: serverTimestamp(),
+          type: 'attendant_pin',
+          userAgent: navigator.userAgent.substring(0, 100)
+        }).catch(function(){});
+
+        if (pinAttempts >= 5) {
+          pinLockoutUntil = new Date(Date.now() + 15 * 60 * 1000);
+          return { valid: false, message: 'Account locked for 15 minutes due to multiple failed attempts.' };
+        }
+
+        const remaining = 5 - pinAttempts;
+        return { valid: false, message: 'Invalid PIN. ' + remaining + ' attempts remaining.' };
+        
       } catch (error) {
         console.error('Validate PIN error:', error);
         return { valid: false, message: 'Verification failed. Please try again.' };
@@ -547,11 +568,11 @@
   function resetInactivityTimer() { 
     if (inactivityTimer) clearTimeout(inactivityTimer); 
     if (!sessionLocked) {
-      inactivityTimer = setTimeout(() => { 
+      inactivityTimer = setTimeout(function() { 
         if (!sessionLocked && userData?.hasAttendantPin) { 
           lockSession(); 
         } 
-      }, 600000); // 10 minutes
+      }, 600000);
     }
   }
 
@@ -591,13 +612,13 @@
         sessionLocked = false;
         document.getElementById('sessionLockOverlay').classList.remove('active');
         document.getElementById('lockPinError').style.display = 'none';
-        ['lockPin1','lockPin2','lockPin3','lockPin4'].forEach(id => document.getElementById(id).value = '');
+        ['lockPin1','lockPin2','lockPin3','lockPin4'].forEach(function(id) { document.getElementById(id).value = ''; });
         resetInactivityTimer();
         showToast('Session unlocked', 'success');
       } else {
         document.getElementById('lockPinError').textContent = result.message;
         document.getElementById('lockPinError').style.display = 'block';
-        ['lockPin1','lockPin2','lockPin3','lockPin4'].forEach(id => document.getElementById(id).value = '');
+        ['lockPin1','lockPin2','lockPin3','lockPin4'].forEach(function(id) { document.getElementById(id).value = ''; });
         document.getElementById('lockPin1').focus();
       }
     } catch (error) {
@@ -614,12 +635,12 @@
   // ============================================
   async function loadProfile() {
     try {
-      unsubscribes.push(onSnapshot(doc(db, 'system_settings', 'points'), (s) => { 
+      unsubscribes.push(onSnapshot(doc(db, 'system_settings', 'points'), function(s) { 
         if (s.exists()) globalPointValue = s.data().value || 500; 
         updateSalaryDisplay(); 
       }));
       
-      unsubscribes.push(onSnapshot(doc(db, 'users', currentUser.uid), (snap) => {
+      unsubscribes.push(onSnapshot(doc(db, 'users', currentUser.uid), function(snap) {
         if (!snap.exists()) return;
         userData = snap.data();
         
@@ -632,7 +653,7 @@
         document.getElementById('profileEmail').textContent = userData.email || '-';
         document.getElementById('profilePhone').textContent = userData.phone || '-';
         document.getElementById('sidebarAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
-        document.getElementById('sidebarName').textContent = userData.fullName?.split(' ')[0] || 'Attendant';
+        document.getElementById('sidebarName').textContent = (userData.fullName || 'Attendant').split(' ')[0];
         document.getElementById('sidebarRole').textContent = (userData.role || 'attendant').replace(/_/g, ' ');
         
         document.getElementById('currentPoints').textContent = userData.totalPoints || 0;
@@ -641,7 +662,7 @@
         document.getElementById('displayEmail').textContent = userData.email || '-';
         document.getElementById('displayPhone').textContent = userData.phone || '-';
         document.getElementById('displayRole').textContent = (userData.role || '-').replace(/_/g, ' ');
-        document.getElementById('displayStatus').innerHTML = `<span class="badge badge-${userData.status==='active'?'success':'warning'}">${userData.status || 'active'}</span>`;
+        document.getElementById('displayStatus').innerHTML = '<span class="badge badge-' + (userData.status==='active'?'success':'warning') + '">' + (userData.status || 'active') + '</span>';
         document.getElementById('displayJoined').textContent = formatDate(userData.createdAt);
         document.getElementById('displayAddress').textContent = userData.address || 'Not set';
         document.getElementById('displayEmergency').textContent = userData.emergencyContact || 'Not set';
@@ -649,10 +670,14 @@
         document.getElementById('displayAccountNumber').textContent = userData.accountNumber || 'Not set';
         document.getElementById('displayAccountName').textContent = userData.accountName || userData.fullName || 'Not set';
         
-        // Update PIN status
-        if (userData.hasAttendantPin) {
+        // Update PIN status (check hashed PIN)
+        if (userData.hasAttendantPin && userData.attendantPinHash) {
           document.getElementById('pinButtonText').textContent = 'Change Security PIN';
           document.getElementById('pinStatusText').textContent = 'PIN is set ✓ - Session locks after 10 min inactivity';
+        } else if (userData.attendantPin) {
+          // Old plain-text PIN exists
+          document.getElementById('pinButtonText').textContent = 'Change Security PIN';
+          document.getElementById('pinStatusText').textContent = 'PIN is set (will be upgraded to secure storage on next use)';
         } else {
           document.getElementById('pinButtonText').textContent = 'Set Security PIN';
           document.getElementById('pinStatusText').textContent = 'No PIN set - Set your PIN to secure your account';
@@ -670,34 +695,34 @@
         document.getElementById('salaryBase').textContent = formatCurrency(userData.baseSalary || 0); 
         document.getElementById('salaryPointValue').textContent = ppv.toFixed(0); 
         document.getElementById('salaryPoints').textContent = userData.totalPoints || 0; 
-        document.getElementById('pointsAdjustment').innerHTML = `<span class="${bonus>=0?'positive':'negative'}">${bonus>=0?'+':''}${formatCurrency(bonus)}</span>`; 
+        document.getElementById('pointsAdjustment').innerHTML = '<span class="' + (bonus>=0?'positive':'negative') + '">' + (bonus>=0?'+':'') + formatCurrency(bonus) + '</span>'; 
         document.getElementById('finalSalary').textContent = formatCurrency(final); 
       }
       
-      unsubscribes.push(onSnapshot(query(collection(db, 'coin_transactions'), where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc'), limit(20)), (snap) => { 
+      unsubscribes.push(onSnapshot(query(collection(db, 'coin_transactions'), where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc'), limit(20)), function(snap) { 
         const tbody = document.getElementById('pointHistoryTable'); 
         tbody.innerHTML = ''; 
         if (snap.empty) { 
           tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No point history yet</div></td></tr>'; 
           return; 
         } 
-        snap.forEach(d => { 
+        snap.forEach(function(d) { 
           const p = d.data(); 
-          tbody.innerHTML += `<tr><td>${formatDate(p.createdAt)}</td><td>${p.reason || '-'}</td><td class="${(p.points||0)>=0?'positive':'negative'}">${(p.points||0)>0?'+':''}${p.points||0}</td><td>${formatCurrency((p.points||0) * (globalPointValue/5))}</td></tr>`; 
+          tbody.innerHTML += '<tr><td>' + formatDate(p.createdAt) + '</td><td>' + (p.reason || '-') + '</td><td class="' + ((p.points||0)>=0?'positive':'negative') + '">' + ((p.points||0)>0?'+':'') + (p.points||0) + '</td><td>' + formatCurrency((p.points||0) * (globalPointValue/5)) + '</td></tr>'; 
         }); 
       }));
       
-      unsubscribes.push(onSnapshot(query(collection(db, 'leave_requests'), where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc')), (snap) => { 
+      unsubscribes.push(onSnapshot(query(collection(db, 'leave_requests'), where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc')), function(snap) { 
         const tbody = document.getElementById('leaveHistoryTable'); 
         tbody.innerHTML = ''; 
         if (snap.empty) { 
           tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No leave requests</div></td></tr>'; 
           return; 
         } 
-        snap.forEach(d => { 
+        snap.forEach(function(d) { 
           const l = d.data(); 
           const statusBadge = l.status === 'approved' ? 'success' : l.status === 'rejected' ? 'danger' : 'warning';
-          tbody.innerHTML += `<tr><td>${(l.requestedDates || []).join(' to ')}</td><td>${l.reason || '-'}</td><td><span class="badge badge-${statusBadge}">${l.status || 'pending'}</span></td><td>${l.approvedByName || l.rejectedByName || '-'}</td></tr>`; 
+          tbody.innerHTML += '<tr><td>' + (l.requestedDates || []).join(' to ') + '</td><td>' + (l.reason || '-') + '</td><td><span class="badge badge-' + statusBadge + '">' + (l.status || 'pending') + '</span></td><td>' + (l.approvedByName || l.rejectedByName || '-') + '</td></tr>'; 
         }); 
       }));
       
@@ -706,7 +731,7 @@
       
       const attSnap = await getDocs(query(collection(db, 'attendance'), where('userId', '==', currentUser.uid), orderBy('date', 'desc'), limit(30))); 
       let streak = 0; 
-      const dates = attSnap.docs.map(d => d.data().date).sort().reverse(); 
+      const dates = attSnap.docs.map(function(d) { return d.data().date; }).sort().reverse(); 
       const today = new Date().toISOString().split('T')[0]; 
       if (dates.length && dates[0] === today) streak = 1; 
       for (let i = 1; i < dates.length; i++) { 
@@ -718,20 +743,20 @@
       document.getElementById('attendanceStreak').textContent = streak;
       
       const generalQuery = query(collection(db, 'announcements'), where('target', 'in', ['all', 'attendants']), orderBy('createdAt', 'desc'), limit(10)); 
-      unsubscribes.push(onSnapshot(generalQuery, (snap) => { 
+      unsubscribes.push(onSnapshot(generalQuery, function(snap) { 
         const c = document.getElementById('generalAnnouncements'); 
-        c.innerHTML = snap.empty ? '<div class="empty-state">No general announcements</div>' : snap.docs.map(d => { 
+        c.innerHTML = snap.empty ? '<div class="empty-state">No general announcements</div>' : snap.docs.map(function(d) { 
           const a = d.data(); 
-          return `<div class="announcement-card"><h4>${a.title || 'Announcement'}</h4><p>${a.message || ''}</p><div class="meta"><span>From: ${a.sentByName || 'Admin'}</span><span>${formatDateTime(a.createdAt)}</span></div></div>`; 
+          return '<div class="announcement-card"><h4>' + (a.title || 'Announcement') + '</h4><p>' + (a.message || '') + '</p><div class="meta"><span>From: ' + (a.sentByName || 'Admin') + '</span><span>' + formatDateTime(a.createdAt) + '</span></div></div>'; 
         }).join(''); 
       }));
       
       const personalQuery = query(collection(db, 'announcements'), where('recipientIds', 'array-contains', currentUser.uid), orderBy('createdAt', 'desc'), limit(10)); 
-      unsubscribes.push(onSnapshot(personalQuery, (snap) => { 
+      unsubscribes.push(onSnapshot(personalQuery, function(snap) { 
         const c = document.getElementById('personalAnnouncements'); 
-        c.innerHTML = snap.empty ? '<div class="empty-state">No personal announcements</div>' : snap.docs.map(d => { 
+        c.innerHTML = snap.empty ? '<div class="empty-state">No personal announcements</div>' : snap.docs.map(function(d) { 
           const a = d.data(); 
-          return `<div class="announcement-card"><h4>${a.title || 'Personal Message'}</h4><p>${a.message || ''}</p><div class="meta"><span>From: ${a.sentByName || 'Admin'}</span><span>${formatDateTime(a.createdAt)}</span></div></div>`; 
+          return '<div class="announcement-card"><h4>' + (a.title || 'Personal Message') + '</h4><p>' + (a.message || '') + '</p><div class="meta"><span>From: ' + (a.sentByName || 'Admin') + '</span><span>' + formatDateTime(a.createdAt) + '</span></div></div>'; 
         }).join(''); 
       }));
       
@@ -744,29 +769,31 @@
   // ============================================
   // TAB SWITCHING
   // ============================================
-  document.querySelectorAll('.tab-btn').forEach(t => t.addEventListener('click', function() { 
-    document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active')); 
-    this.classList.add('active'); 
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); 
-    const targetId = this.dataset.tab + 'Announcements';
-    const target = document.getElementById(targetId);
-    if (target) target.classList.add('active'); 
-  }));
+  document.querySelectorAll('.tab-btn').forEach(function(t) {
+    t.addEventListener('click', function() { 
+      document.querySelectorAll('.tab-btn').forEach(function(x) { x.classList.remove('active'); }); 
+      this.classList.add('active'); 
+      document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); }); 
+      const targetId = this.dataset.tab + 'Announcements';
+      const target = document.getElementById(targetId);
+      if (target) target.classList.add('active'); 
+    });
+  });
 
   // ============================================
   // MODAL ACTIONS
   // ============================================
-  window.openEditProfile = () => { 
-    showModal('Edit Profile', `
-      <div class="form-group"><label>Full Name</label><input class="form-control" id="editName" value="${userData.fullName || ''}"></div>
-      <div class="form-group"><label>Phone</label><input class="form-control" id="editPhone" value="${userData.phone || ''}"></div>
-      <div class="form-group"><label>Address</label><input class="form-control" id="editAddress" value="${userData.address || ''}"></div>
-      <div class="form-group"><label>Emergency Contact</label><input class="form-control" id="editEmergency" value="${userData.emergencyContact || ''}"></div>
-      <button class="btn btn-primary" onclick="saveProfile()" style="width:100%;justify-content:center;">Save Changes</button>
-    `); 
+  window.openEditProfile = function() { 
+    showModal('Edit Profile', 
+      '<div class="form-group"><label>Full Name</label><input class="form-control" id="editName" value="' + (userData.fullName || '') + '"></div>' +
+      '<div class="form-group"><label>Phone</label><input class="form-control" id="editPhone" value="' + (userData.phone || '') + '"></div>' +
+      '<div class="form-group"><label>Address</label><input class="form-control" id="editAddress" value="' + (userData.address || '') + '"></div>' +
+      '<div class="form-group"><label>Emergency Contact</label><input class="form-control" id="editEmergency" value="' + (userData.emergencyContact || '') + '"></div>' +
+      '<button class="btn btn-primary" onclick="saveProfile()" style="width:100%;justify-content:center;">Save Changes</button>'
+    ); 
   };
   
-  window.saveProfile = async () => { 
+  window.saveProfile = async function() { 
     const name = document.getElementById('editName')?.value?.trim();
     if (!name) { showToast('Name is required', 'error'); return; }
     try {
@@ -781,16 +808,16 @@
     } catch(e) { showToast('Failed to update profile', 'error'); }
   };
   
-  window.openEditBank = () => { 
-    showModal('Edit Bank Details', `
-      <div class="form-group"><label>Bank Name</label><input class="form-control" id="editBankName" value="${userData.bankName || ''}"></div>
-      <div class="form-group"><label>Account Number</label><input class="form-control" id="editAccountNumber" value="${userData.accountNumber || ''}"></div>
-      <div class="form-group"><label>Account Name</label><input class="form-control" id="editAccountName" value="${userData.accountName || userData.fullName || ''}"></div>
-      <button class="btn btn-primary" onclick="saveBank()" style="width:100%;justify-content:center;">Save Bank Details</button>
-    `); 
+  window.openEditBank = function() { 
+    showModal('Edit Bank Details', 
+      '<div class="form-group"><label>Bank Name</label><input class="form-control" id="editBankName" value="' + (userData.bankName || '') + '"></div>' +
+      '<div class="form-group"><label>Account Number</label><input class="form-control" id="editAccountNumber" value="' + (userData.accountNumber || '') + '"></div>' +
+      '<div class="form-group"><label>Account Name</label><input class="form-control" id="editAccountName" value="' + (userData.accountName || userData.fullName || '') + '"></div>' +
+      '<button class="btn btn-primary" onclick="saveBank()" style="width:100%;justify-content:center;">Save Bank Details</button>'
+    ); 
   };
   
-  window.saveBank = async () => { 
+  window.saveBank = async function() { 
     try {
       await updateDoc(doc(db, 'users', currentUser.uid), { 
         bankName: document.getElementById('editBankName')?.value?.trim() || '', 
@@ -802,16 +829,16 @@
     } catch(e) { showToast('Failed to update bank details', 'error'); }
   };
   
-  window.openRequestLeave = () => { 
-    showModal('Request Leave', `
-      <div class="form-group"><label>Start Date</label><input type="date" class="form-control" id="modalStart" value="${document.getElementById('leaveStartDate').value}"></div>
-      <div class="form-group"><label>End Date</label><input type="date" class="form-control" id="modalEnd" value="${document.getElementById('leaveEndDate').value}"></div>
-      <div class="form-group"><label>Reason</label><textarea class="form-control" id="modalReason" placeholder="Enter reason for leave..."></textarea></div>
-      <button class="btn btn-primary" onclick="submitLeave()" style="width:100%;justify-content:center;">Submit Leave Request</button>
-    `); 
+  window.openRequestLeave = function() { 
+    showModal('Request Leave', 
+      '<div class="form-group"><label>Start Date</label><input type="date" class="form-control" id="modalStart" value="' + (document.getElementById('leaveStartDate').value || '') + '"></div>' +
+      '<div class="form-group"><label>End Date</label><input type="date" class="form-control" id="modalEnd" value="' + (document.getElementById('leaveEndDate').value || '') + '"></div>' +
+      '<div class="form-group"><label>Reason</label><textarea class="form-control" id="modalReason" placeholder="Enter reason for leave..."></textarea></div>' +
+      '<button class="btn btn-primary" onclick="submitLeave()" style="width:100%;justify-content:center;">Submit Leave Request</button>'
+    ); 
   };
   
-  window.submitLeave = async () => { 
+  window.submitLeave = async function() { 
     const start = document.getElementById('modalStart')?.value; 
     const end = document.getElementById('modalEnd')?.value; 
     const reason = document.getElementById('modalReason')?.value?.trim();
@@ -826,7 +853,7 @@
     const days = Math.ceil((endDate - startDate) / 86400000) + 1; 
     const remaining = userData.leaveDaysRemaining ?? 2;
     
-    if (days > remaining) { showToast(`You only have ${remaining} leave days remaining`, 'error'); return; } 
+    if (days > remaining) { showToast('You only have ' + remaining + ' leave days remaining', 'error'); return; } 
     
     try {
       await addDoc(collection(db, 'leave_requests'), { 
@@ -846,98 +873,99 @@
   };
 
   // ============================================
-  // PIN MANAGEMENT
+  // PIN MANAGEMENT (UPDATED WITH HASHED STORAGE)
   // ============================================
-  window.openSetPinModal = () => { 
-    const hasExistingPin = userData?.hasAttendantPin;
+  window.openSetPinModal = function() { 
+    const hasExistingPin = userData?.hasAttendantPin && userData?.attendantPinHash;
+    const hasOldPin = !hasExistingPin && userData?.attendantPin; // Old plain-text PIN
     
-    showModal(hasExistingPin ? 'Change Security PIN' : 'Set Security PIN', `
-      <div style="text-align:center;margin-bottom:20px;">
-        <i class="fas fa-shield-alt" style="font-size:3rem;color:var(--primary);margin-bottom:12px;display:block;"></i>
-        <h3 style="margin-bottom:5px;">${hasExistingPin ? 'Change Your Security PIN' : 'Set Your Security PIN'}</h3>
-        <p style="color:var(--gray);font-size:0.85rem;">This PIN secures your session and authorizes your actions</p>
-      </div>
+    showModal(hasExistingPin ? 'Change Security PIN' : 'Set Security PIN', 
+      '<div style="text-align:center;margin-bottom:20px;">' +
+        '<i class="fas fa-shield-alt" style="font-size:3rem;color:var(--primary);margin-bottom:12px;display:block;"></i>' +
+        '<h3 style="margin-bottom:5px;">' + (hasExistingPin ? 'Change Your Security PIN' : 'Set Your Security PIN') + '</h3>' +
+        '<p style="color:var(--gray);font-size:0.85rem;">This PIN secures your session and authorizes your actions</p>' +
+        (hasOldPin ? '<p style="color:var(--warning);font-size:0.75rem;margin-top:8px;">⚠️ Your PIN will be upgraded to secure encrypted storage</p>' : '') +
+      '</div>' +
       
-      ${hasExistingPin ? `
-      <div class="form-group">
-        <label>Current PIN</label>
-        <div class="pin-input-container" id="currentPinContainer">
-          <input type="password" maxlength="1" class="pin-input current-pin-input" id="currentPin1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-          <input type="password" maxlength="1" class="pin-input current-pin-input" id="currentPin2" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-          <input type="password" maxlength="1" class="pin-input current-pin-input" id="currentPin3" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-          <input type="password" maxlength="1" class="pin-input current-pin-input" id="currentPin4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-        </div>
-      </div>
-      ` : ''}
+      (hasExistingPin || hasOldPin ? 
+      '<div class="form-group">' +
+        '<label>Current PIN</label>' +
+        '<div class="pin-input-container" id="currentPinContainer">' +
+          '<input type="password" maxlength="1" class="pin-input current-pin-input" id="currentPin1" inputmode="numeric" pattern="[0-9]" autocomplete="off">' +
+          '<input type="password" maxlength="1" class="pin-input current-pin-input" id="currentPin2" inputmode="numeric" pattern="[0-9]" autocomplete="off">' +
+          '<input type="password" maxlength="1" class="pin-input current-pin-input" id="currentPin3" inputmode="numeric" pattern="[0-9]" autocomplete="off">' +
+          '<input type="password" maxlength="1" class="pin-input current-pin-input" id="currentPin4" inputmode="numeric" pattern="[0-9]" autocomplete="off">' +
+        '</div>' +
+      '</div>' : '') +
       
-      <div class="form-group">
-        <label>New PIN</label>
-        <div class="pin-input-container" id="newPinContainer">
-          <input type="password" maxlength="1" class="pin-input new-pin-input" id="newPin1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-          <input type="password" maxlength="1" class="pin-input new-pin-input" id="newPin2" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-          <input type="password" maxlength="1" class="pin-input new-pin-input" id="newPin3" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-          <input type="password" maxlength="1" class="pin-input new-pin-input" id="newPin4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-        </div>
-      </div>
+      '<div class="form-group">' +
+        '<label>New PIN</label>' +
+        '<div class="pin-input-container" id="newPinContainer">' +
+          '<input type="password" maxlength="1" class="pin-input new-pin-input" id="newPin1" inputmode="numeric" pattern="[0-9]" autocomplete="off">' +
+          '<input type="password" maxlength="1" class="pin-input new-pin-input" id="newPin2" inputmode="numeric" pattern="[0-9]" autocomplete="off">' +
+          '<input type="password" maxlength="1" class="pin-input new-pin-input" id="newPin3" inputmode="numeric" pattern="[0-9]" autocomplete="off">' +
+          '<input type="password" maxlength="1" class="pin-input new-pin-input" id="newPin4" inputmode="numeric" pattern="[0-9]" autocomplete="off">' +
+        '</div>' +
+      '</div>' +
       
-      <div class="form-group">
-        <label>Confirm New PIN</label>
-        <div class="pin-input-container" id="confirmPinContainer">
-          <input type="password" maxlength="1" class="pin-input confirm-pin-input" id="confirmPin1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-          <input type="password" maxlength="1" class="pin-input confirm-pin-input" id="confirmPin2" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-          <input type="password" maxlength="1" class="pin-input confirm-pin-input" id="confirmPin3" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-          <input type="password" maxlength="1" class="pin-input confirm-pin-input" id="confirmPin4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-        </div>
-        <div id="pinMatchError" style="color:var(--danger);font-size:0.8rem;margin-top:8px;display:none;"></div>
-      </div>
+      '<div class="form-group">' +
+        '<label>Confirm New PIN</label>' +
+        '<div class="pin-input-container" id="confirmPinContainer">' +
+          '<input type="password" maxlength="1" class="pin-input confirm-pin-input" id="confirmPin1" inputmode="numeric" pattern="[0-9]" autocomplete="off">' +
+          '<input type="password" maxlength="1" class="pin-input confirm-pin-input" id="confirmPin2" inputmode="numeric" pattern="[0-9]" autocomplete="off">' +
+          '<input type="password" maxlength="1" class="pin-input confirm-pin-input" id="confirmPin3" inputmode="numeric" pattern="[0-9]" autocomplete="off">' +
+          '<input type="password" maxlength="1" class="pin-input confirm-pin-input" id="confirmPin4" inputmode="numeric" pattern="[0-9]" autocomplete="off">' +
+        '</div>' +
+        '<div id="pinMatchError" style="color:var(--danger);font-size:0.8rem;margin-top:8px;display:none;"></div>' +
+      '</div>' +
       
-      <div class="pin-requirements-box">
-        <p style="font-weight:600;font-size:0.8rem;margin-bottom:8px;"><i class="fas fa-info-circle"></i> PIN Requirements:</p>
-        <ul>
-          <li id="req-length"><i class="fas fa-times"></i> Exactly 4 digits</li>
-          <li id="req-sequential"><i class="fas fa-times"></i> Not sequential (1234, 4321)</li>
-          <li id="req-repeat"><i class="fas fa-times"></i> Not repeated digits (1111)</li>
-          <li id="req-common"><i class="fas fa-times"></i> Not a common PIN</li>
-        </ul>
-      </div>
+      '<div class="pin-requirements-box">' +
+        '<p style="font-weight:600;font-size:0.8rem;margin-bottom:8px;"><i class="fas fa-info-circle"></i> PIN Requirements:</p>' +
+        '<ul>' +
+          '<li id="req-length"><i class="fas fa-times"></i> Exactly 4 digits</li>' +
+          '<li id="req-sequential"><i class="fas fa-times"></i> Not sequential (1234, 4321)</li>' +
+          '<li id="req-repeat"><i class="fas fa-times"></i> Not repeated digits (1111)</li>' +
+          '<li id="req-common"><i class="fas fa-times"></i> Not a common PIN</li>' +
+        '</ul>' +
+      '</div>' +
       
-      <button class="btn btn-primary" onclick="saveAttendantPin()" style="width:100%;justify-content:center;">
-        <i class="fas fa-save"></i> ${hasExistingPin ? 'Update PIN' : 'Save PIN'}
-      </button>
-      <button class="btn btn-outline" onclick="hideModal()" style="width:100%;justify-content:center;margin-top:8px;">Cancel</button>
-    `);
+      '<button class="btn btn-primary" onclick="saveAttendantPin()" style="width:100%;justify-content:center;">' +
+        '<i class="fas fa-save"></i> ' + (hasExistingPin ? 'Update PIN' : 'Save PIN') +
+      '</button>' +
+      '<button class="btn btn-outline" onclick="hideModal()" style="width:100%;justify-content:center;margin-top:8px;">Cancel</button>'
+    );
     
     setupPinInputNavigation();
     setupPinValidation();
   };
   
   function setupPinInputNavigation() {
-    const setupGroup = (containerId, inputClass) => {
+    const setupGroup = function(containerId, inputClass) {
       const container = document.getElementById(containerId);
       if (!container) return;
       const inputs = container.querySelectorAll('.' + inputClass);
       
-      inputs.forEach((input, index) => {
-        input.addEventListener('input', (e) => {
+      inputs.forEach(function(input, index) {
+        input.addEventListener('input', function(e) {
           if (e.target.value && index < inputs.length - 1) {
             inputs[index + 1].focus();
           }
           validatePinForm();
         });
         
-        input.addEventListener('keydown', (e) => {
+        input.addEventListener('keydown', function(e) {
           if (e.key === 'Backspace' && !e.target.value && index > 0) {
             inputs[index - 1].focus();
           }
         });
         
-        input.addEventListener('paste', (e) => {
+        input.addEventListener('paste', function(e) {
           e.preventDefault();
           const pasted = (e.clipboardData || window.clipboardData).getData('text');
           if (/^\d{4}$/.test(pasted)) {
             const digits = pasted.split('');
             const allInputs = container.querySelectorAll('.' + inputClass);
-            digits.forEach((digit, i) => {
+            digits.forEach(function(digit, i) {
               if (allInputs[i]) allInputs[i].value = digit;
             });
             validatePinForm();
@@ -953,13 +981,13 @@
   
   function setupPinValidation() {
     const newInputs = document.querySelectorAll('.new-pin-input');
-    newInputs.forEach(input => {
+    newInputs.forEach(function(input) {
       input.addEventListener('input', validatePinForm);
     });
   }
   
   function getPinFromInputs(prefix) {
-    return [1,2,3,4].map(i => document.getElementById(prefix + i)?.value || '').join('');
+    return [1,2,3,4].map(function(i) { return document.getElementById(prefix + i)?.value || ''; }).join('');
   }
   
   function validatePinForm() {
@@ -967,12 +995,11 @@
     const confirmPin = getPinFromInputs('confirmPin');
     const errorDiv = document.getElementById('pinMatchError');
     
-    // Validate requirements
     document.getElementById('req-length').querySelector('i').className = 
       /^\d{4}$/.test(newPin) ? 'fas fa-check' : 'fas fa-times';
     
     const sequential = ['0123', '1234', '2345', '3456', '4567', '5678', '6789', '7890'];
-    const isSequential = sequential.includes(newPin) || sequential.includes(newPin.split('').reverse().join(''));
+    const isSequential = sequential.indexOf(newPin) !== -1 || sequential.indexOf(newPin.split('').reverse().join('')) !== -1;
     document.getElementById('req-sequential').querySelector('i').className = 
       (!isSequential && newPin.length === 4) ? 'fas fa-check' : 'fas fa-times';
     
@@ -982,26 +1009,16 @@
     
     const weakPins = ['1234', '0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '4321', '1230', '1004', '2000', '2001', '1122', '1212', '6969'];
     document.getElementById('req-common').querySelector('i').className = 
-      (!weakPins.includes(newPin) && newPin.length === 4) ? 'fas fa-check' : 'fas fa-times';
+      (weakPins.indexOf(newPin) === -1 && newPin.length === 4) ? 'fas fa-check' : 'fas fa-times';
     
-    // Check match
     if (newPin.length === 4 && confirmPin.length === 4) {
       if (newPin !== confirmPin) {
-        if (errorDiv) {
-          errorDiv.textContent = '❌ PINs do not match';
-          errorDiv.style.display = 'block';
-        }
+        if (errorDiv) { errorDiv.textContent = '❌ PINs do not match'; errorDiv.style.display = 'block'; }
       } else {
-        if (errorDiv) {
-          errorDiv.textContent = '✅ PINs match';
-          errorDiv.style.color = 'var(--success)';
-          errorDiv.style.display = 'block';
-        }
+        if (errorDiv) { errorDiv.textContent = '✅ PINs match'; errorDiv.style.color = 'var(--success)'; errorDiv.style.display = 'block'; }
       }
     } else if (confirmPin.length > 0) {
-      if (errorDiv) {
-        errorDiv.style.display = 'none';
-      }
+      if (errorDiv) { errorDiv.style.display = 'none'; }
     }
   }
   
@@ -1021,19 +1038,22 @@
     }
     
     const weakPins = ['1234', '0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '4321'];
-    if (weakPins.includes(newPin) || new Set(newPin.split('')).size === 1) {
+    if (weakPins.indexOf(newPin) !== -1 || new Set(newPin.split('')).size === 1) {
       showToast('This PIN is too common. Please choose a more secure PIN.', 'error');
       return;
     }
     
     try {
+      const hasExistingPin = userData?.hasAttendantPin && userData?.attendantPinHash;
+      const hasOldPin = !hasExistingPin && userData?.attendantPin;
+      
       const result = await attendantPinService.setAttendantPin(
         currentUser.uid, 
-        userData?.hasAttendantPin ? currentPin : null, 
+        (hasExistingPin || hasOldPin) ? currentPin : null, 
         newPin
       );
       
-      showToast(result.message || 'PIN saved successfully!', 'success');
+      showToast(result.message || 'PIN saved successfully! 🔒', 'success');
       hideModal();
       
       // Reload user data
@@ -1057,22 +1077,19 @@
   document.getElementById('unlockBtn').addEventListener('click', unlockSession);
   
   document.getElementById('lockPinContainer').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      unlockSession();
-    }
+    if (e.key === 'Enter') { unlockSession(); }
   });
   
-  // Setup lock PIN input navigation
-  ['lockPin1','lockPin2','lockPin3','lockPin4'].forEach((id, index, arr) => {
+  ['lockPin1','lockPin2','lockPin3','lockPin4'].forEach(function(id, index, arr) {
     const input = document.getElementById(id);
     if (input) {
-      input.addEventListener('input', (e) => {
+      input.addEventListener('input', function(e) {
         document.getElementById('lockPinError').style.display = 'none';
         if (e.target.value && index < arr.length - 1) {
           document.getElementById(arr[index + 1])?.focus();
         }
       });
-      input.addEventListener('keydown', (e) => {
+      input.addEventListener('keydown', function(e) {
         if (e.key === 'Backspace' && !e.target.value && index > 0) {
           document.getElementById(arr[index - 1])?.focus();
         }
@@ -1083,22 +1100,15 @@
   // ============================================
   // AUTH STATE
   // ============================================
-  onAuthStateChanged(auth, async (u) => { 
-    if (!u) { 
-      window.location.href = 'auth.html'; 
-      return; 
-    } 
+  onAuthStateChanged(auth, async function(u) { 
+    if (!u) { window.location.href = 'auth.html'; return; } 
     currentUser = u; 
     const snap = await getDoc(doc(db, 'users', u.uid)); 
-    if (!snap.exists()) { 
-      window.location.href = 'auth.html'; 
-      return; 
-    }
+    if (!snap.exists()) { window.location.href = 'auth.html'; return; }
     
     const role = snap.data().role || '';
-    if (!role.includes('attendant') && !role.includes('staff') && role !== 'admin' && role !== 'super_admin') { 
-      window.location.href = 'auth.html'; 
-      return; 
+    if (role.indexOf('attendant') === -1 && role.indexOf('staff') === -1 && role !== 'admin' && role !== 'super_admin') { 
+      window.location.href = 'auth.html'; return; 
     }
     
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}); 
@@ -1106,15 +1116,15 @@
     resetInactivityTimer(); 
   });
   
-  document.getElementById('logoutBtn').addEventListener('click', async () => { 
+  document.getElementById('logoutBtn').addEventListener('click', async function() { 
     if (inactivityTimer) clearTimeout(inactivityTimer);
-    unsubscribes.forEach(u => u()); 
+    unsubscribes.forEach(function(u) { u(); }); 
     await signOut(auth); 
     window.location.href = 'auth.html'; 
   });
   
-  window.addEventListener('beforeunload', () => { 
-    unsubscribes.forEach(u => u()); 
+  window.addEventListener('beforeunload', function() { 
+    unsubscribes.forEach(function(u) { u(); }); 
     if (inactivityTimer) clearTimeout(inactivityTimer); 
   });
 </script>
