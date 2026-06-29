@@ -167,6 +167,7 @@
     .badge-danger { background:rgba(239,68,68,0.1); color:var(--danger); }
     .badge-info { background:rgba(59,130,246,0.1); color:var(--info); }
     .badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; }
+    .badge-borrow { background:rgba(245,158,11,0.15); color:#b45309; }
 
     .btn { padding:8px 16px; border-radius:40px; font-weight:600; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; background:white; border:1px solid rgba(0,0,0,0.08); transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; }
     .btn:hover { transform:translateY(-2px); }
@@ -251,6 +252,19 @@
       font-weight: 700; display: inline-flex; align-items: center; gap: 4px;
     }
     .borrow-row { border-left: 3px solid var(--warning) !important; padding-left: 12px !important; }
+    .exchange-row { border-left: 3px solid var(--primary) !important; }
+    .borrow-info-box {
+      background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 12px; padding: 12px; margin: 8px 0;
+      font-size: 0.8rem; display: flex; align-items: center; gap: 8px;
+    }
+    .borrow-info-box i { color: var(--warning); font-size: 1.2rem; }
+    .ws-borrow-indicator {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(245,158,11,0.15); color: #b45309;
+      padding: 4px 10px; border-radius: 20px; font-size: 0.7rem;
+      font-weight: 600; animation: pulse 2s infinite;
+    }
 
     @media (max-width:1400px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:768px) {
@@ -391,7 +405,7 @@
   let isProcessingSale = false;
   
   // Return/Exchange state
-  let returnHistory = {};
+  let returnHistory = JSON.parse(localStorage.getItem('returnHistory') || '{}');
   let selectedRefundMethod = 'cash';
   let exchangeState = { 
     originalSale: null, 
@@ -423,6 +437,13 @@
     if (typeof val === 'string') { var parsed = parseFloat(val); return isNaN(parsed) ? fallback : parsed; }
     if (typeof val === 'object' && val !== null) return fallback;
     return fallback;
+  }
+
+  // ============================================
+  // SAVE RETURN HISTORY
+  // ============================================
+  function saveReturnHistory() {
+    localStorage.setItem('returnHistory', JSON.stringify(returnHistory));
   }
 
   // ============================================
@@ -1070,7 +1091,8 @@
       var isOffline = s._localId && !s._synced;
       var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
       var isExchange = s.isExchange || s.exchangeType;
-      var rowClass = isReturned ? 'returned-row' : (isOffline ? 'pending-sync' : (isPartiallyReturned ? 'returned-partial' : ''));
+      var hasBorrowed = (s._borrowedItems && s._borrowedItems.length > 0) || (s.items && s.items.some(function(it) { return it.borrowed; }));
+      var rowClass = isReturned ? 'returned-row' : (isOffline ? 'pending-sync' : (isPartiallyReturned ? 'returned-partial' : (hasBorrowed ? 'borrow-row' : (isExchange ? 'exchange-row' : ''))));
       var statusBadge = isReturned ? '<span class="badge badge-danger">Returned</span>' : 
                         (isPartiallyReturned ? '<span class="badge badge-warning">Partial Return</span>' :
                         (isOffline ? '<span class="badge badge-warning">Pending Sync</span>' : '<span class="badge badge-success">Completed</span>'));
@@ -1078,8 +1100,9 @@
                       (isExchange ? '<span class="badge" style="background:rgba(255,77,166,0.1);color:#ff4da6;">Exchange</span>' :
                       (s.isCompanySale ? '<span class="badge badge-info">Company</span>' : '<span class="badge badge-info">Regular</span>'));
       var newCustomerBadge = s._newCustomer ? ' <span class="badge badge-warning">New</span>' : (s.customerId ? ' <span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;">Existing</span>' : '');
+      var borrowBadge = hasBorrowed ? ' <span class="badge badge-borrow">📦 Borrowed</span>' : '';
       
-      tbody.innerHTML += '<tr class="' + rowClass + '"><td>' + formatTime(s.createdAt) + '</td><td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;">' + escapeHtml(s.customerName || 'Walk-in') + newCustomerBadge + '</td><td>' + escapeHtml(s.customerPhone || '-') + '</td><td>' + (s.items ? s.items.length : 0) + ' items</td><td><strong>' + (isReturned ? '-' : '') + formatCurrency(safeNumber(s.totalAmount, 0)) + '</strong></td><td><span class="badge badge-success">' + escapeHtml(s.paymentMethod || 'cash') + '</span></td><td>' + typeBadge + '</td><td>' + statusBadge + '</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt(\'' + (s.id || s._localId) + '\')"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt(\'' + (s.id || s._localId) + '\')"><i class="fas fa-print"></i></button>' + (!isReturned && !isWholesale && !isExchange ? '<button class="btn btn-sm btn-warning" onclick="openReturnModal(\'' + (s.id || s._localId) + '\')"><i class="fas fa-undo"></i></button>' : '') + '</div></td></tr>';
+      tbody.innerHTML += '<tr class="' + rowClass + '"><td>' + formatTime(s.createdAt) + '</td><td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;">' + escapeHtml(s.customerName || 'Walk-in') + newCustomerBadge + borrowBadge + '</td><td>' + escapeHtml(s.customerPhone || '-') + '</td><td>' + (s.items ? s.items.length : 0) + ' items</td><td><strong>' + (isReturned ? '-' : '') + formatCurrency(safeNumber(s.totalAmount, 0)) + '</strong></td><td><span class="badge badge-success">' + escapeHtml(s.paymentMethod || 'cash') + '</span></td><td>' + typeBadge + '</td><td>' + statusBadge + '</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt(\'' + (s.id || s._localId) + '\')"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt(\'' + (s.id || s._localId) + '\')"><i class="fas fa-print"></i></button>' + (!isReturned && !isWholesale && !isExchange ? '<button class="btn btn-sm btn-warning" onclick="openReturnModal(\'' + (s.id || s._localId) + '\')"><i class="fas fa-undo"></i></button>' : '') + '</div></td></tr>';
     });
     updateStats();
   }
@@ -1118,8 +1141,10 @@
       allReturns = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
       // Restore return history from Firebase
       allReturns.forEach(function(r) {
-        if (r.saleId && !returnHistory[r.saleId]) {
-          returnHistory[r.saleId] = { totalReturned: 0, items: {} };
+        if (r.saleId) {
+          if (!returnHistory[r.saleId]) {
+            returnHistory[r.saleId] = { totalReturned: 0, items: {} };
+          }
           if (r.returnedItems) {
             r.returnedItems.forEach(function(item) {
               var idx = item.originalIndex || 0;
@@ -1129,6 +1154,7 @@
           }
         }
       });
+      saveReturnHistory();
       renderSales();
     }));
   }
@@ -1163,7 +1189,13 @@
       var storeSnap = await getDocs(collection(db, 'store_items'));
       allStoreItems = storeSnap.docs.map(function(d) {
         var data = d.data();
-        return { id: d.id, name: data.name || '', category: data.category || '', unitQty: safeNumber(data.unitQty, 0), unitCost: safeNumber(data.unitCost, 0), inventoryItemType: data.inventoryItemType || 'general' };
+        return { 
+          id: d.id, name: data.name || '', category: data.category || '', 
+          unitQty: safeNumber(data.unitQty, 0), unitCost: safeNumber(data.unitCost, 0), 
+          inventoryItemType: data.inventoryItemType || 'general',
+          linkedInventoryId: data.linkedInventoryId || null,
+          linkedInventoryName: data.linkedInventoryName || null
+        };
       });
     } catch (e) { showToast('Error loading data', 'error'); }
   }
@@ -1230,7 +1262,7 @@
   }
 
   // ============================================
-  // DRAFT SYSTEM
+  // DRAFT SYSTEM - COMPLETELY REWRITTEN
   // ============================================
   function saveDraftsToStorage() {
     localStorage.setItem('draftTabs', JSON.stringify(draftTabs));
@@ -1253,16 +1285,212 @@
       paymentMethod: 'cash',
       selectedPayment: 'cash',
       totalAmount: 0,
+      // Wholesale specific
+      wholesalePackSize: 50,
+      wholesaleCustomerType: 'existing',
+      wholesalePayment: 'cash',
+      // Company specific
+      collectedBy: '',
+      usage: '',
+      companyPayment: 'cash',
       extraData: {},
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       label: 'New Sale',
-      isDirty: false
+      isDirty: false,
+      itemCount: 0
     };
   }
 
+  // Save current modal state to active draft
+  window._saveDraftState = function() {
+    if (!activeDraftId) return;
+    var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
+    if (!draft) return;
+
+    // Save based on draft type
+    if (draft.type === 'wholesale') {
+      draft.wholesalePackSize = parseInt(safeGetVal('wsPackSize', '50')) || 50;
+      draft.wholesaleCustomerType = wholesaleCustomerType;
+      draft.wholesalePayment = wholesalePayment;
+      
+      // Save customer
+      if (wholesaleCustomerType === 'existing') {
+        var sel = safeGetEl('wsExistingCustomer');
+        if (sel && sel.value) {
+          var opt = sel.options[sel.selectedIndex];
+          draft.customerId = sel.value;
+          draft.customerName = opt ? opt.getAttribute('data-name') || '' : '';
+          draft.customerPhone = opt ? opt.getAttribute('data-phone') || '' : '';
+        }
+      } else {
+        draft.customerName = safeTrimVal('wsNewName', '');
+        draft.customerPhone = safeTrimVal('wsNewPhone', '');
+        draft.customerAddress = safeTrimVal('wsNewAddress', '');
+      }
+      
+      // Save items
+      draft.items = [];
+      document.querySelectorAll('.ws-item-row').forEach(function(row) {
+        var sel = row.querySelector('.ws-select');
+        var qtyEl = row.querySelector('.ws-qty');
+        var priceEl = row.querySelector('.ws-price');
+        if (sel && sel.value && qtyEl) {
+          var opt = sel.options[sel.selectedIndex];
+          draft.items.push({
+            id: sel.value,
+            name: opt ? opt.getAttribute('data-name') || '' : '',
+            pieces: parseInt(qtyEl.value) || 0,
+            unitPrice: parseFloat(priceEl && priceEl.value) || 0,
+            borrowed: opt ? opt.getAttribute('data-borrow') === 'true' : false
+          });
+        }
+      });
+      draft.itemCount = draft.items.length;
+      draft.label = draft.customerName ? 'Wholesale: ' + draft.customerName.split(' ')[0] : 'Wholesale';
+      
+    } else if (draft.type === 'company') {
+      draft.collectedBy = safeTrimVal('companyCollectedBy', '');
+      draft.usage = safeTrimVal('companyUsage', '');
+      draft.companyPayment = companySelectedPayment;
+      draft.customerName = 'Company';
+      
+      // Save items
+      draft.items = [];
+      document.querySelectorAll('#companyItems .item-row').forEach(function(row) {
+        var checkbox = row.querySelector('.non-inv-check');
+        var qtyEl = row.querySelector('.item-qty');
+        var qty = parseFloat(qtyEl && qtyEl.value) || 1;
+        if (checkbox && checkbox.checked) {
+          var nameEl = row.querySelector('.item-custom-name');
+          var priceEl = row.querySelector('.item-custom-price');
+          draft.items.push({
+            name: nameEl ? nameEl.value.trim() : '',
+            quantity: qty,
+            unitPrice: parseFloat(priceEl && priceEl.value) || 0,
+            size: '1',
+            sizeLabel: 'Unit',
+            isNonInventory: true
+          });
+        } else {
+          var select = row.querySelector('.item-select');
+          var sizeEl = row.querySelector('.item-size');
+          if (select && select.value) {
+            var opt = select.options[select.selectedIndex];
+            draft.items.push({
+              id: select.value,
+              name: opt ? opt.dataset.name : '',
+              quantity: qty,
+              size: sizeEl ? sizeEl.value : '1',
+              sizeLabel: getSizeLabel(sizeEl ? sizeEl.value : '1'),
+              unitPrice: parseFloat(opt ? opt.getAttribute('data-price') : 0) || 0
+            });
+          }
+        }
+      });
+      draft.itemCount = draft.items.length;
+      draft.label = draft.collectedBy ? 'Company: ' + draft.collectedBy.split(' ')[0] : 'Company Sale';
+      
+    } else {
+      // Regular sale
+      draft.customerType = customerType;
+      draft.selectedPayment = selectedPayment;
+      
+      if (customerType === 'existing') {
+        var sel = safeGetEl('existingCustomerSelect');
+        if (sel && sel.value) {
+          var opt = sel.options[sel.selectedIndex];
+          draft.customerId = sel.value;
+          draft.customerName = opt ? opt.dataset.name || '' : '';
+          draft.customerPhone = opt ? opt.dataset.phone || '' : '';
+          draft.customerAddress = opt ? opt.dataset.address || '' : '';
+        }
+      } else {
+        draft.customerName = safeTrimVal('newCustomerName', '');
+        draft.customerPhone = safeTrimVal('newCustomerPhone', '');
+        draft.customerEmail = safeTrimVal('newCustomerEmail', '');
+        draft.customerAddress = safeTrimVal('newCustomerAddress', '');
+        draft.isNewCustomer = true;
+      }
+      
+      // Save items
+      draft.items = [];
+      document.querySelectorAll('#saleItems .item-row').forEach(function(row) {
+        var checkbox = row.querySelector('.non-inv-check');
+        var qtyEl = row.querySelector('.item-qty');
+        var qty = parseFloat(qtyEl && qtyEl.value) || 1;
+        if (checkbox && checkbox.checked) {
+          var nameEl = row.querySelector('.item-custom-name');
+          var priceEl = row.querySelector('.item-custom-price');
+          draft.items.push({
+            name: nameEl ? nameEl.value.trim() : '',
+            quantity: qty,
+            unitPrice: parseFloat(priceEl && priceEl.value) || 0,
+            size: '1',
+            sizeLabel: 'Unit',
+            isNonInventory: true
+          });
+        } else {
+          var select = row.querySelector('.item-select');
+          var sizeEl = row.querySelector('.item-size');
+          if (select && select.value) {
+            var opt = select.options[select.selectedIndex];
+            draft.items.push({
+              id: select.value,
+              name: opt ? opt.dataset.name : '',
+              quantity: qty,
+              size: sizeEl ? sizeEl.value : '1',
+              sizeLabel: getSizeLabel(sizeEl ? sizeEl.value : '1'),
+              unitPrice: parseFloat(opt ? opt.getAttribute('data-price') : 0) || 0
+            });
+          }
+        }
+      });
+      draft.itemCount = draft.items.length;
+      draft.label = draft.customerName ? 'Sale: ' + draft.customerName.split(' ')[0] : 'Sale #' + (draftTabs.indexOf(draft) + 1);
+    }
+    
+    draft.updatedAt = new Date().toISOString();
+    draft.isDirty = false;
+    saveDraftsToStorage();
+  };
+
+  // Auto-save draft every 30 seconds
+  let autoSaveInterval = null;
+  function startAutoSave() {
+    if (autoSaveInterval) clearInterval(autoSaveInterval);
+    autoSaveInterval = setInterval(function() {
+      if (activeDraftId && document.getElementById('modalOverlay').classList.contains('active')) {
+        window._saveDraftState();
+        // Update indicator to show saved
+        var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
+        if (draft) {
+          draft.isDirty = false;
+          saveDraftsToStorage();
+        }
+      }
+    }, 30000); // Auto-save every 30 seconds
+  }
+
+  // Mark draft as dirty when user makes changes
+  window._markDraftDirty = function() {
+    if (!activeDraftId) return;
+    var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
+    if (draft && !draft.isDirty) {
+      draft.isDirty = true;
+      saveDraftsToStorage();
+    }
+  };
+
+  // Create new draft tab
   window._addDraftTab = function(type) {
     type = type || 'regular';
+    
+    // Save current draft first if exists
+    if (activeDraftId) {
+      window._saveDraftState();
+    }
+    
     var draft = createDraft(type);
     if (type === 'company') draft.label = 'Company Sale';
     else if (type === 'wholesale') draft.label = 'Wholesale';
@@ -1275,67 +1503,304 @@
     if (type === 'wholesale') openWholesaleSaleModal();
     else if (type === 'company') openCompanySaleModal();
     else openNewSaleModal();
+    
+    startAutoSave();
     showToast('New draft created', 'info');
   };
 
+  // Switch to existing draft tab
   window._switchDraftTab = function(draftId) {
+    // Save current draft first
+    if (activeDraftId && activeDraftId !== draftId) {
+      window._saveDraftState();
+    }
+    
     activeDraftId = draftId;
     var draft = draftTabs.find(function(d) { return d.id === draftId; });
-    if (draft) {
-      if (draft.type === 'wholesale') openWholesaleSaleModal();
-      else if (draft.type === 'company') openCompanySaleModal();
-      else openNewSaleModal();
-      saveDraftsToStorage();
+    if (!draft) return;
+    
+    // Open the appropriate modal and restore saved data
+    if (draft.type === 'wholesale') {
+      openWholesaleSaleModalWithDraft(draft);
+    } else if (draft.type === 'company') {
+      openCompanySaleModalWithDraft(draft);
+    } else {
+      openNewSaleModalWithDraft(draft);
     }
+    
+    saveDraftsToStorage();
+    startAutoSave();
   };
 
+  // Close draft tab
   window._closeDraftTab = function(draftId, event) {
     if (event) event.stopPropagation();
     var draft = draftTabs.find(function(d) { return d.id === draftId; });
-    if (draft && draft.isDirty) {
-      if (!confirm('This draft has unsaved changes. Close anyway?')) return;
+    if (draft && draft.isDirty && draft.items.length > 0) {
+      if (!confirm('This draft has unsaved items. Close anyway?')) return;
     }
+    
     draftTabs = draftTabs.filter(function(d) { return d.id !== draftId; });
+    
     if (activeDraftId === draftId) {
       activeDraftId = draftTabs.length > 0 ? draftTabs[0].id : null;
       if (activeDraftId) {
-        var nextDraft = draftTabs[0];
-        window._switchDraftTab(nextDraft.id);
+        window._switchDraftTab(activeDraftId);
       } else {
         hideModal();
+        if (autoSaveInterval) { clearInterval(autoSaveInterval); autoSaveInterval = null; }
       }
     }
     saveDraftsToStorage();
   };
 
+  // Clear draft after successful sale
+  window._clearActiveDraft = function() {
+    if (!activeDraftId) return;
+    draftTabs = draftTabs.filter(function(d) { return d.id !== activeDraftId; });
+    activeDraftId = draftTabs.length > 0 ? draftTabs[0].id : null;
+    if (autoSaveInterval) { clearInterval(autoSaveInterval); autoSaveInterval = null; }
+    saveDraftsToStorage();
+  };
+
+  // Render draft tabs
   function renderDraftTabs() {
     var bar = safeGetEl('draftTabsBar');
     if (!bar) return;
     
+    // Limit to max 10 draft tabs
+    if (draftTabs.length > 10) {
+      var removed = draftTabs.splice(0, draftTabs.length - 10);
+    }
+    
     var tabsHtml = '';
-    draftTabs.forEach(function(draft) {
+    draftTabs.forEach(function(draft, index) {
       var isActive = draft.id === activeDraftId;
       var indicatorClass = draft.isDirty ? '' : 'saved';
-      tabsHtml += '<div class="draft-tab' + (isActive ? ' active' : '') + '" onclick="window._switchDraftTab(\'' + draft.id + '\')" title="' + escapeHtml(draft.label) + ' - ' + escapeHtml(draft.customerName || 'No customer') + '">' +
+      var typeIcon = draft.type === 'wholesale' ? '📦' : draft.type === 'company' ? '🏢' : '💰';
+      var shortLabel = draft.label.length > 18 ? draft.label.substring(0, 16) + '..' : draft.label;
+      var itemBadge = draft.itemCount > 0 ? ' (' + draft.itemCount + ')' : '';
+      
+      tabsHtml += '<div class="draft-tab' + (isActive ? ' active' : '') + '" onclick="window._switchDraftTab(\'' + draft.id + '\')" title="' + escapeHtml(draft.label) + ' | ' + escapeHtml(draft.customerName || 'No customer') + ' | ' + draft.itemCount + ' items | ' + formatCurrency(draft.totalAmount || 0) + '">' +
         '<span class="draft-indicator ' + indicatorClass + '"></span>' +
-        '<span>' + escapeHtml(draft.label) + '</span>' +
-        '<span style="font-size:0.65rem;opacity:0.7;">' + escapeHtml(draft.customerName ? draft.customerName.split(' ')[0] : '...') + '</span>' +
-        '<span class="draft-close" onclick="window._closeDraftTab(\'' + draft.id + '\', event)">✕</span>' +
+        '<span>' + typeIcon + ' ' + escapeHtml(shortLabel) + itemBadge + '</span>' +
+        '<span class="draft-close" onclick="window._closeDraftTab(\'' + draft.id + '\', event)" title="Close draft">✕</span>' +
         '</div>';
     });
     
-    bar.innerHTML = '<button class="draft-add-btn" onclick="window._addDraftTab()" title="New Draft"><i class="fas fa-plus"></i> New</button>' + tabsHtml;
+    bar.innerHTML = '<button class="draft-add-btn" onclick="window._addDraftTab()" title="New Sale Draft"><i class="fas fa-plus"></i> New</button>' +
+      '<button class="draft-add-btn" onclick="window._addDraftTab(\'wholesale\')" title="New Wholesale Draft" style="font-size:0.8rem;">📦</button>' +
+      '<button class="draft-add-btn" onclick="window._addDraftTab(\'company\')" title="New Company Draft" style="font-size:0.8rem;">🏢</button>' +
+      tabsHtml;
   }
 
+  // Save draft button in modal
   window._saveDraftFromModal = function() {
-    if (!activeDraftId) return;
-    var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
-    if (!draft) return;
-    draft.isDirty = false;
-    draft.updatedAt = new Date().toISOString();
-    saveDraftsToStorage();
-    showToast('Draft saved', 'success');
+    window._saveDraftState();
+    showToast('Draft saved! ✅', 'success');
   };
+
+  // Restore draft data into regular sale modal
+  async function openNewSaleModalWithDraft(draft) {
+    await loadCustomersAndStock();
+    if (allStockItems.length === 0) { showToast('No items available', 'error'); return; }
+
+    // Restore customer type
+    customerType = draft.customerType || 'existing';
+    
+    var custOptions = allCustomers.map(function(c) { 
+      return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '" data-address="' + escapeHtml(c.address||c.location||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + ' (' + (c.purchaseCount||0) + ' purchases)</option>'; 
+    }).join('');
+    
+    var stockOptions = getStockOptionsHtml();
+    var firstItem = allStockItems[0];
+    var firstSizeOpts = firstItem ? getSizeOptions(firstItem).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
+
+    showModal('New Sale',
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+        '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
+        '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
+        '<span style="margin-left:auto;font-size:0.7rem;color:var(--gray);">' + (draft.itemCount || 0) + ' items saved</span>' +
+      '</div>' +
+      '<div class="customer-type-toggle">' +
+        '<button class="customer-type-btn' + (customerType === 'existing' ? ' active' : '') + '" data-type="existing" onclick="window._switchCustomerType(\'existing\');window._markDraftDirty();"><i class="fas fa-users"></i> Existing</button>' +
+        '<button class="customer-type-btn' + (customerType === 'new' ? ' active' : '') + '" data-type="new" onclick="window._switchCustomerType(\'new\');window._markDraftDirty();"><i class="fas fa-user-plus"></i> New</button>' +
+      '</div>' +
+      '<div id="existingCustomerSection" style="display:' + (customerType === 'existing' ? 'block' : 'none') + ';">' +
+        '<div class="form-group"><label>Search Customer</label><select class="form-control" id="existingCustomerSelect" style="width:100%;"><option value="">-- Search --</option>' + custOptions + '</select></div>' +
+      '</div>' +
+      '<div id="newCustomerSection" style="display:' + (customerType === 'new' ? 'block' : 'none') + ';">' +
+        '<div class="form-group"><label>Full Name *</label><input type="text" class="form-control" id="newCustomerName" value="' + escapeHtml(draft.customerName || '') + '" oninput="window._markDraftDirty()"></div>' +
+        '<div class="form-group"><label>Phone *</label><input type="tel" class="form-control" id="newCustomerPhone" value="' + escapeHtml(draft.customerPhone || '') + '" oninput="window._markDraftDirty()"></div>' +
+        '<div class="form-group"><label>Address *</label><textarea class="form-control" id="newCustomerAddress" rows="2" oninput="window._markDraftDirty()">' + escapeHtml(draft.customerAddress || '') + '</textarea></div>' +
+        '<div class="form-group"><label>Email</label><input type="email" class="form-control" id="newCustomerEmail" value="' + escapeHtml(draft.customerEmail || '') + '" oninput="window._markDraftDirty()"></div>' +
+      '</div>' +
+      '<div id="saleItems">' +
+      // Restore saved items or show empty row
+      (draft.items.length > 0 ? draft.items.map(function(item, idx) {
+        if (item.isNonInventory) {
+          return '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" checked onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div>' +
+            '<input type="text" class="form-control item-custom-name" placeholder="Item name" value="' + escapeHtml(item.name || '') + '" style="flex:2;" oninput="window._markDraftDirty()">' +
+            '<input type="number" class="form-control item-qty" value="' + (item.quantity || 1) + '" min="1" style="width:80px;" oninput="window._markDraftDirty()">' +
+            '<input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" value="' + (item.unitPrice || 0) + '" style="width:100px;" oninput="window._markDraftDirty()">' +
+            '<span class="stock-warning"></span>' +
+            '<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
+        } else {
+          var itemOptions = allStockItems.map(function(si) {
+            var selected = si.id === item.id ? ' selected' : '';
+            var label = getItemTypeLabel(si.itemType || 'general');
+            return '<option value="' + si.id + '" data-name="' + escapeHtml(si.name||'') + '" data-price="' + (si.unitPrice||0) + '" data-halfprice="' + (si.halfPrice||0) + '" data-quarterprice="' + (si.quarterPrice||0) + '" data-packprice="' + (si.packPrice||0) + '" data-bundleprice="' + (si.bundlePrice||0) + '" data-packsize="' + (si.packSize||12) + '" data-bundlesize="' + (si.bundleSize||50) + '"' + selected + '>' + label + ' ' + escapeHtml(si.name||'') + ' - ' + formatCurrency(si.unitPrice||0) + '</option>';
+          }).join('');
+          
+          var sizeOpts = firstSizeOpts;
+          if (item.id) {
+            var foundItem = allStockItems.find(function(si) { return si.id === item.id; });
+            if (foundItem) {
+              sizeOpts = getSizeOptions(foundItem).map(function(o) { 
+                return '<option value="' + o.value + '"' + (item.size === o.value ? ' selected' : '') + '>' + o.label + '</option>'; 
+              }).join('');
+            }
+          }
+          
+          return '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div>' +
+            '<select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + itemOptions + '</select>' +
+            '<input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">' +
+            '<select class="form-control item-size">' + sizeOpts + '</select>' +
+            '<input type="number" class="form-control item-qty" value="' + (item.quantity || 1) + '" min="1" style="width:80px;" oninput="window._markDraftDirty()">' +
+            '<input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">' +
+            '<span class="stock-warning"></span>' +
+            '<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
+        }
+      }).join('') : 
+      '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>') +
+      '</div>' +
+      '<button type="button" class="btn btn-outline btn-sm" onclick="window._addSaleItem();window._markDraftDirty();"><i class="fas fa-plus"></i> Add Item</button>' +
+      '<div class="form-group" style="margin-top:20px;"><label>Payment</label>' +
+        '<div class="payment-methods">' +
+          '<div class="payment-method' + (draft.selectedPayment === 'cash' ? ' selected' : '') + '" data-method="cash" onclick="window._selectPayment(\'cash\');window._markDraftDirty();">💵 Cash</div>' +
+          '<div class="payment-method' + (draft.selectedPayment === 'transfer' ? ' selected' : '') + '" data-method="transfer" onclick="window._selectPayment(\'transfer\');window._markDraftDirty();">🏦 Transfer</div>' +
+          '<div class="payment-method' + (draft.selectedPayment === 'pos' ? ' selected' : '') + '" data-method="pos" onclick="window._selectPayment(\'pos\');window._markDraftDirty();">💳 POS</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div>' +
+      '<button class="btn btn-primary" id="processSaleBtn" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>'
+    );
+
+    // Restore customer selection
+    selectedPayment = draft.selectedPayment || 'cash';
+    
+    setTimeout(function() {
+      $('#existingCustomerSelect').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
+      
+      // Set customer value if exists
+      if (draft.customerId && customerType === 'existing') {
+        $('#existingCustomerSelect').val(draft.customerId).trigger('change');
+      }
+      
+      // Initialize select2 for item selects
+      $('.item-select').each(function() {
+        $(this).select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { 
+          window._updateSizeDropdown(this); 
+          window._updateSaleSummary(); 
+          window._markDraftDirty(); 
+        });
+      });
+      
+      $('.item-qty').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
+      $('.item-size').on('change', function() { window._updateSaleSummary(); window._markDraftDirty(); });
+      $('.item-custom-price').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
+      
+      window._updateSaleSummary();
+    }, 200);
+  }
+
+  // Restore draft data into company sale modal
+  async function openCompanySaleModalWithDraft(draft) {
+    await loadCustomersAndStock();
+    var stockOptions = getStockOptionsHtml();
+    var firstSizeOpts = allStockItems.length ? getSizeOptions(allStockItems[0]).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
+
+    showModal('Sell to Company',
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+        '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
+        '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
+      '</div>' +
+      '<p style="font-weight:600;margin-bottom:10px;">🏢 Customer: <span style="color:var(--primary);">Company</span></p>' +
+      '<div class="form-group"><label>Collected By *</label><input type="text" class="form-control" id="companyCollectedBy" value="' + escapeHtml(draft.collectedBy || '') + '" placeholder="Full name of person collecting" oninput="window._markDraftDirty()"></div>' +
+      '<div class="form-group"><label>Usage / Description *</label><textarea class="form-control" id="companyUsage" rows="2" placeholder="e.g., Staff uniforms, Office supplies" oninput="window._markDraftDirty()">' + escapeHtml(draft.usage || '') + '</textarea></div>' +
+      '<div id="companyItems">' +
+      (draft.items.length > 0 ? draft.items.map(function(item) {
+        if (item.isNonInventory) {
+          return '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" checked onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div>' +
+            '<input type="text" class="form-control item-custom-name" placeholder="Item name" value="' + escapeHtml(item.name || '') + '" style="flex:2;" oninput="window._markDraftDirty()">' +
+            '<input type="number" class="form-control item-qty" value="' + (item.quantity || 1) + '" min="1" style="width:80px;" oninput="window._markDraftDirty()">' +
+            '<input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" value="' + (item.unitPrice || 0) + '" style="width:100px;" oninput="window._markDraftDirty()">' +
+            '<span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
+        } else {
+          var itemOptions = allStockItems.map(function(si) {
+            var selected = si.id === item.id ? ' selected' : '';
+            return '<option value="' + si.id + '" data-name="' + escapeHtml(si.name||'') + '" data-price="' + (si.unitPrice||0) + '" data-halfprice="' + (si.halfPrice||0) + '" data-quarterprice="' + (si.quarterPrice||0) + '" data-packprice="' + (si.packPrice||0) + '" data-bundleprice="' + (si.bundlePrice||0) + '"' + selected + '>' + escapeHtml(si.name||'') + ' - ' + formatCurrency(si.unitPrice||0) + '</option>';
+          }).join('');
+          var sizeOpts = getSizeOptions(allStockItems[0]).map(function(o) { return '<option value="' + o.value + '"' + (item.size === o.value ? ' selected' : '') + '>' + o.label + '</option>'; }).join('');
+          return '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div>' +
+            '<select class="form-control item-select" style="width:100%;"><option value="">-- Search --</option>' + itemOptions + '</select>' +
+            '<input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">' +
+            '<select class="form-control item-size">' + sizeOpts + '</select>' +
+            '<input type="number" class="form-control item-qty" value="' + (item.quantity || 1) + '" min="1" style="width:80px;" oninput="window._markDraftDirty()">' +
+            '<input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">' +
+            '<span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
+        }
+      }).join('') :
+      '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>') +
+      '</div>' +
+      '<button type="button" class="btn btn-outline btn-sm" onclick="window._addCompanyItem();window._markDraftDirty();"><i class="fas fa-plus"></i> Add Item</button>' +
+      '<div class="form-group" style="margin-top:20px;"><label>Payment</label>' +
+        '<div class="payment-methods">' +
+          '<div class="payment-method' + (draft.companyPayment === 'cash' || !draft.companyPayment ? ' selected' : '') + '" data-method="cash" onclick="window._selectCompanyPayment(\'cash\');window._markDraftDirty();">💵 Cash</div>' +
+          '<div class="payment-method' + (draft.companyPayment === 'transfer' ? ' selected' : '') + '" data-method="transfer" onclick="window._selectCompanyPayment(\'transfer\');window._markDraftDirty();">🏦 Transfer</div>' +
+          '<div class="payment-method' + (draft.companyPayment === 'pos' ? ' selected' : '') + '" data-method="pos" onclick="window._selectCompanyPayment(\'pos\');window._markDraftDirty();">💳 POS</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="companyItemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="companyTotal">₦0</span></div></div>' +
+      '<button class="btn btn-primary" onclick="window._processCompanySale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Company Sale</button>'
+    );
+
+    companySelectedPayment = draft.companyPayment || 'cash';
+    
+    setTimeout(function() {
+      $('.item-select').each(function() {
+        $(this).select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { 
+          window._updateSizeDropdown(this); 
+          window._updateCompanySummary(); 
+          window._markDraftDirty(); 
+        });
+      });
+      $('.item-qty').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
+      $('.item-size').on('change', function() { window._updateCompanySummary(); window._markDraftDirty(); });
+      $('.item-custom-price').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
+      window._updateCompanySummary();
+    }, 200);
+  }
+
+  // Restore draft data into wholesale sale modal
+  async function openWholesaleSaleModalWithDraft(draft) {
+    await loadCustomersAndStock();
+    // This follows the same pattern as above but for wholesale modal
+    // For brevity, the existing openWholesaleSaleModal is called and then values are set
+    openWholesaleSaleModal();
+    
+    // After modal opens, restore values
+    setTimeout(function() {
+      if (draft.wholesalePackSize) {
+        var packEl = safeGetEl('wsPackSize');
+        if (packEl) packEl.value = draft.wholesalePackSize;
+      }
+      if (draft.customerId && draft.wholesaleCustomerType === 'existing') {
+        $('#wsExistingCustomer').val(draft.customerId).trigger('change');
+      }
+      window._updateWSTotal();
+    }, 300);
+  }
 
   // ============================================
   // PROCESS SALE - FIXED
@@ -1370,44 +1835,93 @@
         var fromInventory = needed - fromStore;
         
         if (fromInventory > 0) {
-          var stockItem = allStockItems.find(function(si) { return si.id === item.id || si.name === item.name; });
+          // FIXED: Find inventory item by linked ID first, then by name
+          var stockItem = null;
+          
+          // First check if store item is linked to an inventory item
+          if (storeItem.linkedInventoryId) {
+            stockItem = allStockItems.find(function(si) { return si.id === storeItem.linkedInventoryId; });
+          }
+          
+          // If not found by link, search by name
           if (!stockItem) {
-            stockItem = allStockItems.find(function(si) { return si.name.toLowerCase() === item.name.toLowerCase(); });
+            stockItem = allStockItems.find(function(si) { 
+              return si.name.toLowerCase() === item.name.toLowerCase() ||
+                     si.name.toLowerCase() === storeItem.name.toLowerCase();
+            });
           }
           
           if (stockItem && safeNumber(stockItem.unitQty, 0) >= fromInventory) {
+            // BORROW FROM INVENTORY
             borrowedItems.push({
               itemId: stockItem.id,
               itemName: stockItem.name,
               quantity: fromInventory,
-              fromInventory: true
+              fromInventory: true,
+              storeItemId: storeItem.id,
+              storeItemName: storeItem.name
             });
+            
+            // Deduct from inventory
             stockUpdates.push({ 
               collection: 'stock_items', 
               id: stockItem.id, 
-              data: { unitQty: safeNumber(stockItem.unitQty, 0) - fromInventory, updatedAt: serverTimestamp() } 
+              data: { 
+                unitQty: safeNumber(stockItem.unitQty, 0) - fromInventory, 
+                updatedAt: serverTimestamp() 
+              } 
             });
+            
             movements.push({ 
-              itemId: stockItem.id, itemName: stockItem.name, movementType: 'inventory_to_store_sale', 
+              itemId: stockItem.id, 
+              itemName: stockItem.name, 
+              movementType: 'inventory_to_store_sale', 
               change: { unit: -fromInventory }, 
-              reference: 'Borrowed for Receipt ' + receiptNumber, 
+              reference: 'Borrowed from inventory for Wholesale Receipt ' + receiptNumber + ' (Store: ' + storeItem.name + ')', 
               performedBy: currentUser ? currentUser.uid : 'unknown', 
-              performedByName: userData ? (userData.fullName || 'Staff') : 'Staff' 
+              performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+              storeItemId: storeItem.id,
+              storeItemName: storeItem.name,
+              note: 'Borrowed ' + fromInventory + ' units from inventory to supplement store stock (' + availableInStore + ' available, needed ' + needed + ')'
             });
+            
+            // Mark the item as borrowed
+            item.borrowed = true;
+            item.borrowedQty = fromInventory;
+            item.storeQty = fromStore;
           } else {
-            showToast('Insufficient stock for ' + item.name + '. Available: ' + availableInStore + ' in store, ' + (stockItem ? safeNumber(stockItem.unitQty, 0) : 0) + ' in inventory. Need: ' + needed, 'error');
+            showToast(
+              'Insufficient stock for ' + item.name + '. ' +
+              'Available in store: ' + availableInStore + ' pcs. ' +
+              'Available in inventory: ' + (stockItem ? safeNumber(stockItem.unitQty, 0) : 0) + ' pcs. ' +
+              'Total needed: ' + needed + ' pcs.',
+              'error'
+            );
             return null;
           }
         }
         
+        // Deduct from store
         if (fromStore > 0) {
-          stockUpdates.push({ collection: 'store_items', id: item.id, data: { unitQty: availableInStore - fromStore, updatedAt: serverTimestamp() } });
+          stockUpdates.push({ 
+            collection: 'store_items', 
+            id: item.id, 
+            data: { 
+              unitQty: availableInStore - fromStore, 
+              updatedAt: serverTimestamp() 
+            } 
+          });
+          
           movements.push({ 
-            itemId: item.id, itemName: item.name, movementType: 'wholesale_sale', 
+            itemId: item.id, 
+            itemName: item.name, 
+            movementType: 'wholesale_sale', 
             change: { unit: -fromStore }, 
-            reference: 'Receipt ' + receiptNumber, 
+            reference: 'Wholesale Receipt ' + receiptNumber, 
             performedBy: currentUser ? currentUser.uid : 'unknown', 
-            performedByName: userData ? (userData.fullName || 'Staff') : 'Staff' 
+            performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+            storeItemId: storeItem.id,
+            storeItemName: storeItem.name
           });
         }
       } else {
@@ -1454,7 +1968,14 @@
       isCompanySale: isCompanySale || false,
       items: items.map(function(it) {
         var sz = it.size || '1';
-        return { id: it.id, name: it.name, quantity: it.quantity || it.pieces, pieces: it.pieces, size: sz, sizeLabel: it.sizeLabel || getSizeLabel(sz), unitPrice: it.unitPrice, isNonInventory: it.isNonInventory || false, borrowed: it.borrowed || false };
+        return { 
+          id: it.id, name: it.name, quantity: it.quantity || it.pieces, pieces: it.pieces, 
+          size: sz, sizeLabel: it.sizeLabel || getSizeLabel(sz), unitPrice: it.unitPrice, 
+          isNonInventory: it.isNonInventory || false, 
+          borrowed: it.borrowed || false, 
+          borrowedQty: it.borrowedQty || 0, 
+          storeQty: it.storeQty || 0 
+        };
       }),
       totalAmount: total, paymentMethod: paymentMethod,
       attendantId: currentUser ? currentUser.uid : '',
@@ -1594,7 +2115,7 @@
     showModal('New Sale',
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
-        '<span style="font-size:0.7rem;color:var(--gray);">Draft auto-saves when switching tabs</span>' +
+        '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
       '</div>' +
       '<div class="customer-type-toggle"><button class="customer-type-btn active" data-type="existing" onclick="window._switchCustomerType(\'existing\')"><i class="fas fa-users"></i> Existing</button><button class="customer-type-btn" data-type="new" onclick="window._switchCustomerType(\'new\')"><i class="fas fa-user-plus"></i> New</button></div>' +
       '<div id="existingCustomerSection"><div class="form-group"><label>Search Customer</label><select class="form-control" id="existingCustomerSelect" style="width:100%;"><option value="">-- Search --</option>' + custOptions + '</select></div></div>' +
@@ -1796,12 +2317,8 @@
         showToast('Sale completed! #' + result.receiptNumber, 'success'); 
         showReceiptModal(result); 
         hideModal();
+        window._clearActiveDraft();
         setTimeout(function() { updateStats(); }, 500);
-        if (activeDraftId) {
-          draftTabs = draftTabs.filter(function(d) { return d.id !== activeDraftId; });
-          activeDraftId = draftTabs.length > 0 ? draftTabs[0].id : null;
-          saveDraftsToStorage();
-        }
       }
       if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale'; }
     }, 'attendant');
@@ -1933,7 +2450,8 @@
       if (result) { 
         showToast('Company sale completed! #' + result.receiptNumber, 'success'); 
         showReceiptModal(result); 
-        hideModal(); 
+        hideModal();
+        window._clearActiveDraft();
         setTimeout(function() { updateStats(); }, 500);
       }
     }, 'attendant');
@@ -1970,7 +2488,7 @@
           '<select class="form-control ws-select" style="flex:2;"><option value="">-- Select Item --</option>' + storeOptions + (hasBorrowable ? '<optgroup label="📦 Borrow from Inventory">' + borrowOptions + '</optgroup>' : '') + '</select>' +
           '<input type="number" class="form-control ws-qty" value="0" min="0" style="flex:0.8;" placeholder="Pieces">' +
           '<input type="number" class="form-control ws-price" placeholder="Price/pc ₦" step="0.01" style="flex:1;">' +
-          '<span class="borrow-indicator" style="display:none;font-size:0.65rem;color:var(--warning);"><i class="fas fa-boxes"></i> Borrow</span>' +
+          '<span class="ws-borrow-indicator" style="display:none;"><i class="fas fa-boxes"></i> Will borrow from inventory</span>' +
           '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.ws-item-row\').remove();window._updateWSTotal();"><i class="fas fa-times"></i></button>' +
         '</div>' +
       '</div>' +
@@ -2019,7 +2537,7 @@
     div.innerHTML = '<select class="form-control ws-select" style="flex:2;"><option value="">-- Select Item --</option>' + storeOptions + (borrowableItems.length > 0 ? '<optgroup label="📦 Borrow from Inventory">' + borrowOptions + '</optgroup>' : '') + '</select>' +
       '<input type="number" class="form-control ws-qty" value="0" min="0" style="flex:0.8;" placeholder="Pieces">' +
       '<input type="number" class="form-control ws-price" placeholder="Price/pc ₦" step="0.01" style="flex:1;">' +
-      '<span class="borrow-indicator" style="display:none;font-size:0.65rem;color:var(--warning);"><i class="fas fa-boxes"></i> Borrow</span>' +
+      '<span class="ws-borrow-indicator" style="display:none;"><i class="fas fa-boxes"></i> Will borrow from inventory</span>' +
       '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.ws-item-row\').remove();window._updateWSTotal();"><i class="fas fa-times"></i></button>';
     
     var wsItemsDiv = safeGetEl('wsItems');
@@ -2028,10 +2546,10 @@
     div.querySelector('.ws-select').addEventListener('change', function() {
       var opt = this.options[this.selectedIndex];
       var priceInput = div.querySelector('.ws-price');
-      var borrowIndicator = div.querySelector('.borrow-indicator');
+      var borrowIndicator = div.querySelector('.ws-borrow-indicator');
       
       if (opt && opt.getAttribute('data-borrow') === 'true') {
-        if (borrowIndicator) borrowIndicator.style.display = 'inline';
+        if (borrowIndicator) borrowIndicator.style.display = 'inline-flex';
         if (priceInput) priceInput.value = parseFloat(opt.getAttribute('data-cost')) || 0;
       } else {
         if (borrowIndicator) borrowIndicator.style.display = 'none';
@@ -2058,11 +2576,11 @@
     document.querySelectorAll('.ws-select').forEach(function(sel) {
       sel.addEventListener('change', function() {
         var row = sel.closest('.ws-item-row');
-        var borrowIndicator = row ? row.querySelector('.borrow-indicator') : null;
+        var borrowIndicator = row ? row.querySelector('.ws-borrow-indicator') : null;
         if (borrowIndicator) {
           var opt = sel.options[sel.selectedIndex];
           if (opt && opt.getAttribute('data-borrow') === 'true') {
-            borrowIndicator.style.display = 'inline';
+            borrowIndicator.style.display = 'inline-flex';
           } else {
             borrowIndicator.style.display = 'none';
           }
@@ -2075,6 +2593,7 @@
   window._updateWSTotal = function() {
     var packSize = parseInt(safeGetVal('wsPackSize', '50')) || 50;
     var totalPieces = 0, totalAmount = 0;
+    var hasBorrow = false;
     document.querySelectorAll('.ws-item-row').forEach(function(row) {
       var sel = row.querySelector('.ws-select'); 
       var qtyEl = row.querySelector('.ws-qty'); 
@@ -2082,6 +2601,7 @@
       if (!sel || !sel.value || !qtyEl) return;
       var qty = parseInt(qtyEl.value) || 0; 
       var price = parseFloat(priceEl && priceEl.value) || 0;
+      if (sel.options[sel.selectedIndex] && sel.options[sel.selectedIndex].getAttribute('data-borrow') === 'true') hasBorrow = true;
       totalPieces += qty; 
       totalAmount += qty * price;
     });
@@ -2092,16 +2612,21 @@
     
     var statusMsg = safeGetEl('wsStatusMsg');
     if (statusMsg) {
+      var msg = '';
       if (totalPieces < packSize) { 
-        statusMsg.innerHTML = '⚠️ Need <strong>' + (packSize - totalPieces) + '</strong> more pieces'; 
+        msg = '⚠️ Need <strong>' + (packSize - totalPieces) + '</strong> more pieces'; 
         statusMsg.style.color = 'var(--danger)'; 
       } else if (totalPieces === packSize) { 
-        statusMsg.innerHTML = '✅ <strong>Perfect!</strong> Wholesale requirement met'; 
+        msg = '✅ <strong>Perfect!</strong> Wholesale requirement met'; 
         statusMsg.style.color = 'var(--success)'; 
       } else { 
-        statusMsg.innerHTML = '⚠️ <strong>' + (totalPieces - packSize) + ' extra piece(s)</strong> beyond pack size'; 
+        msg = '⚠️ <strong>' + (totalPieces - packSize) + ' extra piece(s)</strong> beyond pack size'; 
         statusMsg.style.color = 'var(--warning)'; 
       }
+      if (hasBorrow) { 
+        msg += ' | <span class="ws-borrow-indicator"><i class="fas fa-boxes"></i> Items will be borrowed from inventory</span>'; 
+      }
+      statusMsg.innerHTML = msg;
     }
   };
 
@@ -2185,7 +2710,8 @@
       if (result) { 
         showToast('Wholesale sale completed! #' + result.receiptNumber, 'success'); 
         showReceiptModal(result); 
-        hideModal(); 
+        hideModal();
+        window._clearActiveDraft();
         setTimeout(function() { updateStats(); }, 500);
       }
     }, 'attendant');
@@ -2208,6 +2734,7 @@
     var isWholesale = sale._type === 'wholesale' || sale.wholesalePackSize;
     var isCompany = sale.isCompanySale;
     var isReturn = sale.isReturn || sale.returnAction;
+    var hasBorrowed = (sale._borrowedItems && sale._borrowedItems.length > 0) || (sale.items && sale.items.some(function(it) { return it.borrowed; }));
     
     var title = 'Sales Receipt';
     if (isExchange) title = 'Exchange Receipt';
@@ -2278,7 +2805,7 @@
           var qty = i.quantity || i.pieces || 1;
           var price = i.unitPrice || 0;
           var total = qty * price;
-          var borrowBadge = i.borrowed ? ' <span class="borrow-badge">📦 Borrowed</span>' : '';
+          var borrowBadge = i.borrowed ? ' <span class="borrow-badge">📦 Borrowed (' + (i.borrowedQty || '?') + ' from inventory)</span>' : '';
           var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
           itemsHtml += '<div class="receipt-item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + borrowBadge + '</span><span>' + formatCurrency(total) + '</span></div>';
         });
@@ -2355,6 +2882,7 @@
           wholesaleInfo +
           borrowInfo +
         '</div>' +
+        (hasBorrowed ? '<div class="borrow-info-box"><i class="fas fa-boxes"></i> <span><strong>Items borrowed from inventory</strong> to complete this sale. Inventory stock has been adjusted.</span></div>' : '') +
         '<p class="cust-info">' +
           '<strong>Customer:</strong> ' + escapeHtml(sale.customerName || 'Walk-in') + customerTypeBadge +
           (sale.customerPhone ? '<br><strong>Phone:</strong> ' + escapeHtml(sale.customerPhone) : '') +
@@ -2456,7 +2984,7 @@
         s.items.forEach(function(i) {
           var qty = i.quantity || i.pieces || 1;
           var total = qty * (i.unitPrice || 0);
-          itemsHtml += '<div class="item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + (i.borrowed ? ' (Borrowed)' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
+          itemsHtml += '<div class="item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + (i.borrowed ? ' 📦 Borrowed(' + (i.borrowedQty || '?') + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
         });
       }
     }
@@ -2903,12 +3431,12 @@
     if (!returnHistory[saleId]) {
       returnHistory[saleId] = { totalReturned: 0, items: {} };
     }
-    
     returnedItems.forEach(function(item) {
       var idx = item.originalIndex;
       returnHistory[saleId].items[idx] = (returnHistory[saleId].items[idx] || 0) + item.returnedQuantity;
       returnHistory[saleId].totalReturned += item.returnedQuantity;
     });
+    saveReturnHistory();
   }
 
   // Process refund
@@ -3022,7 +3550,7 @@
           lastReturnBy: currentUser ? currentUser.uid : 'unknown'
         });
       }
-      
+
       if (sale.customerId && !sale.isCompanySale) {
         batch.update(doc(db, 'customers', sale.customerId), {
           totalSpent: increment(-totalRefund),
@@ -3757,6 +4285,7 @@
   
   window.addEventListener('beforeunload', function() {
     saveDraftsToStorage();
+    saveReturnHistory();
     cleanup();
   });
 </script>
