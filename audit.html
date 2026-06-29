@@ -20,7 +20,7 @@
       --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
       --primary-soft:#fff0f6; --dark:#1a1a2e; --gray:#6b7280;
       --gray-light:#f3f4f6; --success:#10b981; --warning:#f59e0b;
-      --danger:#ef4444; --info:#3b82f6;
+      --danger:#ef4444; --info:#3b82f6; --purple:#8b5cf6;
       --sidebar-width:280px; --header-height:70px;
     }
 
@@ -164,22 +164,23 @@
     .panel-header h3 i { color:var(--primary); }
 
     .table-wrapper { overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:16px; }
-    .data-table { width:100%; border-collapse:collapse; min-width:1000px; }
+    .data-table { width:100%; border-collapse:collapse; min-width:1100px; }
     .data-table th {
       text-align:left; padding:14px 10px; font-size:0.7rem; font-weight:600;
       color:var(--gray); text-transform:uppercase; letter-spacing:1px;
       border-bottom:2px solid var(--primary-soft); white-space:nowrap; background:white;
     }
     .data-table td { padding:14px 10px; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
-    .data-table tbody tr { transition:background 0.2s; }
+    .data-table tbody tr { transition:background 0.2s; cursor:pointer; }
     .data-table tbody tr:hover { background:var(--primary-soft); }
+    .data-table tbody tr.important-row { background:rgba(239,68,68,0.03); }
 
     .badge { padding:5px 12px; border-radius:40px; font-size:0.7rem; font-weight:600; display:inline-block; white-space:nowrap; }
     .badge-success { background:rgba(16,185,129,0.1); color:var(--success); }
     .badge-warning { background:rgba(245,158,11,0.1); color:var(--warning); }
     .badge-danger { background:rgba(239,68,68,0.1); color:var(--danger); }
     .badge-info { background:rgba(59,130,246,0.1); color:var(--info); }
-    .badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; }
+    .badge-purple { background:rgba(139,92,246,0.1); color:var(--purple); }
 
     .btn {
       padding:8px 16px; border-radius:40px; font-weight:600; font-size:0.75rem;
@@ -195,6 +196,11 @@
     .empty-state { text-align:center; padding:40px 20px; color:var(--gray); }
     .empty-state i { font-size:2.5rem; color:var(--primary-light); margin-bottom:10px; display:block; }
 
+    .log-detail-modal { max-width:600px; }
+    .log-detail-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
+    .log-detail-row strong { color:var(--dark); }
+    .log-detail-json { background:var(--gray-light); border-radius:8px; padding:12px; font-family:monospace; font-size:0.75rem; max-height:200px; overflow-y:auto; margin-top:10px; white-space:pre-wrap; }
+
     .toast-container { position:fixed; bottom:24px; right:24px; z-index:3000; display:flex; flex-direction:column; gap:10px; }
     .toast {
       background:white; color:var(--dark); padding:14px 20px; border-radius:50px;
@@ -205,8 +211,6 @@
     .toast.success { border-left-color:var(--success); }
     .toast.error { border-left-color:var(--danger); }
     .toast i { font-size:1.1rem; }
-    .toast.success i { color:var(--success); }
-    .toast.error i { color:var(--danger); }
 
     @media (max-width:768px) {
       .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; }
@@ -251,6 +255,7 @@
     </div>
     <div class="nav-section"><div class="nav-section-title">MONITORING</div>
       <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
+      <button class="nav-item" onclick="navigateTo('store.html')"><i class="fas fa-store"></i><span>Store</span></button>
       <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
       <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
       <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
@@ -283,27 +288,82 @@
     </div>
 
     <div class="filter-bar">
-      <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search by user, action, or details..."></div>
+      <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search by user, action, receipt #, or details..."></div>
       <select class="filter-select" id="actionFilter">
         <option value="all">All Actions</option>
-        <option value="login">Login</option>
-        <option value="logout">Logout</option>
-        <option value="add_item">Add Item</option>
-        <option value="edit_item">Edit Item</option>
-        <option value="delete_item">Delete Item</option>
-        <option value="sale">Sale</option>
-        <option value="return_goods">Return Goods</option>
-        <option value="purchase_completed">Purchase Completed</option>
-        <option value="approve_user">Approve User</option>
-        <option value="reject_user">Reject User</option>
-        <option value="add_staff">Add Staff</option>
-        <option value="edit_staff">Edit Staff</option>
-        <option value="terminate_staff">Terminate Staff</option>
-        <option value="suspend_staff">Suspend Staff</option>
-        <option value="reinstate_staff">Reinstate Staff</option>
-        <option value="add_category">Add Category</option>
-        <option value="update_point_value">Update Point Value</option>
-        <option value="dashboard_view">Dashboard View</option>
+        <optgroup label="🔐 Authentication">
+          <option value="login">Login</option>
+          <option value="logout">Logout</option>
+          <option value="session_start">Session Start</option>
+          <option value="pin_verified">PIN Verified</option>
+          <option value="pin_failed">PIN Failed</option>
+        </optgroup>
+        <optgroup label="💰 Sales">
+          <option value="sale_processed">Sale Processed</option>
+          <option value="sale_saved_firestore">Sale Saved (Firestore)</option>
+          <option value="sale_save_failed">Sale Save Failed</option>
+          <option value="receipt_viewed">Receipt Viewed</option>
+          <option value="receipt_printed">Receipt Printed</option>
+          <option value="sales_exported">Sales Exported</option>
+          <option value="reveal_sales_stats">Stats Revealed</option>
+        </optgroup>
+        <optgroup label="↩️ Returns & Exchanges">
+          <option value="return_refund_processed">Return Refund</option>
+          <option value="return_exchange_processed">Return Exchange</option>
+          <option value="return_store_credit">Return Store Credit</option>
+          <option value="return_replacement">Return Replacement</option>
+        </optgroup>
+        <optgroup label="📦 Inventory">
+          <option value="add_item">Add Item</option>
+          <option value="edit_item">Edit Item</option>
+          <option value="delete_item">Delete Item</option>
+          <option value="delete_all">Delete All</option>
+          <option value="reject_item">Reject Item</option>
+          <option value="resubmit_item">Resubmit Item</option>
+          <option value="csv_import">CSV Import</option>
+          <option value="view_inventory">View Inventory</option>
+          <option value="fix_discrepancies">Fix Discrepancies</option>
+        </optgroup>
+        <optgroup label="🏪 Store">
+          <option value="add_store_item">Add Store Item</option>
+          <option value="edit_store_item">Edit Store Item</option>
+          <option value="delete_store_item">Delete Store Item</option>
+          <option value="incoming_inventory_queued">Incoming Queued</option>
+          <option value="confirm_incoming">Confirm Incoming</option>
+          <option value="view_store">View Store</option>
+          <option value="export_store">Export Store</option>
+          <option value="reveal_store_value">Reveal Store Value</option>
+        </optgroup>
+        <optgroup label="📝 Drafts">
+          <option value="draft_created">Draft Created</option>
+          <option value="draft_saved">Draft Saved</option>
+          <option value="draft_restored">Draft Restored</option>
+        </optgroup>
+        <optgroup label="👥 Staff & Users">
+          <option value="approve_user">Approve User</option>
+          <option value="reject_user">Reject User</option>
+          <option value="add_staff">Add Staff</option>
+          <option value="edit_staff">Edit Staff</option>
+          <option value="terminate_staff">Terminate Staff</option>
+          <option value="suspend_staff">Suspend Staff</option>
+          <option value="reinstate_staff">Reinstate Staff</option>
+        </optgroup>
+        <optgroup label="🛒 Purchases">
+          <option value="purchase_completed">Purchase Completed</option>
+          <option value="approve_purchase">Approve Purchase</option>
+          <option value="add_category">Add Category</option>
+        </optgroup>
+        <optgroup label="📊 Finance">
+          <option value="view_finance">View Finance</option>
+          <option value="update_point_value">Update Point Value</option>
+          <option value="add_misc_expense">Add Misc Expense</option>
+          <option value="approve_misc_expense">Approve Misc Expense</option>
+          <option value="reject_misc_expense">Reject Misc Expense</option>
+        </optgroup>
+        <optgroup label="📋 Other">
+          <option value="data_refreshed">Data Refreshed</option>
+          <option value="perm_delete">Permanent Delete</option>
+        </optgroup>
       </select>
       <button class="btn btn-outline btn-sm" onclick="exportAudit()"><i class="fas fa-download"></i> Export CSV</button>
       <button class="btn btn-outline btn-sm" onclick="refreshAudit()"><i class="fas fa-sync-alt"></i> Refresh</button>
@@ -312,12 +372,15 @@
     <div class="panel">
       <div class="panel-header">
         <h3><i class="fas fa-history"></i> System Activity Log</h3>
-        <button class="btn btn-danger btn-sm" onclick="requestDeleteAudit()"><i class="fas fa-trash-alt"></i> Request Deletion</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="loadMoreLogs()"><i class="fas fa-chevron-down"></i> Load More</button>
+          <button class="btn btn-danger btn-sm" onclick="requestDeleteAudit()"><i class="fas fa-trash-alt"></i> Request Deletion</button>
+        </div>
       </div>
       <div class="table-wrapper">
         <table class="data-table">
-          <thead><tr><th>Date & Time</th><th>Action</th><th>User</th><th>Details</th></tr></thead>
-          <tbody id="auditTable"><tr><td colspan="4"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading audit logs...</p></div></td></tr></tbody>
+          <thead><tr><th>Date & Time</th><th>Action</th><th>User</th><th>Role</th><th>Details</th></tr></thead>
+          <tbody id="auditTable"><tr><td colspan="5"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading audit logs...</p></div></td></tr></tbody>
         </table>
       </div>
     </div>
@@ -330,7 +393,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, where, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, where, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
@@ -346,12 +409,17 @@
   const db = getFirestore(app);
 
   let currentUser = null, userData = null, unsubscribes = [], allLogs = [], currentFilter = 'all';
+  let lastVisible = null, hasMoreLogs = true;
+  const LOGS_PER_PAGE = 200;
 
   function formatDateTime(d) {
     if (!d) return '-';
-    const date = d.toDate ? d.toDate() : new Date(d);
+    const date = d.toDate ? d.toDate() : (d.seconds ? new Date(d.seconds * 1000) : new Date(d));
+    if (isNaN(date.getTime())) return '-';
     return date.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}) + ' ' + date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }
+
+  function safeNumber(val, fallback) { fallback = fallback || 0; if (typeof val === 'number') return val; const parsed = parseFloat(val); return isNaN(parsed) ? fallback : parsed; }
 
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
@@ -377,53 +445,103 @@
   };
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
 
+  // ============================================
+  // COMPLETE ACTION TYPE MAPS
+  // ============================================
   function getActionBadge(actionType) {
     const map = {
-      login:'info', logout:'info', add_item:'success', edit_item:'warning', delete_item:'danger',
-      sale:'success', return_goods:'danger', purchase_completed:'success',
+      // Auth
+      login:'info', logout:'info', session_start:'info', pin_verified:'success', pin_failed:'danger',
+      // Sales
+      sale_processed:'success', sale_saved_firestore:'success', sale_save_failed:'danger',
+      receipt_viewed:'info', receipt_printed:'info', sales_exported:'info', reveal_sales_stats:'warning',
+      // Returns & Exchanges
+      return_refund_processed:'danger', return_exchange_processed:'purple', return_store_credit:'warning',
+      return_replacement:'info',
+      // Inventory
+      add_item:'success', edit_item:'warning', delete_item:'danger', delete_all:'danger',
+      reject_item:'danger', resubmit_item:'success', csv_import:'success', view_inventory:'info',
+      fix_discrepancies:'warning',
+      // Store
+      add_store_item:'success', edit_store_item:'warning', delete_store_item:'danger',
+      incoming_inventory_queued:'info', confirm_incoming:'success', view_store:'info',
+      export_store:'info', reveal_store_value:'warning',
+      // Drafts
+      draft_created:'info', draft_saved:'success', draft_restored:'info',
+      // Staff
       approve_user:'success', reject_user:'danger', add_staff:'info', edit_staff:'warning',
       terminate_staff:'danger', suspend_staff:'warning', reinstate_staff:'success',
-      add_category:'purple', update_point_value:'info', dashboard_view:'info',
-      stock_action_request:'warning', approve_stock_request:'success', reject_stock_request:'danger',
-      view_inventory:'info', view_sales:'info', view_finance:'info', view_purchases:'info',
-      view_staff_management:'info', view_approvals:'info', view_history:'info',
-      draft_request:'info', submit_request:'warning', approve_purchase:'success',
-      add_misc_expense:'warning', approve_misc_expense:'success', reject_misc_expense:'danger',
-      grant_value_view:'success', reveal_total_value:'warning'
+      // Purchases
+      purchase_completed:'success', approve_purchase:'success', add_category:'purple',
+      // Finance
+      view_finance:'info', update_point_value:'info', add_misc_expense:'warning',
+      approve_misc_expense:'success', reject_misc_expense:'danger',
+      // Other
+      data_refreshed:'info', perm_delete:'danger'
     };
     return map[actionType] || 'info';
   }
 
   function getActionIcon(actionType) {
     const map = {
-      login:'sign-in-alt', logout:'sign-out-alt', add_item:'plus-circle', edit_item:'edit',
-      delete_item:'trash', sale:'cash-register', return_goods:'undo', purchase_completed:'truck',
+      login:'sign-in-alt', logout:'sign-out-alt', session_start:'play', pin_verified:'check-shield', pin_failed:'shield-times',
+      sale_processed:'cash-register', sale_saved_firestore:'cloud-check', sale_save_failed:'cloud-times',
+      receipt_viewed:'receipt', receipt_printed:'print', sales_exported:'file-export', reveal_sales_stats:'eye',
+      return_refund_processed:'money-bill-wave', return_exchange_processed:'exchange-alt', return_store_credit:'piggy-bank',
+      return_replacement:'sync-alt',
+      add_item:'plus-circle', edit_item:'edit', delete_item:'trash', delete_all:'trash-alt',
+      reject_item:'ban', resubmit_item:'paper-plane', csv_import:'file-upload', view_inventory:'box',
+      fix_discrepancies:'wrench',
+      add_store_item:'store-plus', edit_store_item:'store-edit', delete_store_item:'store-slash',
+      incoming_inventory_queued:'truck-loading', confirm_incoming:'check-double', view_store:'store',
+      export_store:'file-download', reveal_store_value:'eye',
+      draft_created:'file-alt', draft_saved:'save', draft_restored:'file-import',
       approve_user:'user-check', reject_user:'user-times', add_staff:'user-plus', edit_staff:'user-edit',
-      terminate_staff:'ban', suspend_staff:'pause', reinstate_staff:'undo',
-      add_category:'folder-plus', update_point_value:'coins', dashboard_view:'chart-pie',
-      stock_action_request:'clipboard-list', view_inventory:'box', view_sales:'shopping-bag',
-      view_finance:'chart-line', view_purchases:'shopping-cart', view_staff_management:'users-cog',
-      add_misc_expense:'receipt', grant_value_view:'eye'
+      terminate_staff:'user-slash', suspend_staff:'user-clock', reinstate_staff:'user-check',
+      purchase_completed:'truck', approve_purchase:'check', add_category:'folder-plus',
+      view_finance:'chart-line', update_point_value:'coins', add_misc_expense:'receipt',
+      approve_misc_expense:'check-circle', reject_misc_expense:'times-circle',
+      data_refreshed:'sync', perm_delete:'eraser'
     };
     return map[actionType] || 'circle';
+  }
+
+  function getActionGroup(actionType) {
+    if (['login','logout','session_start','pin_verified','pin_failed'].includes(actionType)) return '🔐 Auth';
+    if (['sale_processed','sale_saved_firestore','sale_save_failed','receipt_viewed','receipt_printed','sales_exported','reveal_sales_stats'].includes(actionType)) return '💰 Sales';
+    if (['return_refund_processed','return_exchange_processed','return_store_credit','return_replacement'].includes(actionType)) return '↩️ Returns';
+    if (['add_item','edit_item','delete_item','delete_all','reject_item','resubmit_item','csv_import','view_inventory','fix_discrepancies'].includes(actionType)) return '📦 Inventory';
+    if (['add_store_item','edit_store_item','delete_store_item','incoming_inventory_queued','confirm_incoming','view_store','export_store','reveal_store_value'].includes(actionType)) return '🏪 Store';
+    if (['draft_created','draft_saved','draft_restored'].includes(actionType)) return '📝 Drafts';
+    if (['approve_user','reject_user','add_staff','edit_staff','terminate_staff','suspend_staff','reinstate_staff'].includes(actionType)) return '👥 Staff';
+    if (['purchase_completed','approve_purchase','add_category'].includes(actionType)) return '🛒 Purchases';
+    if (['view_finance','update_point_value','add_misc_expense','approve_misc_expense','reject_misc_expense'].includes(actionType)) return '📊 Finance';
+    return '📋 Other';
   }
 
   function renderAudit() {
     let filtered = [...allLogs];
     const search = (document.getElementById('searchInput')?.value||'').toLowerCase();
-    if (search) filtered = filtered.filter(l => (l.performedByName||'').toLowerCase().includes(search) || (l.note||'').toLowerCase().includes(search) || (l.actionType||'').toLowerCase().includes(search));
+    if (search) {
+      filtered = filtered.filter(l => 
+        (l.performedByName||'').toLowerCase().includes(search) || 
+        (l.note||'').toLowerCase().includes(search) || 
+        (l.actionType||'').toLowerCase().includes(search) ||
+        (l.performedByRole||'').toLowerCase().includes(search)
+      );
+    }
     if (currentFilter !== 'all') filtered = filtered.filter(l => l.actionType === currentFilter);
 
     // Stats
     const today = new Date().toISOString().split('T')[0];
     const todayLogs = allLogs.filter(l => {
-      const d = l.performedAt?.toDate ? l.performedAt.toDate() : new Date(l.performedAt||0);
+      const d = l.performedAt?.toDate ? l.performedAt.toDate() : (l.performedAt?.seconds ? new Date(l.performedAt.seconds * 1000) : new Date(l.performedAt||0));
       return d.toISOString().split('T')[0] === today;
     });
     const uniqueUsers = new Set(allLogs.map(l => l.performedByName || l.performedBy).filter(Boolean));
     const uniqueActions = new Set(allLogs.map(l => l.actionType).filter(Boolean));
 
-    document.getElementById('totalActions').textContent = allLogs.length;
+    document.getElementById('totalActions').textContent = allLogs.length.toLocaleString();
     document.getElementById('todayActions').textContent = todayLogs.length;
     document.getElementById('uniqueUsers').textContent = uniqueUsers.size;
     document.getElementById('actionTypes').textContent = uniqueActions.size;
@@ -431,33 +549,153 @@
     const tbody = document.getElementById('auditTable');
     if (!tbody) return;
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-history"></i><p>No audit logs found</p></div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-history"></i><p>No audit logs found matching your filters</p></div></td></tr>';
       return;
     }
-    tbody.innerHTML = filtered.slice(0, 200).map(l => {
+    tbody.innerHTML = filtered.slice(0, LOGS_PER_PAGE).map(l => {
       const badge = getActionBadge(l.actionType);
       const icon = getActionIcon(l.actionType);
-      return `<tr>
-        <td>${formatDateTime(l.performedAt)}</td>
-        <td><span class="badge badge-${badge}"><i class="fas fa-${icon}"></i> ${(l.actionType||'action').replace(/_/g,' ')}</span></td>
+      const group = getActionGroup(l.actionType);
+      const note = l.note || '-';
+      const isImportant = l.actionType && (l.actionType.includes('delete') || l.actionType.includes('terminate') || l.actionType.includes('pin_failed'));
+      const rowClass = isImportant ? 'important-row' : '';
+      
+      return `<tr class="${rowClass}" onclick="showLogDetail('${l.id}')" title="Click to view details">
+        <td style="font-size:0.8rem;">${formatDateTime(l.performedAt)}</td>
+        <td><span class="badge badge-${badge}" style="font-size:0.7rem;"><i class="fas fa-${icon}"></i> ${group}<br><small>${(l.actionType||'action').replace(/_/g,' ')}</small></span></td>
         <td><strong>${l.performedByName || (l.performedBy?.slice(0,8)) || 'System'}</strong></td>
-        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${l.note||''}">${l.note||'-'}</td>
+        <td><span class="badge badge-purple" style="font-size:0.65rem;">${l.performedByRole || '—'}</span></td>
+        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${note.replace(/"/g,'&quot;')}">${note.length > 80 ? note.substring(0, 80) + '...' : note}</td>
       </tr>`;
     }).join('');
   }
 
+  // Show log detail modal
+  window.showLogDetail = function(logId) {
+    const log = allLogs.find(l => l.id === logId);
+    if (!log) return;
+    
+    const badge = getActionBadge(log.actionType);
+    const icon = getActionIcon(log.actionType);
+    const group = getActionGroup(log.actionType);
+    
+    let extraDataHtml = '';
+    if (log.extraData || log.receiptNumber || log.customerName) {
+      const extra = log.extraData || {};
+      const allExtra = Object.assign({}, extra, {
+        receiptNumber: log.receiptNumber,
+        customerName: log.customerName,
+        customerPhone: log.customerPhone,
+        totalAmount: log.totalAmount,
+        paymentMethod: log.paymentMethod
+      });
+      extraDataHtml = '<div class="log-detail-json">' + JSON.stringify(allExtra, function(key, val) {
+        if (val === undefined || val === null || val === '') return undefined;
+        if (key === 'performedAt' || key === 'createdAt') return undefined;
+        return val;
+      }, 2) + '</div>';
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay active';
+    modal.innerHTML = `
+      <div class="modal log-detail-modal">
+        <div class="modal-header">
+          <h3><span class="badge badge-${badge}"><i class="fas fa-${icon}"></i> ${group}</span></h3>
+          <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+        </div>
+        <div class="log-detail-row"><strong>Action:</strong> <span>${(log.actionType||'unknown').replace(/_/g,' ')}</span></div>
+        <div class="log-detail-row"><strong>Date:</strong> <span>${formatDateTime(log.performedAt)}</span></div>
+        <div class="log-detail-row"><strong>User:</strong> <span>${log.performedByName || 'System'} (${log.performedByRole || 'unknown'})</span></div>
+        <div class="log-detail-row"><strong>User ID:</strong> <span style="font-family:monospace;font-size:0.75rem;">${log.performedBy || 'N/A'}</span></div>
+        <div class="log-detail-row"><strong>Details:</strong> <span>${log.note || '—'}</span></div>
+        <div class="log-detail-row"><strong>Online:</strong> <span>${log.isOnline ? '✅ Yes' : '❌ No (offline)'}</span></div>
+        <div class="log-detail-row"><strong>Device:</strong> <span style="font-size:0.7rem;">${(log.deviceInfo || 'Unknown').substring(0, 100)}</span></div>
+        ${extraDataHtml}
+        <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:15px;">Close</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+  };
+
   function loadAuditLogs() {
     cleanup();
-    const q = query(collection(db, 'audit_logs'), orderBy('performedAt','desc'), limit(500));
+    const q = query(collection(db, 'audit_logs'), orderBy('performedAt','desc'), limit(LOGS_PER_PAGE));
     unsubscribes.push(onSnapshot(q, snap => {
-      allLogs = snap.docs.map(d=>({id:d.id,...d.data()}));
+      allLogs = snap.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          actionType: data.actionType || 'unknown',
+          performedBy: data.performedBy || '',
+          performedByName: data.performedByName || 'System',
+          performedByRole: data.performedByRole || '',
+          performedAt: data.performedAt,
+          note: data.note || '',
+          deviceInfo: data.deviceInfo || '',
+          isOnline: data.isOnline !== undefined ? data.isOnline : true,
+          timestamp_local: data.timestamp_local || '',
+          extraData: data.extraData || {},
+          receiptNumber: data.receiptNumber || (data.extraData && data.extraData.receiptNumber) || '',
+          customerName: data.customerName || (data.extraData && data.extraData.customerName) || '',
+          customerPhone: data.customerPhone || (data.extraData && data.extraData.customerPhone) || '',
+          totalAmount: data.totalAmount || (data.extraData && data.extraData.totalAmount) || 0,
+          paymentMethod: data.paymentMethod || (data.extraData && data.extraData.paymentMethod) || ''
+        };
+      });
+      lastVisible = snap.docs[snap.docs.length - 1] || null;
+      hasMoreLogs = snap.docs.length >= LOGS_PER_PAGE;
       renderAudit();
     }, error => {
       console.error('Audit load error:', error);
       const tbody = document.getElementById('auditTable');
-      if (tbody) tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><i class="fas fa-exclamation-circle" style="color:var(--danger);"></i><p>Error: ${error.message||'Failed to load'}</p></div></td></tr>`;
+      if (tbody) tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-exclamation-circle" style="color:var(--danger);"></i><p>Error: ${error.message||'Failed to load'}</p></div></td></tr>`;
     }));
   }
+
+  window.loadMoreLogs = async function() {
+    if (!hasMoreLogs || !lastVisible) {
+      showToast('No more logs to load', 'info');
+      return;
+    }
+    try {
+      const q = query(collection(db, 'audit_logs'), orderBy('performedAt','desc'), startAfter(lastVisible), limit(LOGS_PER_PAGE));
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        hasMoreLogs = false;
+        showToast('All logs loaded', 'info');
+        return;
+      }
+      const newLogs = snap.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          actionType: data.actionType || 'unknown',
+          performedBy: data.performedBy || '',
+          performedByName: data.performedByName || 'System',
+          performedByRole: data.performedByRole || '',
+          performedAt: data.performedAt,
+          note: data.note || '',
+          deviceInfo: data.deviceInfo || '',
+          isOnline: data.isOnline !== undefined ? data.isOnline : true,
+          timestamp_local: data.timestamp_local || '',
+          extraData: data.extraData || {},
+          receiptNumber: data.receiptNumber || (data.extraData && data.extraData.receiptNumber) || '',
+          customerName: data.customerName || (data.extraData && data.extraData.customerName) || '',
+          totalAmount: data.totalAmount || (data.extraData && data.extraData.totalAmount) || 0,
+          paymentMethod: data.paymentMethod || (data.extraData && data.extraData.paymentMethod) || ''
+        };
+      });
+      allLogs = [...allLogs, ...newLogs];
+      lastVisible = snap.docs[snap.docs.length - 1] || null;
+      hasMoreLogs = snap.docs.length >= LOGS_PER_PAGE;
+      renderAudit();
+      showToast(`Loaded ${newLogs.length} more logs`, 'success');
+    } catch (e) {
+      showToast('Failed: ' + e.message, 'error');
+    }
+  };
 
   window.requestDeleteAudit = async () => {
     const days = prompt('Delete logs older than how many days? (e.g., 30)');
@@ -483,16 +721,19 @@
     const search = (document.getElementById('searchInput')?.value||'').toLowerCase();
     if (search) filtered = filtered.filter(l => (l.performedByName||'').toLowerCase().includes(search) || (l.note||'').toLowerCase().includes(search));
     if (currentFilter !== 'all') filtered = filtered.filter(l => l.actionType === currentFilter);
-    const headers = 'Date & Time,Action,User,Details';
-    const rows = filtered.map(l => `"${formatDateTime(l.performedAt)}","${l.actionType||'action'}","${l.performedByName||l.performedBy||'System'}","${(l.note||'').replace(/"/g,'""')}"`);
+    const headers = 'Date & Time,Action,User,Role,Details,Online';
+    const rows = filtered.map(l => {
+      const note = (l.note||'').replace(/"/g,'""');
+      return `"${formatDateTime(l.performedAt)}","${l.actionType||'action'}","${l.performedByName||l.performedBy||'System'}","${l.performedByRole||''}","${note}","${l.isOnline?'Yes':'No'}"`;
+    });
     const csv = [headers, ...rows].join('\n');
     const blob = new Blob([csv],{type:'text/csv'});
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`; a.click();
-    showToast('Exported','success');
+    showToast(`Exported ${rows.length} logs`,'success');
   };
 
-  window.refreshAudit = () => { loadAuditLogs(); showToast('Refreshed','success'); };
+  window.refreshAudit = () => { allLogs = []; lastVisible = null; hasMoreLogs = true; loadAuditLogs(); showToast('Refreshed','success'); };
 
   document.getElementById('searchInput').addEventListener('input', renderAudit);
   document.getElementById('actionFilter').addEventListener('change', e => { currentFilter = e.target.value; renderAudit(); });
