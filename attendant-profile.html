@@ -38,6 +38,137 @@
     .page-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
     .content-wrapper { padding: 28px; max-width: 1200px; }
     
+    @keyframes zoomInOut {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .company-loan-card {
+      background: linear-gradient(135deg, #1a1a2e 0%, #2d1b3d 25%, #1a1a2e 50%, #2d1b3d 75%, #1a1a2e 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 8s ease infinite;
+      border-radius: 24px;
+      padding: 28px 24px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid rgba(255,77,166,0.3);
+      box-shadow: 0 10px 40px rgba(255,77,166,0.15);
+    }
+    .company-loan-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,77,166,0.08) 0%, transparent 70%);
+      animation: zoomInOut 3s ease-in-out infinite;
+    }
+    .company-loan-card .loan-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+      text-align: center;
+    }
+    .company-loan-card .loan-icon {
+      font-size: 3rem;
+      animation: zoomInOut 2s ease-in-out infinite;
+      color: #ffd700;
+      filter: drop-shadow(0 0 20px rgba(255,215,0,0.4));
+    }
+    .company-loan-card .loan-amount {
+      animation: zoomInOut 2.5s ease-in-out infinite;
+    }
+    .company-loan-card .loan-amount .amount-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 4px;
+    }
+    .company-loan-card .loan-amount .amount-value {
+      font-size: 2.8rem;
+      font-weight: 900;
+      font-family: 'Playfair Display', serif;
+      color: #ffd700;
+      text-shadow: 0 0 30px rgba(255,215,0,0.5);
+      line-height: 1;
+    }
+    .company-loan-card .loan-divider {
+      width: 2px;
+      height: 60px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.3), transparent);
+    }
+    .company-loan-card .countdown-section {
+      text-align: center;
+    }
+    .company-loan-card .countdown-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 8px;
+    }
+    .company-loan-card .countdown-timer {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .company-loan-card .countdown-unit {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      padding: 12px 16px;
+      min-width: 70px;
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
+    .company-loan-card .countdown-unit .countdown-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: white;
+      line-height: 1;
+      font-family: 'Playfair Display', serif;
+    }
+    .company-loan-card .countdown-unit .countdown-unit-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 4px;
+    }
+    .company-loan-card .due-date {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.6);
+      margin-top: 8px;
+      letter-spacing: 1px;
+    }
+    .company-loan-card .loan-status {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: rgba(245,158,11,0.2);
+      color: #ffd700;
+      border: 1px solid rgba(245,158,11,0.3);
+      animation: zoomInOut 3s ease-in-out infinite;
+    }
+    
     .profile-header { display: flex; align-items: center; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; }
     .profile-avatar { width: 100px; height: 100px; border-radius: 30px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; color: white; }
     .profile-info h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 5px; color: var(--dark); }
@@ -144,6 +275,9 @@
       .info-grid { grid-template-columns: 1fr; } 
       .profile-header { flex-direction: column; text-align: center; }
       .profile-info p { justify-content: center; }
+      .company-loan-card .loan-amount .amount-value { font-size: 2rem; }
+      .company-loan-card .countdown-unit { min-width: 55px; padding: 8px 10px; }
+      .company-loan-card .countdown-unit .countdown-value { font-size: 1.3rem; }
     }
   </style>
 </head>
@@ -201,6 +335,41 @@
     <div id="loadingState" class="loading-state"><div class="spinner"></div></div>
     
     <div id="mainContent" style="display: none;">
+      
+      <!-- Company Loan Countdown Card -->
+      <div class="company-loan-card">
+        <div class="loan-content">
+          <div class="loan-icon">🏦</div>
+          <div class="loan-amount">
+            <div class="amount-label">Company Loan</div>
+            <div class="amount-value">₦100,000</div>
+          </div>
+          <div class="loan-divider"></div>
+          <div class="countdown-section">
+            <div class="countdown-label">Time Until Due Date</div>
+            <div class="countdown-timer" id="loanCountdown">
+              <div class="countdown-unit">
+                <div class="countdown-value" id="loanDays">0</div>
+                <div class="countdown-unit-label">Days</div>
+              </div>
+              <div class="countdown-unit">
+                <div class="countdown-value" id="loanHours">0</div>
+                <div class="countdown-unit-label">Hours</div>
+              </div>
+              <div class="countdown-unit">
+                <div class="countdown-value" id="loanMinutes">0</div>
+                <div class="countdown-unit-label">Mins</div>
+              </div>
+              <div class="countdown-unit">
+                <div class="countdown-value" id="loanSeconds">0</div>
+                <div class="countdown-unit-label">Secs</div>
+              </div>
+            </div>
+            <div class="due-date">Due: <strong>30 April 2027</strong></div>
+          </div>
+          <div class="loan-status">⏳ ACTIVE LOAN</div>
+        </div>
+      </div>
       
       <div class="profile-header">
         <div class="profile-avatar" id="profileAvatar">A</div>
@@ -372,6 +541,11 @@
   let sessionLocked = false;
   let pinAttempts = 0;
   let pinLockoutUntil = null;
+  let loanCountdownInterval = null;
+
+  // Company Loan Due Date: 30 April 2027
+  const LOAN_DUE_DATE = new Date(2027, 3, 30); // Month is 0-indexed: 3 = April
+  const LOAN_AMOUNT = 100000;
 
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}); }
   function formatDateTime(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleString('en-GB', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
@@ -396,7 +570,74 @@
   }
 
   // ============================================
-  // ATTENDANT PIN SERVICE (HASHED)
+  // COMPANY LOAN COUNTDOWN
+  // ============================================
+  function updateLoanCountdown() {
+    const now = new Date();
+    const diff = LOAN_DUE_DATE - now;
+    
+    if (diff <= 0) {
+      document.getElementById('loanDays').textContent = '0';
+      document.getElementById('loanHours').textContent = '0';
+      document.getElementById('loanMinutes').textContent = '0';
+      document.getElementById('loanSeconds').textContent = '0';
+      const statusEl = document.querySelector('.loan-status');
+      if (statusEl) {
+        statusEl.textContent = '⚠️ OVERDUE';
+        statusEl.style.background = 'rgba(239,68,68,0.2)';
+        statusEl.style.color = '#ef4444';
+        statusEl.style.borderColor = 'rgba(239,68,68,0.3)';
+      }
+      return;
+    }
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    document.getElementById('loanDays').textContent = days;
+    document.getElementById('loanHours').textContent = hours;
+    document.getElementById('loanMinutes').textContent = minutes;
+    document.getElementById('loanSeconds').textContent = seconds;
+    
+    // Change colors when less than 30 days remaining
+    if (days < 30) {
+      document.querySelectorAll('.countdown-value').forEach(function(el) {
+        el.style.color = '#f59e0b';
+      });
+      const statusEl = document.querySelector('.loan-status');
+      if (statusEl) {
+        statusEl.textContent = '⚠️ DUE SOON';
+        statusEl.style.background = 'rgba(245,158,11,0.2)';
+        statusEl.style.color = '#f59e0b';
+        statusEl.style.borderColor = 'rgba(245,158,11,0.3)';
+      }
+    }
+    
+    // Change colors when less than 7 days remaining
+    if (days < 7) {
+      document.querySelectorAll('.countdown-value').forEach(function(el) {
+        el.style.color = '#ef4444';
+      });
+      const statusEl = document.querySelector('.loan-status');
+      if (statusEl) {
+        statusEl.textContent = '🔴 URGENT';
+        statusEl.style.background = 'rgba(239,68,68,0.2)';
+        statusEl.style.color = '#ef4444';
+        statusEl.style.borderColor = 'rgba(239,68,68,0.3)';
+      }
+    }
+  }
+
+  function startLoanCountdown() {
+    updateLoanCountdown();
+    if (loanCountdownInterval) clearInterval(loanCountdownInterval);
+    loanCountdownInterval = setInterval(updateLoanCountdown, 1000);
+  }
+
+  // ============================================
+  // ATTENDANT PIN SERVICE (HASHED) - FIXED this BINDING
   // ============================================
   class AttendantPinService {
     async hashPin(pin, userId) {
@@ -430,6 +671,9 @@
       }
 
       try {
+        // FIXED: Capture 'this' reference for use inside transaction callback
+        const self = this;
+        
         const result = await runTransaction(db, async function(transaction) {
           const userRef = doc(db, 'users', userId);
           const userDoc = await transaction.get(userRef);
@@ -440,18 +684,19 @@
 
           const userData = userDoc.data();
           
-          // If user already has a PIN, verify the current one
           if (userData.hasAttendantPin && userData.attendantPinHash) {
             if (!currentPin || currentPin.length !== 4) {
               throw new Error('Current PIN is required to change your PIN');
             }
-            const currentValid = await this.verifyPin(currentPin, userData.attendantPinHash, userId);
+            // FIXED: Use 'self' instead of 'this'
+            const currentValid = await self.verifyPin(currentPin, userData.attendantPinHash, userId);
             if (!currentValid) {
               throw new Error('Current PIN is incorrect');
             }
           }
 
-          const newPinHash = await this.hashPin(newPin, userId);
+          // FIXED: Use 'self' instead of 'this'
+          const newPinHash = await self.hashPin(newPin, userId);
           const wasSet = userData.hasAttendantPin || false;
           
           transaction.update(userRef, {
@@ -500,10 +745,12 @@
         }
 
         const userData = userDoc.data();
+        // FIXED: Capture 'this' reference
+        const self = this;
         
-        // Check for new hashed PIN first
         if (userData.hasAttendantPin && userData.attendantPinHash) {
-          const isValid = await this.verifyPin(inputPin, userData.attendantPinHash, userId);
+          // FIXED: Use 'self' instead of 'this'
+          const isValid = await self.verifyPin(inputPin, userData.attendantPinHash, userId);
           
           if (isValid) {
             pinAttempts = 0;
@@ -517,13 +764,12 @@
           }
         }
         
-        // Fallback: Check old plain-text attendantPin (for backward compatibility)
         if (userData.attendantPin && userData.attendantPin === inputPin) {
           pinAttempts = 0;
           pinLockoutUntil = null;
           
-          // Auto-migrate to hashed PIN
-          const newHash = await this.hashPin(inputPin, userId);
+          // FIXED: Use 'self' instead of 'this'
+          const newHash = await self.hashPin(inputPin, userId);
           updateDoc(doc(db, 'users', userId), {
             attendantPinHash: newHash,
             hasAttendantPin: true,
@@ -534,7 +780,6 @@
           return { valid: true, message: 'PIN verified (migrated to secure storage)' };
         }
         
-        // Invalid PIN
         pinAttempts++;
         
         addDoc(collection(db, 'pin_failed_attempts'), {
@@ -670,12 +915,10 @@
         document.getElementById('displayAccountNumber').textContent = userData.accountNumber || 'Not set';
         document.getElementById('displayAccountName').textContent = userData.accountName || userData.fullName || 'Not set';
         
-        // Update PIN status (check hashed PIN)
         if (userData.hasAttendantPin && userData.attendantPinHash) {
           document.getElementById('pinButtonText').textContent = 'Change Security PIN';
           document.getElementById('pinStatusText').textContent = 'PIN is set ✓ - Session locks after 10 min inactivity';
         } else if (userData.attendantPin) {
-          // Old plain-text PIN exists
           document.getElementById('pinButtonText').textContent = 'Change Security PIN';
           document.getElementById('pinStatusText').textContent = 'PIN is set (will be upgraded to secure storage on next use)';
         } else {
@@ -873,11 +1116,11 @@
   };
 
   // ============================================
-  // PIN MANAGEMENT (UPDATED WITH HASHED STORAGE)
+  // PIN MANAGEMENT
   // ============================================
   window.openSetPinModal = function() { 
     const hasExistingPin = userData?.hasAttendantPin && userData?.attendantPinHash;
-    const hasOldPin = !hasExistingPin && userData?.attendantPin; // Old plain-text PIN
+    const hasOldPin = !hasExistingPin && userData?.attendantPin;
     
     showModal(hasExistingPin ? 'Change Security PIN' : 'Set Security PIN', 
       '<div style="text-align:center;margin-bottom:20px;">' +
@@ -1013,7 +1256,7 @@
     
     if (newPin.length === 4 && confirmPin.length === 4) {
       if (newPin !== confirmPin) {
-        if (errorDiv) { errorDiv.textContent = '❌ PINs do not match'; errorDiv.style.display = 'block'; }
+        if (errorDiv) { errorDiv.textContent = '❌ PINs do not match'; errorDiv.style.display = 'block'; errorDiv.style.color = 'var(--danger)'; }
       } else {
         if (errorDiv) { errorDiv.textContent = '✅ PINs match'; errorDiv.style.color = 'var(--success)'; errorDiv.style.display = 'block'; }
       }
@@ -1056,7 +1299,6 @@
       showToast(result.message || 'PIN saved successfully! 🔒', 'success');
       hideModal();
       
-      // Reload user data
       const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
       if (userSnap.exists()) {
         userData = userSnap.data();
@@ -1114,10 +1356,12 @@
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}); 
     await loadProfile(); 
     resetInactivityTimer(); 
+    startLoanCountdown(); // Start the loan countdown
   });
   
   document.getElementById('logoutBtn').addEventListener('click', async function() { 
     if (inactivityTimer) clearTimeout(inactivityTimer);
+    if (loanCountdownInterval) clearInterval(loanCountdownInterval);
     unsubscribes.forEach(function(u) { u(); }); 
     await signOut(auth); 
     window.location.href = 'auth.html'; 
@@ -1126,6 +1370,7 @@
   window.addEventListener('beforeunload', function() { 
     unsubscribes.forEach(function(u) { u(); }); 
     if (inactivityTimer) clearTimeout(inactivityTimer); 
+    if (loanCountdownInterval) clearInterval(loanCountdownInterval);
   });
 </script>
 </body>
