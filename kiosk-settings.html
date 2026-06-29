@@ -6,13 +6,12 @@
   <meta name="theme-color" content="#ff4da6">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Sales · OmoCreations</title>
+  <title>Kiosk Settings · OmoCreations</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
   <style>
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -27,344 +26,283 @@
     body {
       font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
       background:linear-gradient(135deg,#f9fafb 0%,#fff0f6 100%);
-      display:flex; min-height:100vh; overflow-x:hidden;
-      -webkit-font-smoothing:antialiased;
+      display:flex; min-height:100vh; overflow-x:hidden; -webkit-font-smoothing:antialiased;
     }
     @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
     @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
     @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
-    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.5} }
-    @keyframes spin { 0%{transform:rotate(0deg)}100%{transform:rotate(360deg)} }
 
-    .offline-banner {
-      background: var(--warning); color: white; text-align: center;
-      padding: 8px; font-size: 0.8rem; font-weight: 600;
-      display: none; position: sticky; top: 0; z-index: 100;
+    .sidebar {
+      width:var(--sidebar-width); min-width:var(--sidebar-width);
+      background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%);
+      color:white; position:fixed; top:0; left:0; height:100vh;
+      overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000;
+      border-right:1px solid rgba(255,77,166,0.2);
     }
-    .offline-banner.show { display: block; }
-
-    .debug-panel {
-      position: fixed; bottom: 20px; right: 20px;
-      background: #1a1a2e; color: #fff; padding: 16px;
-      border-radius: 16px; font-size: 0.75rem; z-index: 5000;
-      display: none; max-width: 400px; max-height: 60vh;
-      overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      font-family: monospace; line-height: 1.5;
+    .sidebar::-webkit-scrollbar { width:4px; }
+    .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); }
+    .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
+    .sidebar-header {
+      padding:24px 18px; display:flex; align-items:center; gap:12px;
+      border-bottom:1px solid rgba(255,77,166,0.2); position:sticky; top:0; z-index:10;
+      background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%);
     }
-    .debug-panel.show { display: block; }
-    .debug-panel h4 { color: var(--primary); margin-bottom: 8px; font-size: 0.85rem; }
-    .debug-panel .debug-item { margin-bottom: 4px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .debug-panel .debug-ok { color: var(--success); }
-    .debug-panel .debug-warn { color: var(--warning); }
-    .debug-panel .debug-error { color: var(--danger); }
-    .debug-panel button {
-      background: var(--primary); color: white; border: none;
-      padding: 6px 12px; border-radius: 8px; cursor: pointer;
-      font-size: 0.7rem; margin-top: 8px; font-family: 'Poppins', sans-serif;
+    .sidebar-header .close-sidebar {
+      display:none; background:rgba(255,255,255,0.1); border:none; color:white;
+      width:32px; height:32px; border-radius:50%; cursor:pointer;
+      font-size:1.2rem; margin-left:auto; align-items:center; justify-content:center;
     }
-
-    .draft-tabs-bar {
-      background: white; border-bottom: 1px solid rgba(255,77,166,0.15);
-      padding: 0 16px; display: flex; align-items: center; gap: 4px;
-      overflow-x: auto; min-height: 44px; position: sticky; top: var(--header-height);
-      z-index: 45; -webkit-overflow-scrolling: touch;
+    .logo-icon {
+      width:42px; height:42px; background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+      border-radius:12px; display:flex; align-items:center; justify-content:center;
+      font-size:1.3rem; font-weight:700; flex-shrink:0; animation:flameRing 2s ease-in-out infinite;
     }
-    .draft-tab {
-      padding: 8px 14px; border-radius: 10px 10px 0 0;
-      cursor: pointer; font-size: 0.8rem; font-weight: 500;
-      white-space: nowrap; border: 1px solid transparent;
-      border-bottom: none; transition: all 0.2s; position: relative;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .draft-tab:hover { background: var(--primary-soft); }
-    .draft-tab.active {
-      background: var(--primary-soft); color: var(--primary);
-      border-color: rgba(255,77,166,0.2); font-weight: 700;
-    }
-    .draft-tab .draft-close {
-      font-size: 0.7rem; opacity: 0.5; cursor: pointer; padding: 2px;
-    }
-    .draft-tab .draft-close:hover { opacity: 1; color: var(--danger); }
-    .draft-tab .draft-indicator {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--warning); animation: pulse 1.5s infinite;
-    }
-    .draft-tab .draft-indicator.saved { background: var(--success); animation: none; }
-    .draft-add-btn {
-      padding: 8px 12px; border-radius: 8px; cursor: pointer;
-      font-size: 1rem; color: var(--primary); background: none; border: 1px dashed rgba(255,77,166,0.3);
-      transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
-    }
-    .draft-add-btn:hover { background: var(--primary-soft); }
-
-    .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); color:white; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000; border-right:1px solid rgba(255,77,166,0.2); }
-    .sidebar::-webkit-scrollbar { width:4px; } .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); } .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
-    .sidebar-header { padding:24px 18px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,77,166,0.2); position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); }
-    .sidebar-header .close-sidebar { display:none; background:rgba(255,255,255,0.1); border:none; color:white; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1.2rem; margin-left:auto; align-items:center; justify-content:center; }
-    .logo-icon { width:42px; height:42px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:700; flex-shrink:0; animation:flameRing 2s ease-in-out infinite; }
     .logo-text { font-size:1.25rem; font-weight:800; font-family:'Playfair Display',serif; white-space:nowrap; } .logo-text span { color:var(--primary); }
     .sidebar-nav { padding:20px 12px; display:flex; flex-direction:column; } .nav-section { margin-bottom:20px; }
     .nav-section-title { font-size:0.65rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.4); padding:8px 14px 6px; font-weight:600; white-space:nowrap; }
     .nav-item { display:flex; align-items:center; gap:14px; padding:12px 14px; border-radius:12px; color:rgba(255,255,255,0.7); cursor:pointer; border:none; background:none; width:100%; font-size:0.9rem; font-weight:500; text-align:left; margin-bottom:3px; transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; text-decoration:none; }
-    .nav-item i { width:22px; font-size:1.1rem; text-align:center; flex-shrink:0; } .nav-item:hover { background:rgba(255,77,166,0.15); color:white; transform:translateX(5px); }
-    .nav-item.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; box-shadow:0 5px 15px rgba(255,77,166,0.3); } .nav-item.logout { color:rgba(239,68,68,0.7); margin-top:auto; } .nav-item.logout:hover { background:rgba(239,68,68,0.15); color:#ef4444; }
+    .nav-item i { width:22px; font-size:1.1rem; text-align:center; flex-shrink:0; }
+    .nav-item:hover { background:rgba(255,77,166,0.15); color:white; transform:translateX(5px); }
+    .nav-item.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; box-shadow:0 5px 15px rgba(255,77,166,0.3); }
+    .nav-item.logout { color:rgba(239,68,68,0.7); margin-top:auto; }
+    .nav-item.logout:hover { background:rgba(239,68,68,0.15); color:#ef4444; }
     .sidebar-footer { padding:20px; border-top:1px solid rgba(255,77,166,0.2); position:sticky; bottom:0; background:linear-gradient(0deg,#0f0f1a 0%,transparent 100%); }
-    .user-profile { display:flex; align-items:center; gap:12px; } .user-avatar { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); display:flex; align-items:center; justify-content:center; font-weight:700; color:white; flex-shrink:0; font-size:1.1rem; }
+    .user-profile { display:flex; align-items:center; gap:12px; }
+    .user-avatar { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); display:flex; align-items:center; justify-content:center; font-weight:700; color:white; flex-shrink:0; font-size:1.1rem; }
     .user-details { white-space:nowrap; } .user-details h4 { font-size:0.85rem; font-weight:600; } .user-details p { font-size:0.7rem; opacity:0.6; }
-    .sidebar-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:999; display:none; } .sidebar-overlay.active { display:block; }
+    .sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:999; display:none; } .sidebar-overlay.active { display:block; }
 
     .main-content { flex:1; margin-left:var(--sidebar-width); transition:margin-left 0.3s ease; min-height:100vh; width:calc(100% - var(--sidebar-width)); }
-    .top-bar { height:var(--header-height); background:rgba(255,255,255,0.98); backdrop-filter:blur(12px); padding:0 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,77,166,0.15); position:sticky; top:0; z-index:50; }
+    .top-bar { height:var(--header-height); background:rgba(255,255,255,0.98); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); padding:0 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,77,166,0.15); position:sticky; top:0; z-index:50; }
     .top-bar-left { display:flex; align-items:center; gap:14px; } .menu-toggle { background:none; border:none; font-size:1.3rem; color:var(--gray); cursor:pointer; padding:10px; border-radius:10px; transition:all 0.2s; display:none; align-items:center; justify-content:center; } .menu-toggle:hover { background:var(--primary-soft); color:var(--primary); }
     .page-title { font-size:1.5rem; font-weight:700; color:var(--dark); font-family:'Playfair Display',serif; } .current-date { color:var(--gray); font-size:0.85rem; white-space:nowrap; }
-    .content-wrapper { padding:28px; max-width:1600px; }
+    .content-wrapper { padding:28px; max-width:900px; margin:0 auto; }
 
-    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
-    .stat-card { background:white; padding:18px 16px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(255,77,166,0.1); transition:all 0.3s; position:relative; overflow:hidden; animation:fadeInUp 0.5s ease forwards; opacity:0; }
-    .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}.stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}
-    .stat-card:hover { transform:translateY(-5px); box-shadow:0 12px 24px rgba(255,77,166,0.15); }
-    .stat-header { display:flex; justify-content:space-between; margin-bottom:12px; }
-    .stat-header span { font-size:0.65rem; color:var(--gray); text-transform:uppercase; font-weight:600; letter-spacing:1px; }
-    .stat-icon { width:36px; height:36px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; color:var(--primary); }
-    .stat-value { font-size:1.8rem; font-weight:800; color:var(--dark); font-family:'Playfair Display',serif; line-height:1; }
-    .stat-sub { font-size:0.65rem; color:var(--gray); margin-top:4px; }
+    .settings-card { background:white; border-radius:24px; padding:28px; margin-bottom:24px; box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(255,77,166,0.08); }
+    .settings-header { margin-bottom:22px; }
+    .settings-header h2 { font-size:1.25rem; font-weight:700; display:flex; align-items:center; gap:10px; color:var(--dark); }
+    .settings-header p { color:var(--gray); font-size:0.85rem; margin-top:5px; }
+    .form-group { margin-bottom:22px; }
+    .form-group label { display:block; font-size:0.85rem; font-weight:600; color:var(--dark); margin-bottom:8px; }
+    .form-group .hint { font-size:0.75rem; color:var(--gray); margin-top:5px; }
+    .time-input-group { display:flex; align-items:center; gap:15px; flex-wrap:wrap; }
+    .time-input { display:flex; align-items:center; gap:5px; background:var(--gray-light); padding:8px 15px; border-radius:40px; }
+    .time-input input { width:60px; padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center; font-size:1rem; font-weight:600; outline:none; font-family:'Poppins',sans-serif; }
+    .time-input input:focus { border-color:var(--primary); }
+    .penalty-group { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+    .penalty-item { flex:1; min-width:150px; }
+    .penalty-item input { width:100%; padding:12px 15px; border:1.5px solid rgba(0,0,0,0.08); border-radius:12px; font-size:1rem; font-weight:600; outline:none; font-family:'Poppins',sans-serif; }
+    .penalty-item input:focus { border-color:var(--primary); }
+    .divider { height:1px; background:rgba(0,0,0,0.08); margin:25px 0; }
+    .btn { padding:12px 24px; border-radius:40px; font-weight:600; font-size:0.9rem; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; font-family:'Poppins',sans-serif; }
+    .btn-primary { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; width:100%; justify-content:center; }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow:0 8px 18px rgba(255,77,166,0.3); }
+    .btn-outline { border:1.5px solid rgba(255,77,166,0.3); color:var(--primary); background:transparent; width:100%; justify-content:center; margin-top:12px; }
+    .btn-sm { padding:8px 16px; font-size:0.8rem; width:auto; }
 
-    .stat-card.value-locked .stat-value { filter:blur(8px); user-select:none; cursor:pointer; position:relative; }
-    .stat-card.value-locked .stat-value::after { content:'\f023'; font-family:'Font Awesome 6 Free'; font-weight:900; position:absolute; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--gray); filter:none; }
-    .stat-card .value-hint { font-size:0.6rem; color:var(--primary); text-align:center; cursor:pointer; margin-top:2px; display:none; }
-    .stat-card.value-locked .value-hint { display:block; }
-
-    .attendant-stats { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px; margin-bottom:24px; }
-    .attendant-card { background:white; padding:14px; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(255,77,166,0.1); }
-    .attendant-card h5 { font-size:0.8rem; color:var(--gray); margin-bottom:6px; }
-    .attendant-card .attendant-sales { font-size:1.3rem; font-weight:700; color:var(--success); }
-    .attendant-card .attendant-count { font-size:0.7rem; color:var(--gray); }
-
-    .filter-bar { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
-    .search-wrapper { flex:1; min-width:200px; position:relative; }
-    .search-wrapper i { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--gray); }
-    .search-input { width:100%; padding:12px 16px 12px 42px; border:1.5px solid rgba(0,0,0,0.08); border-radius:40px; font-size:0.85rem; outline:none; font-family:'Poppins',sans-serif; }
-    .search-input:focus { border-color:var(--primary); }
-
-    .panel { background:white; border-radius:24px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(255,77,166,0.08); margin-bottom:24px; }
-    .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
-    .panel-header h3 { font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:10px; color:var(--dark); }
-    .panel-header h3 i { color:var(--primary); }
-
-    .table-wrapper { overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:16px; }
-    .data-table { width:100%; border-collapse:collapse; min-width:1100px; }
-    .data-table th { text-align:left; padding:14px 10px; font-size:0.7rem; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(--primary-soft); white-space:nowrap; background:white; }
-    .data-table td { padding:14px 10px; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
-    .data-table tbody tr { transition:background 0.2s; cursor:pointer; }
-    .data-table tbody tr:hover { background:var(--primary-soft); }
-    .data-table tbody tr.returned-row { background:rgba(239,68,68,0.03); }
-    .data-table tbody tr.pending-sync { background:rgba(245,158,11,0.05); }
-    .data-table tbody tr.returned-partial { background:rgba(245,158,11,0.05); }
-
+    /* Admin PINs table */
+    .pins-table { width:100%; border-collapse:collapse; margin-top:12px; }
+    .pins-table th { text-align:left; padding:10px 12px; font-size:0.7rem; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(--primary-soft); }
+    .pins-table td { padding:12px; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
+    .pins-table tr:hover { background:var(--primary-soft); }
+    .pin-display { font-family:monospace; font-size:1.1rem; letter-spacing:4px; font-weight:700; }
     .badge { padding:5px 12px; border-radius:40px; font-size:0.7rem; font-weight:600; display:inline-block; white-space:nowrap; }
-    .badge-success { background:rgba(16,185,129,0.1); color:var(--success); }
-    .badge-warning { background:rgba(245,158,11,0.1); color:var(--warning); }
-    .badge-danger { background:rgba(239,68,68,0.1); color:var(--danger); }
-    .badge-info { background:rgba(59,130,246,0.1); color:var(--info); }
-    .badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; }
-    .badge-borrow { background:rgba(245,158,11,0.15); color:#b45309; }
 
-    .btn { padding:8px 16px; border-radius:40px; font-weight:600; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; background:white; border:1px solid rgba(0,0,0,0.08); transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; }
-    .btn:hover { transform:translateY(-2px); }
-    .btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
-    .btn-primary { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; border:none; }
-    .btn-outline { border:1.5px solid rgba(255,77,166,0.3); color:var(--primary); background:transparent; }
-    .btn-sm { padding:6px 12px; font-size:0.7rem; }
-    .btn-success { background:var(--success); color:white; border:none; }
-    .btn-danger { background:var(--danger); color:white; border:none; }
-    .btn-warning { background:var(--warning); color:white; border:none; }
+    .info-box { background:var(--primary-soft); border-radius:16px; padding:20px; margin-top:20px; }
+    .info-box h4 { font-size:0.9rem; margin-bottom:10px; color:var(--dark); }
+    .info-box ul { list-style:none; }
+    .info-box li { font-size:0.8rem; color:var(--gray); padding:5px 0; display:flex; align-items:center; gap:8px; }
 
-    .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:2000; padding:16px; }
-    .modal-overlay.active { display:flex; }
-    .modal { background:white; border-radius:28px; padding:28px; max-width:750px; width:100%; max-height:85vh; overflow-y:auto; animation:fadeInUp 0.3s ease; }
-    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-    .modal-header h3 { font-size:1.2rem; font-weight:700; }
-    .modal-close { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--gray); padding:5px; transition:all 0.2s; } .modal-close:hover { color:var(--danger); transform:rotate(90deg); }
-    .form-group { margin-bottom:18px; }
-    .form-group label { display:block; font-size:0.8rem; font-weight:600; color:var(--dark); margin-bottom:6px; }
-    .form-control { width:100%; padding:12px 16px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; font-size:0.9rem; outline:none; background:white; font-family:'Poppins',sans-serif; transition:border 0.2s; }
-    .form-control:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(255,77,166,0.1); }
-
-    .customer-type-toggle { display:flex; gap:10px; margin-bottom:15px; }
-    .customer-type-btn { flex:1; padding:12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; background:white; cursor:pointer; font-weight:600; font-size:0.85rem; font-family:'Poppins',sans-serif; transition:all 0.2s; }
-    .customer-type-btn.active { border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
-
-    .payment-methods { display:flex; gap:10px; margin-top:5px; flex-wrap:wrap; }
-    .payment-method { flex:1; min-width:80px; text-align:center; padding:12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:12px; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; font-size:0.8rem; }
-    .payment-method.selected { border-color:var(--primary); background:var(--primary-soft); font-weight:600; }
-
-    .item-row { display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-wrap:wrap; }
-    .item-row .item-select { flex:3; min-width:180px; }
-    .item-row .item-size { flex:1; min-width:100px; }
-    .item-row .item-qty { flex:0.5; min-width:60px; }
-    .stock-warning { color:var(--danger); font-size:0.7rem; margin-left:5px; white-space:nowrap; display:block; min-height:18px; }
-
-    .non-inv-toggle { display:flex; align-items:center; gap:4px; font-size:0.7rem; white-space:nowrap; margin-right:6px; }
-    .non-inv-toggle input { margin:0; }
-
-    .sale-summary { background:var(--gray-light); border-radius:14px; padding:16px; margin-top:20px; }
-    .summary-row { display:flex; justify-content:space-between; padding:5px 0; }
-    .summary-row.total { font-weight:700; font-size:1.1rem; border-top:1px dashed rgba(0,0,0,0.1); margin-top:8px; padding-top:12px; }
-
-    .pin-input-container { display:flex; gap:10px; justify-content:center; margin:20px 0; }
-    .pin-input { width:55px; height:65px; text-align:center; font-size:1.8rem; font-weight:700; border:2px solid rgba(255,77,166,0.2); border-radius:14px; outline:none; font-family:'Poppins',sans-serif; }
-    .pin-input:focus { border-color:var(--primary); }
-
-    .wholesale-pack-size-box { background:var(--primary-soft); border:2px solid var(--primary); border-radius:14px; padding:16px; margin-bottom:16px; text-align:center; }
-    .wholesale-pack-size-box label { font-weight:700; color:var(--primary); }
-    .wholesale-pack-size-box input { font-size:1.3rem; font-weight:700; text-align:center; }
-
-    .receipt-container { background:#f8f9fa; border-radius:12px; padding:20px; font-family:'Segoe UI',Roboto,'Helvetica Neue',sans-serif; font-weight:normal; }
-    .receipt-header { text-align:center; border-bottom:1px dashed #ccc; padding-bottom:10px; margin-bottom:10px; }
-    .receipt-header h2 { font-weight:bold; margin:0; }
-    .receipt-header .addr { font-weight:bold; margin:2px 0; }
-    .receipt-header .rec { margin:2px 0; font-weight:normal; }
-    .receipt-items { margin:15px 0; }
-    .receipt-item { display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:5px; font-weight:normal; }
-    .receipt-total { border-top:1px dashed #ccc; padding-top:10px; font-weight:bold; font-size:1.1rem; display:flex; justify-content:space-between; }
-    .cust-info { font-weight:normal; margin:4px 0; line-height:1.3; }
-    .thanks { text-align:center; font-style:italic; margin-top:15px; font-weight:normal; }
-
-    .return-options { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px; margin:15px 0; }
-    .return-option { padding:14px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:12px; }
-    .return-option:hover { border-color:var(--primary); background:var(--primary-soft); }
-    .return-option.selected { border-color:var(--primary); background:var(--primary-soft); box-shadow:0 4px 12px rgba(255,77,166,0.1); }
-    .return-option i { font-size:1.3rem; color:var(--primary); width:30px; text-align:center; }
-
-    .empty-state { text-align:center; padding:40px 20px; color:var(--gray); }
-    .empty-state i { font-size:2.5rem; color:var(--primary-light); margin-bottom:10px; display:block; }
+    .debug-panel { background:#1a1a2e; color:#10b981; border-radius:12px; padding:15px; margin-bottom:15px; font-family:monospace; font-size:0.75rem; max-height:200px; overflow-y:auto; display:none; }
+    .debug-panel.show { display:block; }
+    .debug-panel .debug-line { margin-bottom:3px; }
+    .debug-panel .debug-error { color:#ef4444; }
+    .debug-panel .debug-warn { color:#f59e0b; }
 
     .toast-container { position:fixed; bottom:24px; right:24px; z-index:3000; display:flex; flex-direction:column; gap:10px; }
     .toast { background:white; color:var(--dark); padding:14px 20px; border-radius:50px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px; font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease; border-left:4px solid var(--primary); transition:all 0.3s ease; }
-    .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); } .toast.warning { border-left-color:var(--warning); } .toast.info { border-left-color:var(--info); } .toast i { font-size:1.1rem; }
+    .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); } .toast.warning { border-left-color:var(--warning); }
+    .toast i { font-size:1.1rem; }
 
-    .return-item-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; padding:14px; background:var(--gray-light); border-radius:12px; flex-wrap:wrap; }
-    .return-condition-select { font-size:0.75rem !important; padding:6px 8px !important; }
+    .pin-wrapper { position: relative; display: inline-block; }
+    .pin-wrapper input { padding-right: 40px; }
+    .pin-eye-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--gray); }
 
-    .borrow-badge {
-      background: rgba(245,158,11,0.15); color: var(--warning);
-      padding: 2px 8px; border-radius: 20px; font-size: 0.65rem;
-      font-weight: 700; display: inline-flex; align-items: center; gap: 4px;
-    }
-    .borrow-row { border-left: 3px solid var(--warning) !important; padding-left: 12px !important; }
-    .exchange-row { border-left: 3px solid var(--primary) !important; }
-    .borrow-info-box {
-      background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.3);
-      border-radius: 12px; padding: 12px; margin: 8px 0;
-      font-size: 0.8rem; display: flex; align-items: center; gap: 8px;
-    }
-    .borrow-info-box i { color: var(--warning); font-size: 1.2rem; }
-    .ws-borrow-indicator {
-      display: inline-flex; align-items: center; gap: 4px;
-      background: rgba(245,158,11,0.15); color: #b45309;
-      padding: 4px 10px; border-radius: 20px; font-size: 0.7rem;
-      font-weight: 600; animation: pulse 2s infinite;
-    }
-
-    @media (max-width:1400px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:768px) {
-      .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; } .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); }
-      .sidebar-header .close-sidebar { display:flex !important; } .menu-toggle { display:flex !important; }
-      .main-content { margin-left:0 !important; width:100% !important; } .content-wrapper { padding:16px 12px; } .top-bar { padding:0 16px; }
-      .page-title { font-size:1.1rem; } .current-date { display:none; } .stats-grid { grid-template-columns:1fr 1fr; gap:10px; }
-      .stat-card { padding:14px 12px; } .stat-value { font-size:1.4rem; } .panel { padding:16px 12px; border-radius:18px; }
-      .data-table { min-width:900px; } .data-table th, .data-table td { padding:10px 6px; font-size:0.75rem; } .modal { padding:20px; border-radius:20px; }
-      .draft-tabs-bar { padding: 0 8px; }
+      .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; }
+      .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); }
+      .sidebar-header .close-sidebar { display:flex !important; }
+      .menu-toggle { display:flex !important; }
+      .main-content { margin-left:0 !important; width:100% !important; }
+      .content-wrapper { padding:16px 12px; }
+      .top-bar { padding:0 16px; }
+      .page-title { font-size:1.1rem; }
+      .current-date { display:none; }
     }
-    @media (max-width:480px) { .stats-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
 
-<div class="offline-banner" id="offlineBanner">
-  <i class="fas fa-wifi"></i> You are offline — sales saved locally, will sync when reconnected
-</div>
-
-<div class="debug-panel" id="debugPanel">
-  <h4>🐞 Debug Info</h4>
-  <div id="debugContent">Loading...</div>
-  <button onclick="document.getElementById('debugPanel').classList.remove('show')">Close</button>
-</div>
-
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
 <aside class="sidebar" id="sidebar">
-  <div class="sidebar-header"><div class="logo-icon">✨</div><div class="logo-text"><span>Omo</span>creations</div><button class="close-sidebar" onclick="closeSidebar()"><i class="fas fa-times"></i></button></div>
-  <nav class="sidebar-nav" id="sidebarNav"></nav>
-  <div class="sidebar-footer"><div class="user-profile"><div class="user-avatar" id="userAvatar">A</div><div class="user-details"><h4 id="userName">Staff</h4><p id="userRole">Loading...</p></div></div></div>
+  <div class="sidebar-header">
+    <div class="logo-icon">✨</div>
+    <div class="logo-text"><span>Omo</span>creations</div>
+    <button class="close-sidebar" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section"><div class="nav-section-title">OVERVIEW</div>
+      <button class="nav-item" onclick="navigateTo('admin-dashboard.html')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+      <button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>
+      <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
+      <button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff Management</span></button>
+      <button class="nav-item" onclick="navigateTo('make-admin.html')"><i class="fas fa-user-shield"></i><span>Make Admin</span></button>
+      <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
+      <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit Logs</span></button>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">MONITORING</div>
+      <button class="nav-item" onclick="navigateTo('inventory.html')"><i class="fas fa-box"></i><span>Inventory</span></button>
+      <button class="nav-item" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>
+      <button class="nav-item" onclick="navigateTo('customers.html')"><i class="fas fa-users"></i><span>Customers</span></button>
+      <button class="nav-item" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i><span>Sales</span></button>
+      <button class="nav-item" onclick="navigateTo('orders-admin.html')"><i class="fas fa-clipboard-list"></i><span>Orders Admin</span></button>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">SHOP &amp; KIOSK</div>
+      <button class="nav-item" onclick="window.open('kiosk.html','_blank')"><i class="fas fa-desktop"></i><span>Launch Kiosk</span></button>
+      <button class="nav-item active"><i class="fas fa-cog"></i><span>Kiosk Settings</span></button>
+      <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
+      <button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><span>Catalog</span></button>
+    </div>
+    <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
+  </nav>
+  <div class="sidebar-footer"><div class="user-profile"><div class="user-avatar" id="userAvatar">A</div><div class="user-details"><h4 id="userName">Admin</h4><p id="userRole">Admin</p></div></div></div>
 </aside>
 
 <main class="main-content">
   <header class="top-bar">
-    <div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">Sales & Transactions</h1></div>
-    <div style="display:flex;align-items:center;gap:12px;">
-      <button class="btn btn-outline btn-sm" onclick="toggleDebugPanel()" title="Debug Info"><i class="fas fa-bug"></i> Debug</button>
-      <span id="syncStatus" style="font-size:0.75rem;color:var(--gray);"></span>
-      <button class="btn btn-outline btn-sm" onclick="navigateTo('history.html')"><i class="fas fa-history"></i> History</button>
-      <span class="current-date" id="currentDate"></span>
-    </div>
+    <div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">Kiosk Settings</h1></div>
+    <span class="current-date" id="currentDate"></span>
   </header>
-
-  <div class="draft-tabs-bar" id="draftTabsBar">
-    <button class="draft-add-btn" onclick="window._addDraftTab()" title="New Draft"><i class="fas fa-plus"></i></button>
-  </div>
 
   <div class="content-wrapper">
 
-    <div class="stats-grid">
-      <div class="stat-card value-locked" id="todayCard"><div class="stat-header"><span>Today's Sales</span><div class="stat-icon"><i class="fas fa-calendar-day"></i></div></div><div class="stat-value" id="todaySales">₦0</div><div class="stat-sub" id="todayTransactions">0 txn</div><div class="value-hint" onclick="revealStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
-      <div class="stat-card value-locked" id="weekCard"><div class="stat-header"><span>This Week</span><div class="stat-icon"><i class="fas fa-calendar-week"></i></div></div><div class="stat-value" id="weekSales">₦0</div><div class="stat-sub" id="weekTransactions">0 txn</div><div class="value-hint" onclick="revealStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
-      <div class="stat-card value-locked" id="monthCard"><div class="stat-header"><span>This Month</span><div class="stat-icon"><i class="fas fa-calendar-alt"></i></div></div><div class="stat-value" id="monthSales">₦0</div><div class="stat-sub" id="monthTransactions">0 txn</div><div class="value-hint" onclick="revealStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
-      <div class="stat-card value-locked" id="yearCard"><div class="stat-header"><span>This Year</span><div class="stat-icon"><i class="fas fa-chart-line"></i></div></div><div class="stat-value" id="yearSales">₦0</div><div class="stat-sub" id="yearTransactions">0 txn</div><div class="value-hint" onclick="revealStats()"><i class="fas fa-lock"></i> Tap to unlock</div></div>
+    <!-- Debug Panel -->
+    <div class="debug-panel" id="debugPanel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <strong>🐛 Debug Log</strong>
+        <button onclick="document.getElementById('debugPanel').classList.remove('show')" style="background:none;border:none;color:white;cursor:pointer;font-size:1rem;">&times;</button>
+      </div>
+      <div id="debugContent"></div>
     </div>
 
-    <div class="panel" id="attendantStatsPanel" style="display:none;">
-      <div class="panel-header"><h3><i class="fas fa-users"></i> Attendant Performance (Today)</h3></div>
-      <div class="attendant-stats" id="attendantStats"></div>
-    </div>
-
-    <div class="filter-bar">
-      <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="salesSearchInput" placeholder="Search by customer, phone, or receipt #..."></div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-header">
-        <h3><i class="fas fa-history"></i> Recent Sales</h3>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-outline btn-sm" onclick="exportSalesData()"><i class="fas fa-download"></i> Export</button>
-          <button class="btn btn-outline btn-sm" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
-          <button class="btn btn-primary btn-sm" onclick="openNewSaleModal()"><i class="fas fa-plus"></i> New Sale</button>
-          <button class="btn btn-primary btn-sm" onclick="openCompanySaleModal()"><i class="fas fa-building"></i> Sell to Company</button>
-          <button class="btn btn-success btn-sm" onclick="openWholesaleSaleModal()"><i class="fas fa-tags"></i> Wholesale</button>
+    <!-- Admin PINs Card -->
+    <div class="settings-card">
+      <div class="settings-header">
+        <h2><i class="fas fa-key"></i> Admin PINs Management</h2>
+        <p>Each admin must set their PIN on their <strong>own profile page</strong> (staff-management.html). After they set it, click <strong>"Sync All Admin PINs Now"</strong> to push them to the central collection that attendants can use.</p>
+      </div>
+      
+      <div style="background:rgba(245,158,11,0.1);border-left:4px solid var(--warning);border-radius:14px;padding:16px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <i class="fas fa-exclamation-triangle" style="color:var(--warning);font-size:1.3rem;"></i>
+          <div>
+            <strong style="color:var(--dark);">⚠️ Important: Admins Must Set Their Own PINs</strong>
+            <p style="font-size:0.8rem;color:var(--gray);margin-top:2px;">
+              The "Synced 0 PINs from 3 admins" message means the admin user documents don't have <code>adminPin</code> or <code>attendantPin</code> fields set. 
+              Each admin needs to go to their profile and set a 4-digit PIN. Until then, only the <strong>Master Fallback PIN</strong> below will work.
+            </p>
+          </div>
         </div>
       </div>
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead><tr><th>Time</th><th>Receipt #</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Payment</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody id="salesTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading sales...</p></div></td></tr></tbody>
+
+      <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-sm btn-primary" onclick="syncAllAdminPins()"><i class="fas fa-sync-alt"></i> Sync All Admin PINs Now</button>
+        <span style="font-size:0.75rem;color:var(--gray);">Last synced: <span id="lastSyncTime">Never</span></span>
+      </div>
+
+      <div class="table-wrapper" style="overflow-x:auto;">
+        <table class="pins-table" id="adminPinsTable">
+          <thead>
+            <tr>
+              <th>Admin Name</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Admin PIN</th>
+              <th>Attendant PIN</th>
+              <th>Has PIN Set?</th>
+              <th>Last Updated</th>
+            </tr>
+          </thead>
+          <tbody id="adminPinsBody">
+            <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray);">Loading admin PINs...</td></tr>
+          </tbody>
         </table>
+      </div>
+
+      <div class="info-box" style="margin-top:16px;">
+        <h4><i class="fas fa-lightbulb"></i> How PINs Work</h4>
+        <ul>
+          <li><i class="fas fa-check-circle" style="color:var(--success);"></i> <strong id="activePinCount">0</strong> active admin PINs available for attendants</li>
+          <li><i class="fas fa-user-cog" style="color:var(--primary);"></i> Admins set their PINs on their <strong>profile page</strong> (not here)</li>
+          <li><i class="fas fa-sync-alt" style="color:var(--info);"></i> After setting PINs, click <strong>Sync</strong> to push them to the central collection</li>
+          <li><i class="fas fa-key" style="color:var(--warning);"></i> The <strong>Master Fallback PIN</strong> below works until admins set their individual PINs</li>
+          <li><i class="fas fa-users" style="color:var(--success);"></i> Attendants can use <strong>any admin's PIN</strong> to authorize actions</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Cloudinary Settings -->
+    <div class="settings-card">
+      <div class="settings-header"><h2><i class="fas fa-cloud-upload-alt"></i> Cloudinary Configuration</h2><p>Your Cloudinary account for storing attendance photos.</p></div>
+      <div class="form-group"><label>Cloudinary Cloud Name</label><input type="text" id="cloudinaryCloudName" class="form-control" value="dw80fw9un" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;font-family:'Poppins',sans-serif;"></div>
+      <div class="form-group"><label>Upload Preset (Unsigned)</label><input type="text" id="cloudinaryUploadPreset" class="form-control" value="kiosk_attendance" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;font-family:'Poppins',sans-serif;"></div>
+    </div>
+
+    <!-- Attendance Settings -->
+    <div class="settings-card">
+      <div class="settings-header"><h2><i class="fas fa-clock"></i> Attendance Time Settings</h2></div>
+      <div class="form-group"><label><i class="fas fa-sign-in-alt"></i> Check-In Time</label><div class="time-input-group"><div class="time-input"><input type="number" id="checkInHour" min="0" max="23" value="9"> <span>:</span> <input type="number" id="checkInMinute" min="0" max="59" value="0"></div><span style="color:var(--gray);">AM</span></div></div>
+      <div class="form-group"><label><i class="fas fa-sign-out-alt"></i> Check-Out Time</label><div class="time-input-group"><div class="time-input"><input type="number" id="checkOutHour" min="0" max="23" value="18"> <span>:</span> <input type="number" id="checkOutMinute" min="0" max="59" value="0"></div><span style="color:var(--gray);">PM</span></div></div>
+      <div class="divider"></div>
+      <div class="settings-header"><h2><i class="fas fa-coins"></i> Penalty Settings</h2></div>
+      <div class="penalty-group"><div class="penalty-item"><label>Late Penalty</label><input type="number" id="latePenalty" value="5" min="1" max="50"></div><div class="penalty-item"><label>Early Departure</label><input type="number" id="earlyPenalty" value="5" min="1" max="50"></div><div class="penalty-item"><label>Absent Penalty</label><input type="number" id="absentPenalty" value="10" min="1" max="50"></div></div>
+      <div class="divider"></div>
+      <div class="settings-header"><h2><i class="fas fa-shield-alt"></i> Master Fallback PIN</h2></div>
+      <div class="form-group">
+        <label>Master Admin PIN (Works until admins set their own PINs)</label>
+        <div class="pin-wrapper">
+          <input type="password" id="adminPin" class="form-control" maxlength="4" value="1234" style="width:150px;padding:12px;border-radius:12px;border:1px solid #ddd;font-family:'Poppins',sans-serif;">
+          <i class="fas fa-eye pin-eye-btn" id="toggleSettingsPinEye" onclick="toggleSettingsPinVisibility()" title="Show/Hide PIN"></i>
+        </div>
+        <p class="hint">This PIN is always accepted. It's the <strong>fallback</strong> — use it until admins set their individual PINs on their profile pages.</p>
+      </div>
+      <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> Save All Settings</button>
+      <button class="btn btn-outline" onclick="window.open('kiosk.html','_blank')"><i class="fas fa-desktop"></i> Open Kiosk Terminal</button>
+    </div>
+
+    <!-- Today's Photos -->
+    <div class="settings-card">
+      <div class="settings-header">
+        <h2><i class="fas fa-images"></i> Today's Attendance Photos</h2>
+        <button onclick="loadTodayPhotos()" style="background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;font-size:0.8rem;">↻ Refresh</button>
+      </div>
+      <div id="attendancePhotosContainer">
+        <div style="text-align:center;padding:30px;color:var(--gray);"><p>Loading photos...</p></div>
       </div>
     </div>
 
   </div>
 </main>
 
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal"><div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="hideModal()">&times;</button></div><div id="modalContent"></div></div>
-</div>
 <div class="toast-container" id="toastContainer"></div>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs, deleteDoc, setDoc, increment, writeBatch, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
@@ -378,538 +316,343 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  let currentUser = null;
+  let allAdminPins = [];
 
-  try {
-    enableIndexedDbPersistence(db).then(function() {
-      console.log('Offline persistence enabled');
-    }).catch(function(err) {
-      if (err.code === 'failed-precondition') {
-        console.warn('Multiple tabs open, persistence disabled');
-      } else if (err.code === 'unimplemented') {
-        console.warn('Browser doesn\'t support persistence');
-      }
-    });
-  } catch (e) {
-    console.warn('Persistence setup error:', e);
-  }
-
-  let currentUser = null, userData = null, unsubscribes = [];
-  let allSales = [], allReturns = [], allCustomers = [], allStockItems = [], allStoreItems = [];
-  let selectedPayment = 'cash', customerType = 'existing';
-  let statsRevealed = false, selectedReturnAction = 'refund';
-  let adminPins = new Set();
-  let isOnline = navigator.onLine;
-  let isProcessingSale = false;
-  let returnHistory = JSON.parse(localStorage.getItem('returnHistory') || '{}');
-  let selectedRefundMethod = 'cash';
-  let exchangeState = { 
-    originalSale: null, returnedItems: [], totalRefund: 0, 
-    exchangeItems: [], exchangeTotal: 0, difference: 0, 
-    differenceType: '', exchangePayment: 'cash', reason: '' 
-  };
-  let offlineSales = JSON.parse(localStorage.getItem('offlineSales') || '[]');
-  let pendingCustomers = JSON.parse(localStorage.getItem('pendingCustomers') || '[]');
-  let draftTabs = JSON.parse(localStorage.getItem('draftTabs') || '[]');
-  let activeDraftId = null;
-  let receiptCounter = parseInt(localStorage.getItem('receiptCounter') || '0');
-
-  // ============================================
-  // SAFE HELPERS
-  // ============================================
-  function safeNumber(val, fallback) {
-    fallback = (typeof fallback === 'undefined') ? 0 : fallback;
-    if (typeof val === 'number') return val;
-    if (typeof val === 'string') { var parsed = parseFloat(val); return isNaN(parsed) ? fallback : parsed; }
-    if (typeof val === 'object' && val !== null) return fallback;
-    return fallback;
-  }
-
-  function saveReturnHistory() {
-    localStorage.setItem('returnHistory', JSON.stringify(returnHistory));
-  }
-
-  function safeGetEl(id) { return document.getElementById(id); }
-  function safeGetVal(id, fallback) {
-    var el = document.getElementById(id);
-    if (!el) return (typeof fallback !== 'undefined') ? fallback : '';
-    return (el.value !== undefined) ? el.value : (typeof fallback !== 'undefined') ? fallback : '';
-  }
-  function safeTrimVal(id, fallback) {
-    var val = safeGetVal(id, fallback);
-    return (typeof val === 'string') ? val.trim() : val;
-  }
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-  }
-
-  // ============================================
-  // DEBUG PANEL
-  // ============================================
-  window.toggleDebugPanel = function() {
-    var panel = safeGetEl('debugPanel');
-    if (!panel) return;
-    panel.classList.toggle('show');
-    if (panel.classList.contains('show')) updateDebugPanel();
-  };
-  function updateDebugPanel() {
-    var content = safeGetEl('debugContent'); if (!content) return;
-    var html = '';
-    html += '<div class="debug-item"><strong>Connection:</strong> <span class="' + (isOnline ? 'debug-ok' : 'debug-error') + '">' + (isOnline ? '✅ Online' : '❌ Offline') + '</span></div>';
-    html += '<div class="debug-item"><strong>Offline Sales Queue:</strong> ' + offlineSales.length + ' pending</div>';
-    html += '<div class="debug-item"><strong>Pending Customers:</strong> ' + pendingCustomers.length + ' queued</div>';
-    html += '<div class="debug-item"><strong>Active Drafts:</strong> ' + draftTabs.length + '</div>';
-    html += '<div class="debug-item"><strong>Processing Lock:</strong> ' + (isProcessingSale ? '🔒 LOCKED' : '✅ Free') + '</div>';
-    html += '<div class="debug-item"><strong>Return History Entries:</strong> ' + Object.keys(returnHistory).length + '</div>';
-    html += '<button onclick="window._retrySync()" style="margin-top:8px;">🔄 Retry Sync Now</button>';
-    html += '<button onclick="window._clearSyncErrors()" style="margin-top:4px;">🗑️ Clear Errors</button>';
-    content.innerHTML = html;
-  }
-  window._retrySync = function() { syncOfflineSales(); syncPendingCustomers(); updateDebugPanel(); showToast('Retry triggered', 'info'); };
-  window._clearSyncErrors = function() { localStorage.setItem('syncErrors', '[]'); updateDebugPanel(); showToast('Errors cleared', 'success'); };
-
-  // ============================================
-  // CUSTOMER SYNC
-  // ============================================
-  function savePendingCustomer(customerData) {
-    var exists = pendingCustomers.some(function(c) { return c.phone === customerData.phone && c.fullName === customerData.fullName; });
-    if (!exists) { customerData._queuedAt = new Date().toISOString(); customerData._synced = false; pendingCustomers.push(customerData); localStorage.setItem('pendingCustomers', JSON.stringify(pendingCustomers)); }
-    trySyncCustomerToFirestore(customerData);
-  }
-  async function trySyncCustomerToFirestore(customerData) {
-    try {
-      var existingQuery = query(collection(db, 'customers'), where('phone', '==', customerData.phone));
-      var existingSnap = await getDocs(existingQuery);
-      if (!existingSnap.empty) { var existingId = existingSnap.docs[0].id; markCustomerSynced(customerData.phone, existingId); return existingId; }
-      var custRef = doc(collection(db, 'customers'));
-      await setDoc(custRef, Object.assign({}, customerData, { createdAt: serverTimestamp() }));
-      markCustomerSynced(customerData.phone, custRef.id); return custRef.id;
-    } catch (e) { console.warn('Cannot sync customer now (offline):', e.message); return null; }
-  }
-  function markCustomerSynced(phone, firestoreId) {
-    pendingCustomers.forEach(function(c) { if (c.phone === phone) { c._synced = true; c._firestoreId = firestoreId; } });
-    localStorage.setItem('pendingCustomers', JSON.stringify(pendingCustomers));
-  }
-  async function syncPendingCustomers() {
-    if (pendingCustomers.length === 0) return;
-    var unsynced = pendingCustomers.filter(function(c) { return !c._synced; });
-    if (unsynced.length === 0) return;
-    for (var i = 0; i < unsynced.length; i++) {
-      var c = unsynced[i];
-      try {
-        var existingQuery = query(collection(db, 'customers'), where('phone', '==', c.phone));
-        var existingSnap = await getDocs(existingQuery);
-        if (!existingSnap.empty) { markCustomerSynced(c.phone, existingSnap.docs[0].id); continue; }
-        var custRef = doc(collection(db, 'customers'));
-        var cleanData = Object.assign({}, c); delete cleanData._queuedAt; delete cleanData._synced; delete cleanData._firestoreId;
-        await setDoc(custRef, Object.assign({}, cleanData, { createdAt: serverTimestamp() }));
-        markCustomerSynced(c.phone, custRef.id);
-      } catch (e) { console.error('Failed to sync customer:', c.fullName, e.message); }
-    }
-    updateDebugPanel();
-  }
-
-  // ============================================
-  // ONLINE/OFFLINE
-  // ============================================
-  window.addEventListener('online', function() { isOnline = true; var banner = safeGetEl('offlineBanner'); if (banner) banner.classList.remove('show'); var syncStatus = safeGetEl('syncStatus'); if (syncStatus) syncStatus.textContent = ''; syncOfflineSales(); syncPendingCustomers(); updateDebugPanel(); showToast('Back online! Syncing...', 'success'); });
-  window.addEventListener('offline', function() { isOnline = false; var banner = safeGetEl('offlineBanner'); if (banner) banner.classList.add('show'); var syncStatus = safeGetEl('syncStatus'); if (syncStatus) syncStatus.textContent = '⚠️ Offline'; updateDebugPanel(); showToast('You are offline. Sales will sync when reconnected.', 'warning'); });
-  if (!navigator.onLine) { isOnline = false; var banner = safeGetEl('offlineBanner'); if (banner) banner.classList.add('show'); var syncStatus = safeGetEl('syncStatus'); if (syncStatus) syncStatus.textContent = '⚠️ Offline'; }
-
-  function saveOfflineSale(saleData) { offlineSales.push(saleData); localStorage.setItem('offlineSales', JSON.stringify(offlineSales)); allSales.unshift(saleData); renderSales(); updateDebugPanel(); }
-  async function syncOfflineSales() {
-    if (!isOnline || offlineSales.length === 0) return;
-    localStorage.setItem('lastSyncAttempt', Date.now().toString());
-    var toSync = offlineSales.slice(); var failedSales = []; var successCount = 0;
-    showToast('Syncing ' + toSync.length + ' offline sale(s)...', 'warning');
-    for (var i = 0; i < toSync.length; i++) {
-      var saleData = toSync[i];
-      try {
-        var batch = writeBatch(db); var customerId = saleData.customerId || '';
-        if (saleData._newCustomer && saleData._customerData) {
-          var syncedCustomer = pendingCustomers.find(function(c) { return c.phone === saleData._customerData.phone && c._synced && c._firestoreId; });
-          if (syncedCustomer) { customerId = syncedCustomer._firestoreId; }
-          else { var custRef = doc(collection(db, 'customers')); batch.set(custRef, Object.assign({}, saleData._customerData, { createdAt: serverTimestamp() })); customerId = custRef.id; }
-        }
-        var collectionName = saleData._type === 'wholesale' ? 'wholesale_sales' : 'sales';
-        var saleRef = doc(collection(db, collectionName));
-        var cleanData = Object.assign({}, saleData); delete cleanData._type; delete cleanData._newCustomer; delete cleanData._customerData; delete cleanData._stockUpdates; delete cleanData._movements; delete cleanData._localId; delete cleanData._synced; delete cleanData._customerType; delete cleanData._borrowedItems;
-        cleanData.customerId = customerId; cleanData.createdAt = serverTimestamp(); batch.set(saleRef, cleanData);
-        if (saleData._stockUpdates) { for (var j = 0; j < saleData._stockUpdates.length; j++) { var update = saleData._stockUpdates[j]; batch.update(doc(db, update.collection, update.id), update.data); } }
-        if (saleData._movements) { for (var k = 0; k < saleData._movements.length; k++) { var mov = saleData._movements[k]; var movRef = doc(collection(db, 'stock_movements')); batch.set(movRef, Object.assign({}, mov, { performedAt: serverTimestamp() })); } }
-        await batch.commit();
-        var syncedSale = allSales.find(function(s) { return s._localId === saleData._localId; }); if (syncedSale) { syncedSale.id = saleRef.id; syncedSale._synced = true; }
-        successCount++;
-      } catch (e) { console.error('Sync failed for sale:', e); failedSales.push(saleData); }
-    }
-    offlineSales = failedSales; localStorage.setItem('offlineSales', JSON.stringify(offlineSales));
-    renderSales(); updateDebugPanel();
-    if (successCount > 0 && failedSales.length === 0) showToast('All ' + successCount + ' offline sales synced!', 'success');
-    else if (successCount > 0 && failedSales.length > 0) showToast(successCount + ' synced, ' + failedSales.length + ' failed. Will retry.', 'warning');
-    else if (failedSales.length > 0) showToast('All ' + failedSales.length + ' sales failed to sync. Will retry.', 'error');
-  }
-
-  // ============================================
-  // UTILITY FUNCTIONS
-  // ============================================
-  function formatTime(d) { if (!d) return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); if (typeof d === 'string') return new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); var date = d.toDate ? d.toDate() : (d instanceof Date ? d : new Date(d)); return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }
-  function formatCurrency(n) { return '₦' + (safeNumber(n, 0)).toLocaleString(); }
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
-  function generateReceiptNumber(prefix) { prefix = prefix || 'RCP'; receiptCounter++; localStorage.setItem('receiptCounter', receiptCounter.toString()); var padded = receiptCounter.toString().padStart(6, '0'); return prefix + '-' + padded; }
-  function formatDateTime(d) { if (!d) return 'Unknown'; var date; if (typeof d === 'string') date = new Date(d); else if (d.toDate) date = d.toDate(); else if (d.seconds) date = new Date(d.seconds * 1000); else if (d instanceof Date) date = d; else date = new Date(); return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }
-  function getSaleDate(sale) { if (!sale || !sale.createdAt) return new Date(); if (sale.createdAt.toDate) return sale.createdAt.toDate(); if (sale.createdAt.seconds) return new Date(sale.createdAt.seconds * 1000); if (typeof sale.createdAt === 'string') return new Date(sale.createdAt); if (sale.createdAt instanceof Date) return sale.createdAt; return new Date(); }
 
-  function showToast(msg, type) {
-    type = type || 'success'; var c = safeGetEl('toastContainer'); if (!c) return;
-    var t = document.createElement('div'); t.className = 'toast ' + type;
-    var icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle';
-    t.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + msg; c.appendChild(t);
-    setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = 'all 0.3s ease'; setTimeout(function() { t.remove(); }, 300); }, 4000);
+  function showToast(msg, type='success') {
+    const c = document.getElementById('toastContainer'); if(!c) return;
+    const t = document.createElement('div'); t.className = `toast ${type}`;
+    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
+    c.appendChild(t);
+    setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},3500);
   }
 
-  async function logAudit(action, note, extraData) {
-    try {
-      var auditData = { actionType: action, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff', performedByRole: userData ? (userData.role || 'attendant') : 'unknown', performedAt: serverTimestamp(), note: note || '', deviceInfo: navigator.userAgent, isOnline: isOnline, timestamp_local: new Date().toISOString() };
-      if (extraData) Object.assign(auditData, extraData);
-      await addDoc(collection(db, 'audit_logs'), auditData);
-    } catch (e) { console.warn('Audit log failed:', e.message); }
+  function debugLog(msg, type='info') {
+    console.log(`[KioskSettings] ${msg}`);
+    const panel = document.getElementById('debugPanel');
+    const content = document.getElementById('debugContent');
+    if(panel && content) {
+      panel.classList.add('show');
+      const color = type==='error'?'debug-error':type==='warn'?'debug-warn':'';
+      content.innerHTML += `<div class="debug-line ${color}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+      panel.scrollTop = panel.scrollHeight;
+    }
   }
 
-  function hideModal() { var overlay = safeGetEl('modalOverlay'); if (overlay) overlay.classList.remove('active'); }
-  window.hideModal = hideModal;
-  function showModal(title, content) { var titleEl = safeGetEl('modalTitle'); var contentEl = safeGetEl('modalContent'); var overlay = safeGetEl('modalOverlay'); if (titleEl) titleEl.textContent = title; if (contentEl) contentEl.innerHTML = content; if (overlay) overlay.classList.add('active'); }
-  function cleanup() { unsubscribes.forEach(function(u) { u(); }); unsubscribes = []; }
-  function isAdmin() { return userData && (userData.role === 'admin' || userData.role === 'super_admin'); }
-
-  window.toggleSidebar = function() { var s = safeGetEl('sidebar'), o = safeGetEl('sidebarOverlay'); if (!s || !o) return; if (s.classList.contains('mobile-open')) { s.classList.remove('mobile-open'); o.classList.remove('active'); document.body.style.overflow = ''; } else { s.classList.add('mobile-open'); o.classList.add('active'); document.body.style.overflow = 'hidden'; } };
-  window.closeSidebar = function() { var s = safeGetEl('sidebar'); var o = safeGetEl('sidebarOverlay'); if (s) s.classList.remove('mobile-open'); if (o) o.classList.remove('active'); document.body.style.overflow = ''; };
-  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { hideModal(); closeSidebar(); } });
-
-  function buildSidebar() {
-    var nav = safeGetEl('sidebarNav'); if (!nav) return;
-    var dashboardLink = isAdmin() ? 'admin-dashboard.html' : 'attendant-dashboard.html';
-    nav.innerHTML = '<div class="nav-section"><div class="nav-section-title">OVERVIEW</div>' + '<button class="nav-item" onclick="navigateTo(\'' + dashboardLink + '\')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>' + (isAdmin() ? '<button class="nav-item" onclick="navigateTo(\'approvals.html\')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>' : '') + '</div>' + '<div class="nav-section"><div class="nav-section-title">OPERATIONS</div>' + '<button class="nav-item" onclick="navigateTo(\'inventory.html\')"><i class="fas fa-box"></i><span>Inventory</span></button>' + '<button class="nav-item" onclick="navigateTo(\'store.html\')"><i class="fas fa-store"></i><span>Store</span></button>' + '<button class="nav-item" onclick="navigateTo(\'purchases.html\')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>' + '<button class="nav-item" onclick="navigateTo(\'customers.html\')"><i class="fas fa-users"></i><span>Customers</span></button>' + '<button class="nav-item active"><i class="fas fa-cash-register"></i><span>Sales</span></button>' + '</div>' + (isAdmin() ? '<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>' + '<button class="nav-item" onclick="navigateTo(\'staff-management.html\')"><i class="fas fa-users-cog"></i><span>Staff</span></button>' + '<button class="nav-item" onclick="navigateTo(\'finance.html\')"><i class="fas fa-chart-line"></i><span>Finance</span></button>' + '<button class="nav-item" onclick="navigateTo(\'audit.html\')"><i class="fas fa-history"></i><span>Audit</span></button>' + '</div>' : '') + '<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>';
-    var logoutBtn = safeGetEl('logoutBtn'); if (logoutBtn) { logoutBtn.addEventListener('click', async function() { try { await logAudit('logout', 'User logged out'); } catch (e) {} await signOut(auth); window.location.href = 'auth.html'; }); }
-  }
+  window.toggleSidebar = function() {
+    const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay');
+    if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}
+    else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';}
+  };
+  window.closeSidebar = function() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow='';
+  };
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
 
   // ============================================
-  // FIXED: PIN Verification
+  // ADMIN PINS SYNC - FIXED
   // ============================================
   async function loadAdminPins() {
+    debugLog('Loading admin PINs from users collection...');
     try {
-      var snap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['admin', 'super_admin']), where('status', '==', 'active')));
-      adminPins.clear();
-      snap.forEach(function(d) {
-        var data = d.data();
-        if (data.adminPin) adminPins.add(data.adminPin);
-        if (data.attendantPin) adminPins.add(data.attendantPin);
+      const adminsQuery = query(
+        collection(db, 'users'),
+        where('role', 'in', ['admin', 'super_admin']),
+        where('status', '==', 'active')
+      );
+      const adminsSnap = await getDocs(adminsQuery);
+      
+      allAdminPins = [];
+      adminsSnap.forEach(function(d) {
+        const data = d.data();
+        const adminInfo = {
+          id: d.id,
+          fullName: data.fullName || 'Unknown Admin',
+          role: data.role || 'admin',
+          status: data.status || 'active',
+          adminPin: data.adminPin || '',
+          attendantPin: data.attendantPin || '',
+          updatedAt: data.updatedAt || data.createdAt
+        };
+        allAdminPins.push(adminInfo);
+        
+        // Debug: Log what we found
+        debugLog(`Admin: ${adminInfo.fullName} | adminPin: ${adminInfo.adminPin || '(empty)'} | attendantPin: ${adminInfo.attendantPin || '(empty)'}`);
       });
-    } catch (e) { console.error('Failed to load admin PINs:', e); }
-  }
 
-  // ============================================
-  // FIXED: verifyPin - Handles both admin PIN and attendant PIN
-  // ============================================
-  async function verifyPin(pin, requiredRole) {
-    if (!pin || pin.length < 4) return false;
-    
-    // 1. If admin authorization is required, check the kiosk master admin PIN
-    if (requiredRole === 'admin') {
-      // Check kiosk master admin PIN (set in Kiosk Settings page)
-      try {
-        const kioskSnap = await getDoc(doc(db, 'system_settings', 'kiosk'));
-        if (kioskSnap.exists() && kioskSnap.data().adminPin === pin) return true;
-      } catch(e) {
-        console.warn('Could not check kiosk PIN:', e.message);
+      debugLog(`Found ${allAdminPins.length} active admins`);
+      renderAdminPinsTable();
+      
+      // Load last sync time
+      const syncedQuery = query(collection(db, 'admin_pins'));
+      const syncedSnap = await getDocs(syncedQuery);
+      
+      if (!syncedSnap.empty) {
+        const syncedData = syncedSnap.docs[0].data();
+        if (syncedData.syncedAt) {
+          document.getElementById('lastSyncTime').textContent = 
+            new Date(syncedData.syncedAt.seconds * 1000).toLocaleString();
+        }
       }
-      // Also check any admin PINs from users collection
-      if (adminPins.has(pin)) return true;
-      return false;
-    }
-    
-    // 2. For attendant-level authorization:
-    //    - Attendant's own PIN works
-    //    - Admin PIN also works (admin can override)
-    //    - Kiosk master PIN also works
-    if (requiredRole === 'attendant') {
-      // Check the current attendant's own PIN
-      if (userData && pin === userData.attendantPin) return true;
-      
-      // Check admin PINs from users collection
-      if (adminPins.has(pin)) return true;
-      
-      // Check kiosk master admin PIN
-      try {
-        const kioskSnap = await getDoc(doc(db, 'system_settings', 'kiosk'));
-        if (kioskSnap.exists() && kioskSnap.data().adminPin === pin) return true;
-      } catch(e) {}
-      
-      return false;
-    }
-    
-    return false;
-  }
-
-  function showPinModal(title, action, onSuccess, requiredRole) {
-    requiredRole = requiredRole || 'attendant';
-    var pinHint = requiredRole === 'admin' 
-      ? '🔒 Admin authorization required — Enter the admin PIN'
-      : '🔑 Enter your attendant PIN or the admin PIN';
-    
-    showModal(title,
-      '<p style="text-align:center;margin-bottom:20px;">Enter your PIN to ' + action + '</p>' +
-      '<p style="text-align:center;font-size:0.75rem;color:var(--gray);margin-bottom:10px;">' + pinHint + '</p>' +
-      '<div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div>' +
-      '<button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>'
-    );
-    
-    var pin1 = safeGetEl('pin1'); if (pin1) pin1.focus();
-    document.querySelectorAll('#modalOverlay .pin-input').forEach(function(inp, i, arr) { inp.addEventListener('input', function(e) { if (e.target.value && i < arr.length - 1) arr[i + 1].focus(); }); });
-    var verifyBtn = safeGetEl('verifyPinBtn');
-    if (verifyBtn) {
-      verifyBtn.onclick = async function() {
-        var pin = '';
-        for (var i = 1; i <= 4; i++) { pin += safeGetVal('pin' + i, ''); }
-        var isValid = await verifyPin(pin, requiredRole);
-        if (isValid) { hideModal(); await logAudit('pin_verified', 'PIN verified for action: ' + action, { requiredRole: requiredRole }); onSuccess(); }
-        else { showToast('Invalid PIN. Please try again.', 'error'); await logAudit('pin_failed', 'Failed PIN attempt for action: ' + action, { requiredRole: requiredRole }); }
-      };
+    } catch (e) {
+      debugLog(`Error loading admin PINs: ${e.message}`, 'error');
+      showToast('Failed to load admin PINs', 'error');
     }
   }
 
-  window.revealStats = function() {
-    if (statsRevealed) return;
-    if (isAdmin()) { statsRevealed = true; updateStatsDisplay(); updateAttendantStats(); logAudit('reveal_sales_stats', 'Admin revealed sales figures automatically'); return; }
-    showPinModal('Unlock Stats', 'view sales figures', function() { statsRevealed = true; updateStatsDisplay(); updateAttendantStats(); logAudit('reveal_sales_stats', 'Sales figures revealed'); showToast('Sales figures unlocked', 'success'); }, 'admin');
+  function renderAdminPinsTable() {
+    const tbody = document.getElementById('adminPinsBody');
+    if (!tbody) return;
+
+    if (allAdminPins.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray);">No active admins found. Add admins via Staff Management.</td></tr>';
+      document.getElementById('activePinCount').textContent = '0';
+      return;
+    }
+
+    tbody.innerHTML = allAdminPins.map(function(admin) {
+      const hasAdminPin = admin.adminPin && admin.adminPin.length >= 4;
+      const hasAttendantPin = admin.attendantPin && admin.attendantPin.length >= 4;
+      const hasAnyPin = hasAdminPin || hasAttendantPin;
+      const roleBadge = admin.role === 'super_admin' 
+        ? '<span class="badge" style="background:rgba(139,92,246,0.1);color:#8b5cf6;">Super Admin</span>'
+        : '<span class="badge" style="background:rgba(59,130,246,0.1);color:#3b82f6;">Admin</span>';
+      
+      return '<tr>' +
+        '<td><strong>' + (admin.fullName || 'Unknown') + '</strong></td>' +
+        '<td>' + roleBadge + '</td>' +
+        '<td><span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;">Active</span></td>' +
+        '<td>' + (hasAdminPin ? '<span class="pin-display">' + admin.adminPin + '</span>' : '<span style="color:#ef4444;">⚠️ Not Set</span>') + '</td>' +
+        '<td>' + (hasAttendantPin ? '<span class="pin-display">' + admin.attendantPin + '</span>' : '<span style="color:var(--gray);">—</span>') + '</td>' +
+        '<td>' + (hasAnyPin ? '<span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;">✅ Yes</span>' : '<span class="badge" style="background:rgba(239,68,68,0.1);color:#ef4444;">❌ No</span>') + '</td>' +
+        '<td style="font-size:0.75rem;color:var(--gray);">' + (admin.updatedAt ? new Date(admin.updatedAt.seconds * 1000).toLocaleDateString() : '—') + '</td>' +
+        '</tr>';
+    }).join('');
+
+    const activePinCount = allAdminPins.filter(function(a) { 
+      return (a.adminPin && a.adminPin.length >= 4) || (a.attendantPin && a.attendantPin.length >= 4);
+    }).length;
+    document.getElementById('activePinCount').textContent = activePinCount;
+  }
+
+  // Sync all admin PINs to the central admin_pins collection
+  window.syncAllAdminPins = async function() {
+    debugLog('Syncing all admin PINs to central collection...');
+    showToast('Syncing admin PINs...', 'warning');
+
+    try {
+      const batch = writeBatch(db);
+      const adminsQuery = query(
+        collection(db, 'users'),
+        where('role', 'in', ['admin', 'super_admin']),
+        where('status', '==', 'active')
+      );
+      const adminsSnap = await getDocs(adminsQuery);
+      
+      let syncedCount = 0;
+      const pinSet = new Set();
+      
+      // First, delete all existing PIN docs to avoid stale data
+      const existingPinsSnap = await getDocs(collection(db, 'admin_pins'));
+      existingPinsSnap.forEach(function(d) {
+        batch.delete(d.ref);
+      });
+      
+      // Now write fresh PINs
+      adminsSnap.forEach(function(d) {
+        const data = d.data();
+        debugLog(`Checking ${data.fullName}: adminPin="${data.adminPin || ''}", attendantPin="${data.attendantPin || ''}"`);
+        
+        if (data.adminPin && data.adminPin.length >= 4) {
+          const pinRef = doc(collection(db, 'admin_pins'), d.id + '_admin');
+          batch.set(pinRef, {
+            pin: data.adminPin,
+            type: 'admin',
+            userId: d.id,
+            fullName: data.fullName || 'Unknown Admin',
+            role: data.role || 'admin',
+            syncedAt: serverTimestamp()
+          });
+          pinSet.add(data.adminPin);
+          syncedCount++;
+        }
+        
+        if (data.attendantPin && data.attendantPin.length >= 4) {
+          const pinRef = doc(collection(db, 'admin_pins'), d.id + '_attendant');
+          batch.set(pinRef, {
+            pin: data.attendantPin,
+            type: 'attendant',
+            userId: d.id,
+            fullName: data.fullName || 'Unknown Admin',
+            role: data.role || 'admin',
+            syncedAt: serverTimestamp()
+          });
+          pinSet.add(data.attendantPin);
+          syncedCount++;
+        }
+      });
+
+      // Also add the master fallback PIN
+      const kioskSnap = await getDoc(doc(db, 'system_settings', 'kiosk'));
+      if (kioskSnap.exists()) {
+        const masterPin = kioskSnap.data().adminPin;
+        if (masterPin && masterPin.length >= 4) {
+          const masterRef = doc(collection(db, 'admin_pins'), '_master_fallback');
+          batch.set(masterRef, {
+            pin: masterPin,
+            type: 'master_fallback',
+            userId: 'system',
+            fullName: 'Master Fallback PIN',
+            role: 'system',
+            syncedAt: serverTimestamp()
+          });
+          pinSet.add(masterPin);
+          syncedCount++;
+          debugLog(`Added master fallback PIN: ${masterPin}`);
+        }
+      }
+
+      // Store sync metadata
+      const syncMetaRef = doc(collection(db, 'admin_pins'), '_sync_meta');
+      batch.set(syncMetaRef, {
+        syncedAt: serverTimestamp(),
+        totalPins: pinSet.size,
+        adminCount: adminsSnap.size,
+        syncedBy: currentUser?.uid,
+        syncedByName: document.getElementById('userName')?.textContent || 'Admin'
+      });
+
+      await batch.commit();
+      
+      document.getElementById('lastSyncTime').textContent = new Date().toLocaleString();
+      debugLog(`Synced ${syncedCount} PINs (${pinSet.size} unique) from ${adminsSnap.size} admins + master fallback`);
+      showToast(`Synced ${pinSet.size} unique PINs! ✅`, 'success');
+      
+      await loadAdminPins();
+    } catch (e) {
+      debugLog(`Sync failed: ${e.message}`, 'error');
+      showToast('Sync failed: ' + e.message, 'error');
+    }
   };
 
-  function updateStatsDisplay() {
-    if (!statsRevealed) return;
-    ['todayCard','weekCard','monthCard','yearCard'].forEach(function(id) { var card = safeGetEl(id); if (card) { card.classList.remove('value-locked'); var valEl = card.querySelector('.stat-value'); if (valEl) { valEl.style.filter = 'none'; valEl.style.cursor = 'default'; } var hint = card.querySelector('.value-hint'); if (hint) hint.style.display = 'none'; } });
-    var panel = safeGetEl('attendantStatsPanel'); if (panel) panel.style.display = 'block';
-  }
-
-  function updateAttendantStats() {
-    if (!statsRevealed) { var panel = safeGetEl('attendantStatsPanel'); if (panel) panel.style.display = 'none'; return; }
-    var panel = safeGetEl('attendantStatsPanel'); if (panel) panel.style.display = 'block';
-    var now = new Date(); var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    var attendantMap = {}; var allTxns = allSales.concat(offlineSales);
-    allTxns.forEach(function(s) { if (s.status === 'returned') return; var saleDate = getSaleDate(s); var name = s.attendantName || 'Unknown'; if (!attendantMap[name]) attendantMap[name] = { sales: 0, count: 0, todaySales: 0, todayCount: 0 }; attendantMap[name].sales += safeNumber(s.totalAmount, 0); attendantMap[name].count += 1; if (saleDate >= todayStart) { attendantMap[name].todaySales += safeNumber(s.totalAmount, 0); attendantMap[name].todayCount += 1; } });
-    var statsDiv = safeGetEl('attendantStats'); if (!statsDiv) return;
-    statsDiv.innerHTML = Object.entries(attendantMap).map(function(entry) { var name = entry[0], data = entry[1]; return '<div class="attendant-card"><h5>' + escapeHtml(name) + '</h5><div class="attendant-sales">' + formatCurrency(data.todaySales) + '</div><div class="attendant-count">Today: ' + data.todayCount + ' txn | All: ' + data.count + ' txn</div></div>'; }).join('');
-  }
-
-  function updateStats() {
-    var now = new Date(); var today = now.toISOString().split('T')[0];
-    var weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
-    var monthStart = new Date(now.getFullYear(), now.getMonth(), 1); var yearStart = new Date(now.getFullYear(), 0, 1);
-    var todayTotal = 0, weekTotal = 0, monthTotal = 0, yearTotal = 0;
-    var todayCount = 0, weekCount = 0, monthCount = 0, yearCount = 0;
-    var allTxns = allSales.concat(offlineSales);
-    allTxns.forEach(function(s) { if (s.status === 'returned') return; var saleDate = getSaleDate(s); var amt = safeNumber(s.totalAmount, 0); if (saleDate.toISOString().split('T')[0] === today) { todayTotal += amt; todayCount++; } if (saleDate >= weekStart) { weekTotal += amt; weekCount++; } if (saleDate >= monthStart) { monthTotal += amt; monthCount++; } if (saleDate >= yearStart) { yearTotal += amt; yearCount++; } });
-    var todaySalesEl = safeGetEl('todaySales'); if (todaySalesEl) todaySalesEl.textContent = formatCurrency(Math.max(0, todayTotal));
-    var weekSalesEl = safeGetEl('weekSales'); if (weekSalesEl) weekSalesEl.textContent = formatCurrency(Math.max(0, weekTotal));
-    var monthSalesEl = safeGetEl('monthSales'); if (monthSalesEl) monthSalesEl.textContent = formatCurrency(Math.max(0, monthTotal));
-    var yearSalesEl = safeGetEl('yearSales'); if (yearSalesEl) yearSalesEl.textContent = formatCurrency(Math.max(0, yearTotal));
-    var todayTxnsEl = safeGetEl('todayTransactions'); if (todayTxnsEl) todayTxnsEl.textContent = Math.max(0, todayCount) + ' txn';
-    var weekTxnsEl = safeGetEl('weekTransactions'); if (weekTxnsEl) weekTxnsEl.textContent = Math.max(0, weekCount) + ' txn';
-    var monthTxnsEl = safeGetEl('monthTransactions'); if (monthTxnsEl) monthTxnsEl.textContent = Math.max(0, monthCount) + ' txn';
-    var yearTxnsEl = safeGetEl('yearTransactions'); if (yearTxnsEl) yearTxnsEl.textContent = Math.max(0, yearCount) + ' txn';
-    updateAttendantStats();
-  }
-
-  function findSaleByIdentifier(identifier) { if (!identifier) return null; return allSales.find(function(x) { return x.id === identifier || x._localId === identifier || x.receiptNumber === identifier; }); }
-
-  function renderSales() {
-    var tbody = safeGetEl('salesTable'); if (!tbody) return;
-    var searchInput = safeGetEl('salesSearchInput'); var search = (searchInput && searchInput.value || '').toLowerCase();
-    var filtered = allSales.slice();
-    if (search) filtered = filtered.filter(function(s) { return (s.customerName || '').toLowerCase().indexOf(search) !== -1 || (s.customerPhone || '').toLowerCase().indexOf(search) !== -1 || (s.receiptNumber || '').toLowerCase().indexOf(search) !== -1; });
-    if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-cash-register"></i><p>No sales found</p></div></td></tr>'; updateStats(); return; }
-    filtered.sort(function(a, b) { var aTime = 0, bTime = 0; if (a.createdAt) { if (a.createdAt.seconds) aTime = a.createdAt.seconds; else if (typeof a.createdAt === 'string') aTime = new Date(a.createdAt).getTime() / 1000; else aTime = a.createdAt.getTime ? a.createdAt.getTime() / 1000 : 0; } if (b.createdAt) { if (b.createdAt.seconds) bTime = b.createdAt.seconds; else if (typeof b.createdAt === 'string') bTime = new Date(b.createdAt).getTime() / 1000; else bTime = b.createdAt.getTime ? b.createdAt.getTime() / 1000 : 0; } return bTime - aTime; });
-    tbody.innerHTML = '';
-    filtered.forEach(function(s) {
-      var isReturned = s.status === 'returned';
-      var isPartiallyReturned = s.partiallyReturned || (returnHistory[s.id || s._localId] && returnHistory[s.id || s._localId].totalReturned > 0);
-      var isOffline = s._localId && !s._synced;
-      var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
-      var isExchange = s.isExchange || s.exchangeType;
-      var hasBorrowed = (s._borrowedItems && s._borrowedItems.length > 0) || (s.items && s.items.some(function(it) { return it.borrowed; }));
-      var rowClass = isReturned ? 'returned-row' : (isOffline ? 'pending-sync' : (isPartiallyReturned ? 'returned-partial' : (hasBorrowed ? 'borrow-row' : (isExchange ? 'exchange-row' : ''))));
-      var statusBadge = isReturned ? '<span class="badge badge-danger">Returned</span>' : (isPartiallyReturned ? '<span class="badge badge-warning">Partial Return</span>' : (isOffline ? '<span class="badge badge-warning">Pending Sync</span>' : '<span class="badge badge-success">Completed</span>'));
-      var typeBadge = isWholesale ? '<span class="badge badge-purple">Wholesale</span>' : (isExchange ? '<span class="badge" style="background:rgba(255,77,166,0.1);color:#ff4da6;">Exchange</span>' : (s.isCompanySale ? '<span class="badge badge-info">Company</span>' : '<span class="badge badge-info">Regular</span>'));
-      var newCustomerBadge = s._newCustomer ? ' <span class="badge badge-warning">New</span>' : (s.customerId ? ' <span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;">Existing</span>' : '');
-      var borrowBadge = hasBorrowed ? ' <span class="badge badge-borrow">📦 Borrowed</span>' : '';
-      tbody.innerHTML += '<tr class="' + rowClass + '"><td>' + formatTime(s.createdAt) + '</td><td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;">' + escapeHtml(s.customerName || 'Walk-in') + newCustomerBadge + borrowBadge + '</td><td>' + escapeHtml(s.customerPhone || '-') + '</td><td>' + (s.items ? s.items.length : 0) + ' items</td><td><strong>' + (isReturned ? '-' : '') + formatCurrency(safeNumber(s.totalAmount, 0)) + '</strong></td><td><span class="badge badge-success">' + escapeHtml(s.paymentMethod || 'cash') + '</span></td><td>' + typeBadge + '</td><td>' + statusBadge + '</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt(\'' + (s.id || s._localId) + '\')"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt(\'' + (s.id || s._localId) + '\')"><i class="fas fa-print"></i></button>' + (!isReturned && !isWholesale && !isExchange ? '<button class="btn btn-sm btn-warning" onclick="openReturnModal(\'' + (s.id || s._localId) + '\')"><i class="fas fa-undo"></i></button>' : '') + '</div></td></tr>';
-    });
-    updateStats();
-  }
-
-  function loadSales() {
-    cleanup();
-    var salesQuery = query(collection(db, 'sales'), orderBy('createdAt', 'desc'));
-    unsubscribes.push(onSnapshot(salesQuery, function(snap) { var serverSales = snap.docs.map(function(d) { return Object.assign({ id: d.id, _synced: true, _type: 'regular' }, d.data()); }); var serverIds = new Set(serverSales.map(function(s) { return s.id; })); var mergedOffline = offlineSales.filter(function(s) { return !serverIds.has(s.id) && !s._synced; }); allSales = serverSales.concat(mergedOffline); renderSales(); }, function() { unsubscribes.push(onSnapshot(collection(db, 'sales'), function(snap) { var serverSales = snap.docs.map(function(d) { return Object.assign({ id: d.id, _synced: true, _type: 'regular' }, d.data()); }); var serverIds = new Set(serverSales.map(function(s) { return s.id; })); var mergedOffline = offlineSales.filter(function(s) { return !serverIds.has(s.id) && !s._synced; }); allSales = serverSales.concat(mergedOffline); allSales.sort(function(a, b) { var aSec = (a.createdAt && a.createdAt.seconds) || 0; var bSec = (b.createdAt && b.createdAt.seconds) || 0; return bSec - aSec; }); renderSales(); })); }));
-    var wsQuery = query(collection(db, 'wholesale_sales'), orderBy('createdAt', 'desc'));
-    unsubscribes.push(onSnapshot(wsQuery, function(snap) { var wsSales = snap.docs.map(function(d) { return Object.assign({ id: d.id, _synced: true, _type: 'wholesale' }, d.data()); }); var existingIds = new Set(allSales.map(function(s) { return s.id; })); wsSales.forEach(function(ws) { if (!existingIds.has(ws.id)) allSales.push(ws); }); renderSales(); }));
-    unsubscribes.push(onSnapshot(query(collection(db, 'returns'), orderBy('createdAt', 'desc')), function(snap) {
-      allReturns = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-      allReturns.forEach(function(r) { if (r.saleId) { if (!returnHistory[r.saleId]) { returnHistory[r.saleId] = { totalReturned: 0, items: {} }; } if (r.returnedItems) { r.returnedItems.forEach(function(item) { var idx = item.originalIndex || 0; returnHistory[r.saleId].items[idx] = (returnHistory[r.saleId].items[idx] || 0) + (item.returnedQuantity || item.returnedQty || 1); returnHistory[r.saleId].totalReturned += (item.returnedQuantity || item.returnedQty || 1); }); } } });
-      saveReturnHistory(); renderSales();
-    }));
-  }
-
-  async function loadCustomersAndStock() {
-    try {
-      var custSnap = await getDocs(query(collection(db, 'customers'), where('status', '==', 'approved'))); allCustomers = custSnap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-      var stockSnap = await getDocs(collection(db, 'stock_items')); allStockItems = stockSnap.docs.map(function(d) { var data = d.data(); var unitQty = safeNumber(data.unitQty || data.quantityAvailable, 0); var packSize = parseInt(data.packSize || 12); var bundleSize = parseInt(data.bundleSize || 50); var packQty = safeNumber(data.packQty, 0) || Math.floor(unitQty / packSize); var bundleQty = safeNumber(data.bundleQty, 0) || Math.floor(unitQty / bundleSize); return { id: d.id, name: data.name || '', category: data.category || '', itemType: data.itemType || 'general', unitQty: unitQty, unitPrice: safeNumber(data.unitPrice, 0), halfQty: safeNumber(data.halfQty, 0), halfPrice: safeNumber(data.halfPrice, 0), quarterQty: safeNumber(data.quarterQty, 0), quarterPrice: safeNumber(data.quarterPrice, 0), packSize: packSize, packQty: packQty, packPrice: safeNumber(data.packPrice, 0), bundleSize: bundleSize, bundleQty: bundleQty, bundlePrice: safeNumber(data.bundlePrice, 0), measuredSubType: data.measuredSubType || 'yard', yardQty: safeNumber(data.yardQty, 0), pricePerYard: safeNumber(data.pricePerYard, 0), threshold: safeNumber(data.threshold, 10) }; });
-      var storeSnap = await getDocs(collection(db, 'store_items')); allStoreItems = storeSnap.docs.map(function(d) { var data = d.data(); return { id: d.id, name: data.name || '', category: data.category || '', unitQty: safeNumber(data.unitQty, 0), unitCost: safeNumber(data.unitCost, 0), inventoryItemType: data.inventoryItemType || 'general', linkedInventoryId: data.linkedInventoryId || null, linkedInventoryName: data.linkedInventoryName || null }; });
-    } catch (e) { showToast('Error loading data', 'error'); }
-  }
-
-  function getAvailableStock(item, size) { if (size === '0.5' || size === '½' || size === 'half') return safeNumber(item.halfQty, 0); if (size === '0.25' || size === '¼' || size === 'quarter') return safeNumber(item.quarterQty, 0); if (size === 'pack') return safeNumber(item.packQty, 0); if (size === 'bundle') return safeNumber(item.bundleQty, 0); return safeNumber(item.unitQty, 0); }
-  function getDeductQuantity(item, size, qty) { if (size === 'pack') return qty * (parseInt(item.packSize) || 12); if (size === 'bundle') return qty * (parseInt(item.bundleSize) || 50); return qty; }
-  function getSizeLabel(size) { var labels = { '1': 'Unit', '0.5': '½', '0.25': '¼', 'half': '½', 'quarter': '¼', 'pack': 'Pack', 'bundle': 'Bundle' }; return labels[size] || 'Unit'; }
-  function getItemTypeLabel(type) { var labels = { fashion: '👗', pack_bundle: '📦', measured: '📏', general: '🔧' }; return labels[type] || '🔧'; }
-  function getStockOptionsHtml() { return allStockItems.map(function(i) { var label = getItemTypeLabel(i.itemType || 'general'); var stockInfo = ''; var unitQty = i.unitQty || 0; var packQty = i.packQty || 0; if (i.itemType === 'fashion') { stockInfo = '(U:' + unitQty + ', H:' + (i.halfQty||0) + ', Q:' + (i.quarterQty||0) + ')'; } else if (i.itemType === 'pack_bundle') { stockInfo = '(Units:' + unitQty + ', Packs:' + packQty + ')'; } else { stockInfo = '(' + unitQty + ')'; } return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-price="' + (i.unitPrice||0) + '" data-halfprice="' + (i.halfPrice||0) + '" data-quarterprice="' + (i.quarterPrice||0) + '" data-packprice="' + (i.packPrice||0) + '" data-bundleprice="' + (i.bundlePrice||0) + '" data-packsize="' + (i.packSize||12) + '" data-bundlesize="' + (i.bundleSize||50) + '" data-stock="' + unitQty + '" data-halfstock="' + (i.halfQty||0) + '" data-quarterstock="' + (i.quarterQty||0) + '" data-packstock="' + packQty + '" data-bundlestock="' + (i.bundleQty||0) + '">' + label + ' ' + escapeHtml(i.name||'') + ' - ' + formatCurrency(i.unitPrice||0) + ' ' + stockInfo + '</option>'; }).join(''); }
-  function getSizeOptions(item) { var opts = []; if (safeNumber(item.unitPrice, 0) > 0) opts.push({ value: '1', label: '1 (Unit)' }); if (safeNumber(item.halfPrice, 0) > 0) opts.push({ value: '0.5', label: '½ (Half)' }); if (safeNumber(item.quarterPrice, 0) > 0) opts.push({ value: '0.25', label: '¼ (Quarter)' }); if (safeNumber(item.packPrice, 0) > 0) opts.push({ value: 'pack', label: '📦 Pack (' + (item.packSize||12) + ')' }); if (safeNumber(item.bundlePrice, 0) > 0) opts.push({ value: 'bundle', label: '📦 Bundle (' + (item.bundleSize||50) + ')' }); if (opts.length === 0) opts.push({ value: '1', label: '1 (Unit)' }); return opts; }
-
   // ============================================
-  // DRAFT SYSTEM
+  // KIOSK SETTINGS
   // ============================================
-  function saveDraftsToStorage() { localStorage.setItem('draftTabs', JSON.stringify(draftTabs)); renderDraftTabs(); }
-  function createDraft(type) { return { id: 'draft_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6), type: type || 'regular', customerType: 'existing', customerId: '', customerName: '', customerPhone: '', customerAddress: '', customerEmail: '', isNewCustomer: false, customerData: null, items: [], paymentMethod: 'cash', selectedPayment: 'cash', totalAmount: 0, wholesalePackSize: 50, wholesaleCustomerType: 'existing', wholesalePayment: 'cash', collectedBy: '', usage: '', companyPayment: 'cash', extraData: {}, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), label: 'New Sale', isDirty: false, itemCount: 0 }; }
-  
-  window._saveDraftState = function() { if (!activeDraftId) return; var draft = draftTabs.find(function(d) { return d.id === activeDraftId; }); if (!draft) return; if (draft.type === 'wholesale') { draft.wholesalePackSize = parseInt(safeGetVal('wsPackSize', '50')) || 50; draft.wholesaleCustomerType = wholesaleCustomerType; draft.wholesalePayment = wholesalePayment; if (wholesaleCustomerType === 'existing') { var sel = safeGetEl('wsExistingCustomer'); if (sel && sel.value) { var opt = sel.options[sel.selectedIndex]; draft.customerId = sel.value; draft.customerName = opt ? opt.getAttribute('data-name') || '' : ''; draft.customerPhone = opt ? opt.getAttribute('data-phone') || '' : ''; } } else { draft.customerName = safeTrimVal('wsNewName', ''); draft.customerPhone = safeTrimVal('wsNewPhone', ''); draft.customerAddress = safeTrimVal('wsNewAddress', ''); } draft.items = []; document.querySelectorAll('.ws-item-row').forEach(function(row) { var sel = row.querySelector('.ws-select'); var qtyEl = row.querySelector('.ws-qty'); var priceEl = row.querySelector('.ws-price'); if (sel && sel.value && qtyEl) { var opt = sel.options[sel.selectedIndex]; draft.items.push({ id: sel.value, name: opt ? opt.getAttribute('data-name') || '' : '', pieces: parseInt(qtyEl.value) || 0, unitPrice: parseFloat(priceEl && priceEl.value) || 0, borrowed: opt ? opt.getAttribute('data-borrow') === 'true' : false }); } }); draft.itemCount = draft.items.length; draft.label = draft.customerName ? 'Wholesale: ' + draft.customerName.split(' ')[0] : 'Wholesale'; } else if (draft.type === 'company') { draft.collectedBy = safeTrimVal('companyCollectedBy', ''); draft.usage = safeTrimVal('companyUsage', ''); draft.companyPayment = companySelectedPayment; draft.customerName = 'Company'; draft.items = []; document.querySelectorAll('#companyItems .item-row').forEach(function(row) { var checkbox = row.querySelector('.non-inv-check'); var qtyEl = row.querySelector('.item-qty'); var qty = parseFloat(qtyEl && qtyEl.value) || 1; if (checkbox && checkbox.checked) { var nameEl = row.querySelector('.item-custom-name'); var priceEl = row.querySelector('.item-custom-price'); draft.items.push({ name: nameEl ? nameEl.value.trim() : '', quantity: qty, unitPrice: parseFloat(priceEl && priceEl.value) || 0, size: '1', sizeLabel: 'Unit', isNonInventory: true }); } else { var select = row.querySelector('.item-select'); var sizeEl = row.querySelector('.item-size'); if (select && select.value) { var opt = select.options[select.selectedIndex]; draft.items.push({ id: select.value, name: opt ? opt.dataset.name : '', quantity: qty, size: sizeEl ? sizeEl.value : '1', sizeLabel: getSizeLabel(sizeEl ? sizeEl.value : '1'), unitPrice: parseFloat(opt ? opt.getAttribute('data-price') : 0) || 0 }); } } }); draft.itemCount = draft.items.length; draft.label = draft.collectedBy ? 'Company: ' + draft.collectedBy.split(' ')[0] : 'Company Sale'; } else { draft.customerType = customerType; draft.selectedPayment = selectedPayment; if (customerType === 'existing') { var sel = safeGetEl('existingCustomerSelect'); if (sel && sel.value) { var opt = sel.options[sel.selectedIndex]; draft.customerId = sel.value; draft.customerName = opt ? opt.dataset.name || '' : ''; draft.customerPhone = opt ? opt.dataset.phone || '' : ''; draft.customerAddress = opt ? opt.dataset.address || '' : ''; } } else { draft.customerName = safeTrimVal('newCustomerName', ''); draft.customerPhone = safeTrimVal('newCustomerPhone', ''); draft.customerEmail = safeTrimVal('newCustomerEmail', ''); draft.customerAddress = safeTrimVal('newCustomerAddress', ''); draft.isNewCustomer = true; } draft.items = []; document.querySelectorAll('#saleItems .item-row').forEach(function(row) { var checkbox = row.querySelector('.non-inv-check'); var qtyEl = row.querySelector('.item-qty'); var qty = parseFloat(qtyEl && qtyEl.value) || 1; if (checkbox && checkbox.checked) { var nameEl = row.querySelector('.item-custom-name'); var priceEl = row.querySelector('.item-custom-price'); draft.items.push({ name: nameEl ? nameEl.value.trim() : '', quantity: qty, unitPrice: parseFloat(priceEl && priceEl.value) || 0, size: '1', sizeLabel: 'Unit', isNonInventory: true }); } else { var select = row.querySelector('.item-select'); var sizeEl = row.querySelector('.item-size'); if (select && select.value) { var opt = select.options[select.selectedIndex]; draft.items.push({ id: select.value, name: opt ? opt.dataset.name : '', quantity: qty, size: sizeEl ? sizeEl.value : '1', sizeLabel: getSizeLabel(sizeEl ? sizeEl.value : '1'), unitPrice: parseFloat(opt ? opt.getAttribute('data-price') : 0) || 0 }); } } }); draft.itemCount = draft.items.length; draft.label = draft.customerName ? 'Sale: ' + draft.customerName.split(' ')[0] : 'Sale #' + (draftTabs.indexOf(draft) + 1); } draft.updatedAt = new Date().toISOString(); draft.isDirty = false; saveDraftsToStorage(); };
-
-  let autoSaveInterval = null;
-  function startAutoSave() { if (autoSaveInterval) clearInterval(autoSaveInterval); autoSaveInterval = setInterval(function() { if (activeDraftId && document.getElementById('modalOverlay').classList.contains('active')) { window._saveDraftState(); var draft = draftTabs.find(function(d) { return d.id === activeDraftId; }); if (draft) { draft.isDirty = false; saveDraftsToStorage(); } } }, 30000); }
-  window._markDraftDirty = function() { if (!activeDraftId) return; var draft = draftTabs.find(function(d) { return d.id === activeDraftId; }); if (draft && !draft.isDirty) { draft.isDirty = true; saveDraftsToStorage(); } };
-
-  window._addDraftTab = function(type) { type = type || 'regular'; if (activeDraftId) { window._saveDraftState(); } var draft = createDraft(type); if (type === 'company') draft.label = 'Company Sale'; else if (type === 'wholesale') draft.label = 'Wholesale'; else draft.label = 'Sale #' + (draftTabs.length + 1); draftTabs.push(draft); activeDraftId = draft.id; saveDraftsToStorage(); if (type === 'wholesale') openWholesaleSaleModal(); else if (type === 'company') openCompanySaleModal(); else openNewSaleModal(); startAutoSave(); showToast('New draft created', 'info'); };
-  window._switchDraftTab = function(draftId) { if (activeDraftId && activeDraftId !== draftId) { window._saveDraftState(); } activeDraftId = draftId; var draft = draftTabs.find(function(d) { return d.id === draftId; }); if (!draft) return; if (draft.type === 'wholesale') { openWholesaleSaleModalWithDraft(draft); } else if (draft.type === 'company') { openCompanySaleModalWithDraft(draft); } else { openNewSaleModalWithDraft(draft); } saveDraftsToStorage(); startAutoSave(); };
-  window._closeDraftTab = function(draftId, event) { if (event) event.stopPropagation(); var draft = draftTabs.find(function(d) { return d.id === draftId; }); if (draft && draft.isDirty && draft.items.length > 0) { if (!confirm('This draft has unsaved items. Close anyway?')) return; } draftTabs = draftTabs.filter(function(d) { return d.id !== draftId; }); if (activeDraftId === draftId) { activeDraftId = draftTabs.length > 0 ? draftTabs[0].id : null; if (activeDraftId) { window._switchDraftTab(activeDraftId); } else { hideModal(); if (autoSaveInterval) { clearInterval(autoSaveInterval); autoSaveInterval = null; } } } saveDraftsToStorage(); };
-  window._clearActiveDraft = function() { if (!activeDraftId) return; draftTabs = draftTabs.filter(function(d) { return d.id !== activeDraftId; }); activeDraftId = draftTabs.length > 0 ? draftTabs[0].id : null; if (autoSaveInterval) { clearInterval(autoSaveInterval); autoSaveInterval = null; } saveDraftsToStorage(); };
-
-  function renderDraftTabs() {
-    var bar = safeGetEl('draftTabsBar'); if (!bar) return;
-    if (draftTabs.length > 10) { var removed = draftTabs.splice(0, draftTabs.length - 10); }
-    var tabsHtml = '';
-    draftTabs.forEach(function(draft, index) { var isActive = draft.id === activeDraftId; var indicatorClass = draft.isDirty ? '' : 'saved'; var typeIcon = draft.type === 'wholesale' ? '📦' : draft.type === 'company' ? '🏢' : '💰'; var shortLabel = draft.label.length > 18 ? draft.label.substring(0, 16) + '..' : draft.label; var itemBadge = draft.itemCount > 0 ? ' (' + draft.itemCount + ')' : ''; tabsHtml += '<div class="draft-tab' + (isActive ? ' active' : '') + '" onclick="window._switchDraftTab(\'' + draft.id + '\')" title="' + escapeHtml(draft.label) + ' | ' + escapeHtml(draft.customerName || 'No customer') + ' | ' + draft.itemCount + ' items | ' + formatCurrency(draft.totalAmount || 0) + '"><span class="draft-indicator ' + indicatorClass + '"></span><span>' + typeIcon + ' ' + escapeHtml(shortLabel) + itemBadge + '</span><span class="draft-close" onclick="window._closeDraftTab(\'' + draft.id + '\', event)" title="Close draft">✕</span></div>'; });
-    bar.innerHTML = '<button class="draft-add-btn" onclick="window._addDraftTab()" title="New Sale Draft"><i class="fas fa-plus"></i> New</button><button class="draft-add-btn" onclick="window._addDraftTab(\'wholesale\')" title="New Wholesale Draft" style="font-size:0.8rem;">📦</button><button class="draft-add-btn" onclick="window._addDraftTab(\'company\')" title="New Company Draft" style="font-size:0.8rem;">🏢</button>' + tabsHtml;
-  }
-  window._saveDraftFromModal = function() { window._saveDraftState(); showToast('Draft saved! ✅', 'success'); };
-
-  // Draft restoration functions
-  async function openNewSaleModalWithDraft(draft) {
-    await loadCustomersAndStock(); if (allStockItems.length === 0) { showToast('No items available', 'error'); return; }
-    customerType = draft.customerType || 'existing';
-    var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '" data-address="' + escapeHtml(c.address||c.location||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + ' (' + (c.purchaseCount||0) + ' purchases)</option>'; }).join('');
-    var stockOptions = getStockOptionsHtml(); var firstItem = allStockItems[0]; var firstSizeOpts = firstItem ? getSizeOptions(firstItem).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
-    showModal('New Sale', '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button><span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span><span style="margin-left:auto;font-size:0.7rem;color:var(--gray);">' + (draft.itemCount || 0) + ' items saved</span></div><div class="customer-type-toggle"><button class="customer-type-btn' + (customerType === 'existing' ? ' active' : '') + '" data-type="existing" onclick="window._switchCustomerType(\'existing\');window._markDraftDirty();"><i class="fas fa-users"></i> Existing</button><button class="customer-type-btn' + (customerType === 'new' ? ' active' : '') + '" data-type="new" onclick="window._switchCustomerType(\'new\');window._markDraftDirty();"><i class="fas fa-user-plus"></i> New</button></div><div id="existingCustomerSection" style="display:' + (customerType === 'existing' ? 'block' : 'none') + ';"><div class="form-group"><label>Search Customer</label><select class="form-control" id="existingCustomerSelect" style="width:100%;"><option value="">-- Search --</option>' + custOptions + '</select></div></div><div id="newCustomerSection" style="display:' + (customerType === 'new' ? 'block' : 'none') + ';"><div class="form-group"><label>Full Name *</label><input type="text" class="form-control" id="newCustomerName" value="' + escapeHtml(draft.customerName || '') + '" oninput="window._markDraftDirty()"></div><div class="form-group"><label>Phone *</label><input type="tel" class="form-control" id="newCustomerPhone" value="' + escapeHtml(draft.customerPhone || '') + '" oninput="window._markDraftDirty()"></div><div class="form-group"><label>Address *</label><textarea class="form-control" id="newCustomerAddress" rows="2" oninput="window._markDraftDirty()">' + escapeHtml(draft.customerAddress || '') + '</textarea></div><div class="form-group"><label>Email</label><input type="email" class="form-control" id="newCustomerEmail" value="' + escapeHtml(draft.customerEmail || '') + '" oninput="window._markDraftDirty()"></div></div><div id="saleItems">' + (draft.items.length > 0 ? draft.items.map(function(item, idx) { if (item.isNonInventory) { return '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" checked onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><input type="text" class="form-control item-custom-name" placeholder="Item name" value="' + escapeHtml(item.name || '') + '" style="flex:2;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-qty" value="' + (item.quantity || 1) + '" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" value="' + (item.unitPrice || 0) + '" style="width:100px;" oninput="window._markDraftDirty()"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>'; } else { var itemOptions = allStockItems.map(function(si) { var selected = si.id === item.id ? ' selected' : ''; var label = getItemTypeLabel(si.itemType || 'general'); return '<option value="' + si.id + '" data-name="' + escapeHtml(si.name||'') + '" data-price="' + (si.unitPrice||0) + '" data-halfprice="' + (si.halfPrice||0) + '" data-quarterprice="' + (si.quarterPrice||0) + '" data-packprice="' + (si.packPrice||0) + '" data-bundleprice="' + (si.bundlePrice||0) + '" data-packsize="' + (si.packSize||12) + '" data-bundlesize="' + (si.bundleSize||50) + '"' + selected + '>' + label + ' ' + escapeHtml(si.name||'') + ' - ' + formatCurrency(si.unitPrice||0) + '</option>'; }).join(''); var sizeOpts = firstSizeOpts; if (item.id) { var foundItem = allStockItems.find(function(si) { return si.id === item.id; }); if (foundItem) { sizeOpts = getSizeOptions(foundItem).map(function(o) { return '<option value="' + o.value + '"' + (item.size === o.value ? ' selected' : '') + '>' + o.label + '</option>'; }).join(''); } } return '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + itemOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + sizeOpts + '</select><input type="number" class="form-control item-qty" value="' + (item.quantity || 1) + '" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>'; } }).join('') : '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>') + '</div><button type="button" class="btn btn-outline btn-sm" onclick="window._addSaleItem();window._markDraftDirty();"><i class="fas fa-plus"></i> Add Item</button><div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods"><div class="payment-method' + (draft.selectedPayment === 'cash' ? ' selected' : '') + '" data-method="cash" onclick="window._selectPayment(\'cash\');window._markDraftDirty();">💵 Cash</div><div class="payment-method' + (draft.selectedPayment === 'transfer' ? ' selected' : '') + '" data-method="transfer" onclick="window._selectPayment(\'transfer\');window._markDraftDirty();">🏦 Transfer</div><div class="payment-method' + (draft.selectedPayment === 'pos' ? ' selected' : '') + '" data-method="pos" onclick="window._selectPayment(\'pos\');window._markDraftDirty();">💳 POS</div></div></div><div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div><button class="btn btn-primary" id="processSaleBtn" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>');
-    selectedPayment = draft.selectedPayment || 'cash';
-    setTimeout(function() { $('#existingCustomerSelect').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }); if (draft.customerId && customerType === 'existing') { $('#existingCustomerSelect').val(draft.customerId).trigger('change'); } $('.item-select').each(function() { $(this).select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { window._updateSizeDropdown(this); window._updateSaleSummary(); window._markDraftDirty(); }); }); $('.item-qty').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); }); $('.item-size').on('change', function() { window._updateSaleSummary(); window._markDraftDirty(); }); $('.item-custom-price').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); }); window._updateSaleSummary(); }, 200);
-  }
-
-  async function openCompanySaleModalWithDraft(draft) {
-    await loadCustomersAndStock(); var stockOptions = getStockOptionsHtml(); var firstSizeOpts = allStockItems.length ? getSizeOptions(allStockItems[0]).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
-    showModal('Sell to Company', '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button><span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span></div><p style="font-weight:600;margin-bottom:10px;">🏢 Customer: <span style="color:var(--primary);">Company</span></p><div class="form-group"><label>Collected By *</label><input type="text" class="form-control" id="companyCollectedBy" value="' + escapeHtml(draft.collectedBy || '') + '" placeholder="Full name of person collecting" oninput="window._markDraftDirty()"></div><div class="form-group"><label>Usage / Description *</label><textarea class="form-control" id="companyUsage" rows="2" placeholder="e.g., Staff uniforms, Office supplies" oninput="window._markDraftDirty()">' + escapeHtml(draft.usage || '') + '</textarea></div><div id="companyItems">' + (draft.items.length > 0 ? draft.items.map(function(item) { if (item.isNonInventory) { return '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" checked onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><input type="text" class="form-control item-custom-name" placeholder="Item name" value="' + escapeHtml(item.name || '') + '" style="flex:2;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-qty" value="' + (item.quantity || 1) + '" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" value="' + (item.unitPrice || 0) + '" style="width:100px;" oninput="window._markDraftDirty()"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>'; } else { var itemOptions = allStockItems.map(function(si) { var selected = si.id === item.id ? ' selected' : ''; return '<option value="' + si.id + '" data-name="' + escapeHtml(si.name||'') + '" data-price="' + (si.unitPrice||0) + '" data-halfprice="' + (si.halfPrice||0) + '" data-quarterprice="' + (si.quarterPrice||0) + '" data-packprice="' + (si.packPrice||0) + '" data-bundleprice="' + (si.bundlePrice||0) + '"' + selected + '>' + escapeHtml(si.name||'') + ' - ' + formatCurrency(si.unitPrice||0) + '</option>'; }).join(''); var sizeOpts = getSizeOptions(allStockItems[0]).map(function(o) { return '<option value="' + o.value + '"' + (item.size === o.value ? ' selected' : '') + '>' + o.label + '</option>'; }).join(''); return '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search --</option>' + itemOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + sizeOpts + '</select><input type="number" class="form-control item-qty" value="' + (item.quantity || 1) + '" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>'; } }).join('') : '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>') + '</div><button type="button" class="btn btn-outline btn-sm" onclick="window._addCompanyItem();window._markDraftDirty();"><i class="fas fa-plus"></i> Add Item</button><div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods"><div class="payment-method' + (draft.companyPayment === 'cash' || !draft.companyPayment ? ' selected' : '') + '" data-method="cash" onclick="window._selectCompanyPayment(\'cash\');window._markDraftDirty();">💵 Cash</div><div class="payment-method' + (draft.companyPayment === 'transfer' ? ' selected' : '') + '" data-method="transfer" onclick="window._selectCompanyPayment(\'transfer\');window._markDraftDirty();">🏦 Transfer</div><div class="payment-method' + (draft.companyPayment === 'pos' ? ' selected' : '') + '" data-method="pos" onclick="window._selectCompanyPayment(\'pos\');window._markDraftDirty();">💳 POS</div></div></div><div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="companyItemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="companyTotal">₦0</span></div></div><button class="btn btn-primary" onclick="window._processCompanySale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Company Sale</button>');
-    companySelectedPayment = draft.companyPayment || 'cash';
-    setTimeout(function() { $('.item-select').each(function() { $(this).select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { window._updateSizeDropdown(this); window._updateCompanySummary(); window._markDraftDirty(); }); }); $('.item-qty').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); }); $('.item-size').on('change', function() { window._updateCompanySummary(); window._markDraftDirty(); }); $('.item-custom-price').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); }); window._updateCompanySummary(); }, 200);
-  }
-
-  async function openWholesaleSaleModalWithDraft(draft) { await loadCustomersAndStock(); openWholesaleSaleModal(); setTimeout(function() { if (draft.wholesalePackSize) { var packEl = safeGetEl('wsPackSize'); if (packEl) packEl.value = draft.wholesalePackSize; } if (draft.customerId && draft.wholesaleCustomerType === 'existing') { $('#wsExistingCustomer').val(draft.customerId).trigger('change'); } window._updateWSTotal(); }, 300); }
-
-  // ============================================
-  // PROCESS SALE COMMON
-  // ============================================
-  function processSaleCommon(items, total, customerInfo, paymentMethod, isCompanySale, extraData, saleType) {
-    if (isProcessingSale) { showToast('Processing in progress... Please wait.', 'warning'); return null; }
-    var receiptNumber = generateReceiptNumber(saleType === 'wholesale' ? 'WSL' : 'RCP');
-    var stockUpdates = []; var movements = []; var borrowedItems = []; var customerId = customerInfo.customerId || '';
-    if (customerInfo._isNew && customerInfo._customerData) { savePendingCustomer(customerInfo._customerData); }
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i]; if (item.isNonInventory || !item.id) continue;
-      if (saleType === 'wholesale') {
-        var storeItem = allStoreItems.find(function(si) { return si.id === item.id; }); if (!storeItem) { showToast('Store item not found: ' + item.name, 'error'); return null; }
-        var availableInStore = safeNumber(storeItem.unitQty, 0); var needed = item.pieces || item.quantity || 1; var fromStore = Math.min(needed, availableInStore); var fromInventory = needed - fromStore;
-        if (fromInventory > 0) {
-          var stockItem = null;
-          if (storeItem.linkedInventoryId) { stockItem = allStockItems.find(function(si) { return si.id === storeItem.linkedInventoryId; }); }
-          if (!stockItem) { stockItem = allStockItems.find(function(si) { return si.name.toLowerCase() === item.name.toLowerCase() || si.name.toLowerCase() === storeItem.name.toLowerCase(); }); }
-          if (stockItem && safeNumber(stockItem.unitQty, 0) >= fromInventory) {
-            borrowedItems.push({ itemId: stockItem.id, itemName: stockItem.name, quantity: fromInventory, fromInventory: true, storeItemId: storeItem.id, storeItemName: storeItem.name });
-            stockUpdates.push({ collection: 'stock_items', id: stockItem.id, data: { unitQty: safeNumber(stockItem.unitQty, 0) - fromInventory, updatedAt: serverTimestamp() } });
-            movements.push({ itemId: stockItem.id, itemName: stockItem.name, movementType: 'inventory_to_store_sale', change: { unit: -fromInventory }, reference: 'Borrowed from inventory for Wholesale Receipt ' + receiptNumber + ' (Store: ' + storeItem.name + ')', performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff', storeItemId: storeItem.id, storeItemName: storeItem.name, note: 'Borrowed ' + fromInventory + ' units from inventory to supplement store stock (' + availableInStore + ' available, needed ' + needed + ')' });
-            item.borrowed = true; item.borrowedQty = fromInventory; item.storeQty = fromStore;
-          } else { showToast('Insufficient stock for ' + item.name + '. Available in store: ' + availableInStore + ' pcs. Available in inventory: ' + (stockItem ? safeNumber(stockItem.unitQty, 0) : 0) + ' pcs. Total needed: ' + needed + ' pcs.', 'error'); return null; }
-        }
-        if (fromStore > 0) { stockUpdates.push({ collection: 'store_items', id: item.id, data: { unitQty: availableInStore - fromStore, updatedAt: serverTimestamp() } }); movements.push({ itemId: item.id, itemName: item.name, movementType: 'wholesale_sale', change: { unit: -fromStore }, reference: 'Wholesale Receipt ' + receiptNumber, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff', storeItemId: storeItem.id, storeItemName: storeItem.name }); }
-      } else {
-        var stockItem = allStockItems.find(function(si) { return si.id === item.id; }); if (!stockItem) continue;
-        var size = item.size || '1'; var qty = item.quantity || 1; var available = getAvailableStock(stockItem, size); var deductQty = getDeductQuantity(stockItem, size, qty);
-        if (deductQty > available) { showToast('Insufficient stock for ' + item.name + ' (' + (item.sizeLabel || getSizeLabel(size)) + '). Available: ' + available + ', Need: ' + deductQty, 'error'); return null; }
-        var updateData = { updatedAt: serverTimestamp() }; var change = {};
-        if (size === '0.5' || size === '½' || size === 'half') { updateData.halfQty = safeNumber(stockItem.halfQty, 0) - qty; change.half = -qty; }
-        else if (size === '0.25' || size === '¼' || size === 'quarter') { updateData.quarterQty = safeNumber(stockItem.quarterQty, 0) - qty; change.quarter = -qty; }
-        else if (size === 'pack') { updateData.packQty = safeNumber(stockItem.packQty, 0) - qty; updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty; change.unit = -deductQty; }
-        else if (size === 'bundle') { updateData.bundleQty = safeNumber(stockItem.bundleQty, 0) - qty; updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty; change.unit = -deductQty; }
-        else { updateData.unitQty = safeNumber(stockItem.unitQty, 0) - qty; change.unit = -qty; }
-        stockUpdates.push({ collection: 'stock_items', id: item.id, data: updateData }); movements.push({ itemId: item.id, itemName: item.name, movementType: 'sale', change: change, reference: 'Receipt ' + receiptNumber, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff' });
-      }
+  async function loadSettings() {
+    debugLog('Loading kiosk settings...');
+    const snap = await getDoc(doc(db, 'system_settings', 'kiosk'));
+    if(snap.exists()) {
+      const s = snap.data();
+      document.getElementById('checkInHour').value = s.checkInHour || 9;
+      document.getElementById('checkInMinute').value = s.checkInMinute || 0;
+      document.getElementById('checkOutHour').value = s.checkOutHour || 18;
+      document.getElementById('checkOutMinute').value = s.checkOutMinute || 0;
+      document.getElementById('latePenalty').value = s.latePenalty || 5;
+      document.getElementById('earlyPenalty').value = s.earlyPenalty || 5;
+      document.getElementById('absentPenalty').value = s.absentPenalty || 10;
+      document.getElementById('adminPin').value = s.adminPin || '1234';
+      document.getElementById('cloudinaryCloudName').value = s.cloudinaryCloudName || 'dw80fw9un';
+      document.getElementById('cloudinaryUploadPreset').value = s.cloudinaryUploadPreset || 'kiosk_attendance';
     }
-    var saleData = { receiptNumber: receiptNumber, customerId: customerId, customerName: customerInfo.customerName || 'Walk-in', customerPhone: customerInfo.customerPhone || '', customerAddress: customerInfo.customerAddress || '', isCompanySale: isCompanySale || false, items: items.map(function(it) { var sz = it.size || '1'; return { id: it.id, name: it.name, quantity: it.quantity || it.pieces, pieces: it.pieces, size: sz, sizeLabel: it.sizeLabel || getSizeLabel(sz), unitPrice: it.unitPrice, isNonInventory: it.isNonInventory || false, borrowed: it.borrowed || false, borrowedQty: it.borrowedQty || 0, storeQty: it.storeQty || 0 }; }), totalAmount: total, paymentMethod: paymentMethod, attendantId: currentUser ? currentUser.uid : '', attendantName: userData ? (userData.fullName || 'Staff') : 'Staff', status: 'completed', _type: saleType, _stockUpdates: stockUpdates, _movements: movements, _localId: 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6), _newCustomer: customerInfo._isNew, _customerData: customerInfo._customerData || null, _borrowedItems: borrowedItems.length > 0 ? borrowedItems : null, _customerType: customerInfo._isNew ? 'new' : (customerInfo.customerId ? 'existing' : 'walk-in') };
-    if (extraData) Object.assign(saleData, extraData);
-    isProcessingSale = true; var saleDataRef = saleData;
-    if (isOnline) { saveSaleToFirestore(saleDataRef, customerInfo).then(function() { isProcessingSale = false; updateDebugPanel(); }).catch(function(e) { isProcessingSale = false; updateDebugPanel(); console.error('Save failed:', e); }); }
-    else { saleDataRef.createdAt = new Date().toISOString(); saleDataRef._synced = false; saveOfflineSale(saleDataRef); isProcessingSale = false; updateDebugPanel(); }
-    logAudit('sale_processed', 'Sale ' + receiptNumber + ': ' + formatCurrency(total), { receiptNumber: receiptNumber, customerName: customerInfo.customerName || 'Walk-in', customerPhone: customerInfo.customerPhone || '', customerType: customerInfo._isNew ? 'new' : (customerInfo.customerId ? 'existing' : 'walk-in'), totalAmount: total, paymentMethod: paymentMethod, saleType: saleType, itemCount: items.length, isCompanySale: isCompanySale || false, borrowedItems: borrowedItems.length });
-    return saleDataRef;
   }
 
-  async function saveSaleToFirestore(saleData, customerInfo) {
+  window.toggleSettingsPinVisibility = function() {
+    const pinInput = document.getElementById('adminPin');
+    const eyeIcon = document.getElementById('toggleSettingsPinEye');
+    if (pinInput.type === 'password') {
+      pinInput.type = 'text';
+      eyeIcon.classList.remove('fa-eye');
+      eyeIcon.classList.add('fa-eye-slash');
+    } else {
+      pinInput.type = 'password';
+      eyeIcon.classList.remove('fa-eye-slash');
+      eyeIcon.classList.add('fa-eye');
+    }
+  };
+
+  window.saveSettings = async () => {
+    const settings = {
+      checkInHour: parseInt(document.getElementById('checkInHour').value) || 9,
+      checkInMinute: parseInt(document.getElementById('checkInMinute').value) || 0,
+      checkOutHour: parseInt(document.getElementById('checkOutHour').value) || 18,
+      checkOutMinute: parseInt(document.getElementById('checkOutMinute').value) || 0,
+      latePenalty: parseInt(document.getElementById('latePenalty').value) || 5,
+      earlyPenalty: parseInt(document.getElementById('earlyPenalty').value) || 5,
+      absentPenalty: parseInt(document.getElementById('absentPenalty').value) || 10,
+      adminPin: document.getElementById('adminPin').value || '1234',
+      cloudinaryCloudName: document.getElementById('cloudinaryCloudName').value || 'dw80fw9un',
+      cloudinaryUploadPreset: document.getElementById('cloudinaryUploadPreset').value || 'kiosk_attendance',
+      updatedAt: serverTimestamp(),
+      updatedBy: currentUser?.uid
+    };
+    debugLog('Saving settings...');
+    await setDoc(doc(db, 'system_settings', 'kiosk'), settings);
+    debugLog('Settings saved successfully!');
+    showToast('All settings saved!', 'success');
+    
+    // Auto-sync PINs after saving
+    await window.syncAllAdminPins();
+  };
+
+  window.loadTodayPhotos = async function() {
+    const container = document.getElementById('attendancePhotosContainer');
+    const today = new Date().toISOString().split('T')[0];
+    
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray);"><p>Loading photos...</p></div>';
+    
     try {
-      var batch = writeBatch(db); var customerId = saleData.customerId || '';
-      if (customerInfo._isNew && customerInfo._customerData) { var alreadyCreated = pendingCustomers.find(function(c) { return c.phone === customerInfo._customerData.phone && c._synced && c._firestoreId; }); if (alreadyCreated) { customerId = alreadyCreated._firestoreId; } else { var custRef = doc(collection(db, 'customers')); batch.set(custRef, Object.assign({}, customerInfo._customerData, { createdAt: serverTimestamp(), status: 'pending_approval' })); customerId = custRef.id; markCustomerSynced(customerInfo._customerData.phone, custRef.id); } }
-      var collectionName = saleData._type === 'wholesale' ? 'wholesale_sales' : 'sales'; var saleRef = doc(collection(db, collectionName)); var cleanData = Object.assign({}, saleData); delete cleanData._type; delete cleanData._stockUpdates; delete cleanData._movements; delete cleanData._localId; delete cleanData._newCustomer; delete cleanData._customerData; delete cleanData._customerType; delete cleanData._borrowedItems; cleanData.customerId = customerId; cleanData.createdAt = serverTimestamp(); batch.set(saleRef, cleanData);
-      if (saleData._stockUpdates) { for (var i = 0; i < saleData._stockUpdates.length; i++) { var update = saleData._stockUpdates[i]; batch.update(doc(db, update.collection, update.id), update.data); } }
-      if (saleData._movements) { for (var j = 0; j < saleData._movements.length; j++) { var mov = saleData._movements[j]; var movRef = doc(collection(db, 'stock_movements')); batch.set(movRef, Object.assign({}, mov, { performedAt: serverTimestamp() })); } }
-      if (customerId && !saleData.isCompanySale && saleData._type !== 'wholesale') { batch.update(doc(db, 'customers', customerId), { totalSpent: increment(saleData.totalAmount), purchaseCount: increment(1), lastPurchase: serverTimestamp() }); }
-      await batch.commit(); await logAudit('sale_saved_firestore', 'Sale ' + saleData.receiptNumber + ' saved to Firestore', { receiptNumber: saleData.receiptNumber, firestoreId: saleRef.id, customerId: customerId }); return saleRef.id;
-    } catch (e) { console.error('Firestore save failed:', e); saleData.createdAt = new Date().toISOString(); saleData._synced = false; saveOfflineSale(saleData); await logAudit('sale_save_failed', 'Failed to save sale to Firestore: ' + e.message, { receiptNumber: saleData.receiptNumber }); return null; }
-  }
+      const q = query(collection(db, 'kiosk_photos'), where('date', '==', today));
+      const snap = await getDocs(q);
+      
+      if (snap.empty) {
+        container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray);"><i class="fas fa-camera" style="font-size:2.5rem;margin-bottom:12px;display:block;opacity:0.5;"></i><p>No attendance photos today</p></div>';
+        return;
+      }
+      
+      const photos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      photos.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+      
+      container.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:15px;">' +
+        photos.map(p => {
+          const time = p.timestamp?.toDate ? p.timestamp.toDate().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : '-';
+          return `<div style="background:var(--gray-light);border-radius:16px;overflow:hidden;">
+            <img src="${p.photoUrl}" style="width:100%;height:140px;object-fit:cover;cursor:pointer;" onclick="window.open('${p.photoUrl}')" alt="${p.staffName||'Staff'}">
+            <div style="padding:10px;"><strong>${p.staffName||'Unknown'}</strong><br><small>${p.type==='checkin'?'Check-in':'Check-out'}: ${time}</small></div>
+          </div>`;
+        }).join('') + '</div>';
+    } catch (e) {
+      container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray);"><p>Failed to load photos: ' + e.message + '</p></div>';
+    }
+  };
 
-  // ============================================
-  // REMAINING FUNCTIONS (abbreviated for brevity - the full implementations are unchanged from the last complete version)
-  // The rest of the sales page functions (openNewSaleModal, openCompanySaleModal, openWholesaleSaleModal,
-  // processSale, processCompanySale, processWS, receipts, returns, exchanges, exports) remain exactly 
-  // the same as the last complete version provided above.
-  // ============================================
-
-  // [All remaining functions from the complete sales.html provided earlier are unchanged]
-
-  onAuthStateChanged(auth, async function(u) {
-    if (!u) { window.location.href = 'auth.html'; return; } currentUser = u;
-    try {
-      var snap = await getDoc(doc(db, 'users', u.uid)); if (!snap.exists() || snap.data().status !== 'active') { await signOut(auth); window.location.href = 'auth.html'; return; }
-      userData = snap.data(); if (isAdmin()) { statsRevealed = true; }
-      var userNameEl = safeGetEl('userName'); if (userNameEl) userNameEl.textContent = (userData.fullName || 'Staff').split(' ')[0];
-      var userRoleEl = safeGetEl('userRole'); if (userRoleEl) userRoleEl.textContent = (userData.role || '').replace('_', ' ');
-      var userAvatarEl = safeGetEl('userAvatar'); if (userAvatarEl) userAvatarEl.textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
-      var currentDateEl = safeGetEl('currentDate'); if (currentDateEl) currentDateEl.textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-      await loadAdminPins(); buildSidebar(); loadSales();
-      if (statsRevealed) { updateStatsDisplay(); updateAttendantStats(); }
-      if (isOnline && offlineSales.length > 0) { syncOfflineSales(); }
-      if (isOnline && pendingCustomers.length > 0) { syncPendingCustomers(); }
-      renderDraftTabs(); updateDebugPanel();
-      await logAudit('session_start', 'User logged in and viewed sales', { userRole: userData.role, isAdmin: isAdmin() });
-    } catch (e) { console.error('Init error:', e); showToast('Error loading', 'error'); }
+  onAuthStateChanged(auth, async (u) => {
+    if(!u){window.location.href='auth.html';return;} 
+    currentUser=u;
+    
+    const snap = await getDoc(doc(db,'users',u.uid));
+    if(!snap.exists()||(snap.data().role!=='admin'&&snap.data().role!=='super_admin')){
+      window.location.href='auth.html';return;
+    }
+    const data = snap.data();
+    
+    document.getElementById('userName').textContent = data.fullName?.split(' ')[0]||'Admin';
+    document.getElementById('userRole').textContent = data.role==='super_admin'?'Super Admin':'Admin';
+    document.getElementById('userAvatar').textContent = (data.fullName||'A').charAt(0).toUpperCase();
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    
+    await loadSettings();
+    await loadAdminPins();
+    await loadTodayPhotos();
+    debugLog('✅ Kiosk settings page fully loaded');
   });
 
-  function loadDraftsFromStorage() { var saved = localStorage.getItem('draftTabs'); if (saved) { try { draftTabs = JSON.parse(saved); if (draftTabs.length > 0) { activeDraftId = draftTabs[0].id; } } catch (e) { draftTabs = []; } } renderDraftTabs(); }
-  loadDraftsFromStorage();
-
-  window.addEventListener('beforeunload', function() { saveDraftsToStorage(); saveReturnHistory(); cleanup(); });
+  document.getElementById('logoutBtn').addEventListener('click',async()=>{
+    await signOut(auth);window.location.href='auth.html';
+  });
 </script>
 </body>
 </html>
