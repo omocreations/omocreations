@@ -496,6 +496,23 @@
             font-size: 1.3rem;
         }
         
+        .borrowed-banner {
+            background: rgba(245, 158, 11, 0.08);
+            border-left: 4px solid var(--warning);
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .borrowed-banner i {
+            color: var(--warning);
+            font-size: 1.3rem;
+        }
+        
         .filter-bar {
             display: flex;
             gap: 12px;
@@ -692,6 +709,11 @@
         .badge-purple {
             background: rgba(139, 92, 246, 0.1);
             color: #8b5cf6;
+        }
+        
+        .badge-borrow {
+            background: rgba(245, 158, 11, 0.15);
+            color: #b45309;
         }
         
         .btn {
@@ -1310,6 +1332,11 @@
                 <div style="flex: 1;"><strong>Stock Discrepancy Detected</strong> — <span id="discrepancyMsg"></span></div>
             </div>
 
+            <div class="borrowed-banner" id="borrowedBanner" style="display: none;">
+                <i class="fas fa-boxes"></i>
+                <div style="flex: 1;"><strong>Items Borrowed for Wholesale</strong> — <span id="borrowedMsg"></span></div>
+            </div>
+
             <div id="suspiciousAlerts" style="display: none; background: rgba(239, 68, 68, 0.08); border-left: 4px solid var(--danger); padding: 14px 18px; border-radius: 14px; margin-bottom: 20px;">
             </div>
 
@@ -1328,6 +1355,7 @@
             <div class="filter-bar">
                 <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search items..."></div>
                 <select class="filter-select" id="categoryFilter"><option value="all">All Categories</option></select>
+                <select class="filter-select" id="movementTypeFilter" onchange="renderInventory()"><option value="all">All Movement Types</option></select>
                 <button class="btn btn-outline btn-sm" onclick="exportData('csv')" id="exportBtn"><i class="fas fa-download"></i> Export CSV</button>
                 <button class="btn btn-outline btn-sm" onclick="openCsvUploadModal()" id="importBtn"><i class="fas fa-upload"></i> Import CSV</button>
                 <button class="btn btn-primary btn-sm" onclick="openAddItemModal()" id="addItemBtn"><i class="fas fa-plus"></i> Add Item</button>
@@ -1356,6 +1384,7 @@
                                     <th>Half Sold</th>
                                     <th>Quarter Sold</th>
                                     <th>Pack/Bundle Sold</th>
+                                    <th>Borrowed Out</th>
                                     <th>Unit Avail</th>
                                     <th>Half Avail</th>
                                     <th>Quarter Avail</th>
@@ -1370,7 +1399,7 @@
                                 </tr>
                             </thead>
                             <tbody id="inventoryTable">
-                                <tr><td colspan="21"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading inventory...</p></div></td></tr>
+                                <tr><td colspan="22"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading inventory...</p></div></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1394,6 +1423,7 @@
                                     <th>Half Sold</th>
                                     <th>Quarter Sold</th>
                                     <th>Pack/Bundle Sold</th>
+                                    <th>Borrowed Out</th>
                                     <th>Unit Avail</th>
                                     <th>Half Avail</th>
                                     <th>Quarter Avail</th>
@@ -1404,7 +1434,7 @@
                                 </tr>
                             </thead>
                             <tbody id="lowTable">
-                                <tr><td colspan="17"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
+                                <tr><td colspan="18"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1755,6 +1785,54 @@
             return fallback;
         }
 
+        // ============================================
+        // MOVEMENT TYPE LABELS
+        // ============================================
+        function getMovementTypeLabel(type) {
+            const labels = {
+                'initial': '🔰 Initial Stock',
+                'add': '➕ Added',
+                'edit': '✏️ Edited',
+                'sale': '💰 Sale',
+                'wholesale_sale': '📦 Wholesale',
+                'return': '↩️ Return',
+                'return_restock': '↩️✅ Return Restock',
+                'return_damaged': '↩️🗑️ Return Damaged',
+                'return_exchange': '↩️🔄 Exchange Return',
+                'exchange_sale': '🔄💰 Exchange Sale',
+                'inventory_to_store_sale': '📦→🏪 Borrowed for Wholesale',
+                'reject': '🚫 Rejected',
+                'adjustment': '🔧 Adjustment'
+            };
+            return labels[type] || type || '—';
+        }
+
+        function getMovementTypeBadge(type) {
+            const warningTypes = ['inventory_to_store_sale', 'return_damaged', 'reject'];
+            const successTypes = ['return_restock', 'add', 'initial'];
+            const infoTypes = ['sale', 'wholesale_sale', 'exchange_sale'];
+            const purpleTypes = ['return_exchange', 'edit'];
+            
+            if (warningTypes.indexOf(type) !== -1) return 'badge-warning';
+            if (successTypes.indexOf(type) !== -1) return 'badge-success';
+            if (infoTypes.indexOf(type) !== -1) return 'badge-info';
+            if (purpleTypes.indexOf(type) !== -1) return 'badge-purple';
+            return 'badge-info';
+        }
+
+        // ============================================
+        // BORROWED ITEMS TRACKING
+        // ============================================
+        function getBorrowedOut(itemId) {
+            let total = 0;
+            allMovements.forEach(function(m) {
+                if (m.itemId === itemId && m.movementType === 'inventory_to_store_sale') {
+                    total += Math.abs(safeNumber(m.change && m.change.unit, 0));
+                }
+            });
+            return total;
+        }
+
         function getSoldBreakdown(itemId) {
             const result = {
                 unitSold: 0,
@@ -1800,16 +1878,17 @@
                 });
             });
             allReturns.forEach(function(r) {
-                if (!r.items) return;
-                r.items.forEach(function(item) {
-                    if (item.id !== itemId) return;
-                    const qty = safeNumber(item.quantity, 0);
+                if (!r.returnedItems && !r.items) return;
+                const items = r.returnedItems || r.items || [];
+                items.forEach(function(item) {
+                    if (item.id !== itemId && item.itemId !== itemId) return;
+                    const qty = safeNumber(item.returnedQuantity || item.quantity, 0);
                     const size = (item.sizeLabel || item.size || 'unit').toString().toLowerCase();
                     result.allTransactions.push({
                         date: r.createdAt,
-                        receipt: r.receiptNumber || 'Return',
+                        receipt: r.saleReceiptNumber || r.receiptNumber || 'Return',
                         customer: r.customerName || 'Walk-in',
-                        attendant: r.attendantName || '-',
+                        attendant: r.processedByName || r.attendantName || '-',
                         quantity: -qty,
                         size: size,
                         price: safeNumber(item.unitPrice, 0),
@@ -1845,6 +1924,7 @@
             let adjustedUnit = 0,
                 adjustedHalf = 0,
                 adjustedQuarter = 0;
+            let borrowedOut = 0;
             const ledger = [];
             movements.forEach(function(m) {
                 const change = m.change || {};
@@ -1853,7 +1933,9 @@
                     type: m.movementType,
                     reference: m.reference || '',
                     change: change,
-                    performedBy: m.performedByName || '-'
+                    performedBy: m.performedByName || '-',
+                    storeItemName: m.storeItemName || '',
+                    note: m.note || ''
                 });
                 if (m.movementType === 'initial') {
                     initialUnit += safeNumber(change.unit, 0);
@@ -1867,10 +1949,15 @@
                     soldUnit += Math.abs(safeNumber(change.unit, 0));
                     soldHalf += Math.abs(safeNumber(change.half, 0));
                     soldQuarter += Math.abs(safeNumber(change.quarter, 0));
-                } else if (m.movementType === 'return') {
+                } else if (m.movementType === 'return' || m.movementType === 'return_restock') {
                     returnedUnit += safeNumber(change.unit, 0);
                     returnedHalf += safeNumber(change.half, 0);
                     returnedQuarter += safeNumber(change.quarter, 0);
+                } else if (m.movementType === 'return_damaged') {
+                    // Damaged returns don't restore stock
+                } else if (m.movementType === 'inventory_to_store_sale') {
+                    borrowedOut += Math.abs(safeNumber(change.unit, 0));
+                    soldUnit += Math.abs(safeNumber(change.unit, 0));
                 } else if (m.movementType === 'reject') {
                     addedUnit -= safeNumber(change.unit, 0);
                     addedHalf -= safeNumber(change.half, 0);
@@ -1897,6 +1984,7 @@
                 adjustedUnit: adjustedUnit,
                 adjustedHalf: adjustedHalf,
                 adjustedQuarter: adjustedQuarter,
+                borrowedOut: borrowedOut,
                 calculatedUnit: initialUnit + addedUnit - soldUnit + returnedUnit + adjustedUnit,
                 calculatedHalf: initialHalf + addedHalf - soldHalf + returnedHalf + adjustedHalf,
                 calculatedQuarter: initialQuarter + addedQuarter - soldQuarter + returnedQuarter + adjustedQuarter,
@@ -2192,6 +2280,16 @@
                 return d && d >= weekStart;
             });
 
+            const todayBorrowed = allMovements.filter(function(m) {
+                const d = m.performedAt && m.performedAt.toDate ? m.performedAt.toDate() : null;
+                return d && d >= todayStart && m.movementType === 'inventory_to_store_sale';
+            });
+
+            const todayRestocks = allMovements.filter(function(m) {
+                const d = m.performedAt && m.performedAt.toDate ? m.performedAt.toDate() : null;
+                return d && d >= todayStart && (m.movementType === 'return_restock' || m.movementType === 'return');
+            });
+
             const discrepancyItems = allItems.filter(function(i) {
                 const mov = getMovementBreakdown(i.id);
                 const t = i.itemType || 'general';
@@ -2204,10 +2302,11 @@
             let html = '';
             html += '<div class="reconciliation-panel">';
             html += '<h4><i class="fas fa-calendar-day"></i> Daily Reconciliation — ' + now.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) + '</h4>';
-            html += '<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">';
+            html += '<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px;">';
             html += '<div class="recon-stat"><strong>Revenue</strong><span class="recon-value positive">' + formatCurrency(todayRevenue) + '</span></div>';
             html += '<div class="recon-stat"><strong>Sales Count</strong><span class="recon-value">' + (todaySalesOnly.length + todayWholesaleOnly.length) + '</span></div>';
             html += '<div class="recon-stat"><strong>Stock Moves</strong><span class="recon-value">' + todayMovements.length + '</span></div>';
+            html += '<div class="recon-stat"><strong>Borrowed</strong><span class="recon-value" style="color: var(--warning);">' + todayBorrowed.length + '</span></div>';
             html += '<div class="recon-stat"><strong>Discrepancies</strong><span class="recon-value" style="color: ' + (discrepancyItems > 0 ? 'var(--danger)' : 'var(--success)') + ';">' + discrepancyItems + '</span></div>';
             html += '</div></div>';
 
@@ -2285,12 +2384,20 @@
         window.showMovementHistory = function(itemId, itemName) {
             const mov = getMovementBreakdown(itemId);
             let html = '<h3>Movement Ledger: ' + itemName + '</h3>';
+            html += '<div style="background: var(--gray-light); padding: 12px; border-radius: 12px; margin-bottom: 12px;">';
             html += '<p><strong>Initial Stock:</strong> Unit: ' + mov.initialUnit + ' | Half: ' + mov.initialHalf + ' | Quarter: ' + mov.initialQuarter + '</p>';
             html += '<p><strong>Calculated Available:</strong> Unit: ' + mov.calculatedUnit + ' | Half: ' + mov.calculatedHalf + ' | Quarter: ' + mov.calculatedQuarter + '</p>';
+            if (mov.borrowedOut > 0) {
+                html += '<p><strong style="color: var(--warning);">📦 Borrowed Out:</strong> ' + mov.borrowedOut + ' units (for wholesale)</p>';
+            }
+            html += '</div>';
             if (mov.ledger.length === 0) html += '<p>No movements recorded for this item.</p>';
             else {
                 html += '<table style="width: 100%; font-size: 0.8rem;"><tr><th>Date</th><th>Type</th><th>Reference</th><th>Unit</th><th>Half</th><th>Quarter</th><th>By</th></tr>';
-                mov.ledger.forEach(function(l) { html += '<tr><td>' + formatDateTime(l.date) + '</td><td>' + l.type + '</td><td>' + l.reference + '</td><td>' + (l.change.unit || 0) + '</td><td>' + (l.change.half || 0) + '</td><td>' + (l.change.quarter || 0) + '</td><td>' + l.performedBy + '</td></tr>'; });
+                mov.ledger.forEach(function(l) {
+                    const typeLabel = getMovementTypeLabel(l.type);
+                    html += '<tr><td>' + formatDateTime(l.date) + '</td><td><span class="badge ' + getMovementTypeBadge(l.type) + '">' + typeLabel + '</span></td><td>' + l.reference + (l.storeItemName ? ' → ' + l.storeItemName : '') + (l.note ? '<br><small style="color:var(--gray);">' + l.note + '</small>' : '') + '</td><td>' + (l.change.unit || 0) + '</td><td>' + (l.change.half || 0) + '</td><td>' + (l.change.quarter || 0) + '</td><td>' + l.performedBy + '</td></tr>';
+                });
                 html += '</table>';
             }
             html += '<button class="btn btn-primary" onclick="hideModal()" style="width: 100%; margin-top: 16px;">Close</button>';
@@ -2329,6 +2436,23 @@
             const msg = document.getElementById('lowStockMsg');
             if (lowAndOut.length > 0) { banner.style.display = 'flex'; msg.textContent = lowAndOut.length + ' item(s) with low stock.'; } else { banner.style.display = 'none'; }
 
+            // Borrowed items banner
+            let totalBorrowedToday = 0;
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            allMovements.forEach(function(m) {
+                const d = m.performedAt && m.performedAt.toDate ? m.performedAt.toDate() : null;
+                if (d && d >= todayStart && m.movementType === 'inventory_to_store_sale') {
+                    totalBorrowedToday += Math.abs(safeNumber(m.change && m.change.unit, 0));
+                }
+            });
+            const borrowedBanner = document.getElementById('borrowedBanner');
+            const borrowedMsg = document.getElementById('borrowedMsg');
+            if (totalBorrowedToday > 0) {
+                borrowedBanner.style.display = 'flex';
+                borrowedMsg.textContent = totalBorrowedToday + ' units borrowed from inventory for wholesale sales today.';
+            } else { borrowedBanner.style.display = 'none'; }
+
             const suspiciousAlerts = getSuspiciousActivities();
             const alertDiv = document.getElementById('suspiciousAlerts');
             if (suspiciousAlerts.length > 0 && isAdmin()) {
@@ -2364,7 +2488,7 @@
             const tbody = document.getElementById('inventoryTable');
             if (tbody) {
                 if (available.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="21"><div class="empty-state"><i class="fas fa-box"></i><p>No items found. Click "Add Item" to get started.</p></div></td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="22"><div class="empty-state"><i class="fas fa-box"></i><p>No items found. Click "Add Item" to get started.</p></div></td></tr>';
                 } else {
                     tbody.innerHTML = available.map(function(item) {
                         const flags = getLowStockFlags(item);
@@ -2372,6 +2496,7 @@
                         const sb = st === 'available' ? 'success' : 'warning';
                         const breakdown = getSoldBreakdown(item.id);
                         const mov = getMovementBreakdown(item.id);
+                        const borrowedOut = mov.borrowedOut;
                         const unitS = breakdown.unitSold;
                         const halfS = breakdown.halfSold;
                         const quarterS = breakdown.quarterSold;
@@ -2393,6 +2518,7 @@
                         if (flags.indexOf('yard') !== -1) statusLabel = 'yard low';
                         if (flags.indexOf('bundle') !== -1) statusLabel = 'bundle low';
                         const escapedName = (item.name || '').replace(/'/g, "\\'");
+                        let borrowedDisplay = borrowedOut > 0 ? '<span class="badge badge-borrow" title="Borrowed for wholesale">📦 ' + borrowedOut + '</span>' : '—';
                         let actionsHtml = '';
                         if (flags.length) { actionsHtml += '<button class="btn btn-sm btn-warning" onclick="openRestockOptions(\'' + item.id + '\')" title="Restock"><i class="fas fa-box-open"></i></button> '; }
                         if (isAdmin()) {
@@ -2402,14 +2528,14 @@
                             actionsHtml += '<button class="btn btn-sm btn-danger" onclick="deleteItem(\'' + item.id + '\')" title="Delete"><i class="fas fa-trash"></i></button> ';
                             actionsHtml += '<button class="btn btn-sm btn-warning" onclick="rejectItem(\'' + item.id + '\')" title="Reject"><i class="fas fa-ban"></i></button>';
                         }
-                        return '<tr><td><strong>' + (item.name || '-') + '</strong></td><td><span class="badge badge-purple">' + (item.category || '-') + '</span></td><td>' + getItemTypeLabel(item) + '</td><td>' + mov.initialUnit + '</td><td>' + mov.initialHalf + '</td><td>' + mov.initialQuarter + '</td><td><span class="clickable-sold" onclick="showUnitSalesHistory(\'' + item.id + '\',\'' + escapedName + '\')">' + unitS + '</span></td><td><span class="clickable-sold" onclick="showHalfSalesHistory(\'' + item.id + '\',\'' + escapedName + '\')">' + halfS + '</span></td><td><span class="clickable-sold" onclick="showQuarterSalesHistory(\'' + item.id + '\',\'' + escapedName + '\')">' + quarterS + '</span></td><td><span class="clickable-sold" onclick="showPackBundleSalesHistory(\'' + item.id + '\',\'' + escapedName + '\')">' + packS + '</span></td><td>' + unitA + '</td><td>' + halfA + '</td><td>' + quarterA + '</td><td>' + packInfo + (packPrice ? ' · ' + formatCurrency(packPrice) : '') + '</td><td>' + formatCurrency(safeNumber(item.unitPrice, 0)) + '</td><td>' + (item.halfPrice ? formatCurrency(safeNumber(item.halfPrice, 0)) : '—') + '</td><td>' + (item.quarterPrice ? formatCurrency(safeNumber(item.quarterPrice, 0)) : '—') + '</td><td>' + (packPrice ? formatCurrency(packPrice) : '—') + '</td><td style="font-weight: 600;">' + (showRev ? formatCurrency(rev) : '₦••••') + '</td><td><span class="badge badge-' + sb + '">' + statusLabel + '</span></td><td><div style="display: flex; gap: 4px; flex-wrap: wrap;">' + actionsHtml + '</div></td></tr>';
+                        return '<tr><td><strong>' + (item.name || '-') + '</strong></td><td><span class="badge badge-purple">' + (item.category || '-') + '</span></td><td>' + getItemTypeLabel(item) + '</td><td>' + mov.initialUnit + '</td><td>' + mov.initialHalf + '</td><td>' + mov.initialQuarter + '</td><td><span class="clickable-sold" onclick="showUnitSalesHistory(\'' + item.id + '\',\'' + escapedName + '\')">' + unitS + '</span></td><td><span class="clickable-sold" onclick="showHalfSalesHistory(\'' + item.id + '\',\'' + escapedName + '\')">' + halfS + '</span></td><td><span class="clickable-sold" onclick="showQuarterSalesHistory(\'' + item.id + '\',\'' + escapedName + '\')">' + quarterS + '</span></td><td><span class="clickable-sold" onclick="showPackBundleSalesHistory(\'' + item.id + '\',\'' + escapedName + '\')">' + packS + '</span></td><td>' + borrowedDisplay + '</td><td>' + unitA + '</td><td>' + halfA + '</td><td>' + quarterA + '</td><td>' + packInfo + (packPrice ? ' · ' + formatCurrency(packPrice) : '') + '</td><td>' + formatCurrency(safeNumber(item.unitPrice, 0)) + '</td><td>' + (item.halfPrice ? formatCurrency(safeNumber(item.halfPrice, 0)) : '—') + '</td><td>' + (item.quarterPrice ? formatCurrency(safeNumber(item.quarterPrice, 0)) : '—') + '</td><td>' + (packPrice ? formatCurrency(packPrice) : '—') + '</td><td style="font-weight: 600;">' + (showRev ? formatCurrency(rev) : '₦••••') + '</td><td><span class="badge badge-' + sb + '">' + statusLabel + '</span></td><td><div style="display: flex; gap: 4px; flex-wrap: wrap;">' + actionsHtml + '</div></td></tr>';
                     }).join('');
                 }
             }
 
             const lTbody = document.getElementById('lowTable');
             if (lTbody) {
-                if (lowAndOut.length === 0) { lTbody.innerHTML = '<tr><td colspan="17"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items well stocked</p></div></td></tr>'; }
+                if (lowAndOut.length === 0) { lTbody.innerHTML = '<tr><td colspan="18"><div class="empty-state"><i class="fas fa-check-circle"></i><p>All items well stocked</p></div></td></tr>'; }
                 else {
                     lTbody.innerHTML = lowAndOut.map(function(item) {
                         const flags = getLowStockFlags(item);
@@ -2417,10 +2543,12 @@
                         if (flags.indexOf('general') !== -1) statusLabel = 'general low';
                         const mov = getMovementBreakdown(item.id);
                         const breakdown = getSoldBreakdown(item.id);
+                        const borrowedOut = mov.borrowedOut;
                         const escapedName = (item.name || '').replace(/'/g, "\\'");
+                        let borrowedDisplay = borrowedOut > 0 ? '<span class="badge badge-borrow">📦 ' + borrowedOut + '</span>' : '—';
                         let actionsHtml = '';
                         if (isAdmin()) { actionsHtml += '<button class="btn btn-sm btn-warning" onclick="openRestockOptions(\'' + item.id + '\')"><i class="fas fa-box-open"></i></button> <button class="btn btn-sm btn-outline" onclick="openEditItem(\'' + item.id + '\')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline" onclick="showMovementHistory(\'' + item.id + '\',\'' + escapedName + '\')"><i class="fas fa-book"></i></button>'; }
-                        return '<tr><td><strong>' + (item.name || '-') + '</strong></td><td>' + (item.category || '-') + '</td><td>' + getItemTypeLabel(item) + '</td><td>' + mov.initialUnit + '</td><td>' + mov.initialHalf + '</td><td>' + mov.initialQuarter + '</td><td>' + breakdown.unitSold + '</td><td>' + breakdown.halfSold + '</td><td>' + breakdown.quarterSold + '</td><td>' + (breakdown.packSold + breakdown.bundleSold) + '</td><td>' + safeNumber(item.unitQty, 0) + '</td><td>' + safeNumber(item.halfQty, 0) + '</td><td>' + safeNumber(item.quarterQty, 0) + '</td><td>—</td><td>' + formatCurrency(safeNumber(item.unitPrice, 0)) + '</td><td><span class="badge badge-warning">' + statusLabel + '</span></td><td><div style="display: flex; gap: 4px;">' + actionsHtml + '</div></td></tr>';
+                        return '<tr><td><strong>' + (item.name || '-') + '</strong></td><td>' + (item.category || '-') + '</td><td>' + getItemTypeLabel(item) + '</td><td>' + mov.initialUnit + '</td><td>' + mov.initialHalf + '</td><td>' + mov.initialQuarter + '</td><td>' + breakdown.unitSold + '</td><td>' + breakdown.halfSold + '</td><td>' + breakdown.quarterSold + '</td><td>' + (breakdown.packSold + breakdown.bundleSold) + '</td><td>' + borrowedDisplay + '</td><td>' + safeNumber(item.unitQty, 0) + '</td><td>' + safeNumber(item.halfQty, 0) + '</td><td>' + safeNumber(item.quarterQty, 0) + '</td><td>—</td><td>' + formatCurrency(safeNumber(item.unitPrice, 0)) + '</td><td><span class="badge badge-warning">' + statusLabel + '</span></td><td><div style="display: flex; gap: 4px;">' + actionsHtml + '</div></td></tr>';
                     }).join('');
                 }
             }
@@ -2507,11 +2635,40 @@
                 renderInventory();
             }));
             unsubscribes.push(onSnapshot(query(collection(db, 'returns'), orderBy('createdAt', 'desc')), function(snap) {
-                allReturns = snap.docs.map(function(d) { return { id: d.id, items: d.data().items || [], customerName: d.data().customerName || '', attendantName: d.data().attendantName || '', receiptNumber: d.data().receiptNumber || '', createdAt: d.data().createdAt }; });
+                allReturns = snap.docs.map(function(d) { 
+                    const data = d.data();
+                    return { 
+                        id: d.id, 
+                        returnedItems: data.returnedItems || [], 
+                        items: data.items || data.returnedItems || [],
+                        customerName: data.customerName || '', 
+                        attendantName: data.processedByName || data.attendantName || '', 
+                        receiptNumber: data.saleReceiptNumber || data.receiptNumber || '', 
+                        createdAt: data.createdAt,
+                        saleReceiptNumber: data.saleReceiptNumber || '',
+                        processedByName: data.processedByName || ''
+                    }; 
+                });
                 renderInventory();
             }));
             unsubscribes.push(onSnapshot(query(collection(db, 'stock_movements'), orderBy('performedAt', 'asc')), function(snap) {
-                allMovements = snap.docs.map(function(d) { const data = d.data(); return { id: d.id, itemId: data.itemId || '', itemName: data.itemName || '', movementType: data.movementType || '', change: data.change || {}, reference: data.reference || '', performedBy: data.performedBy || '', performedByName: data.performedByName || '', performedAt: data.performedAt }; });
+                allMovements = snap.docs.map(function(d) { 
+                    const data = d.data(); 
+                    return { 
+                        id: d.id, 
+                        itemId: data.itemId || '', 
+                        itemName: data.itemName || '', 
+                        movementType: data.movementType || '', 
+                        change: data.change || {}, 
+                        reference: data.reference || '', 
+                        performedBy: data.performedBy || '', 
+                        performedByName: data.performedByName || '', 
+                        performedAt: data.performedAt,
+                        storeItemId: data.storeItemId || '',
+                        storeItemName: data.storeItemName || '',
+                        note: data.note || ''
+                    }; 
+                });
                 renderInventory();
             }));
         }
@@ -2597,7 +2754,7 @@
         window.openCsvUploadModal = function() { if (!isAdmin()) { showToast('Only admin can import', 'error'); return; } showModal('Import CSV', '<p>Upload a CSV file.</p><p><span class="csv-template-link" onclick="downloadCsvTemplate()"><i class="fas fa-download"></i> Download Template</span></p><div class="form-group"><label>CSV File *</label><input type="file" class="form-control" id="csvFile" accept=".csv"></div><button class="btn btn-primary" onclick="processCsvUpload()"><i class="fas fa-upload"></i> Upload</button><button class="btn btn-outline" onclick="hideModal()" style="margin-top:8px;">Cancel</button>'); };
         window.downloadCsvTemplate = function() { const csv = 'name,category,itemType,measuredSubType,unitQty,unitPrice,halfQty,halfPrice,quarterQty,quarterPrice,packSize,packPrice,bundleQty,bundlePrice,yardQty,pricePerYard,threshold\nExample,rhinestones,fashion,,100,500,20,300,10,150,,,,,,10'; const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventory_template.csv'; a.click(); };
         window.processCsvUpload = async function() { if (!isAdmin()) return; const file = document.getElementById('csvFile')?.files[0]; if (!file) { showToast('Select file', 'error'); return; } const text = await file.text(); const lines = text.split('\n').filter(function(l) { return l.trim(); }); if (lines.length < 2) { showToast('CSV needs header + data', 'error'); return; } const headers = lines[0].split(',').map(function(h) { return h.trim().toLowerCase(); }); let added = 0, errors = 0; const batch = writeBatch(db); for (let i = 1; i < lines.length; i++) { const vals = lines[i].split(',').map(function(v) { return v.trim(); }); if (vals.length < headers.length) continue; const row = {}; headers.forEach(function(h, idx) { row[h] = vals[idx]; }); const name = row.name; if (!name) { errors++; continue; } const data = { name, category: row.category || 'other', itemType: row.itemtype || 'general', measuredSubType: row.measuredsubtype || 'yard', unitQty: parseInt(row.unitqty) || 0, unitPrice: parseFloat(row.unitprice) || 0, halfQty: parseInt(row.halfqty) || 0, halfPrice: parseFloat(row.halfprice) || 0, quarterQty: parseInt(row.quarterqty) || 0, quarterPrice: parseFloat(row.quarterprice) || 0, packSize: parseInt(row.packsize) || 0, packPrice: parseFloat(row.packprice) || 0, bundleQty: parseInt(row.bundleqty) || 0, bundlePrice: parseFloat(row.bundleprice) || 0, yardQty: parseInt(row.yardqty) || 0, pricePerYard: parseFloat(row.priceperyard) || 0, threshold: parseInt(row.threshold) || 10, initialUnitQty: parseInt(row.unitqty) || 0, initialHalfQty: parseInt(row.halfqty) || 0, initialQuarterQty: parseInt(row.quarterqty) || 0, status: 'available', createdBy: currentUser?.uid, createdByName: userData?.fullName || 'Staff', createdAt: serverTimestamp(), updatedAt: serverTimestamp() }; const ref = doc(collection(db, 'stock_items')); batch.set(ref, data); added++; } if (added > 0) { await batch.commit(); await logAudit('csv_import', 'Imported ' + added + ' items'); } showToast('Imported ' + added + '. ' + errors + ' errors.', 'success'); hideModal(); };
-        window.exportData = function(format) { if (!isAdmin()) { showToast('Only admin can export', 'error'); return; } const headers = ['Name','Category','Type','Initial U','Initial ½','Initial ¼','Unit Sold','Half Sold','Quarter Sold','Pack/Bundle Sold','Unit Avail','Half Avail','Quarter Avail','Pack/Bundle Avail','Unit Price','Half Price','Quarter Price','Pack/Bundle Price','Revenue','Status']; const rows = allItems.map(function(i) { const b = getSoldBreakdown(i.id); const m = getMovementBreakdown(i.id); const pack = i.packSize ? (i.packSize + '/pk') : i.yardQty ? (safeNumber(i.yardQty, 0) + 'yds') : ''; return [i.name||'',i.category||'',i.itemType||'general',m.initialUnit,m.initialHalf,m.initialQuarter,b.unitSold,b.halfSold,b.quarterSold,b.packSold+b.bundleSold,safeNumber(i.unitQty,0),safeNumber(i.halfQty,0),safeNumber(i.quarterQty,0),pack,safeNumber(i.unitPrice,0),safeNumber(i.halfPrice,0),safeNumber(i.quarterPrice,0),safeNumber(i.packPrice||i.bundlePrice||i.pricePerYard,0),getItemRevenue(i),getLowStockFlags(i).join(', ')||'available']; }); const csv = [headers.join(','), ...rows.map(function(r) { return r.map(function(c) { return '"' + c + '"'; }).join(','); })].join('\n'); const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventory_' + new Date().toISOString().split('T')[0] + '.csv'; a.click(); showToast('Exported', 'success'); };
+        window.exportData = function(format) { if (!isAdmin()) { showToast('Only admin can export', 'error'); return; } const headers = ['Name','Category','Type','Initial U','Initial ½','Initial ¼','Unit Sold','Half Sold','Quarter Sold','Pack/Bundle Sold','Borrowed Out','Unit Avail','Half Avail','Quarter Avail','Pack/Bundle Avail','Unit Price','Half Price','Quarter Price','Pack/Bundle Price','Revenue','Status']; const rows = allItems.map(function(i) { const b = getSoldBreakdown(i.id); const m = getMovementBreakdown(i.id); const pack = i.packSize ? (i.packSize + '/pk') : i.yardQty ? (safeNumber(i.yardQty, 0) + 'yds') : ''; return [i.name||'',i.category||'',i.itemType||'general',m.initialUnit,m.initialHalf,m.initialQuarter,b.unitSold,b.halfSold,b.quarterSold,b.packSold+b.bundleSold,m.borrowedOut,safeNumber(i.unitQty,0),safeNumber(i.halfQty,0),safeNumber(i.quarterQty,0),pack,safeNumber(i.unitPrice,0),safeNumber(i.halfPrice,0),safeNumber(i.quarterPrice,0),safeNumber(i.packPrice||i.bundlePrice||i.pricePerYard,0),getItemRevenue(i),getLowStockFlags(i).join(', ')||'available']; }); const csv = [headers.join(','), ...rows.map(function(r) { return r.map(function(c) { return '"' + c + '"'; }).join(','); })].join('\n'); const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventory_' + new Date().toISOString().split('T')[0] + '.csv'; a.click(); showToast('Exported', 'success'); };
         window.refreshInventory = function() { loadInventory(); showToast('Refreshed', 'success'); };
 
         window.openRestockOptions = function(id) { const item = allItems.find(function(i) { return i.id === id; }); if (!item) return; showModal('Restock: ' + item.name, '<div class="restock-options"><div class="restock-option" onclick="restockFromStore(\'' + id + '\')"><i class="fas fa-store"></i><div class="label">From Store</div></div><div class="restock-option" onclick="restockFromThirdParty(\'' + id + '\')"><i class="fas fa-truck"></i><div class="label">Third Party</div></div></div><button class="btn btn-outline" onclick="hideModal()" style="width:100%;margin-top:12px;">Cancel</button>'); };
@@ -2605,7 +2762,7 @@
         window.restockFromThirdParty = function(id) { hideModal(); navigateTo('purchases.html'); };
         window.viewHistory = async function(id) { const item = allItems.find(function(i) { return i.id === id; }); if (!item) return; try { const snap = await getDocs(query(collection(db, 'audit_logs'), orderBy('performedAt', 'desc'))); let html = '<h4>' + item.name + '</h4>'; const logs = snap.docs.map(function(d) { return d.data(); }).filter(function(l) { return l.note && l.note.indexOf(item.name) !== -1; }); if (logs.length === 0) html += '<p>No history</p>'; else { html += '<table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Action</th><th>By</th></tr>'; logs.forEach(function(l) { html += '<tr><td>' + formatDate(l.performedAt) + '</td><td>' + (l.actionType||'-') + '</td><td>' + (l.performedByName||'-') + '</td></tr>'; }); html += '</table>'; } html += '<button class="btn btn-primary" onclick="hideModal()" style="margin-top:16px;width:100%;">Close</button>'; showModal('Audit History', html); } catch (e) { showToast('Error', 'error'); } };
 
-        window.openHelpGuide = function() { showModal('📖 Help', '<div class="guide-section"><h4>📦 Item Types</h4><p>General, Fashion, Pack/Bundle, Measured.</p></div><div class="guide-section"><h4>🔐 Roles</h4><p>Admin: full access. Attendant: view only.</p></div><div class="guide-section"><h4>🔧 Fix All Button</h4><p>Click <strong>Fix All</strong> to reconcile stock discrepancies and create missing sale movements.</p></div><button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close</button>'); };
+        window.openHelpGuide = function() { showModal('📖 Help', '<div class="guide-section"><h4>📦 Item Types</h4><p>General, Fashion, Pack/Bundle, Measured.</p></div><div class="guide-section"><h4>📦 Borrowed Items</h4><p>When store stock runs low during wholesale, items are <strong>borrowed from inventory</strong>. These show in the "Borrowed Out" column and in movement history.</p></div><div class="guide-section"><h4>🔐 Roles</h4><p>Admin: full access. Attendant: view only.</p></div><div class="guide-section"><h4>🔧 Fix All Button</h4><p>Click <strong>Fix All</strong> to reconcile stock discrepancies and create missing sale movements.</p></div><button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close</button>'); };
 
         document.getElementById('searchInput').addEventListener('input', renderInventory);
         document.getElementById('categoryFilter').addEventListener('change', renderInventory);
