@@ -4,29 +4,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#ff4da6">
-  <title>My Profile · FashionStone</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>My Profile · OmoCreations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root { --primary: #ff4da6; --primary-dark: #e6398c; --primary-soft: #fff0f6; --dark: #0f0f1a; --gray: #6b7280; --gray-light: #f3f4f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --info: #3b82f6; --header-height: 64px; --sidebar-width: 280px; }
-    body { font-family: 'Inter', sans-serif; background: #f9fafb; display: flex; min-height: 100vh; }
-    .sidebar { width: var(--sidebar-width); background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%); color: white; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; }
-    .sidebar-header { padding: 24px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; }
-    .logo-text { font-size: 1.25rem; font-weight: 700; } .logo-text span { color: var(--primary); }
-    .sidebar-nav { padding: 20px 12px; }
-    .nav-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; color: rgba(255,255,255,0.65); cursor: pointer; border: none; background: none; width: 100%; font-size: 0.9rem; font-weight: 500; margin-bottom: 3px; }
-    .nav-item i { width: 22px; } .nav-item:hover { background: rgba(255,77,166,0.12); color: white; }
-    .nav-item.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f9fafb 0%, #fff0f6 100%); display: flex; min-height: 100vh; }
+    
+    .sidebar { width: var(--sidebar-width); min-width: var(--sidebar-width); background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%); color: white; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; border-right: 1px solid rgba(255,255,255,0.06); }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+    .sidebar-header { padding: 24px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); position: sticky; top: 0; background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%); z-index: 10; }
+    .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; flex-shrink: 0; }
+    .logo-text { font-size: 1.25rem; font-weight: 700; font-family: 'Playfair Display', serif; } .logo-text span { color: var(--primary); }
+    .sidebar-nav { padding: 20px 12px; display: flex; flex-direction: column; }
+    .nav-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; color: rgba(255,255,255,0.65); cursor: pointer; border: none; background: none; width: 100%; font-size: 0.9rem; font-weight: 500; margin-bottom: 3px; transition: all 0.2s; font-family: 'Inter', sans-serif; text-align: left; }
+    .nav-item i { width: 22px; font-size: 1.1rem; text-align: center; }
+    .nav-item:hover { background: rgba(255,77,166,0.12); color: white; transform: translateX(5px); }
+    .nav-item.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 5px 15px rgba(255,77,166,0.3); }
     .nav-item.logout { color: rgba(239,68,68,0.7); margin-top: 20px; }
-    .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,255,255,0.06); position: absolute; bottom: 0; width: 100%; background: inherit; }
+    .nav-item.logout:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,255,255,0.06); position: sticky; bottom: 0; background: inherit; }
     .user-profile { display: flex; align-items: center; gap: 12px; }
-    .user-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .user-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; }
     .user-details h4 { font-size: 0.85rem; } .user-details p { font-size: 0.7rem; opacity: 0.6; }
-    .main-content { flex: 1; margin-left: var(--sidebar-width); }
+    
+    .main-content { flex: 1; margin-left: var(--sidebar-width); min-height: 100vh; }
     .top-bar { height: var(--header-height); background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); padding: 0 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.04); position: sticky; top: 0; z-index: 40; }
-    .page-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); }
+    .page-title { font-size: 1.5rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
     .content-wrapper { padding: 28px; max-width: 1200px; }
     
     .profile-header { display: flex; align-items: center; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; }
@@ -57,7 +66,7 @@
     .positive { color: var(--success); } .negative { color: var(--danger); }
     
     .tabs-container { display: flex; gap: 6px; margin-bottom: 20px; background: var(--gray-light); padding: 6px; border-radius: 40px; }
-    .tab-btn { padding: 10px 20px; border-radius: 40px; font-weight: 600; font-size: 0.85rem; border: none; background: none; color: var(--gray); cursor: pointer; flex: 1; }
+    .tab-btn { padding: 10px 20px; border-radius: 40px; font-weight: 600; font-size: 0.85rem; border: none; background: none; color: var(--gray); cursor: pointer; flex: 1; transition: all 0.2s; font-family: 'Inter', sans-serif; }
     .tab-btn.active { background: var(--primary); color: white; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -77,42 +86,90 @@
     .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
     .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
     
-    .btn { padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background: white; border: 1px solid rgba(0,0,0,0.08); }
+    .btn { padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background: white; border: 1px solid rgba(0,0,0,0.08); transition: all 0.2s; font-family: 'Inter', sans-serif; }
+    .btn:hover { transform: translateY(-1px); }
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; }
     .btn-outline { border: 1.5px solid rgba(255,77,166,0.3); color: var(--primary); background: transparent; }
-    .btn-warning { background: var(--warning); color: white; }
+    .btn-warning { background: var(--warning); color: white; border: none; }
+    .btn-danger { background: var(--danger); color: white; border: none; }
     
     .empty-state { text-align: center; padding: 30px; color: var(--gray); }
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
-    .modal { background: white; border-radius: 28px; padding: 28px; max-width: 500px; width: 100%; }
-    .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: white; border-radius: 28px; padding: 28px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray); }
+    .modal-close:hover { color: var(--danger); }
     .form-group { margin-bottom: 18px; }
-    .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 14px; font-size: 0.9rem; outline: none; }
-    .pin-input-container { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
-    .pin-input { width: 55px; height: 65px; text-align: center; font-size: 1.8rem; font-weight: 700; border: 2px solid rgba(255,77,166,0.2); border-radius: 14px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--dark); margin-bottom: 8px; }
+    .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 14px; font-size: 0.9rem; outline: none; transition: border 0.2s; font-family: 'Inter', sans-serif; }
+    .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,77,166,0.1); }
+    textarea.form-control { min-height: 80px; resize: vertical; }
     
-    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; }
-    .toast { background: white; padding: 14px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 12px; transform: translateX(400px); transition: transform 0.25s; border-left: 4px solid var(--primary); margin-top: 10px; }
-    .toast.show { transform: translateX(0); }
+    .pin-input-container { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
+    .pin-input { width: 55px; height: 65px; text-align: center; font-size: 1.8rem; font-weight: 700; border: 2px solid rgba(255,77,166,0.2); border-radius: 14px; outline: none; transition: all 0.2s; font-family: monospace; }
+    .pin-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,77,166,0.1); }
+    .pin-input.filled { border-color: var(--primary); background: var(--primary-soft); }
+    
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { background: white; padding: 14px 20px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 12px; animation: slideInToast 0.3s ease; border-left: 4px solid var(--primary); font-weight: 500; font-size: 0.85rem; }
+    .toast.success { border-left-color: var(--success); }
+    .toast.error { border-left-color: var(--danger); }
+    .toast.warning { border-left-color: var(--warning); }
+    @keyframes slideInToast { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     
     .loading-state { display: flex; justify-content: center; align-items: center; min-height: 300px; }
     .spinner { width: 40px; height: 40px; border: 3px solid var(--primary-soft); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     
-    .session-lock-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; backdrop-filter: blur(8px); background: rgba(0,0,0,0.3); z-index: 9999; display: none; align-items: center; justify-content: center; }
-    .session-lock-modal { background: white; border-radius: 24px; padding: 28px; max-width: 350px; text-align: center; }
+    .session-lock-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background: rgba(0,0,0,0.3); z-index: 9999; display: none; align-items: center; justify-content: center; }
+    .session-lock-overlay.active { display: flex; }
+    .session-lock-modal { background: white; border-radius: 24px; padding: 28px; max-width: 350px; width: 90%; text-align: center; }
+    .session-lock-modal h3 { margin-bottom: 8px; }
+    .session-lock-modal p { color: var(--gray); margin-bottom: 20px; }
+    .session-lock-modal .pin-input { width: 50px; height: 60px; font-size: 1.5rem; }
     
-    @media (max-width: 768px) { .sidebar { display: none; } .main-content { margin-left: 0; } .content-wrapper { padding: 16px; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .info-grid { grid-template-columns: 1fr; } }
+    .pin-requirements-box { background: var(--primary-soft); padding: 14px; border-radius: 14px; margin: 16px 0; }
+    .pin-requirements-box ul { list-style: none; padding: 0; }
+    .pin-requirements-box li { font-size: 0.75rem; color: var(--gray); padding: 3px 0; display: flex; align-items: center; gap: 6px; }
+    .pin-requirements-box li i.fa-check { color: var(--success); }
+    .pin-requirements-box li i.fa-times { color: var(--danger); }
+    
+    @media (max-width: 768px) { 
+      .sidebar { display: none; } 
+      .main-content { margin-left: 0; } 
+      .content-wrapper { padding: 16px; } 
+      .stats-grid { grid-template-columns: repeat(2, 1fr); } 
+      .info-grid { grid-template-columns: 1fr; } 
+      .profile-header { flex-direction: column; text-align: center; }
+      .profile-info p { justify-content: center; }
+    }
   </style>
 </head>
 <body>
 
 <div class="session-lock-overlay" id="sessionLockOverlay">
-  <div class="session-lock-modal"><i class="fas fa-lock" style="font-size:2.5rem;color:var(--primary);margin-bottom:16px;"></i><h3>Session Locked</h3><p style="color:var(--gray);margin-bottom:20px;">Enter your PIN</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="lockPin1"><input type="password" maxlength="1" class="pin-input" id="lockPin2"><input type="password" maxlength="1" class="pin-input" id="lockPin3"><input type="password" maxlength="1" class="pin-input" id="lockPin4"></div><button class="btn btn-primary" id="unlockBtn" style="width:100%;">Unlock</button></div>
+  <div class="session-lock-modal">
+    <i class="fas fa-lock" style="font-size:2.5rem;color:var(--primary);margin-bottom:16px;"></i>
+    <h3>Session Locked</h3>
+    <p style="color:var(--gray);margin-bottom:20px;">Enter your PIN to unlock</p>
+    <div class="pin-input-container" id="lockPinContainer">
+      <input type="password" maxlength="1" class="pin-input" id="lockPin1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      <input type="password" maxlength="1" class="pin-input" id="lockPin2" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      <input type="password" maxlength="1" class="pin-input" id="lockPin3" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      <input type="password" maxlength="1" class="pin-input" id="lockPin4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+    </div>
+    <div id="lockPinError" style="color:var(--danger);font-size:0.8rem;margin:8px 0;display:none;"></div>
+    <button class="btn btn-primary" id="unlockBtn" style="width:100%;justify-content:center;">Unlock</button>
+  </div>
 </div>
 
 <aside class="sidebar">
-  <div class="sidebar-header"><div class="logo-icon">💎</div><div class="logo-text"><span>Fashion</span>Stone</div></div>
+  <div class="sidebar-header">
+    <div class="logo-icon">✨</div>
+    <div class="logo-text"><span>Omo</span>Creations</div>
+  </div>
   <nav class="sidebar-nav">
     <button class="nav-item" onclick="window.location.href='attendant-dashboard.html'"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
     <button class="nav-item" onclick="window.location.href='inventory.html'"><i class="fas fa-box"></i><span>Inventory</span></button>
@@ -123,11 +180,22 @@
     <button class="nav-item active"><i class="fas fa-user"></i><span>My Profile</span></button>
     <button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
   </nav>
-  <div class="sidebar-footer"><div class="user-profile"><div class="user-avatar" id="sidebarAvatar">A</div><div class="user-details"><h4 id="sidebarName">Attendant</h4><p id="sidebarRole">Attendant</p></div></div></div>
+  <div class="sidebar-footer">
+    <div class="user-profile">
+      <div class="user-avatar" id="sidebarAvatar">A</div>
+      <div class="user-details">
+        <h4 id="sidebarName">Attendant</h4>
+        <p id="sidebarRole">Attendant</p>
+      </div>
+    </div>
+  </div>
 </aside>
 
 <main class="main-content">
-  <header class="top-bar"><h1 class="page-title">My Profile</h1><span id="currentDate" style="color:var(--gray);font-size:0.85rem;"></span></header>
+  <header class="top-bar">
+    <h1 class="page-title">My Profile</h1>
+    <span id="currentDate" style="color:var(--gray);font-size:0.85rem;"></span>
+  </header>
   
   <div class="content-wrapper">
     <div id="loadingState" class="loading-state"><div class="spinner"></div></div>
@@ -138,18 +206,37 @@
         <div class="profile-avatar" id="profileAvatar">A</div>
         <div class="profile-info">
           <h2 id="profileName">Loading...</h2>
-          <p><span><i class="fas fa-briefcase"></i> <span id="profileRole">Attendant</span></span><span><i class="fas fa-envelope"></i> <span id="profileEmail">-</span></span><span><i class="fas fa-phone"></i> <span id="profilePhone">-</span></span></p>
+          <p>
+            <span><i class="fas fa-briefcase"></i> <span id="profileRole">Attendant</span></span>
+            <span><i class="fas fa-envelope"></i> <span id="profileEmail">-</span></span>
+            <span><i class="fas fa-phone"></i> <span id="profilePhone">-</span></span>
+          </p>
         </div>
       </div>
       
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-header"><span>Current Points</span><div class="stat-icon"><i class="fas fa-coins"></i></div></div><div class="stat-value" id="currentPoints">0</div><div class="stat-sub">Value: ₦<span id="pointValue">100</span>/pt</div></div>
-        <div class="stat-card"><div class="stat-header"><span>Tasks Assigned</span><div class="stat-icon"><i class="fas fa-tasks"></i></div></div><div class="stat-value" id="tasksAssigned">0</div><div class="stat-sub">This month</div></div>
-        <div class="stat-card"><div class="stat-header"><span>Leave Days</span><div class="stat-icon"><i class="fas fa-umbrella-beach"></i></div></div><div class="stat-value" id="leaveDays">2</div><div class="stat-sub">Remaining</div></div>
-        <div class="stat-card"><div class="stat-header"><span>Attendance</span><div class="stat-icon"><i class="fas fa-calendar-check"></i></div></div><div class="stat-value" id="attendanceStreak">0</div><div class="stat-sub">Day streak</div></div>
+        <div class="stat-card">
+          <div class="stat-header"><span>Current Points</span><div class="stat-icon"><i class="fas fa-coins"></i></div></div>
+          <div class="stat-value" id="currentPoints">0</div>
+          <div class="stat-sub">Value: ₦<span id="pointValue">100</span>/pt</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><span>Tasks Assigned</span><div class="stat-icon"><i class="fas fa-tasks"></i></div></div>
+          <div class="stat-value" id="tasksAssigned">0</div>
+          <div class="stat-sub">This month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><span>Leave Days</span><div class="stat-icon"><i class="fas fa-umbrella-beach"></i></div></div>
+          <div class="stat-value" id="leaveDays">2</div>
+          <div class="stat-sub">Remaining</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><span>Attendance</span><div class="stat-icon"><i class="fas fa-calendar-check"></i></div></div>
+          <div class="stat-value" id="attendanceStreak">0</div>
+          <div class="stat-sub">Day streak</div>
+        </div>
       </div>
       
-      <!-- Announcements Section -->
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-bullhorn"></i> Announcements</h3></div>
         <div class="tabs-container">
@@ -163,7 +250,10 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
         <div>
           <div class="panel">
-            <div class="panel-header"><h3><i class="fas fa-info-circle"></i> Personal Information</h3><button class="btn btn-outline btn-sm" onclick="openEditProfile()"><i class="fas fa-edit"></i> Edit</button></div>
+            <div class="panel-header">
+              <h3><i class="fas fa-info-circle"></i> Personal Information</h3>
+              <button class="btn btn-outline btn-sm" onclick="openEditProfile()"><i class="fas fa-edit"></i> Edit</button>
+            </div>
             <div class="info-grid">
               <div class="info-item"><label>Full Name</label><p id="displayName">-</p></div>
               <div class="info-item"><label>Email</label><p id="displayEmail">-</p></div>
@@ -177,7 +267,10 @@
           </div>
           
           <div class="panel">
-            <div class="panel-header"><h3><i class="fas fa-university"></i> Bank Details</h3><button class="btn btn-outline btn-sm" onclick="openEditBank()"><i class="fas fa-edit"></i> Edit</button></div>
+            <div class="panel-header">
+              <h3><i class="fas fa-university"></i> Bank Details</h3>
+              <button class="btn btn-outline btn-sm" onclick="openEditBank()"><i class="fas fa-edit"></i> Edit</button>
+            </div>
             <div class="info-grid">
               <div class="info-item"><label>Bank Name</label><p id="displayBankName">Not set</p></div>
               <div class="info-item"><label>Account Number</label><p id="displayAccountNumber">Not set</p></div>
@@ -186,9 +279,18 @@
           </div>
           
           <div class="panel">
-            <div class="panel-header"><h3><i class="fas fa-shield-alt"></i> Security PIN</h3></div>
-            <div style="text-align:center;padding:10px;"><button class="btn btn-warning" onclick="openSetPinModal()"><i class="fas fa-key"></i> Change PIN</button></div>
-            <p style="font-size:0.7rem;color:var(--gray);">Session locks after 10 min inactivity.</p>
+            <div class="panel-header">
+              <h3><i class="fas fa-shield-alt"></i> Security PIN</h3>
+            </div>
+            <div style="text-align:center;padding:10px;">
+              <button class="btn btn-warning" onclick="openSetPinModal()">
+                <i class="fas fa-key"></i> 
+                <span id="pinButtonText">Set Security PIN</span>
+              </button>
+            </div>
+            <p style="font-size:0.7rem;color:var(--gray);text-align:center;">
+              <span id="pinStatusText">No PIN set - Set your PIN to secure your account</span>
+            </p>
           </div>
         </div>
         
@@ -208,73 +310,338 @@
       
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-history"></i> Point History</h3></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Reason</th><th>Points</th><th>Value</th></tr></thead><tbody id="pointHistoryTable"></tbody></table></div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Reason</th><th>Points</th><th>Value</th></tr></thead>
+            <tbody id="pointHistoryTable"></tbody>
+          </table>
+        </div>
       </div>
       
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-calendar-plus"></i> Request Leave</h3></div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;"><input type="date" id="leaveStartDate" class="form-control" style="flex:1;"><input type="date" id="leaveEndDate" class="form-control" style="flex:1;"><button class="btn btn-primary" onclick="openRequestLeave()">Request Leave</button></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <input type="date" id="leaveStartDate" class="form-control" style="flex:1;">
+          <input type="date" id="leaveEndDate" class="form-control" style="flex:1;">
+          <button class="btn btn-primary" onclick="openRequestLeave()">Request Leave</button>
+        </div>
         <p style="font-size:0.75rem;color:var(--gray);margin-top:12px;">Max 2 days per month.</p>
       </div>
       
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-clock"></i> Leave History</h3></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Dates</th><th>Reason</th><th>Status</th><th>Approved/Rejected By</th></tr></thead><tbody id="leaveHistoryTable"></tbody></table></div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Dates</th><th>Reason</th><th>Status</th><th>Approved/Rejected By</th></tr></thead>
+            <tbody id="leaveHistoryTable"></tbody>
+          </table>
+        </div>
       </div>
       
     </div>
   </div>
 </main>
 
-<div class="modal-overlay" id="modalOverlay"><div class="modal"><div class="modal-header"><h3 id="modalTitle">Modal</h3><button onclick="hideModal()">&times;</button></div><div id="modalContent"></div></div></div>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Modal</h3>
+      <button class="modal-close" onclick="hideModal()">&times;</button>
+    </div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, updateDoc, addDoc, serverTimestamp, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, collection, query, where, orderBy, onSnapshot, updateDoc, addDoc, serverTimestamp, getDocs, limit, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
-  const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
-  let currentUser = null, userData = null, globalPointValue = 500, unsubscribes = [], inactivityTimer = null, sessionLocked = false;
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  
+  let currentUser = null;
+  let userData = null;
+  let globalPointValue = 500;
+  let unsubscribes = [];
+  let inactivityTimer = null;
+  let sessionLocked = false;
+  let pinAttempts = 0;
+  let pinLockoutUntil = null;
 
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}); }
   function formatDateTime(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleString('en-GB', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
-  function showToast(msg, type='success') { const c = document.getElementById('toastContainer'); const t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i><span>${msg}</span>`; c.appendChild(t); setTimeout(() => t.classList.add('show'), 10); setTimeout(() => t.remove(), 4000); }
-  window.hideModal = () => document.getElementById('modalOverlay').style.display = 'none';
-  function showModal(title, content) { document.getElementById('modalTitle').textContent = title; document.getElementById('modalContent').innerHTML = content; document.getElementById('modalOverlay').style.display = 'flex'; }
+  
+  function showToast(msg, type='success') { 
+    const c = document.getElementById('toastContainer'); 
+    if (!c) return;
+    const t = document.createElement('div'); 
+    t.className = `toast ${type}`; 
+    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':'exclamation-triangle'}"></i><span>${msg}</span>`; 
+    c.appendChild(t); 
+    setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(100%)'; t.style.transition='all 0.3s ease'; setTimeout(() => t.remove(), 300); }, 4000); 
+  }
+  
+  window.hideModal = function() { 
+    document.getElementById('modalOverlay').classList.remove('active'); 
+  };
+  
+  function showModal(title, content) { 
+    document.getElementById('modalTitle').textContent = title; 
+    document.getElementById('modalContent').innerHTML = content; 
+    document.getElementById('modalOverlay').classList.add('active'); 
+  }
 
-  function resetInactivityTimer() { if (inactivityTimer) clearTimeout(inactivityTimer); inactivityTimer = setTimeout(() => { if (!sessionLocked) { sessionLocked = true; document.getElementById('sessionLockOverlay').style.display = 'flex'; document.getElementById('lockPin1').focus(); } }, 600000); }
-  document.addEventListener('mousemove', resetInactivityTimer); document.addEventListener('keypress', resetInactivityTimer); document.addEventListener('click', resetInactivityTimer);
-  document.getElementById('unlockBtn').addEventListener('click', () => { const pin = ['lockPin1','lockPin2','lockPin3','lockPin4'].map(id => document.getElementById(id).value).join(''); if (pin === (userData?.attendantPin || '1234')) { sessionLocked = false; document.getElementById('sessionLockOverlay').style.display = 'none'; ['lockPin1','lockPin2','lockPin3','lockPin4'].forEach(id => document.getElementById(id).value = ''); resetInactivityTimer(); showToast('Unlocked', 'success'); } else { showToast('Invalid PIN', 'error'); } });
+  // ============================================
+  // ATTENDANT PIN SERVICE
+  // ============================================
+  class AttendantPinService {
+    async hashPin(pin, userId) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(`${pin}_attendant_salt_${userId}_secure_hash_2024`);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
 
+    async verifyPin(inputPin, storedHash, userId) {
+      const inputHash = await this.hashPin(inputPin, userId);
+      return inputHash === storedHash;
+    }
+
+    isWeakPin(pin) {
+      const weakPins = ['1234', '0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '4321', '1230', '1004', '2000', '2001', '1122', '1212', '6969'];
+      if (weakPins.includes(pin)) return true;
+      if (new Set(pin.split('')).size === 1) return true;
+      const sequential = ['0123', '1234', '2345', '3456', '4567', '5678', '6789', '7890'];
+      if (sequential.includes(pin) || sequential.includes(pin.split('').reverse().join(''))) return true;
+      return false;
+    }
+
+    async setAttendantPin(userId, currentPin, newPin) {
+      if (!/^\d{4}$/.test(newPin)) {
+        throw new Error('PIN must be exactly 4 digits');
+      }
+      if (this.isWeakPin(newPin)) {
+        throw new Error('This PIN is too common. Please choose a more secure PIN.');
+      }
+
+      try {
+        const result = await runTransaction(db, async (transaction) => {
+          const userRef = doc(db, 'users', userId);
+          const userDoc = await transaction.get(userRef);
+          
+          if (!userDoc.exists()) {
+            throw new Error('User account not found');
+          }
+
+          const userData = userDoc.data();
+          
+          if (userData.hasAttendantPin && userData.attendantPinHash) {
+            if (!currentPin || currentPin.length !== 4) {
+              throw new Error('Current PIN is required to change your PIN');
+            }
+            const currentValid = await this.verifyPin(currentPin, userData.attendantPinHash, userId);
+            if (!currentValid) {
+              throw new Error('Current PIN is incorrect');
+            }
+          }
+
+          const newPinHash = await this.hashPin(newPin, userId);
+          
+          transaction.update(userRef, {
+            attendantPinHash: newPinHash,
+            hasAttendantPin: true,
+            previousAttendantPinHash: userData.attendantPinHash || null,
+            attendantPinSetAt: userData.attendantPinSetAt || serverTimestamp(),
+            attendantPinLastChanged: serverTimestamp(),
+            attendantPinVersion: (userData.attendantPinVersion || 0) + 1
+          });
+
+          const logRef = doc(collection(db, 'attendant_pin_logs'));
+          transaction.set(logRef, {
+            userId: userId,
+            userEmail: userData.email || '',
+            userName: userData.fullName || '',
+            action: userData.hasAttendantPin ? 'pin_changed' : 'pin_set',
+            timestamp: serverTimestamp(),
+            userAgent: navigator.userAgent.substring(0, 100)
+          });
+        });
+
+        return { success: true, message: 'PIN updated successfully' };
+      } catch (error) {
+        console.error('Set PIN error:', error);
+        throw error;
+      }
+    }
+
+    async validateAttendantPin(userId, inputPin) {
+      if (!inputPin || inputPin.length !== 4) {
+        return { valid: false, message: 'Please enter a 4-digit PIN' };
+      }
+
+      if (pinLockoutUntil && new Date() < pinLockoutUntil) {
+        const minutesLeft = Math.ceil((pinLockoutUntil - new Date()) / 60000);
+        return { valid: false, message: `Too many attempts. Try again in ${minutesLeft} minutes.` };
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        if (!userDoc.exists()) {
+          return { valid: false, message: 'User not found' };
+        }
+
+        const userData = userDoc.data();
+        if (!userData.hasAttendantPin || !userData.attendantPinHash) {
+          return { valid: false, message: 'PIN not set. Please set your PIN first.' };
+        }
+
+        const isValid = await this.verifyPin(inputPin, userData.attendantPinHash, userId);
+        
+        if (isValid) {
+          pinAttempts = 0;
+          pinLockoutUntil = null;
+          
+          await updateDoc(doc(db, 'users', userId), {
+            attendantPinLastUsed: serverTimestamp()
+          }).catch(() => {});
+          
+          return { valid: true, message: 'PIN verified' };
+        } else {
+          pinAttempts++;
+          
+          await addDoc(collection(db, 'pin_failed_attempts'), {
+            userId: userId,
+            pinLastTwo: inputPin.slice(-2),
+            timestamp: serverTimestamp(),
+            type: 'attendant_pin',
+            userAgent: navigator.userAgent.substring(0, 100)
+          }).catch(() => {});
+
+          if (pinAttempts >= 5) {
+            pinLockoutUntil = new Date(Date.now() + 15 * 60 * 1000);
+            return { valid: false, message: 'Account locked for 15 minutes due to multiple failed attempts.' };
+          }
+
+          const remaining = 5 - pinAttempts;
+          return { valid: false, message: `Invalid PIN. ${remaining} attempts remaining.` };
+        }
+      } catch (error) {
+        console.error('Validate PIN error:', error);
+        return { valid: false, message: 'Verification failed. Please try again.' };
+      }
+    }
+  }
+
+  const attendantPinService = new AttendantPinService();
+
+  // ============================================
+  // SESSION LOCK
+  // ============================================
+  function resetInactivityTimer() { 
+    if (inactivityTimer) clearTimeout(inactivityTimer); 
+    if (!sessionLocked) {
+      inactivityTimer = setTimeout(() => { 
+        if (!sessionLocked && userData?.hasAttendantPin) { 
+          lockSession(); 
+        } 
+      }, 600000); // 10 minutes
+    }
+  }
+
+  function lockSession() {
+    sessionLocked = true;
+    document.getElementById('sessionLockOverlay').classList.add('active');
+    document.getElementById('lockPin1').value = '';
+    document.getElementById('lockPin2').value = '';
+    document.getElementById('lockPin3').value = '';
+    document.getElementById('lockPin4').value = '';
+    document.getElementById('lockPinError').style.display = 'none';
+    document.getElementById('lockPin1').focus();
+  }
+
+  async function unlockSession() {
+    const pin = [
+      document.getElementById('lockPin1').value,
+      document.getElementById('lockPin2').value,
+      document.getElementById('lockPin3').value,
+      document.getElementById('lockPin4').value
+    ].join('');
+
+    if (pin.length !== 4) {
+      document.getElementById('lockPinError').textContent = 'Please enter complete PIN';
+      document.getElementById('lockPinError').style.display = 'block';
+      return;
+    }
+
+    const unlockBtn = document.getElementById('unlockBtn');
+    unlockBtn.disabled = true;
+    unlockBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+
+    try {
+      const result = await attendantPinService.validateAttendantPin(currentUser.uid, pin);
+      
+      if (result.valid) {
+        sessionLocked = false;
+        document.getElementById('sessionLockOverlay').classList.remove('active');
+        document.getElementById('lockPinError').style.display = 'none';
+        ['lockPin1','lockPin2','lockPin3','lockPin4'].forEach(id => document.getElementById(id).value = '');
+        resetInactivityTimer();
+        showToast('Session unlocked', 'success');
+      } else {
+        document.getElementById('lockPinError').textContent = result.message;
+        document.getElementById('lockPinError').style.display = 'block';
+        ['lockPin1','lockPin2','lockPin3','lockPin4'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('lockPin1').focus();
+      }
+    } catch (error) {
+      document.getElementById('lockPinError').textContent = 'Unlock failed. Please try again.';
+      document.getElementById('lockPinError').style.display = 'block';
+    } finally {
+      unlockBtn.disabled = false;
+      unlockBtn.innerHTML = 'Unlock';
+    }
+  }
+
+  // ============================================
+  // PROFILE LOADING
+  // ============================================
   async function loadProfile() {
     try {
-      unsubscribes.push(onSnapshot(doc(db, 'system_settings', 'points'), (s) => { if (s.exists()) globalPointValue = s.data().value || 500; updateSalaryDisplay(); }));
+      unsubscribes.push(onSnapshot(doc(db, 'system_settings', 'points'), (s) => { 
+        if (s.exists()) globalPointValue = s.data().value || 500; 
+        updateSalaryDisplay(); 
+      }));
       
       unsubscribes.push(onSnapshot(doc(db, 'users', currentUser.uid), (snap) => {
         if (!snap.exists()) return;
         userData = snap.data();
+        
         document.getElementById('loadingState').style.display = 'none';
         document.getElementById('mainContent').style.display = 'block';
         
         document.getElementById('profileAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
         document.getElementById('profileName').textContent = userData.fullName || 'Attendant';
-        document.getElementById('profileRole').textContent = userData.role || 'Attendant';
+        document.getElementById('profileRole').textContent = (userData.role || 'attendant').replace(/_/g, ' ');
         document.getElementById('profileEmail').textContent = userData.email || '-';
         document.getElementById('profilePhone').textContent = userData.phone || '-';
         document.getElementById('sidebarAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
         document.getElementById('sidebarName').textContent = userData.fullName?.split(' ')[0] || 'Attendant';
-        document.getElementById('sidebarRole').textContent = userData.role || 'Attendant';
+        document.getElementById('sidebarRole').textContent = (userData.role || 'attendant').replace(/_/g, ' ');
         
         document.getElementById('currentPoints').textContent = userData.totalPoints || 0;
-        document.getElementById('leaveDays').textContent = userData.leaveDaysRemaining || 2;
+        document.getElementById('leaveDays').textContent = userData.leaveDaysRemaining ?? 2;
         document.getElementById('displayName').textContent = userData.fullName || '-';
         document.getElementById('displayEmail').textContent = userData.email || '-';
         document.getElementById('displayPhone').textContent = userData.phone || '-';
-        document.getElementById('displayRole').textContent = userData.role || '-';
-        document.getElementById('displayStatus').innerHTML = `<span class="badge badge-success">${userData.status || 'active'}</span>`;
+        document.getElementById('displayRole').textContent = (userData.role || '-').replace(/_/g, ' ');
+        document.getElementById('displayStatus').innerHTML = `<span class="badge badge-${userData.status==='active'?'success':'warning'}">${userData.status || 'active'}</span>`;
         document.getElementById('displayJoined').textContent = formatDate(userData.createdAt);
         document.getElementById('displayAddress').textContent = userData.address || 'Not set';
         document.getElementById('displayEmergency').textContent = userData.emergencyContact || 'Not set';
@@ -282,40 +649,474 @@
         document.getElementById('displayAccountNumber').textContent = userData.accountNumber || 'Not set';
         document.getElementById('displayAccountName').textContent = userData.accountName || userData.fullName || 'Not set';
         
+        // Update PIN status
+        if (userData.hasAttendantPin) {
+          document.getElementById('pinButtonText').textContent = 'Change Security PIN';
+          document.getElementById('pinStatusText').textContent = 'PIN is set ✓ - Session locks after 10 min inactivity';
+        } else {
+          document.getElementById('pinButtonText').textContent = 'Set Security PIN';
+          document.getElementById('pinStatusText').textContent = 'No PIN set - Set your PIN to secure your account';
+        }
+        
         updateSalaryDisplay();
       }));
       
-      function updateSalaryDisplay() { if (!userData) return; const ppv = globalPointValue / 5; const bonus = (userData.totalPoints || 0) * ppv; const final = (userData.baseSalary || 0) + bonus; document.getElementById('pointValue').textContent = ppv; document.getElementById('salaryBase').textContent = formatCurrency(userData.baseSalary || 0); document.getElementById('salaryPointValue').textContent = ppv; document.getElementById('salaryPoints').textContent = userData.totalPoints || 0; document.getElementById('pointsAdjustment').innerHTML = `<span class="${bonus>=0?'positive':'negative'}">${bonus>=0?'+':''}${formatCurrency(bonus)}</span>`; document.getElementById('finalSalary').textContent = formatCurrency(final); }
+      function updateSalaryDisplay() { 
+        if (!userData) return; 
+        const ppv = globalPointValue / 5; 
+        const bonus = (userData.totalPoints || 0) * ppv; 
+        const final = (userData.baseSalary || 0) + bonus; 
+        document.getElementById('pointValue').textContent = ppv.toFixed(0); 
+        document.getElementById('salaryBase').textContent = formatCurrency(userData.baseSalary || 0); 
+        document.getElementById('salaryPointValue').textContent = ppv.toFixed(0); 
+        document.getElementById('salaryPoints').textContent = userData.totalPoints || 0; 
+        document.getElementById('pointsAdjustment').innerHTML = `<span class="${bonus>=0?'positive':'negative'}">${bonus>=0?'+':''}${formatCurrency(bonus)}</span>`; 
+        document.getElementById('finalSalary').textContent = formatCurrency(final); 
+      }
       
-      unsubscribes.push(onSnapshot(query(collection(db, 'coin_transactions'), where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc'), limit(20)), (snap) => { const tbody = document.getElementById('pointHistoryTable'); tbody.innerHTML = ''; if (snap.empty) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No point history</div></td></tr>'; return; } snap.forEach(d => { const p = d.data(); tbody.innerHTML += `<tr><td>${formatDate(p.createdAt)}</td><td>${p.reason}</td><td class="${p.points>=0?'positive':'negative'}">${p.points>0?'+':''}${p.points}</td><td>${formatCurrency(p.points * (globalPointValue/5))}</td></tr>`; }); }));
+      unsubscribes.push(onSnapshot(query(collection(db, 'coin_transactions'), where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc'), limit(20)), (snap) => { 
+        const tbody = document.getElementById('pointHistoryTable'); 
+        tbody.innerHTML = ''; 
+        if (snap.empty) { 
+          tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No point history yet</div></td></tr>'; 
+          return; 
+        } 
+        snap.forEach(d => { 
+          const p = d.data(); 
+          tbody.innerHTML += `<tr><td>${formatDate(p.createdAt)}</td><td>${p.reason || '-'}</td><td class="${(p.points||0)>=0?'positive':'negative'}">${(p.points||0)>0?'+':''}${p.points||0}</td><td>${formatCurrency((p.points||0) * (globalPointValue/5))}</td></tr>`; 
+        }); 
+      }));
       
-      unsubscribes.push(onSnapshot(query(collection(db, 'leave_requests'), where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc')), (snap) => { const tbody = document.getElementById('leaveHistoryTable'); tbody.innerHTML = ''; if (snap.empty) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No leave requests</div></td></tr>'; return; } snap.forEach(d => { const l = d.data(); tbody.innerHTML += `<tr><td>${l.requestedDates?.join(' to ')}</td><td>${l.reason||'-'}</td><td><span class="badge badge-${l.status==='approved'?'success':l.status==='rejected'?'danger':'warning'}">${l.status}</span></td><td>${l.approvedByName||l.rejectedByName||'-'}</td></tr>`; }); }));
+      unsubscribes.push(onSnapshot(query(collection(db, 'leave_requests'), where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc')), (snap) => { 
+        const tbody = document.getElementById('leaveHistoryTable'); 
+        tbody.innerHTML = ''; 
+        if (snap.empty) { 
+          tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No leave requests</div></td></tr>'; 
+          return; 
+        } 
+        snap.forEach(d => { 
+          const l = d.data(); 
+          const statusBadge = l.status === 'approved' ? 'success' : l.status === 'rejected' ? 'danger' : 'warning';
+          tbody.innerHTML += `<tr><td>${(l.requestedDates || []).join(' to ')}</td><td>${l.reason || '-'}</td><td><span class="badge badge-${statusBadge}">${l.status || 'pending'}</span></td><td>${l.approvedByName || l.rejectedByName || '-'}</td></tr>`; 
+        }); 
+      }));
       
-      const tasksSnap = await getDocs(query(collection(db, 'tasks'), where('assignedBy', '==', currentUser.uid))); document.getElementById('tasksAssigned').textContent = tasksSnap.size;
+      const tasksSnap = await getDocs(query(collection(db, 'tasks'), where('assignedTo', '==', currentUser.uid), where('status', 'in', ['pending', 'in_progress'])));
+      document.getElementById('tasksAssigned').textContent = tasksSnap.size;
       
-      const attSnap = await getDocs(query(collection(db, 'attendance'), where('userId', '==', currentUser.uid), orderBy('date', 'desc'), limit(30))); let streak = 0; const dates = attSnap.docs.map(d => d.data().date).sort().reverse(); const today = new Date().toISOString().split('T')[0]; if (dates.length && dates[0] === today) streak = 1; for (let i = 1; i < dates.length; i++) { if ((new Date(dates[i-1]) - new Date(dates[i])) / 86400000 === 1) streak++; else break; } document.getElementById('attendanceStreak').textContent = streak;
+      const attSnap = await getDocs(query(collection(db, 'attendance'), where('userId', '==', currentUser.uid), orderBy('date', 'desc'), limit(30))); 
+      let streak = 0; 
+      const dates = attSnap.docs.map(d => d.data().date).sort().reverse(); 
+      const today = new Date().toISOString().split('T')[0]; 
+      if (dates.length && dates[0] === today) streak = 1; 
+      for (let i = 1; i < dates.length; i++) { 
+        const prev = new Date(dates[i-1]); 
+        const curr = new Date(dates[i]); 
+        if ((prev - curr) / 86400000 === 1) streak++; 
+        else break; 
+      } 
+      document.getElementById('attendanceStreak').textContent = streak;
       
-      const generalQuery = query(collection(db, 'announcements'), where('target', 'in', ['all', 'attendants']), orderBy('createdAt', 'desc'), limit(10)); unsubscribes.push(onSnapshot(generalQuery, (snap) => { const c = document.getElementById('generalAnnouncements'); c.innerHTML = snap.empty ? '<div class="empty-state">No general announcements</div>' : snap.docs.map(d => { const a = d.data(); return `<div class="announcement-card"><h4>${a.title}</h4><p>${a.message}</p><div class="meta"><span>From: ${a.sentByName}</span><span>${formatDateTime(a.createdAt)}</span></div></div>`; }).join(''); }));
+      const generalQuery = query(collection(db, 'announcements'), where('target', 'in', ['all', 'attendants']), orderBy('createdAt', 'desc'), limit(10)); 
+      unsubscribes.push(onSnapshot(generalQuery, (snap) => { 
+        const c = document.getElementById('generalAnnouncements'); 
+        c.innerHTML = snap.empty ? '<div class="empty-state">No general announcements</div>' : snap.docs.map(d => { 
+          const a = d.data(); 
+          return `<div class="announcement-card"><h4>${a.title || 'Announcement'}</h4><p>${a.message || ''}</p><div class="meta"><span>From: ${a.sentByName || 'Admin'}</span><span>${formatDateTime(a.createdAt)}</span></div></div>`; 
+        }).join(''); 
+      }));
       
-      const personalQuery = query(collection(db, 'announcements'), where('recipientIds', 'array-contains', currentUser.uid), orderBy('createdAt', 'desc'), limit(10)); unsubscribes.push(onSnapshot(personalQuery, (snap) => { const c = document.getElementById('personalAnnouncements'); c.innerHTML = snap.empty ? '<div class="empty-state">No personal announcements</div>' : snap.docs.map(d => { const a = d.data(); return `<div class="announcement-card"><h4>${a.title}</h4><p>${a.message}</p><div class="meta"><span>From: ${a.sentByName}</span><span>${formatDateTime(a.createdAt)}</span></div></div>`; }).join(''); }));
+      const personalQuery = query(collection(db, 'announcements'), where('recipientIds', 'array-contains', currentUser.uid), orderBy('createdAt', 'desc'), limit(10)); 
+      unsubscribes.push(onSnapshot(personalQuery, (snap) => { 
+        const c = document.getElementById('personalAnnouncements'); 
+        c.innerHTML = snap.empty ? '<div class="empty-state">No personal announcements</div>' : snap.docs.map(d => { 
+          const a = d.data(); 
+          return `<div class="announcement-card"><h4>${a.title || 'Personal Message'}</h4><p>${a.message || ''}</p><div class="meta"><span>From: ${a.sentByName || 'Admin'}</span><span>${formatDateTime(a.createdAt)}</span></div></div>`; 
+        }).join(''); 
+      }));
       
-    } catch (e) { console.error(e); showToast('Error loading profile', 'error'); }
+    } catch (e) { 
+      console.error('Load profile error:', e); 
+      document.getElementById('loadingState').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle" style="font-size:2rem;color:var(--danger);"></i><p>Error loading profile. Please refresh.</p></div>';
+    }
   }
 
-  document.querySelectorAll('.tab-btn').forEach(t => t.addEventListener('click', function() { document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active')); this.classList.add('active'); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById(this.dataset.tab + 'Announcements').classList.add('active'); }));
+  // ============================================
+  // TAB SWITCHING
+  // ============================================
+  document.querySelectorAll('.tab-btn').forEach(t => t.addEventListener('click', function() { 
+    document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active')); 
+    this.classList.add('active'); 
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); 
+    const targetId = this.dataset.tab + 'Announcements';
+    const target = document.getElementById(targetId);
+    if (target) target.classList.add('active'); 
+  }));
 
-  window.openEditProfile = () => { showModal('Edit Profile', `<div class="form-group"><label>Full Name</label><input class="form-control" id="editName" value="${userData.fullName||''}"></div><div class="form-group"><label>Phone</label><input class="form-control" id="editPhone" value="${userData.phone||''}"></div><div class="form-group"><label>Address</label><input class="form-control" id="editAddress" value="${userData.address||''}"></div><div class="form-group"><label>Emergency Contact</label><input class="form-control" id="editEmergency" value="${userData.emergencyContact||''}"></div><button class="btn btn-primary" onclick="saveProfile()">Save</button>`); };
-  window.saveProfile = async () => { await updateDoc(doc(db, 'users', currentUser.uid), { fullName: document.getElementById('editName').value, phone: document.getElementById('editPhone').value, address: document.getElementById('editAddress').value, emergencyContact: document.getElementById('editEmergency').value }); showToast('Profile updated', 'success'); hideModal(); };
-  window.openEditBank = () => { showModal('Edit Bank', `<div class="form-group"><label>Bank Name</label><input class="form-control" id="editBankName" value="${userData.bankName||''}"></div><div class="form-group"><label>Account Number</label><input class="form-control" id="editAccountNumber" value="${userData.accountNumber||''}"></div><div class="form-group"><label>Account Name</label><input class="form-control" id="editAccountName" value="${userData.accountName||userData.fullName||''}"></div><button class="btn btn-primary" onclick="saveBank()">Save</button>`); };
-  window.saveBank = async () => { await updateDoc(doc(db, 'users', currentUser.uid), { bankName: document.getElementById('editBankName').value, accountNumber: document.getElementById('editAccountNumber').value, accountName: document.getElementById('editAccountName').value }); showToast('Bank details updated', 'success'); hideModal(); };
-  window.openRequestLeave = () => { showModal('Request Leave', `<div class="form-group"><label>Start Date</label><input type="date" class="form-control" id="modalStart" value="${document.getElementById('leaveStartDate').value}"></div><div class="form-group"><label>End Date</label><input type="date" class="form-control" id="modalEnd" value="${document.getElementById('leaveEndDate').value}"></div><div class="form-group"><label>Reason</label><textarea class="form-control" id="modalReason"></textarea></div><button class="btn btn-primary" onclick="submitLeave()">Submit</button>`); };
-  window.submitLeave = async () => { const start = document.getElementById('modalStart').value, end = document.getElementById('modalEnd').value; if (!start || !end) { showToast('Select dates', 'error'); return; } const days = (new Date(end) - new Date(start)) / 86400000 + 1; if (days > 2) { showToast('Max 2 days', 'error'); return; } if (userData.leaveDaysRemaining < days) { showToast(`Only ${userData.leaveDaysRemaining} days left`, 'error'); return; } await addDoc(collection(db, 'leave_requests'), { userId: currentUser.uid, requestedDates: [start, end], reason: document.getElementById('modalReason').value, status: 'pending', createdAt: serverTimestamp() }); showToast('Leave requested', 'success'); hideModal(); document.getElementById('leaveStartDate').value = document.getElementById('leaveEndDate').value = ''; };
-  window.openSetPinModal = () => { showModal('Set Security PIN', `<div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="newPin1"><input type="password" maxlength="1" class="pin-input" id="newPin2"><input type="password" maxlength="1" class="pin-input" id="newPin3"><input type="password" maxlength="1" class="pin-input" id="newPin4"></div><button class="btn btn-primary" onclick="savePin()">Save PIN</button>`); document.querySelectorAll('.pin-input').forEach((inp,i,arr)=>inp.addEventListener('input',e=>{if(e.target.value&&i<arr.length-1)arr[i+1].focus();})); };
-  window.savePin = async () => { const pin = ['newPin1','newPin2','newPin3','newPin4'].map(id => document.getElementById(id).value).join(''); if (pin.length !== 4) { showToast('Enter 4-digit PIN', 'error'); return; } await updateDoc(doc(db, 'users', currentUser.uid), { attendantPin: pin }); showToast('PIN saved', 'success'); hideModal(); };
+  // ============================================
+  // MODAL ACTIONS
+  // ============================================
+  window.openEditProfile = () => { 
+    showModal('Edit Profile', `
+      <div class="form-group"><label>Full Name</label><input class="form-control" id="editName" value="${userData.fullName || ''}"></div>
+      <div class="form-group"><label>Phone</label><input class="form-control" id="editPhone" value="${userData.phone || ''}"></div>
+      <div class="form-group"><label>Address</label><input class="form-control" id="editAddress" value="${userData.address || ''}"></div>
+      <div class="form-group"><label>Emergency Contact</label><input class="form-control" id="editEmergency" value="${userData.emergencyContact || ''}"></div>
+      <button class="btn btn-primary" onclick="saveProfile()" style="width:100%;justify-content:center;">Save Changes</button>
+    `); 
+  };
+  
+  window.saveProfile = async () => { 
+    const name = document.getElementById('editName')?.value?.trim();
+    if (!name) { showToast('Name is required', 'error'); return; }
+    try {
+      await updateDoc(doc(db, 'users', currentUser.uid), { 
+        fullName: name, 
+        phone: document.getElementById('editPhone')?.value?.trim() || '', 
+        address: document.getElementById('editAddress')?.value?.trim() || '', 
+        emergencyContact: document.getElementById('editEmergency')?.value?.trim() || '' 
+      }); 
+      showToast('Profile updated successfully', 'success'); 
+      hideModal(); 
+    } catch(e) { showToast('Failed to update profile', 'error'); }
+  };
+  
+  window.openEditBank = () => { 
+    showModal('Edit Bank Details', `
+      <div class="form-group"><label>Bank Name</label><input class="form-control" id="editBankName" value="${userData.bankName || ''}"></div>
+      <div class="form-group"><label>Account Number</label><input class="form-control" id="editAccountNumber" value="${userData.accountNumber || ''}"></div>
+      <div class="form-group"><label>Account Name</label><input class="form-control" id="editAccountName" value="${userData.accountName || userData.fullName || ''}"></div>
+      <button class="btn btn-primary" onclick="saveBank()" style="width:100%;justify-content:center;">Save Bank Details</button>
+    `); 
+  };
+  
+  window.saveBank = async () => { 
+    try {
+      await updateDoc(doc(db, 'users', currentUser.uid), { 
+        bankName: document.getElementById('editBankName')?.value?.trim() || '', 
+        accountNumber: document.getElementById('editAccountNumber')?.value?.trim() || '', 
+        accountName: document.getElementById('editAccountName')?.value?.trim() || '' 
+      }); 
+      showToast('Bank details updated', 'success'); 
+      hideModal(); 
+    } catch(e) { showToast('Failed to update bank details', 'error'); }
+  };
+  
+  window.openRequestLeave = () => { 
+    showModal('Request Leave', `
+      <div class="form-group"><label>Start Date</label><input type="date" class="form-control" id="modalStart" value="${document.getElementById('leaveStartDate').value}"></div>
+      <div class="form-group"><label>End Date</label><input type="date" class="form-control" id="modalEnd" value="${document.getElementById('leaveEndDate').value}"></div>
+      <div class="form-group"><label>Reason</label><textarea class="form-control" id="modalReason" placeholder="Enter reason for leave..."></textarea></div>
+      <button class="btn btn-primary" onclick="submitLeave()" style="width:100%;justify-content:center;">Submit Leave Request</button>
+    `); 
+  };
+  
+  window.submitLeave = async () => { 
+    const start = document.getElementById('modalStart')?.value; 
+    const end = document.getElementById('modalEnd')?.value; 
+    const reason = document.getElementById('modalReason')?.value?.trim();
+    
+    if (!start || !end) { showToast('Please select both dates', 'error'); return; } 
+    
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    
+    if (endDate < startDate) { showToast('End date must be after start date', 'error'); return; }
+    
+    const days = Math.ceil((endDate - startDate) / 86400000) + 1; 
+    const remaining = userData.leaveDaysRemaining ?? 2;
+    
+    if (days > remaining) { showToast(`You only have ${remaining} leave days remaining`, 'error'); return; } 
+    
+    try {
+      await addDoc(collection(db, 'leave_requests'), { 
+        userId: currentUser.uid, 
+        userName: userData.fullName || 'Staff',
+        requestedDates: [start, end], 
+        reason: reason || 'No reason provided', 
+        days: days,
+        status: 'pending', 
+        createdAt: serverTimestamp() 
+      }); 
+      showToast('Leave request submitted', 'success'); 
+      hideModal(); 
+      document.getElementById('leaveStartDate').value = ''; 
+      document.getElementById('leaveEndDate').value = ''; 
+    } catch(e) { showToast('Failed to submit leave request', 'error'); }
+  };
 
-  onAuthStateChanged(auth, async (u) => { if (!u) { window.location.href = 'auth.html'; return; } currentUser = u; const snap = await getDoc(doc(db, 'users', u.uid)); if (!snap.exists() || !snap.data().role?.includes('attendant')) { window.location.href = 'auth.html'; return; } document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}); loadProfile(); resetInactivityTimer(); });
-  document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'auth.html'; });
-  window.addEventListener('beforeunload', () => { unsubscribes.forEach(u => u()); if (inactivityTimer) clearTimeout(inactivityTimer); });
+  // ============================================
+  // PIN MANAGEMENT
+  // ============================================
+  window.openSetPinModal = () => { 
+    const hasExistingPin = userData?.hasAttendantPin;
+    
+    showModal(hasExistingPin ? 'Change Security PIN' : 'Set Security PIN', `
+      <div style="text-align:center;margin-bottom:20px;">
+        <i class="fas fa-shield-alt" style="font-size:3rem;color:var(--primary);margin-bottom:12px;display:block;"></i>
+        <h3 style="margin-bottom:5px;">${hasExistingPin ? 'Change Your Security PIN' : 'Set Your Security PIN'}</h3>
+        <p style="color:var(--gray);font-size:0.85rem;">This PIN secures your session and authorizes your actions</p>
+      </div>
+      
+      ${hasExistingPin ? `
+      <div class="form-group">
+        <label>Current PIN</label>
+        <div class="pin-input-container" id="currentPinContainer">
+          <input type="password" maxlength="1" class="pin-input current-pin-input" id="currentPin1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+          <input type="password" maxlength="1" class="pin-input current-pin-input" id="currentPin2" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+          <input type="password" maxlength="1" class="pin-input current-pin-input" id="currentPin3" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+          <input type="password" maxlength="1" class="pin-input current-pin-input" id="currentPin4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        </div>
+      </div>
+      ` : ''}
+      
+      <div class="form-group">
+        <label>New PIN</label>
+        <div class="pin-input-container" id="newPinContainer">
+          <input type="password" maxlength="1" class="pin-input new-pin-input" id="newPin1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+          <input type="password" maxlength="1" class="pin-input new-pin-input" id="newPin2" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+          <input type="password" maxlength="1" class="pin-input new-pin-input" id="newPin3" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+          <input type="password" maxlength="1" class="pin-input new-pin-input" id="newPin4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Confirm New PIN</label>
+        <div class="pin-input-container" id="confirmPinContainer">
+          <input type="password" maxlength="1" class="pin-input confirm-pin-input" id="confirmPin1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+          <input type="password" maxlength="1" class="pin-input confirm-pin-input" id="confirmPin2" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+          <input type="password" maxlength="1" class="pin-input confirm-pin-input" id="confirmPin3" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+          <input type="password" maxlength="1" class="pin-input confirm-pin-input" id="confirmPin4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        </div>
+        <div id="pinMatchError" style="color:var(--danger);font-size:0.8rem;margin-top:8px;display:none;"></div>
+      </div>
+      
+      <div class="pin-requirements-box">
+        <p style="font-weight:600;font-size:0.8rem;margin-bottom:8px;"><i class="fas fa-info-circle"></i> PIN Requirements:</p>
+        <ul>
+          <li id="req-length"><i class="fas fa-times"></i> Exactly 4 digits</li>
+          <li id="req-sequential"><i class="fas fa-times"></i> Not sequential (1234, 4321)</li>
+          <li id="req-repeat"><i class="fas fa-times"></i> Not repeated digits (1111)</li>
+          <li id="req-common"><i class="fas fa-times"></i> Not a common PIN</li>
+        </ul>
+      </div>
+      
+      <button class="btn btn-primary" onclick="saveAttendantPin()" style="width:100%;justify-content:center;">
+        <i class="fas fa-save"></i> ${hasExistingPin ? 'Update PIN' : 'Save PIN'}
+      </button>
+      <button class="btn btn-outline" onclick="hideModal()" style="width:100%;justify-content:center;margin-top:8px;">Cancel</button>
+    `);
+    
+    setupPinInputNavigation();
+    setupPinValidation();
+  };
+  
+  function setupPinInputNavigation() {
+    const setupGroup = (containerId, inputClass) => {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const inputs = container.querySelectorAll('.' + inputClass);
+      
+      inputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+          if (e.target.value && index < inputs.length - 1) {
+            inputs[index + 1].focus();
+          }
+          validatePinForm();
+        });
+        
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !e.target.value && index > 0) {
+            inputs[index - 1].focus();
+          }
+        });
+        
+        input.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const pasted = (e.clipboardData || window.clipboardData).getData('text');
+          if (/^\d{4}$/.test(pasted)) {
+            const digits = pasted.split('');
+            const allInputs = container.querySelectorAll('.' + inputClass);
+            digits.forEach((digit, i) => {
+              if (allInputs[i]) allInputs[i].value = digit;
+            });
+            validatePinForm();
+          }
+        });
+      });
+    };
+    
+    setupGroup('currentPinContainer', 'current-pin-input');
+    setupGroup('newPinContainer', 'new-pin-input');
+    setupGroup('confirmPinContainer', 'confirm-pin-input');
+  }
+  
+  function setupPinValidation() {
+    const newInputs = document.querySelectorAll('.new-pin-input');
+    newInputs.forEach(input => {
+      input.addEventListener('input', validatePinForm);
+    });
+  }
+  
+  function getPinFromInputs(prefix) {
+    return [1,2,3,4].map(i => document.getElementById(prefix + i)?.value || '').join('');
+  }
+  
+  function validatePinForm() {
+    const newPin = getPinFromInputs('newPin');
+    const confirmPin = getPinFromInputs('confirmPin');
+    const errorDiv = document.getElementById('pinMatchError');
+    
+    // Validate requirements
+    document.getElementById('req-length').querySelector('i').className = 
+      /^\d{4}$/.test(newPin) ? 'fas fa-check' : 'fas fa-times';
+    
+    const sequential = ['0123', '1234', '2345', '3456', '4567', '5678', '6789', '7890'];
+    const isSequential = sequential.includes(newPin) || sequential.includes(newPin.split('').reverse().join(''));
+    document.getElementById('req-sequential').querySelector('i').className = 
+      (!isSequential && newPin.length === 4) ? 'fas fa-check' : 'fas fa-times';
+    
+    const isRepeating = new Set(newPin.split('')).size === 1;
+    document.getElementById('req-repeat').querySelector('i').className = 
+      (!isRepeating && newPin.length === 4) ? 'fas fa-check' : 'fas fa-times';
+    
+    const weakPins = ['1234', '0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '4321', '1230', '1004', '2000', '2001', '1122', '1212', '6969'];
+    document.getElementById('req-common').querySelector('i').className = 
+      (!weakPins.includes(newPin) && newPin.length === 4) ? 'fas fa-check' : 'fas fa-times';
+    
+    // Check match
+    if (newPin.length === 4 && confirmPin.length === 4) {
+      if (newPin !== confirmPin) {
+        if (errorDiv) {
+          errorDiv.textContent = '❌ PINs do not match';
+          errorDiv.style.display = 'block';
+        }
+      } else {
+        if (errorDiv) {
+          errorDiv.textContent = '✅ PINs match';
+          errorDiv.style.color = 'var(--success)';
+          errorDiv.style.display = 'block';
+        }
+      }
+    } else if (confirmPin.length > 0) {
+      if (errorDiv) {
+        errorDiv.style.display = 'none';
+      }
+    }
+  }
+  
+  window.saveAttendantPin = async function() {
+    const currentPin = getPinFromInputs('currentPin');
+    const newPin = getPinFromInputs('newPin');
+    const confirmPin = getPinFromInputs('confirmPin');
+    
+    if (newPin.length !== 4) {
+      showToast('Please enter a 4-digit new PIN', 'error');
+      return;
+    }
+    
+    if (newPin !== confirmPin) {
+      showToast('New PINs do not match', 'error');
+      return;
+    }
+    
+    const weakPins = ['1234', '0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '4321'];
+    if (weakPins.includes(newPin) || new Set(newPin.split('')).size === 1) {
+      showToast('This PIN is too common. Please choose a more secure PIN.', 'error');
+      return;
+    }
+    
+    try {
+      const result = await attendantPinService.setAttendantPin(
+        currentUser.uid, 
+        userData?.hasAttendantPin ? currentPin : null, 
+        newPin
+      );
+      
+      showToast(result.message || 'PIN saved successfully!', 'success');
+      hideModal();
+      
+      // Reload user data
+      const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
+      if (userSnap.exists()) {
+        userData = userSnap.data();
+      }
+      
+    } catch (error) {
+      showToast(error.message || 'Failed to save PIN', 'error');
+    }
+  };
+
+  // ============================================
+  // EVENT LISTENERS
+  // ============================================
+  document.addEventListener('mousemove', resetInactivityTimer); 
+  document.addEventListener('keypress', resetInactivityTimer); 
+  document.addEventListener('click', resetInactivityTimer);
+  
+  document.getElementById('unlockBtn').addEventListener('click', unlockSession);
+  
+  document.getElementById('lockPinContainer').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      unlockSession();
+    }
+  });
+  
+  // Setup lock PIN input navigation
+  ['lockPin1','lockPin2','lockPin3','lockPin4'].forEach((id, index, arr) => {
+    const input = document.getElementById(id);
+    if (input) {
+      input.addEventListener('input', (e) => {
+        document.getElementById('lockPinError').style.display = 'none';
+        if (e.target.value && index < arr.length - 1) {
+          document.getElementById(arr[index + 1])?.focus();
+        }
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+          document.getElementById(arr[index - 1])?.focus();
+        }
+      });
+    }
+  });
+
+  // ============================================
+  // AUTH STATE
+  // ============================================
+  onAuthStateChanged(auth, async (u) => { 
+    if (!u) { 
+      window.location.href = 'auth.html'; 
+      return; 
+    } 
+    currentUser = u; 
+    const snap = await getDoc(doc(db, 'users', u.uid)); 
+    if (!snap.exists()) { 
+      window.location.href = 'auth.html'; 
+      return; 
+    }
+    
+    const role = snap.data().role || '';
+    if (!role.includes('attendant') && !role.includes('staff') && role !== 'admin' && role !== 'super_admin') { 
+      window.location.href = 'auth.html'; 
+      return; 
+    }
+    
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}); 
+    await loadProfile(); 
+    resetInactivityTimer(); 
+  });
+  
+  document.getElementById('logoutBtn').addEventListener('click', async () => { 
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+    unsubscribes.forEach(u => u()); 
+    await signOut(auth); 
+    window.location.href = 'auth.html'; 
+  });
+  
+  window.addEventListener('beforeunload', () => { 
+    unsubscribes.forEach(u => u()); 
+    if (inactivityTimer) clearTimeout(inactivityTimer); 
+  });
 </script>
 </body>
 </html>
