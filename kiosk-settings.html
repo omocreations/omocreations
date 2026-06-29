@@ -102,13 +102,11 @@
     .btn-sm { padding:8px 16px; font-size:0.8rem; width:auto; }
     .btn-success { background:var(--success); color:white; }
     .btn-warning { background:var(--warning); color:white; }
-    .btn-danger { background:var(--danger); color:white; }
 
     .pins-table { width:100%; border-collapse:collapse; margin-top:12px; }
     .pins-table th { text-align:left; padding:10px 12px; font-size:0.7rem; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(--primary-soft); }
     .pins-table td { padding:12px; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
     .pins-table tr:hover { background:var(--primary-soft); }
-    .pin-display { font-family:monospace; font-size:1.1rem; letter-spacing:4px; font-weight:700; }
     .badge { padding:5px 12px; border-radius:40px; font-size:0.7rem; font-weight:600; display:inline-block; white-space:nowrap; }
 
     .info-box { background:var(--primary-soft); border-radius:16px; padding:20px; margin-top:20px; }
@@ -140,7 +138,7 @@
     .pin-input-row input { width:60px; height:55px; text-align:center; font-size:1.3rem; font-weight:700; border:2px solid rgba(255,77,166,0.2); border-radius:12px; outline:none; font-family:monospace; }
     .pin-input-row input:focus { border-color:var(--primary); }
     
-    .sync-status { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:40px; font-size:0.8rem; font-weight:600; }
+    .sync-status { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:40px; font-size:0.8rem; font-weight:600; }
     .sync-status.synced { background:rgba(16,185,129,0.1); color:var(--success); }
     .sync-status.not-synced { background:rgba(245,158,11,0.1); color:var(--warning); }
 
@@ -318,7 +316,7 @@
       <div class="form-group">
         <label>Master Admin PIN (Works until admins set their own PINs)</label>
         <div class="pin-wrapper">
-          <input type="password" id="adminPin" class="form-control" maxlength="4" value="1234" style="width:150px;">
+          <input type="password" id="masterFallbackPin" class="form-control" maxlength="4" value="1234" style="width:150px;">
           <i class="fas fa-eye pin-eye-btn" id="toggleSettingsPinEye" onclick="toggleSettingsPinVisibility()" title="Show/Hide PIN"></i>
         </div>
         <p class="hint">This PIN is always accepted as a fallback. Use it until admins set their individual PINs above.</p>
@@ -346,7 +344,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, updateDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, updateDoc, runTransaction, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
@@ -367,37 +365,39 @@
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
 
-  function showToast(msg, type='success') {
+  function showToast(msg, type) {
+    type = type || 'success';
     const c = document.getElementById('toastContainer'); if(!c) return;
-    const t = document.createElement('div'); t.className = `toast ${type}`;
+    const t = document.createElement('div'); t.className = 'toast ' + type;
     const icon = type==='success'?'check-circle':type==='error'?'exclamation-circle':'exclamation-triangle';
-    t.innerHTML = `<i class="fas fa-${icon}"></i> ${msg}`;
+    t.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + msg;
     c.appendChild(t);
-    setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),300);},4000);
+    setTimeout(function(){ t.style.opacity='0'; t.style.transform='translateX(100%)'; t.style.transition='all 0.3s ease'; setTimeout(function(){ t.remove(); }, 300); }, 4000);
   }
 
-  function debugLog(msg, type='info') {
-    console.log(`[KioskSettings] ${msg}`);
+  function debugLog(msg, type) {
+    type = type || 'info';
+    console.log('[KioskSettings] ' + msg);
     const panel = document.getElementById('debugPanel');
     const content = document.getElementById('debugContent');
     if(panel && content) {
       panel.classList.add('show');
       const color = type==='error'?'debug-error':type==='warn'?'debug-warn':'';
-      content.innerHTML += `<div class="debug-line ${color}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+      content.innerHTML += '<div class="debug-line ' + color + '">[' + new Date().toLocaleTimeString() + '] ' + msg + '</div>';
       panel.scrollTop = panel.scrollHeight;
     }
   }
 
   window.toggleSidebar = function() {
-    const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay');
-    if(s.classList.contains('mobile-open')){s.classList.remove('mobile-open');o.classList.remove('active');document.body.style.overflow='';}
-    else{s.classList.add('mobile-open');o.classList.add('active');document.body.style.overflow='hidden';}
+    const s = document.getElementById('sidebar'), o = document.getElementById('sidebarOverlay');
+    if(s.classList.contains('mobile-open')){ s.classList.remove('mobile-open'); o.classList.remove('active'); document.body.style.overflow = ''; }
+    else { s.classList.add('mobile-open'); o.classList.add('active'); document.body.style.overflow = 'hidden'; }
   };
   window.closeSidebar = function() {
     document.getElementById('sidebar').classList.remove('mobile-open');
-    document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow='';
+    document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow = '';
   };
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar();});
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeSidebar(); });
 
   // ============================================
   // ADMIN PIN SERVICE
@@ -405,10 +405,10 @@
   class AdminPinService {
     async hashPin(pin, adminId) {
       const encoder = new TextEncoder();
-      const data = encoder.encode(`${pin}_admin_salt_${adminId}_secure_hash_2024`);
+      const data = encoder.encode(pin + '_admin_salt_' + adminId + '_secure_hash_2024');
       const hashBuffer = await crypto.subtle.digest('SHA-256', data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
     }
 
     async verifyPin(inputPin, storedHash, adminId) {
@@ -418,10 +418,10 @@
 
     isWeakPin(pin) {
       const weakPins = ['1234', '0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '4321', '1230', '1004', '2000', '2001', '1122', '1212', '6969'];
-      if (weakPins.includes(pin)) return true;
+      if (weakPins.indexOf(pin) !== -1) return true;
       if (new Set(pin.split('')).size === 1) return true;
       const sequential = ['0123', '1234', '2345', '3456', '4567', '5678', '6789', '7890'];
-      if (sequential.includes(pin) || sequential.includes(pin.split('').reverse().join(''))) return true;
+      if (sequential.indexOf(pin) !== -1 || sequential.indexOf(pin.split('').reverse().join('')) !== -1) return true;
       return false;
     }
 
@@ -434,7 +434,7 @@
       }
 
       try {
-        const result = await runTransaction(db, async (transaction) => {
+        const result = await runTransaction(db, async function(transaction) {
           const userRef = doc(db, 'users', adminId);
           const userDoc = await transaction.get(userRef);
           
@@ -443,10 +443,10 @@
           }
 
           const userData = userDoc.data();
-          const newPinHash = await this.hashPin(newPin, adminId);
+          const newPinHash = await adminPinService.hashPin(newPin, adminId);
           const oldPinHash = userData.adminPinHash || null;
+          const wasSet = userData.hasAdminPin || false;
           
-          // Update user document
           transaction.update(userRef, {
             adminPinHash: newPinHash,
             hasAdminPin: true,
@@ -456,13 +456,12 @@
             adminPinVersion: (userData.adminPinVersion || 0) + 1
           });
 
-          // Log the change
           const logRef = doc(collection(db, 'admin_pin_logs'));
           transaction.set(logRef, {
             adminId: adminId,
             adminName: userData.fullName || 'Unknown',
             adminEmail: userData.email || '',
-            action: userData.hasAdminPin ? 'pin_changed' : 'pin_set',
+            action: wasSet ? 'pin_changed' : 'pin_set',
             timestamp: serverTimestamp(),
             userAgent: navigator.userAgent.substring(0, 100)
           });
@@ -470,24 +469,24 @@
           return { 
             previousHash: oldPinHash, 
             newHash: newPinHash,
-            wasSet: userData.hasAdminPin || false
+            wasChanged: wasSet
           };
         });
 
-        return { success: true, wasChanged: result.wasSet };
+        return { success: true, wasChanged: result.wasChanged };
       } catch (error) {
         console.error('Set admin PIN error:', error);
         throw error;
       }
     }
 
-    async validateAnyAdminPin(inputPin, context = {}) {
+    async validateAnyAdminPin(inputPin, context) {
+      context = context || {};
       if (!inputPin || inputPin.length !== 4) {
         return { valid: false, message: 'Please enter a 4-digit PIN' };
       }
 
       try {
-        // Get all active admin PINs from the synced collection
         const pinsQuery = query(
           collection(db, 'admin_pins'),
           where('isActive', '==', true)
@@ -496,25 +495,26 @@
         const snapshot = await getDocs(pinsQuery);
         const activePins = [];
         
-        snapshot.forEach(doc => {
-          const data = doc.data();
+        snapshot.forEach(function(docSnap) {
+          const data = docSnap.data();
           if (!data.expiresAt || new Date() <= new Date(data.expiresAt)) {
-            activePins.push({ id: doc.id, ...data });
+            activePins.push({ id: docSnap.id, data: data });
           }
         });
 
-        // Also check master fallback
         const settingsDoc = await getDoc(doc(db, 'system_settings', 'kiosk'));
         if (settingsDoc.exists()) {
           const settings = settingsDoc.data();
           if (settings.masterFallbackPinHash) {
             activePins.push({
               id: 'master_fallback',
-              adminId: 'system',
-              adminName: 'Master Fallback',
-              adminRole: 'system',
-              pinHash: settings.masterFallbackPinHash,
-              isActive: true
+              data: {
+                adminId: 'system',
+                adminName: 'Master Fallback',
+                adminRole: 'system',
+                pinHash: settings.masterFallbackPinHash,
+                isActive: true
+              }
             });
           }
         }
@@ -523,23 +523,21 @@
           return { valid: false, message: 'No admin PINs configured. Contact system administrator.' };
         }
 
-        // Try each admin's PIN
-        for (const pinData of activePins) {
+        for (let i = 0; i < activePins.length; i++) {
+          const pinData = activePins[i].data;
           if (!pinData.pinHash) continue;
           
           const isValid = await this.verifyPin(inputPin, pinData.pinHash, pinData.adminId);
           
           if (isValid) {
-            // Update last used
-            if (pinData.id !== 'master_fallback') {
-              updateDoc(doc(db, 'admin_pins', pinData.id), {
+            if (activePins[i].id !== 'master_fallback') {
+              updateDoc(doc(db, 'admin_pins', activePins[i].id), {
                 lastUsedAt: serverTimestamp(),
                 lastUsedFor: context.action || 'unknown',
                 lastUsedBy: context.attendantId || 'unknown'
-              }).catch(() => {});
+              }).catch(function(){});
             }
 
-            // Log validation
             await this.logValidation(pinData.adminId, inputPin, true, context);
             
             return {
@@ -547,12 +545,11 @@
               authorizedBy: pinData.adminName || 'Admin',
               adminId: pinData.adminId,
               adminRole: pinData.adminRole || 'admin',
-              message: `Authorized by ${pinData.adminName || 'Admin'}`
+              message: 'Authorized by ' + (pinData.adminName || 'Admin')
             };
           }
         }
 
-        // No valid PIN found
         await this.logValidation(null, inputPin, false, context);
         return { valid: false, message: 'Invalid PIN. Please try again.' };
 
@@ -564,7 +561,7 @@
 
     async logValidation(adminId, pinInput, success, context) {
       try {
-        await (collection(db, 'admin_pin_validations'), {
+        await addDoc(collection(db, 'admin_pin_validations'), {
           adminId: adminId || 'unknown',
           pinLastTwo: pinInput ? pinInput.slice(-2) : 'none',
           success: success,
@@ -573,7 +570,9 @@
           amount: context.amount || 0,
           timestamp: serverTimestamp()
         });
-      } catch(e) {}
+      } catch(e) {
+        console.error('Log validation error:', e);
+      }
     }
   }
 
@@ -595,21 +594,27 @@
       return;
     }
 
+    const weakPins = ['1234', '0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '4321'];
+    if (weakPins.indexOf(pin) !== -1 || new Set(pin.split('')).size === 1) {
+      showToast('This PIN is too common. Please choose a more secure PIN.', 'error');
+      return;
+    }
+
     const btn = document.getElementById('setMyPinBtn');
     const btnText = document.getElementById('setMyPinBtnText');
+    const statusDiv = document.getElementById('myPinStatus');
+    
     btn.disabled = true;
     btnText.textContent = 'Saving...';
 
     try {
       const result = await adminPinService.setAdminPin(currentUser.uid, pin);
       
-      // Clear PIN inputs
-      ['myPin1','myPin2','myPin3','myPin4'].forEach(id => {
+      ['myPin1','myPin2','myPin3','myPin4'].forEach(function(id) {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
 
-      const statusDiv = document.getElementById('myPinStatus');
       if (result.wasChanged) {
         statusDiv.innerHTML = '<span style="color:var(--success);"><i class="fas fa-check-circle"></i> PIN updated successfully! Old PIN is now invalid.</span>';
         showToast('PIN updated! Old PIN no longer works.', 'success');
@@ -618,13 +623,14 @@
         showToast('PIN set successfully!', 'success');
       }
 
-      // Auto-sync
       await syncAllAdminPinsSilent();
+      await loadAdminPins();
+      
+      debugLog('✅ PIN set and synced successfully');
       
     } catch (error) {
       showToast(error.message || 'Failed to set PIN', 'error');
-      const statusDiv = document.getElementById('myPinStatus');
-      statusDiv.innerHTML = `<span style="color:var(--danger);"><i class="fas fa-exclamation-circle"></i> ${error.message}</span>`;
+      statusDiv.innerHTML = '<span style="color:var(--danger);"><i class="fas fa-exclamation-circle"></i> ' + (error.message || 'Error') + '</span>';
     } finally {
       btn.disabled = false;
       btnText.textContent = userData?.hasAdminPin ? 'Update My PIN' : 'Set My PIN';
@@ -636,28 +642,28 @@
   // ============================================
   function setupMyPinInputs() {
     const inputs = ['myPin1','myPin2','myPin3','myPin4'];
-    inputs.forEach((id, index) => {
+    inputs.forEach(function(id, index) {
       const input = document.getElementById(id);
       if (!input) return;
       
-      input.addEventListener('input', (e) => {
+      input.addEventListener('input', function(e) {
         if (e.target.value && index < inputs.length - 1) {
           document.getElementById(inputs[index + 1])?.focus();
         }
       });
       
-      input.addEventListener('keydown', (e) => {
+      input.addEventListener('keydown', function(e) {
         if (e.key === 'Backspace' && !e.target.value && index > 0) {
           document.getElementById(inputs[index - 1])?.focus();
         }
       });
       
-      input.addEventListener('paste', (e) => {
+      input.addEventListener('paste', function(e) {
         e.preventDefault();
         const pasted = (e.clipboardData || window.clipboardData).getData('text');
         if (/^\d{4}$/.test(pasted)) {
           const digits = pasted.split('');
-          inputs.forEach((inpId, i) => {
+          inputs.forEach(function(inpId, i) {
             const el = document.getElementById(inpId);
             if (el && digits[i]) el.value = digits[i];
           });
@@ -668,7 +674,7 @@
   }
 
   // ============================================
-  // ADMIN PINS SYNC
+  // ADMIN PINS TABLE & SYNC
   // ============================================
   async function loadAdminPins() {
     debugLog('Loading admin PINs from users collection...');
@@ -695,21 +701,19 @@
           isCurrentUser: d.id === currentUser?.uid
         });
         
-        debugLog(`Admin: ${data.fullName} | Has PIN: ${data.hasAdminPin ? 'Yes' : 'No'} | Version: ${data.adminPinVersion || 0}`);
+        debugLog('Admin: ' + data.fullName + ' | Has PIN: ' + (data.hasAdminPin ? 'Yes' : 'No') + ' | Version: ' + (data.adminPinVersion || 0));
       });
 
-      debugLog(`Found ${allAdminPins.length} active admins`);
+      debugLog('Found ' + allAdminPins.length + ' active admins');
       renderAdminPinsTable();
       updateMyPinUI();
       
-      // Load last sync time
-      const syncedQuery = query(collection(db, 'admin_pins'));
-      const syncedSnap = await getDocs(syncedQuery);
+      const syncedSnap = await getDocs(collection(db, 'admin_pins'));
       
       let lastSync = null;
-      syncedSnap.forEach(doc => {
-        if (doc.id === '_sync_meta') {
-          const meta = doc.data();
+      syncedSnap.forEach(function(docSnap) {
+        if (docSnap.id === '_sync_meta') {
+          const meta = docSnap.data();
           if (meta.syncedAt) {
             lastSync = new Date(meta.syncedAt.seconds * 1000);
           }
@@ -724,13 +728,13 @@
         updateSyncStatus(false);
       }
     } catch (e) {
-      debugLog(`Error loading admin PINs: ${e.message}`, 'error');
+      debugLog('Error loading admin PINs: ' + e.message, 'error');
       showToast('Failed to load admin PINs', 'error');
     }
   }
 
   function updateMyPinUI() {
-    const myData = allAdminPins.find(a => a.isCurrentUser);
+    const myData = allAdminPins.find(function(a) { return a.isCurrentUser; });
     const btnText = document.getElementById('setMyPinBtnText');
     const statusDiv = document.getElementById('myPinStatus');
     
@@ -796,31 +800,13 @@
     document.getElementById('activePinCount').textContent = activePinCount;
   }
 
-  // Sync all admin PINs to the central admin_pins collection
-  window.syncAllAdminPins = async function() {
-    debugLog('Syncing all admin PINs to central collection...');
-    showToast('Syncing admin PINs...', 'warning');
-
-    try {
-      const result = await syncAllAdminPinsSilent();
-      
-      if (result.success) {
-        document.getElementById('lastSyncTime').textContent = new Date().toLocaleString();
-        updateSyncStatus(true);
-        debugLog(`Synced ${result.syncedCount} PINs from ${result.adminCount} admins + master fallback`);
-        showToast(`Synced ${result.syncedCount} PINs! ✅`, 'success');
-      }
-    } catch (e) {
-      debugLog(`Sync failed: ${e.message}`, 'error');
-      showToast('Sync failed: ' + e.message, 'error');
-    }
-  };
-
+  // ============================================
+  // SYNC ALL ADMIN PINS - FIXED
+  // ============================================
   async function syncAllAdminPinsSilent() {
     try {
       const batch = writeBatch(db);
       
-      // Get all active admins
       const adminsQuery = query(
         collection(db, 'users'),
         where('role', 'in', ['admin', 'super_admin']),
@@ -828,26 +814,27 @@
       );
       const adminsSnap = await getDocs(adminsQuery);
       
-      // Delete existing synced PINs (except master fallback)
+      // Delete existing synced PINs (except master fallback and sync meta)
       const existingSnap = await getDocs(collection(db, 'admin_pins'));
-      existingSnap.forEach(doc => {
-        if (doc.id !== '_master_fallback' && doc.id !== '_sync_meta') {
-          batch.delete(doc.ref);
+      existingSnap.forEach(function(existingDoc) {
+        if (existingDoc.id !== '_master_fallback' && existingDoc.id !== '_sync_meta') {
+          batch.delete(existingDoc.ref);
         }
       });
       
       let syncCount = 0;
-      const pinSet = new Set();
       
       // Sync each admin's PIN
-      adminsSnap.forEach(doc => {
-        const data = doc.data();
-        debugLog(`Checking ${data.fullName}: hasAdminPin=${data.hasAdminPin}, hasHash=${!!data.adminPinHash}`);
+      adminsSnap.forEach(function(docSnap) {
+        const data = docSnap.data();
+        const adminId = docSnap.id;
+        
+        debugLog('Checking ' + data.fullName + ': hasAdminPin=' + data.hasAdminPin + ', hasHash=' + !!data.adminPinHash);
         
         if (data.hasAdminPin && data.adminPinHash) {
-          const pinRef = doc(collection(db, 'admin_pins'), `${doc.id}_admin`);
+          const pinRef = doc(collection(db, 'admin_pins'), adminId + '_admin');
           batch.set(pinRef, {
-            adminId: doc.id,
+            adminId: adminId,
             adminName: data.fullName || 'Unknown',
             adminRole: data.role || 'admin',
             pinHash: data.adminPinHash,
@@ -857,14 +844,14 @@
             expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
           });
           syncCount++;
-          debugLog(`Synced PIN for ${data.fullName} (v${data.adminPinVersion || 1})`);
+          debugLog('Synced PIN for ' + data.fullName + ' (v' + (data.adminPinVersion || 1) + ')');
         }
       });
       
       // Add master fallback PIN
       const kioskSnap = await getDoc(doc(db, 'system_settings', 'kiosk'));
       if (kioskSnap.exists()) {
-        const masterPin = kioskSnap.data().adminPin;
+        const masterPin = kioskSnap.data().masterFallbackPin || kioskSnap.data().adminPin;
         if (masterPin && masterPin.length >= 4) {
           const masterHash = await adminPinService.hashPin(masterPin, 'system');
           const masterRef = doc(collection(db, 'admin_pins'), '_master_fallback');
@@ -877,9 +864,8 @@
             isActive: true,
             syncedAt: serverTimestamp()
           });
-          pinSet.add(masterPin);
           syncCount++;
-          debugLog(`Added master fallback PIN`);
+          debugLog('Added master fallback PIN');
         }
       }
       
@@ -902,6 +888,25 @@
     }
   }
 
+  window.syncAllAdminPins = async function() {
+    debugLog('Syncing all admin PINs to central collection...');
+    showToast('Syncing admin PINs...', 'warning');
+
+    try {
+      const result = await syncAllAdminPinsSilent();
+      
+      if (result.success) {
+        document.getElementById('lastSyncTime').textContent = new Date().toLocaleString();
+        updateSyncStatus(true);
+        debugLog('Synced ' + result.syncedCount + ' PINs from ' + result.adminCount + ' admins + master fallback');
+        showToast('Synced ' + result.syncedCount + ' PINs! All admin PINs are now active.', 'success');
+      }
+    } catch (e) {
+      debugLog('Sync failed: ' + e.message, 'error');
+      showToast('Sync failed: ' + e.message, 'error');
+    }
+  };
+
   // ============================================
   // KIOSK SETTINGS
   // ============================================
@@ -918,7 +923,7 @@
         document.getElementById('latePenalty').value = s.latePenalty || 5;
         document.getElementById('earlyPenalty').value = s.earlyPenalty || 5;
         document.getElementById('absentPenalty').value = s.absentPenalty || 10;
-        document.getElementById('adminPin').value = s.adminPin || '1234';
+        document.getElementById('masterFallbackPin').value = s.masterFallbackPin || s.adminPin || '1234';
         document.getElementById('cloudinaryCloudName').value = s.cloudinaryCloudName || 'dw80fw9un';
         document.getElementById('cloudinaryUploadPreset').value = s.cloudinaryUploadPreset || 'kiosk_attendance';
         debugLog('Settings loaded successfully');
@@ -926,12 +931,12 @@
         debugLog('No settings found, using defaults');
       }
     } catch(e) {
-      debugLog(`Error loading settings: ${e.message}`, 'error');
+      debugLog('Error loading settings: ' + e.message, 'error');
     }
   }
 
   window.toggleSettingsPinVisibility = function() {
-    const pinInput = document.getElementById('adminPin');
+    const pinInput = document.getElementById('masterFallbackPin');
     const eyeIcon = document.getElementById('toggleSettingsPinEye');
     if (pinInput.type === 'password') {
       pinInput.type = 'text';
@@ -944,13 +949,12 @@
     }
   };
 
-  window.saveSettings = async () => {
+  window.saveSettings = async function() {
     const checkInHour = parseInt(document.getElementById('checkInHour').value) || 9;
     const checkInMinute = parseInt(document.getElementById('checkInMinute').value) || 0;
     const checkOutHour = parseInt(document.getElementById('checkOutHour').value) || 18;
     const checkOutMinute = parseInt(document.getElementById('checkOutMinute').value) || 0;
     
-    // Validate times
     if (checkInHour < 0 || checkInHour > 23 || checkOutHour < 0 || checkOutHour > 23) {
       showToast('Hours must be between 0-23', 'error');
       return;
@@ -960,7 +964,7 @@
       return;
     }
     
-    const masterPin = document.getElementById('adminPin').value || '1234';
+    const masterPin = document.getElementById('masterFallbackPin').value || '1234';
     if (!/^\d{4}$/.test(masterPin)) {
       showToast('Master PIN must be exactly 4 digits', 'error');
       return;
@@ -969,13 +973,14 @@
     const masterPinHash = await adminPinService.hashPin(masterPin, 'system');
     
     const settings = {
-      checkInHour,
-      checkInMinute,
-      checkOutHour,
-      checkOutMinute,
+      checkInHour: checkInHour,
+      checkInMinute: checkInMinute,
+      checkOutHour: checkOutHour,
+      checkOutMinute: checkOutMinute,
       latePenalty: parseInt(document.getElementById('latePenalty').value) || 5,
       earlyPenalty: parseInt(document.getElementById('earlyPenalty').value) || 5,
       absentPenalty: parseInt(document.getElementById('absentPenalty').value) || 10,
+      masterFallbackPin: masterPin,
       adminPin: masterPin,
       masterFallbackPinHash: masterPinHash,
       cloudinaryCloudName: document.getElementById('cloudinaryCloudName').value || 'dw80fw9un',
@@ -991,13 +996,12 @@
       debugLog('Settings saved successfully!');
       showToast('All settings saved!', 'success');
       
-      // Auto-sync PINs after saving
       await syncAllAdminPinsSilent();
       updateSyncStatus(true);
       document.getElementById('lastSyncTime').textContent = new Date().toLocaleString();
       
     } catch(e) {
-      debugLog(`Save failed: ${e.message}`, 'error');
+      debugLog('Save failed: ' + e.message, 'error');
       showToast('Failed to save settings', 'error');
     }
   };
@@ -1017,16 +1021,16 @@
         return;
       }
       
-      const photos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      photos.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+      const photos = snap.docs.map(function(d) { return { id: d.id, data: d.data() }; });
+      photos.sort(function(a, b) { return (b.data.timestamp?.seconds || 0) - (a.data.timestamp?.seconds || 0); });
       
       container.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:15px;">' +
-        photos.map(p => {
-          const time = p.timestamp?.toDate ? p.timestamp.toDate().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : '-';
-          return `<div style="background:var(--gray-light);border-radius:16px;overflow:hidden;">
-            <img src="${p.photoUrl}" style="width:100%;height:140px;object-fit:cover;cursor:pointer;" onclick="window.open('${p.photoUrl}')" alt="${p.staffName||'Staff'}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22>No Image</text></svg>'">
-            <div style="padding:10px;"><strong>${p.staffName||'Unknown'}</strong><br><small>${p.type==='checkin'?'Check-in':'Check-out'}: ${time}</small></div>
-          </div>`;
+        photos.map(function(p) {
+          const time = p.data.timestamp?.toDate ? p.data.timestamp.toDate().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : '-';
+          return '<div style="background:var(--gray-light);border-radius:16px;overflow:hidden;">' +
+            '<img src="' + (p.data.photoUrl || '') + '" style="width:100%;height:140px;object-fit:cover;cursor:pointer;" onclick="window.open(\'' + (p.data.photoUrl || '') + '\')" alt="' + (p.data.staffName||'Staff') + '" onerror="this.src=\'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22>No Image</text></svg>\'">' +
+            '<div style="padding:10px;"><strong>' + (p.data.staffName||'Unknown') + '</strong><br><small>' + (p.data.type==='checkin'?'Check-in':'Check-out') + ': ' + time + '</small></div>' +
+          '</div>';
         }).join('') + '</div>';
     } catch (e) {
       container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray);"><p>Failed to load photos: ' + e.message + '</p></div>';
@@ -1036,22 +1040,21 @@
   // ============================================
   // AUTH STATE
   // ============================================
-  onAuthStateChanged(auth, async (u) => {
-    if(!u){window.location.href='auth.html';return;} 
+  onAuthStateChanged(auth, async function(u) {
+    if(!u){ window.location.href = 'auth.html'; return; } 
     currentUser = u;
     
-    const snap = await getDoc(doc(db,'users',u.uid));
-    if(!snap.exists()||(snap.data().role!=='admin'&&snap.data().role!=='super_admin')){
-      window.location.href='auth.html';return;
+    const snap = await getDoc(doc(db, 'users', u.uid));
+    if(!snap.exists() || (snap.data().role !== 'admin' && snap.data().role !== 'super_admin')){
+      window.location.href = 'auth.html'; return;
     }
     userData = snap.data();
     
-    document.getElementById('userName').textContent = userData.fullName?.split(' ')[0]||'Admin';
-    document.getElementById('userRole').textContent = userData.role==='super_admin'?'Super Admin':'Admin';
-    document.getElementById('userAvatar').textContent = (userData.fullName||'A').charAt(0).toUpperCase();
-    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('userName').textContent = (userData.fullName || 'Admin').split(' ')[0];
+    document.getElementById('userRole').textContent = userData.role === 'super_admin' ? 'Super Admin' : 'Admin';
+    document.getElementById('userAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
     
-    // Update button text based on whether admin has PIN
     if (userData.hasAdminPin) {
       document.getElementById('setMyPinBtnText').textContent = 'Update My PIN';
       document.getElementById('myPinStatus').innerHTML = '<span style="color:var(--success);"><i class="fas fa-check-circle"></i> Your PIN is set and active</span>';
@@ -1064,8 +1067,8 @@
     debugLog('✅ Kiosk settings page fully loaded');
   });
 
-  document.getElementById('logoutBtn').addEventListener('click',async()=>{
-    await signOut(auth);window.location.href='auth.html';
+  document.getElementById('logoutBtn').addEventListener('click', async function() {
+    await signOut(auth); window.location.href = 'auth.html';
   });
 </script>
 </body>
