@@ -484,27 +484,70 @@
     if (!content) return;
     var html = '';
     
-    html += '<div class="debug-item"><strong>Connection:</strong> <span class="' + (isOnline ? 'debug-ok' : 'debug-error') + '">' + (isOnline ? '✅ Online' : '❌ Offline') + '</span></div>';
-    html += '<div class="debug-item"><strong>Offline Sales Queue:</strong> ' + offlineSales.length + ' pending</div>';
-    html += '<div class="debug-item"><strong>Pending Customers:</strong> ' + pendingCustomers.length + ' queued</div>';
-    html += '<div class="debug-item"><strong>Active Drafts:</strong> ' + draftTabs.length + '</div>';
-    html += '<div class="debug-item"><strong>Processing Lock:</strong> ' + (isProcessingSale ? '🔒 LOCKED' : '✅ Free') + '</div>';
-    html += '<div class="debug-item"><strong>Return History Entries:</strong> ' + Object.keys(returnHistory).length + '</div>';
-    html += '<div class="debug-item"><strong>Current Modal:</strong> ' + (currentModalType || 'none') + '</div>';
-    html += '<div class="debug-item"><strong>Stock Items Loaded:</strong> ' + allStockItems.length + '</div>';
+    html += '<div class="debug-item"><strong>📡 Connection:</strong> <span class="' + (isOnline ? 'debug-ok' : 'debug-error') + '">' + (isOnline ? '✅ Online' : '❌ Offline') + '</span></div>';
+    html += '<div class="debug-item"><strong>📤 Offline Queue:</strong> ' + offlineSales.length + ' sales</div>';
+    html += '<div class="debug-item"><strong>👤 Pending Customers:</strong> ' + pendingCustomers.length + '</div>';
+    html += '<div class="debug-item"><strong>📝 Active Drafts:</strong> ' + draftTabs.length + '</div>';
+    html += '<div class="debug-item"><strong>🔒 Processing:</strong> ' + (isProcessingSale ? '❌ LOCKED' : '✅ Free') + '</div>';
+    html += '<div class="debug-item"><strong>📦 Stock Items:</strong> ' + allStockItems.length + ' | Store: ' + allStoreItems.length + '</div>';
+    html += '<div class="debug-item"><strong>📋 Modal:</strong> ' + (currentModalType || 'none') + '</div>';
+    html += '<div class="debug-item"><strong>💳 Reg Payment:</strong> ' + selectedPayment + '</div>';
+    html += '<div class="debug-item"><strong>🏢 Co Payment:</strong> ' + companySelectedPayment + '</div>';
+    html += '<div class="debug-item"><strong>📦 WS Payment:</strong> ' + wholesalePayment + '</div>';
+    
+    // Show active draft details
+    if (activeDraftId) {
+      var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
+      if (draft) {
+        html += '<div class="debug-item" style="margin-top:8px;background:rgba(255,77,166,0.2);padding:4px 8px;border-radius:4px;">';
+        html += '<strong>Active Draft:</strong> ' + escapeHtml(draft.label) + '<br>';
+        html += 'Type: ' + draft.type + ' | Items: ' + draft.itemCount + '<br>';
+        html += 'Customer: ' + escapeHtml(draft.customerName || 'none') + '<br>';
+        html += 'Dirty: ' + (draft.isDirty ? '⚠️ Yes' : '✅ No') + '<br>';
+        html += 'Payment: ' + (draft.type === 'wholesale' ? draft.wholesalePayment : draft.type === 'company' ? draft.companyPayment : draft.selectedPayment);
+        html += '</div>';
+      }
+    }
     
     if (offlineSales.length > 0) {
-      html += '<div class="debug-item" style="margin-top:8px;"><strong>Offline Sales:</strong></div>';
+      html += '<div class="debug-item" style="margin-top:8px;"><strong>📤 Pending Sales:</strong></div>';
       offlineSales.slice(-5).forEach(function(s, idx) {
-        html += '<div class="debug-item" style="padding-left:8px;">' + (idx+1) + '. ' + (s.receiptNumber || 'N/A') + ' - ' + (s.customerName || 'Walk-in') + '</div>';
+        html += '<div class="debug-item" style="padding-left:8px;">' + (idx+1) + '. ' + (s.receiptNumber || 'N/A') + ' - ' + (s.customerName || 'Walk-in') + ' | ' + (s._synced ? '✅' : '⏳') + '</div>';
       });
     }
     
-    html += '<button onclick="window._retrySync()" style="margin-top:8px;">🔄 Retry Sync Now</button>';
-    html += '<button onclick="window._clearSyncErrors()" style="margin-top:4px;">🗑️ Clear Errors</button>';
+    html += '<button onclick="window._retrySync()" style="margin-top:8px;">🔄 Retry Sync</button> ';
+    html += '<button onclick="window._testDrafts()" style="margin-top:8px;">🧪 Test Drafts</button>';
     
     content.innerHTML = html;
   }
+
+  window._testDrafts = function() {
+    console.log('🐛 === DRAFT DIAGNOSTIC ===');
+    console.log('Total drafts:', draftTabs.length);
+    console.log('Active draft ID:', activeDraftId);
+    
+    draftTabs.forEach(function(d, i) {
+      console.log('Draft ' + (i+1) + ':', d.id, '| Type:', d.type, '| Items:', d.itemCount, '| Label:', d.label);
+      console.log('  Items:', JSON.stringify(d.items));
+      console.log('  Payment:', d.type === 'wholesale' ? d.wholesalePayment : d.type === 'company' ? d.companyPayment : d.selectedPayment);
+    });
+    
+    console.log('Modal open:', document.getElementById('modalOverlay').classList.contains('active'));
+    console.log('Modal type:', currentModalType);
+    console.log('Wholesale payment var:', wholesalePayment);
+    console.log('Company payment var:', companySelectedPayment);
+    console.log('Regular payment var:', selectedPayment);
+    
+    var wsPayBtns = document.querySelectorAll('.ws-pay');
+    console.log('WS pay buttons found:', wsPayBtns.length);
+    wsPayBtns.forEach(function(b, i) {
+      console.log('  WS btn ' + i + ':', b.dataset.m, '| Selected:', b.classList.contains('selected'));
+    });
+    
+    updateDebugPanel();
+    showToast('Draft diagnostic logged to console 📋', 'info');
+  };
 
   window._retrySync = function() {
     syncOfflineSales();
@@ -1697,6 +1740,7 @@
   document.addEventListener('click', function(e) {
     var target = e.target;
     
+    // Handle payment-method buttons (regular sale + company)
     if (target.classList.contains('payment-method') && target.dataset.method) {
       var container = target.closest('.payment-methods');
       if (container) {
@@ -1710,22 +1754,27 @@
         
         if (containerId === 'companyPaymentContainer') {
           companySelectedPayment = method;
-        } else if (containerId === 'paymentMethodsContainer' || !containerId) {
+          console.log('🐛 DEBUG: Company payment selected:', companySelectedPayment);
+        } else {
           selectedPayment = method;
+          console.log('🐛 DEBUG: Regular payment selected:', selectedPayment);
         }
         
         if (typeof window._markDraftDirty === 'function') window._markDraftDirty();
-        console.log('💳 Payment selected:', method, '| Container:', containerId || 'default');
+        updateDebugPanel();
       }
     }
     
+    // Handle wholesale payment buttons (.ws-pay with data-m)
     if (target.classList.contains('ws-pay') && target.dataset.m) {
       document.querySelectorAll('.ws-pay').forEach(function(el) {
         el.classList.remove('selected');
       });
       target.classList.add('selected');
       wholesalePayment = target.dataset.m;
-      console.log('💳 Wholesale payment selected:', target.dataset.m);
+      console.log('🐛 DEBUG: Wholesale payment selected:', wholesalePayment);
+      if (typeof window._markDraftDirty === 'function') window._markDraftDirty();
+      updateDebugPanel();
     }
   });
 
@@ -1833,6 +1882,7 @@
       $('.item-custom-price').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       
       window._updateSaleSummary();
+      console.log('🐛 DEBUG: Regular sale draft restored - items:', draft.items.length, '| customer:', draft.customerName);
     }, 200);
   }
 
@@ -2156,7 +2206,50 @@
       $('.item-qty').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       $('.item-size').on('change', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       $('.item-custom-price').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
+      
+      // FIX: Explicitly set saved values after Select2 is ready for company drafts
+      if (draft.items && draft.items.length > 0) {
+        draft.items.forEach(function(item, idx) {
+          var row = document.querySelectorAll('#companyItems .item-row')[idx];
+          if (!row) return;
+          
+          var select = row.querySelector('.item-select');
+          var sizeSelect = row.querySelector('.item-size');
+          var qtyInput = row.querySelector('.item-qty');
+          var priceInput = row.querySelector('.item-custom-price');
+          var checkbox = row.querySelector('.non-inv-check');
+          
+          if (item.isNonInventory) {
+            if (checkbox) checkbox.checked = true;
+            var customName = row.querySelector('.item-custom-name');
+            if (customName) {
+              customName.style.display = '';
+              customName.value = item.name || '';
+            }
+            if (select) {
+              select.style.display = 'none';
+              if ($(select).data('select2')) $(select).select2('destroy');
+            }
+            if (sizeSelect) sizeSelect.style.display = 'none';
+            if (priceInput) {
+              priceInput.style.display = '';
+              priceInput.value = item.unitPrice || 0;
+            }
+          } else if (select && item.id) {
+            $(select).val(item.id).trigger('change');
+            setTimeout(function() {
+              if (sizeSelect && item.size) sizeSelect.value = item.size;
+            }, 50);
+          }
+          
+          if (qtyInput) qtyInput.value = item.quantity || 1;
+          
+          console.log('🐛 DEBUG: Company draft item restored:', item.name, '| qty:', item.quantity, '| non-inv:', item.isNonInventory);
+        });
+      }
+      
       window._updateCompanySummary();
+      console.log('🐛 DEBUG: Company draft restored - items:', draft.items.length, '| collectedBy:', draft.collectedBy);
     }, 200);
   }
 
@@ -2419,6 +2512,7 @@
             priceInput.val(parseFloat(opt.getAttribute('data-cost')) || 0);
           }
           window._updateWSTotal();
+          window._markDraftDirty();
         });
         
         var initialVal = $select.val();
@@ -2430,8 +2524,37 @@
         }
       });
       
+      // FIX: Explicitly set saved values after Select2 is ready
+      if (draft.items && draft.items.length > 0) {
+        draft.items.forEach(function(item, idx) {
+          var row = document.querySelectorAll('.ws-item-row')[idx];
+          if (!row) return;
+          
+          var select = row.querySelector('.ws-select');
+          var qtyInput = row.querySelector('.ws-qty');
+          var priceInput = row.querySelector('.ws-price');
+          var borrowIndicator = row.querySelector('.ws-borrow-indicator');
+          
+          // Set select value
+          if (select && item.id) {
+            $(select).val(item.id).trigger('change');
+          }
+          
+          // Set qty and price AFTER a small delay to let Select2 trigger
+          setTimeout(function() {
+            if (qtyInput) qtyInput.value = item.pieces || 0;
+            if (priceInput) priceInput.value = item.unitPrice || 0;
+            if (borrowIndicator && item.borrowed) {
+              borrowIndicator.style.display = 'inline-flex';
+            }
+            window._updateWSTotal();
+          }, 100);
+        });
+      }
+      
       window._bindWSEvents();
       window._updateWSTotal();
+      console.log('🐛 DEBUG: Wholesale draft restored - items:', draft.items.length, '| name:', draft.label);
     }, 200);
   }
 
@@ -3379,32 +3502,6 @@
   };
 
   window.printReceiptModal = function(id) { hideModal(); setTimeout(function() { window.printReceipt(id); }, 300); };
-
-  function showExchangeReceipt(exchange) {
-    var exchangeSaleData = {
-      id: exchange.receiptNumber,
-      receiptNumber: exchange.receiptNumber,
-      originalReceiptNumber: exchange.originalReceiptNumber,
-      customerName: exchange.customerName,
-      customerPhone: exchange.customerPhone,
-      attendantName: exchange.attendantName,
-      isExchange: true,
-      exchangeType: exchange.differenceType,
-      returnedItems: exchange.returnedItems,
-      exchangeItems: exchange.exchangeItems,
-      totalRefund: exchange.totalRefund,
-      exchangeTotal: exchange.exchangeTotal,
-      difference: exchange.difference,
-      differenceType: exchange.differenceType,
-      exchangePayment: exchange.paymentMethod || exchange.exchangePayment,
-      paymentMethod: exchange.paymentMethod || exchange.exchangePayment,
-      items: exchange.exchangeItems,
-      totalAmount: exchange.exchangeTotal,
-      createdAt: exchange.createdAt || new Date(),
-      _customerType: 'existing'
-    };
-    showReceiptModal(exchangeSaleData);
-  }
 
   // ============================================
   // RETURN PAGE NAVIGATION
