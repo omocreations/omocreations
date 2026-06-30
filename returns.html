@@ -34,6 +34,26 @@
     @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
     @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.5} }
 
+    .debug-panel {
+      position: fixed; bottom: 20px; right: 20px;
+      background: #1a1a2e; color: #fff; padding: 16px;
+      border-radius: 16px; font-size: 0.7rem; z-index: 5000;
+      display: none; max-width: 420px; max-height: 60vh;
+      overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      font-family: monospace; line-height: 1.5;
+    }
+    .debug-panel.show { display: block; }
+    .debug-panel h4 { color: var(--primary); margin-bottom: 8px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
+    .debug-panel .debug-item { margin-bottom: 4px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .debug-panel .debug-ok { color: var(--success); }
+    .debug-panel .debug-warn { color: var(--warning); }
+    .debug-panel .debug-error { color: var(--danger); }
+    .debug-panel button {
+      background: var(--primary); color: white; border: none;
+      padding: 6px 12px; border-radius: 8px; cursor: pointer;
+      font-size: 0.65rem; margin-top: 8px; font-family: 'Poppins', sans-serif;
+    }
+
     .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); color:white; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000; border-right:1px solid rgba(255,77,166,0.2); }
     .sidebar::-webkit-scrollbar { width:4px; } .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); } .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
     .sidebar-header { padding:24px 18px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,77,166,0.2); position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); }
@@ -160,6 +180,11 @@
 </head>
 <body>
 
+<div class="debug-panel" id="debugPanel">
+  <h4>🐞 Return Debug <button onclick="document.getElementById('debugPanel').classList.remove('show')" style="background:var(--danger);font-size:0.6rem;padding:4px 8px;">✕</button></h4>
+  <div id="debugContent">Loading...</div>
+</div>
+
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header"><div class="logo-icon">✨</div><div class="logo-text"><span>Omo</span>creations</div></div>
   <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -169,6 +194,7 @@
   <header class="top-bar">
     <h1 class="page-title">Returns & Exchanges</h1>
     <div style="display:flex;gap:12px;">
+      <button class="btn btn-outline btn-sm" onclick="toggleDebugPanel()" title="Debug Info"><i class="fas fa-bug"></i> Debug</button>
       <button class="btn btn-outline btn-sm" onclick="window.location.href='sales.html'"><i class="fas fa-arrow-left"></i> Back to Sales</button>
     </div>
   </header>
@@ -295,6 +321,7 @@
   let unsubscribes = [];
   let returnCounter = parseInt(localStorage.getItem('returnCounter') || '0');
   let exchangePaymentMethods = {};
+  let debugLogs = [];
 
   function safeNumber(val, fallback) { fallback = (typeof fallback === 'undefined') ? 0 : fallback; if (typeof val === 'number') return val; if (typeof val === 'string') { var p = parseFloat(val); return isNaN(p) ? fallback : p; } return fallback; }
   function safeGetEl(id) { return document.getElementById(id); }
@@ -306,10 +333,106 @@
   function getSizeLabel(size) { var labels = { '1': 'Unit', '0.5': '½', '0.25': '¼', 'half': '½', 'quarter': '¼', 'pack': 'Pack', 'bundle': 'Bundle' }; return labels[size] || 'Unit'; }
   function getItemTypeLabel(type) { var labels = { fashion: '👗', pack_bundle: '📦', measured: '📏', general: '🔧' }; return labels[type] || '🔧'; }
 
+  // ============================================
+  // DEBUG SYSTEM
+  // ============================================
+  function addDebugLog(msg, type) {
+    type = type || 'info';
+    var timestamp = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    debugLogs.unshift({ time: timestamp, msg: msg, type: type });
+    if (debugLogs.length > 100) debugLogs.pop();
+    console.log('🐛 [' + type.toUpperCase() + '] ' + msg);
+    updateDebugPanel();
+  }
+
+  window.toggleDebugPanel = function() {
+    var panel = safeGetEl('debugPanel');
+    if (!panel) return;
+    panel.classList.toggle('show');
+    if (panel.classList.contains('show')) updateDebugPanel();
+  };
+
+  function updateDebugPanel() {
+    var content = safeGetEl('debugContent');
+    if (!content) return;
+    var html = '';
+
+    html += '<div class="debug-item"><strong>📦 Stock Loaded:</strong> ' + allStockItems.length + ' items</div>';
+    html += '<div class="debug-item"><strong>💰 Sales Loaded:</strong> ' + allSales.length + ' sales</div>';
+    html += '<div class="debug-item"><strong>📋 Current Sale:</strong> ' + (currentSale ? (currentSale.receiptNumber || 'N/A') : '<span class="debug-warn">None</span>') + '</div>';
+    html += '<div class="debug-item"><strong>📝 Return History:</strong> ' + Object.keys(returnHistory).length + ' sales tracked</div>';
+    html += '<div class="debug-item"><strong>🔢 Return Counter:</strong> ' + returnCounter + '</div>';
+    html += '<div class="debug-item"><strong>💱 Exchange Payments:</strong> ' + JSON.stringify(exchangePaymentMethods) + '</div>';
+    html += '<div class="debug-item"><strong>👤 User:</strong> ' + (userData ? userData.fullName || 'Staff' : 'Loading...') + ' | ' + (userData ? userData.role || '?' : '?') + '</div>';
+
+    if (currentSale) {
+      html += '<div class="debug-item" style="margin-top:8px;background:rgba(255,77,166,0.2);padding:4px 8px;border-radius:4px;">';
+      html += '<strong>Active Sale:</strong><br>';
+      html += 'Receipt: ' + escapeHtml(currentSale.receiptNumber || 'N/A') + '<br>';
+      html += 'Items: ' + (currentSale.items ? currentSale.items.length : 0) + '<br>';
+      html += 'Total: ' + formatCurrency(currentSale.totalAmount || 0) + '<br>';
+      html += 'Status: ' + (currentSale.status || 'completed') + '<br>';
+      html += 'Partially Returned: ' + (currentSale.partiallyReturned ? 'Yes' : 'No');
+      html += '</div>';
+    }
+
+    html += '<div style="margin-top:8px;"><strong>Recent Logs:</strong></div>';
+    var shownLogs = debugLogs.slice(0, 15);
+    if (shownLogs.length === 0) {
+      html += '<div class="debug-item" style="color:var(--gray);">No logs yet. Interact with the page to generate logs.</div>';
+    } else {
+      shownLogs.forEach(function(log) {
+        var icon = log.type === 'error' ? '❌' : log.type === 'warn' ? '⚠️' : log.type === 'success' ? '✅' : '📋';
+        html += '<div class="debug-item" style="font-size:0.65rem;">' + icon + ' [' + log.time + '] ' + log.msg + '</div>';
+      });
+    }
+
+    html += '<button onclick="window._runReturnDiagnostic()" style="margin-top:8px;">🧪 Run Diagnostic</button> ';
+    html += '<button onclick="window._clearDebugLogs()" style="margin-top:8px;">🗑️ Clear Logs</button>';
+
+    content.innerHTML = html;
+  }
+
+  window._runReturnDiagnostic = function() {
+    addDebugLog('=== DIAGNOSTIC START ===', 'info');
+    addDebugLog('Stock items loaded: ' + allStockItems.length, 'info');
+    addDebugLog('Sales loaded: ' + allSales.length, 'info');
+    addDebugLog('Return history entries: ' + Object.keys(returnHistory).length, 'info');
+    addDebugLog('Current sale: ' + (currentSale ? currentSale.receiptNumber || currentSale.id : 'null'), 'info');
+    addDebugLog('Return counter: ' + returnCounter, 'info');
+    addDebugLog('Exchange payment methods: ' + JSON.stringify(exchangePaymentMethods), 'info');
+
+    if (currentSale && currentSale.items) {
+      currentSale.items.forEach(function(item, i) {
+        var available = getAvailableToReturn(item, currentSale.id || currentSale._localId || '');
+        addDebugLog('Item ' + i + ': ' + (item.name || 'Unknown') + ' | Original: ' + (item.quantity || item.pieces || 1) + ' | Available: ' + available, available > 0 ? 'success' : 'warn');
+      });
+    }
+
+    var cards = document.querySelectorAll('.return-item-card');
+    addDebugLog('Return item cards in DOM: ' + cards.length, 'info');
+    cards.forEach(function(card, i) {
+      var qty = card.querySelector('.return-qty-input');
+      var action = card.getAttribute('data-selected-action') || 'refund';
+      addDebugLog('Card ' + i + ': ' + card.getAttribute('data-item-name') + ' | Qty: ' + (qty ? qty.value : '?') + ' | Action: ' + action, 'info');
+    });
+
+    updateDebugPanel();
+    showToast('Diagnostic complete - check debug panel and console', 'info');
+  };
+
+  window._clearDebugLogs = function() {
+    debugLogs = [];
+    updateDebugPanel();
+    showToast('Debug logs cleared', 'success');
+  };
+
   function generateReturnNumber() {
     returnCounter++;
     localStorage.setItem('returnCounter', returnCounter.toString());
-    return 'RET-' + returnCounter.toString().padStart(6, '0');
+    var num = 'RET-' + returnCounter.toString().padStart(6, '0');
+    addDebugLog('Generated return number: ' + num, 'info');
+    return num;
   }
 
   function getAvailableStock(item, size) {
@@ -337,7 +460,7 @@
     return opts;
   }
 
-  function showToast(msg, type) { type = type || 'success'; var c = safeGetEl('toastContainer'); if (!c) return; var t = document.createElement('div'); t.className = 'toast ' + type; var icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'; t.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + msg; c.appendChild(t); setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = 'all 0.3s ease'; setTimeout(function() { t.remove(); }, 300); }, 4000); }
+  function showToast(msg, type) { type = type || 'success'; var c = safeGetEl('toastContainer'); if (!c) return; var t = document.createElement('div'); t.className = 'toast ' + type; var icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'; t.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + msg; c.appendChild(t); setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = 'all 0.3s ease'; setTimeout(function() { t.remove(); }, 300); }, 4000); addDebugLog(msg, type); }
 
   function hideModal() { var overlay = safeGetEl('modalOverlay'); if (overlay) overlay.classList.remove('active'); }
   window.hideModal = hideModal;
@@ -350,14 +473,16 @@
       var auditData = { actionType: action, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff', performedByRole: userData ? (userData.role || 'attendant') : 'unknown', performedAt: serverTimestamp(), note: note || '', deviceInfo: navigator.userAgent, timestamp_local: new Date().toISOString() };
       if (extraData) Object.assign(auditData, extraData);
       await addDoc(collection(db, 'audit_logs'), auditData);
-    } catch (e) {}
+    } catch (e) { addDebugLog('Audit log failed: ' + e.message, 'error'); }
   }
 
   function saveReturnHistory() { localStorage.setItem('returnHistory', JSON.stringify(returnHistory)); }
 
   function findSaleByIdentifier(identifier) {
     if (!identifier) return null;
-    return allSales.find(function(x) { return x.id === identifier || x._localId === identifier || x.receiptNumber === identifier; }) || allSales.find(function(x) { return (x.id && x.id.toString() === identifier.toString()) || (x._localId && x._localId.toString() === identifier.toString()); }) || null;
+    var sale = allSales.find(function(x) { return x.id === identifier || x._localId === identifier || x.receiptNumber === identifier; });
+    if (!sale) sale = allSales.find(function(x) { return (x.id && x.id.toString() === identifier.toString()) || (x._localId && x._localId.toString() === identifier.toString()); });
+    return sale || null;
   }
 
   function getAvailableToReturn(saleItem, saleIdentifier) {
@@ -379,24 +504,27 @@
       const kioskSnap = await getDoc(doc(db, 'system_settings', 'kiosk'));
       if (kioskSnap.exists() && kioskSnap.data().masterFallbackPinHash) { pinHashes.set('master_fallback', { adminId: 'system', adminName: 'Master Fallback', pinHash: kioskSnap.data().masterFallbackPinHash, type: 'master_fallback' }); }
       try { const usersSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['admin', 'super_admin']), where('status', '==', 'active'))); usersSnap.forEach(function(d) { const data = d.data(); if (data.adminPin) adminPins.add(data.adminPin); if (data.attendantPin) adminPins.add(data.attendantPin); }); } catch(e) {}
-    } catch (e) { console.error('Failed to load admin PINs:', e); }
+      addDebugLog('Admin PINs loaded: ' + pinHashes.size + ' hashed, ' + adminPins.size + ' plain', 'success');
+    } catch (e) { addDebugLog('Failed to load admin PINs: ' + e.message, 'error'); }
   }
 
   async function verifyPin(pin, requiredRole) {
     if (!pin || pin.length < 4) return false;
-    if (adminPins.has(pin)) return true;
+    if (adminPins.has(pin)) { addDebugLog('PIN verified via plain-text match', 'success'); return true; }
     for (let [id, pinData] of pinHashes) {
-      try { const encoder = new TextEncoder(); const data = encoder.encode(pin + '_admin_salt_' + pinData.adminId + '_secure_hash_2024'); const hashBuffer = await crypto.subtle.digest('SHA-256', data); const hashArray = Array.from(new Uint8Array(hashBuffer)); const inputHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); if (inputHash === pinData.pinHash) return true; } catch (e) {}
+      try { const encoder = new TextEncoder(); const data = encoder.encode(pin + '_admin_salt_' + pinData.adminId + '_secure_hash_2024'); const hashBuffer = await crypto.subtle.digest('SHA-256', data); const hashArray = Array.from(new Uint8Array(hashBuffer)); const inputHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); if (inputHash === pinData.pinHash) { addDebugLog('PIN verified for: ' + pinData.adminName, 'success'); return true; } } catch (e) {}
     }
     if (requiredRole === 'attendant' && userData) {
-      if (userData.attendantPinHash) { try { const encoder = new TextEncoder(); const data = encoder.encode(pin + '_attendant_salt_' + currentUser.uid + '_secure_hash_2024'); const hashBuffer = await crypto.subtle.digest('SHA-256', data); const hashArray = Array.from(new Uint8Array(hashBuffer)); const inputHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); if (inputHash === userData.attendantPinHash) return true; } catch (e) {} }
-      if (userData.attendantPin === pin) return true;
+      if (userData.attendantPinHash) { try { const encoder = new TextEncoder(); const data = encoder.encode(pin + '_attendant_salt_' + currentUser.uid + '_secure_hash_2024'); const hashBuffer = await crypto.subtle.digest('SHA-256', data); const hashArray = Array.from(new Uint8Array(hashBuffer)); const inputHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); if (inputHash === userData.attendantPinHash) { addDebugLog('PIN verified (attendant hashed)', 'success'); return true; } } catch (e) {} }
+      if (userData.attendantPin === pin) { addDebugLog('PIN verified (attendant plain)', 'success'); return true; }
     }
+    addDebugLog('PIN verification failed', 'error');
     return false;
   }
 
   function showPinModal(title, action, onSuccess, requiredRole) {
     requiredRole = requiredRole || 'attendant';
+    addDebugLog('PIN modal shown for: ' + action + ' (role: ' + requiredRole + ')', 'info');
     showModal(title, '<p style="text-align:center;margin-bottom:20px;">Enter your PIN to ' + action + '</p><p style="text-align:center;font-size:0.75rem;color:var(--gray);margin-bottom:10px;">' + (requiredRole === 'admin' ? '🔒 Admin authorization required' : '🔑 Attendant or Admin PIN accepted') + '</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width:100%;">Verify</button>');
     var pin1 = safeGetEl('pin1'); if (pin1) pin1.focus();
     document.querySelectorAll('#modalOverlay .pin-input').forEach(function(inp, i, arr) { inp.addEventListener('input', function(e) { if (e.target.value && i < arr.length - 1) arr[i + 1].focus(); }); });
@@ -416,8 +544,8 @@
       wsSnap.docs.forEach(function(d) { allSales.push(Object.assign({ id: d.id, _synced: true, _type: 'wholesale' }, d.data())); });
       var custSnap = await getDocs(query(collection(db, 'customers'), where('status', '==', 'approved')));
       allCustomers = custSnap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-      console.log('📦 Data loaded: ' + allStockItems.length + ' stock, ' + allSales.length + ' sales');
-    } catch (e) { console.error('Load error:', e); }
+      addDebugLog('Data loaded: ' + allStockItems.length + ' stock, ' + allStoreItems.length + ' store, ' + allSales.length + ' sales, ' + allCustomers.length + ' customers', 'success');
+    } catch (e) { addDebugLog('Load error: ' + e.message, 'error'); console.error('Load error:', e); }
   }
 
   // ============================================
@@ -426,14 +554,28 @@
   window.lookupReceipt = async function() {
     var searchVal = safeTrimVal('receiptLookup', '').toUpperCase();
     if (!searchVal) { showToast('Enter a receipt number', 'warning'); return; }
+    addDebugLog('Looking up receipt: ' + searchVal, 'info');
     await loadData();
     var sale = findSaleByIdentifier(searchVal);
     if (!sale) { sale = allSales.find(function(s) { return s.receiptNumber && s.receiptNumber.toUpperCase().includes(searchVal); }); }
-    if (!sale) { safeGetEl('lookupResult').innerHTML = '<p style="text-align:center;color:var(--danger);padding:20px;"><i class="fas fa-exclamation-circle"></i> Sale not found. Check receipt number.</p>'; return; }
-    if (sale.status === 'returned') { safeGetEl('lookupResult').innerHTML = '<p style="text-align:center;color:var(--warning);padding:20px;"><i class="fas fa-exclamation-triangle"></i> This sale has already been fully returned.</p>'; return; }
-    if (sale._type === 'wholesale' || sale.wholesalePackSize) { safeGetEl('lookupResult').innerHTML = '<p style="text-align:center;color:var(--warning);padding:20px;"><i class="fas fa-exclamation-triangle"></i> Wholesale returns must be processed via Inventory Adjustment with admin approval.</p>'; return; }
+    if (!sale) { 
+      addDebugLog('Sale not found: ' + searchVal, 'warn');
+      safeGetEl('lookupResult').innerHTML = '<p style="text-align:center;color:var(--danger);padding:20px;"><i class="fas fa-exclamation-circle"></i> Sale not found. Check receipt number.</p>'; 
+      return; 
+    }
+    if (sale.status === 'returned') { 
+      addDebugLog('Sale already fully returned: ' + searchVal, 'warn');
+      safeGetEl('lookupResult').innerHTML = '<p style="text-align:center;color:var(--warning);padding:20px;"><i class="fas fa-exclamation-triangle"></i> This sale has already been fully returned.</p>'; 
+      return; 
+    }
+    if (sale._type === 'wholesale' || sale.wholesalePackSize) { 
+      addDebugLog('Wholesale sale cannot be returned here: ' + searchVal, 'warn');
+      safeGetEl('lookupResult').innerHTML = '<p style="text-align:center;color:var(--warning);padding:20px;"><i class="fas fa-exclamation-triangle"></i> Wholesale returns must be processed via Inventory Adjustment with admin approval.</p>'; 
+      return; 
+    }
     currentSale = sale;
     exchangePaymentMethods = {};
+    addDebugLog('Sale found: ' + (sale.receiptNumber || sale.id) + ' | Customer: ' + (sale.customerName || 'Walk-in') + ' | Items: ' + (sale.items ? sale.items.length : 0), 'success');
     displaySaleForReturn(sale);
   };
 
@@ -451,6 +593,7 @@
     if (alreadyReturned > 0) {
       safeGetEl('retAlreadyReturned').style.display = 'block';
       safeGetEl('retAlreadyCount').textContent = alreadyReturned;
+      addDebugLog('Previous returns found: ' + alreadyReturned + ' items already returned', 'info');
     } else {
       safeGetEl('retAlreadyReturned').style.display = 'none';
     }
@@ -502,6 +645,7 @@
     safeGetEl('returnFormPanel').style.display = 'block';
     safeGetEl('lookupResult').innerHTML = '';
     updateReturnTotal();
+    addDebugLog('Return form displayed with ' + (sale.items ? sale.items.length : 0) + ' items', 'info');
 
     document.getElementById('returnReason').addEventListener('change', function() { safeGetEl('returnReasonCustom').style.display = this.value === 'Other' ? 'block' : 'none'; });
   }
@@ -514,11 +658,13 @@
     card.querySelectorAll('.return-action-btn').forEach(function(b) { b.classList.remove('selected'); });
     btn.classList.add('selected');
     card.setAttribute('data-selected-action', action);
+    addDebugLog('Item ' + idx + ' action set to: ' + action, 'info');
     var panel = safeGetEl('exchangePanel-' + idx);
     if (panel) {
       if (action === 'exchange') { 
         panel.classList.add('show'); 
         buildExchangePanel(idx); 
+        addDebugLog('Exchange panel opened for item ' + idx, 'info');
       } else { 
         panel.classList.remove('show'); 
         panel.innerHTML = ''; 
@@ -535,7 +681,6 @@
     var unitPrice = parseFloat(card.getAttribute('data-unit-price')) || 0;
     var returnItemName = card.getAttribute('data-item-name') || '';
 
-    // FIX: Show ALL stock items, mark out-of-stock ones
     var stockOptionsHtml = '';
     allStockItems.forEach(function(si) {
       var label = getItemTypeLabel(si.itemType || 'general');
@@ -561,7 +706,6 @@
       '<div id="exchangeActionSection-' + idx + '" style="display:none;margin-top:8px;"></div>' +
       '<div id="exchangeStockWarning-' + idx + '" style="display:none;margin-top:6px;color:var(--danger);font-size:0.75rem;text-align:center;"></div>';
 
-    // Initialize Select2 and bind change event properly
     setTimeout(function() {
       var $select = $('.exchange-select[data-idx="' + idx + '"]');
       $select.select2({ 
@@ -570,7 +714,6 @@
         width: '100%', 
         dropdownParent: $('#modalOverlay') 
       }).on('change', function() { 
-        // FIX: Update size dropdown when product changes
         var selectEl = this;
         var row = $(this).closest('.exchange-item-row')[0];
         if (!row) return;
@@ -593,10 +736,10 @@
         };
         var options = getSizeOptions(itemData);
         sizeEl.innerHTML = options.map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('');
+        addDebugLog('Exchange product selected for item ' + idx + ': ' + (opt.getAttribute('data-name') || 'Unknown'), 'info');
         updateExchangeDiff(idx);
       });
 
-      // Bind size and qty change events
       $('.exchange-size[data-idx="' + idx + '"]').on('change', function() { updateExchangeDiff(idx); });
     }, 150);
   }
@@ -630,13 +773,11 @@
     var exQty = parseInt(qtyEl.value) || 1;
     var exPrice = parseFloat(opt.getAttribute('data-price')) || 0;
 
-    // Get correct price for selected size
     if (size === '0.5' && parseFloat(opt.getAttribute('data-halfprice')) > 0) exPrice = parseFloat(opt.getAttribute('data-halfprice'));
     else if (size === '0.25' && parseFloat(opt.getAttribute('data-quarterprice')) > 0) exPrice = parseFloat(opt.getAttribute('data-quarterprice'));
     else if (size === 'pack' && parseFloat(opt.getAttribute('data-packprice')) > 0) exPrice = parseFloat(opt.getAttribute('data-packprice'));
     else if (size === 'bundle' && parseFloat(opt.getAttribute('data-bundleprice')) > 0) exPrice = parseFloat(opt.getAttribute('data-bundleprice'));
 
-    // FIX: Validate stock
     var stockKey = size === '0.5' ? 'halfstock' : size === '0.25' ? 'quarterstock' : size === 'pack' ? 'packstock' : size === 'bundle' ? 'bundlestock' : 'unitstock';
     var availableStock = parseInt(opt.getAttribute('data-' + stockKey)) || 0;
     var hasStock = availableStock >= exQty;
@@ -644,11 +785,12 @@
     if (stockWarning) {
       if (!hasStock) {
         stockWarning.style.display = 'block';
+        stockWarning.style.color = 'var(--danger)';
         stockWarning.innerHTML = '⚠️ Only <strong>' + availableStock + '</strong> available in this size. Please reduce quantity.';
       } else if (availableStock <= 5) {
         stockWarning.style.display = 'block';
-        stockWarning.innerHTML = '⚠️ Low stock: only <strong>' + availableStock + '</strong> remaining.';
         stockWarning.style.color = 'var(--warning)';
+        stockWarning.innerHTML = '⚠️ Low stock: only <strong>' + availableStock + '</strong> remaining.';
       } else {
         stockWarning.style.display = 'none';
       }
@@ -658,7 +800,6 @@
     var diff = exchangeValue - returnValue;
     var sizeLabel = getSizeLabel(size);
 
-    // FIX: Clear price comparison display
     if (diffDisplay) {
       diffDisplay.style.background = '';
       if (Math.abs(diff) < 0.01) {
@@ -671,6 +812,7 @@
         diffDisplay.innerHTML = '<span class="diff-badge refund">💵 <strong>REFUND TO CUSTOMER: ' + formatCurrency(Math.abs(diff)) + '</strong></span><br><small style="color:var(--gray);">Exchange value: ' + formatCurrency(exchangeValue) + ' | Return value: ' + formatCurrency(returnValue) + '</small>';
         diffDisplay.style.background = 'rgba(239,68,68,0.06)';
       }
+      addDebugLog('Exchange diff for item ' + idx + ': ' + formatCurrency(diff) + ' (' + (diff > 0 ? 'customer pays' : diff < 0 ? 'refund' : 'even') + ')', 'info');
     }
 
     if (actionSection) {
@@ -705,6 +847,7 @@
     exchangePaymentMethods[idx] = method;
     var card = document.querySelector('.return-item-card[data-item-index="' + idx + '"]');
     if (card) card.setAttribute('data-exchange-pay-method', method);
+    addDebugLog('Exchange payment method for item ' + idx + ': ' + method, 'info');
   };
 
   window.resolveExchangeDiff = function(idx, resolution) {
@@ -715,6 +858,7 @@
     if (actionSection) { 
       actionSection.innerHTML = '<div style="background:rgba(16,185,129,0.1);padding:10px;border-radius:8px;text-align:center;"><span style="color:var(--success);font-weight:600;">✅ ' + (resolution === 'refund' ? 'Cash refund selected' : 'Store credit selected') + '</span></div>'; 
     }
+    addDebugLog('Exchange diff resolution for item ' + idx + ': ' + resolution, 'info');
     updateReturnTotal();
   };
 
@@ -737,16 +881,12 @@
       var action = card.getAttribute('data-selected-action') || 'refund';
       var amount = qty * unitPrice;
       
-      // FIX: For exchange, the "return value" is just the refund portion
-      // The grand total shows what's being returned/refunded
       if (action === 'exchange') {
         var exDiff = parseFloat(card.getAttribute('data-exchange-diff')) || 0;
-        // If customer owes money (positive diff), return value stays as refund value
-        // If we owe customer (negative diff), the return value is the full amount being handled
         if (exDiff > 0) {
-          amount = qty * unitPrice; // Return value credited toward more expensive item
+          amount = qty * unitPrice;
         } else {
-          amount = qty * unitPrice; // Full return value minus what we keep for exchange
+          amount = qty * unitPrice;
         }
       }
       grandTotal += amount;
@@ -783,6 +923,8 @@
     var needsStoreCredit = false;
     var needsReplacement = false;
 
+    addDebugLog('Processing returns for: ' + (currentSale.receiptNumber || saleIdentifier), 'info');
+
     document.querySelectorAll('.return-item-card').forEach(function(card, idx) {
       var qtyInput = card.querySelector('.return-qty-input');
       var qty = parseInt(qtyInput && qtyInput.value) || 0;
@@ -790,11 +932,11 @@
       hasItems = true;
       var action = card.getAttribute('data-selected-action') || 'refund';
 
-      // FIX: Validate exchange items
       if (action === 'exchange') {
         var isValid = card.getAttribute('data-exchange-valid');
         if (isValid === 'false') {
           showToast('Insufficient stock for exchange item in row ' + (parseInt(card.getAttribute('data-item-index')) + 1), 'error');
+          addDebugLog('Exchange validation failed for item ' + idx + ': insufficient stock', 'error');
           hasItems = false;
           return;
         }
@@ -803,6 +945,7 @@
           var exSelect = panel.querySelector('.exchange-select');
           if (!exSelect || !exSelect.value) {
             showToast('Please select an exchange product for "' + card.getAttribute('data-item-name') + '"', 'error');
+            addDebugLog('Exchange validation failed for item ' + idx + ': no product selected', 'error');
             hasItems = false;
             return;
           }
@@ -871,6 +1014,8 @@
     var totalRefund = allItems.reduce(function(sum, i) { return sum + i.refundAmount; }, 0);
     var needsAdmin = monthsSinceSale > 11 || totalRefund > 50000 || needsReplacement;
 
+    addDebugLog('Return summary: ' + allItems.length + ' items, total: ' + formatCurrency(totalRefund) + ', needsAdmin: ' + needsAdmin + ', monthsSinceSale: ' + monthsSinceSale, 'info');
+
     showPinModal('Process Returns', 'process ' + allItems.length + ' item(s) worth ' + formatCurrency(totalRefund), function() {
       processReturnsFinal(allItems, reason, saleIdentifier, needsRefund, needsExchange, needsStoreCredit, needsReplacement);
     }, needsAdmin ? 'admin' : 'attendant');
@@ -889,13 +1034,14 @@
       var exchangePaymentMethod = 'cash';
       var storeCreditAmount = 0;
 
+      addDebugLog('Processing return ' + returnNumber + ' with batch write', 'info');
+
       for (var i = 0; i < allItems.length; i++) {
         var item = allItems[i];
         returnItems.push(item);
         totalRefundAmount += item.refundAmount;
 
         if (item.action === 'refund' || item.action === 'store_credit' || item.action === 'replace') {
-          // FIX: For 'replace', restock the returned item (if resellable) but also deduct the replacement
           if (item.id && !item.isNonInventory && item.condition === 'resellable') {
             var stockItem = allStockItems.find(function(si) { return si.id === item.id; });
             if (stockItem) {
@@ -918,7 +1064,6 @@
           totalExchangeAmount += (item.exchangeItemPrice || 0) * (item.exchangeItemQty || 1);
           overallExchangeDiff += item.exchangeDiff || 0;
           exchangePaymentMethod = item.exchangePayMethod || 'cash';
-          // Deduct exchange item from stock
           var exStockItem = allStockItems.find(function(si) { return si.id === item.exchangeItemId; });
           if (exStockItem) {
             var exUpdate = { updatedAt: serverTimestamp() }; var exChange = {}; var exSize = item.exchangeItemSize || '1'; var exQty = item.exchangeItemQty || 1;
@@ -930,7 +1075,6 @@
             batch.update(doc(db, 'stock_items', item.exchangeItemId), exUpdate);
             movements.push({ itemId: item.exchangeItemId, itemName: item.exchangeItemName, movementType: 'exchange_sale', change: exChange, reference: 'Exchange ' + returnNumber + ' - Receipt ' + (currentSale.receiptNumber || ''), performedBy: currentUser?.uid || 'unknown', performedByName: userData?.fullName || 'Staff' });
           }
-          // Also restock the returned item if resellable
           if (item.id && !item.isNonInventory && item.condition === 'resellable') {
             var retStockItem = allStockItems.find(function(si) { return si.id === item.id; });
             if (retStockItem) {
@@ -946,7 +1090,6 @@
           }
         }
 
-        // FIX: Replace action - only deduct the replacement (already restocked above)
         if (item.action === 'replace' && item.id && !item.isNonInventory) {
           var repStockItem = allStockItems.find(function(si) { return si.id === item.id; });
           if (repStockItem) {
@@ -989,8 +1132,10 @@
 
       if (checkIfFullReturn(allItems)) { 
         batch.update(doc(db, 'sales', currentSale.id), { status: 'returned', returnedAt: serverTimestamp(), returnedBy: currentUser?.uid || 'unknown', returnedByName: userData?.fullName || 'Staff', totalRefund: totalRefundAmount, returnReason: reason }); 
+        addDebugLog('Sale marked as FULLY returned', 'success');
       } else { 
         batch.update(doc(db, 'sales', currentSale.id), { partiallyReturned: true, lastReturnAt: serverTimestamp(), lastReturnBy: currentUser?.uid || 'unknown' }); 
+        addDebugLog('Sale marked as PARTIALLY returned', 'info');
       }
 
       if (currentSale.customerId && !currentSale.isCompanySale && needsRefund) { 
@@ -1015,28 +1160,31 @@
           createdAt: serverTimestamp(), 
           expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) 
         }); 
+        addDebugLog('Store credit issued: ' + formatCurrency(storeCreditAmount), 'info');
       }
 
       await batch.commit();
       trackPartialReturn(saleIdentifier, allItems);
+      addDebugLog('Return ' + returnNumber + ' committed successfully! Movements: ' + movements.length, 'success');
       showToast('Return #' + returnNumber + ' processed successfully!', 'success');
       await logAudit('return_processed', 'Return ' + returnNumber + ' for Receipt ' + (currentSale.receiptNumber || ''), { totalRefund: totalRefundAmount, itemCount: allItems.length, returnNumber: returnNumber });
       showReturnReceipt(allItems, reason, returnNumber, totalRefundAmount, totalExchangeAmount, overallExchangeDiff, exchangePaymentMethod, storeCreditAmount);
       resetReturnForm();
       loadReturnHistory();
-    } catch (e) { console.error('Return failed:', e); showToast('Return failed: ' + e.message, 'error'); }
+    } catch (e) { 
+      addDebugLog('Return failed: ' + e.message, 'error');
+      console.error('Return failed:', e); 
+      showToast('Return failed: ' + e.message, 'error'); 
+    }
   }
 
-  // FIX: checkIfFullReturn now accounts for previous returns
   function checkIfFullReturn(returnedItems) {
     if (!currentSale || !currentSale.items) return true;
     var returnedMap = {};
-    // Include current return quantities
     returnedItems.forEach(function(item) {
       var idx = item.originalIndex;
       returnedMap[idx] = (returnedMap[idx] || 0) + item.returnedQuantity;
     });
-    // Add previously returned quantities from history
     var saleIdentifier = currentSale.id || currentSale._localId || '';
     if (returnHistory[saleIdentifier] && returnHistory[saleIdentifier].items) {
       Object.keys(returnHistory[saleIdentifier].items).forEach(function(idx) {
@@ -1058,6 +1206,7 @@
       returnHistory[saleId].totalReturned += item.returnedQuantity; 
     });
     saveReturnHistory();
+    addDebugLog('Return history updated for sale ' + saleId + ': ' + returnHistory[saleId].totalReturned + ' total returned', 'info');
   }
 
   function showReturnReceipt(allItems, reason, returnNumber, totalRefund, totalExchange, exchangeDiff, exchangePayMethod, storeCredit) {
@@ -1100,7 +1249,6 @@
       '</div>'
     );
 
-    // Store receipt data for printing
     window._lastReturnReceiptData = { allItems, reason, returnNumber, totalRefund, totalExchange, exchangeDiff, exchangePayMethod, storeCredit };
   }
 
@@ -1128,7 +1276,8 @@
     safeGetEl('returnGrandTotal').textContent = '₦0'; 
     safeGetEl('returnItemCount').textContent = '0 items selected'; 
     safeGetEl('receiptLookup').value = ''; 
-    safeGetEl('lookupResult').innerHTML = ''; 
+    safeGetEl('lookupResult').innerHTML = '';
+    addDebugLog('Return form reset', 'info');
   }
 
   // ============================================
@@ -1146,12 +1295,16 @@
         var returnNum = r.returnNumber || (r.id ? r.id.substring(0, 8) : 'N/A');
         return '<tr><td>' + formatDate(r.createdAt) + '</td><td><span class="badge badge-info">' + escapeHtml(returnNum) + '</span></td><td>' + escapeHtml(r.saleReceiptNumber || 'N/A') + '</td><td>' + escapeHtml(r.customerName || '-') + '</td><td>' + actionLabel + '</td><td><strong style="color:var(--danger);">' + formatCurrency(r.totalRefund || 0) + '</strong></td><td>' + escapeHtml(r.processedByName || '-') + '</td><td><button class="btn btn-sm btn-outline" onclick="viewReturnReceipt(\'' + r.id + '\')"><i class="fas fa-receipt"></i></button></td></tr>';
       }).join('');
-    } catch (e) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Error loading history</p></div></td></tr>'; }
+      addDebugLog('Return history loaded: ' + returns.length + ' records', 'info');
+    } catch (e) { 
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Error loading history</p></div></td></tr>';
+      addDebugLog('Return history load error: ' + e.message, 'error');
+    }
   }
 
   window.viewReturnReceipt = function(returnId) {
+    addDebugLog('Viewing return receipt: ' + returnId, 'info');
     showToast('Loading return details...', 'info');
-    // In the future, load the return document and display receipt
   };
 
   window.loadReturnHistory = loadReturnHistory;
@@ -1184,21 +1337,34 @@
   onAuthStateChanged(auth, async function(u) {
     if (!u) { window.location.href = 'auth.html'; return; }
     currentUser = u;
+    addDebugLog('Auth state: user logged in', 'success');
     try {
       var snap = await getDoc(doc(db, 'users', u.uid));
       if (!snap.exists() || snap.data().status !== 'active') { await signOut(auth); window.location.href = 'auth.html'; return; }
       userData = snap.data();
+      addDebugLog('User data loaded: ' + (userData.fullName || 'Staff') + ' (' + (userData.role || '?') + ')', 'success');
       await loadAdminPins();
       await loadData();
       buildSidebar();
       loadReturnHistory();
 
       var saleId = sessionStorage.getItem('returnSaleId');
-      if (saleId) { sessionStorage.removeItem('returnSaleId'); safeGetEl('receiptLookup').value = saleId; lookupReceipt(); }
+      if (saleId) { 
+        addDebugLog('Return sale ID found in session: ' + saleId, 'info');
+        sessionStorage.removeItem('returnSaleId'); 
+        safeGetEl('receiptLookup').value = saleId; 
+        lookupReceipt(); 
+      }
 
       var receiptInput = safeGetEl('receiptLookup');
       if (receiptInput) { receiptInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') lookupReceipt(); }); }
-    } catch (e) { console.error('Init error:', e); showToast('Error loading', 'error'); }
+
+      updateDebugPanel();
+    } catch (e) { 
+      addDebugLog('Init error: ' + e.message, 'error');
+      console.error('Init error:', e); 
+      showToast('Error loading', 'error'); 
+    }
   });
 
   window.addEventListener('beforeunload', function() { saveReturnHistory(); cleanup(); });
