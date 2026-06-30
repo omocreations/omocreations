@@ -1508,6 +1508,90 @@
         let pendingEditId = null;
         let pendingRejectedEditId = null;
 
+        // ============================================
+        // FIXED: Proper PIN hashing (matches kiosk settings)
+        // ============================================
+        async function hashPin(pin, adminId) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(pin + '_admin_salt_' + adminId + '_secure_hash_2024');
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+        }
+
+        async function validateAdminPin(pin, context) {
+            context = context || {};
+            if (!pin || pin.length !== 4) {
+                return { valid: false, message: 'Please enter a 4-digit PIN' };
+            }
+
+            try {
+                // Check admin_pins collection (synced from kiosk settings)
+                const pinsQuery = query(collection(db, 'admin_pins'), where('isActive', '==', true));
+                const pinsSnap = await getDocs(pinsQuery);
+
+                for (const docSnap of pinsSnap.docs) {
+                    const data = docSnap.data();
+                    if (!data.pinHash) continue;
+                    const inputHash = await hashPin(pin, data.adminId);
+                    if (inputHash === data.pinHash) {
+                        // Update last used
+                        if (docSnap.id !== '_master_fallback') {
+                            updateDoc(doc(db, 'admin_pins', docSnap.id), {
+                                lastUsedAt: serverTimestamp(),
+                                lastUsedFor: context.action || 'inventory_action',
+                                lastUsedBy: currentUser?.uid || 'unknown'
+                            }).catch(function(){});
+                        }
+                        return {
+                            valid: true,
+                            authorizedBy: data.adminName || 'Admin',
+                            adminId: data.adminId,
+                            message: 'Authorized by ' + (data.adminName || 'Admin')
+                        };
+                    }
+                }
+
+                // Check master fallback from system_settings
+                const kioskSnap = await getDoc(doc(db, 'system_settings', 'kiosk'));
+                if (kioskSnap.exists()) {
+                    const masterHash = kioskSnap.data().masterFallbackPinHash;
+                    if (masterHash) {
+                        const inputHash = await hashPin(pin, 'system');
+                        if (inputHash === masterHash) {
+                            return {
+                                valid: true,
+                                authorizedBy: 'Master Fallback',
+                                adminId: 'system',
+                                message: 'Authorized by Master Fallback'
+                            };
+                        }
+                    }
+                }
+
+                return { valid: false, message: 'Invalid PIN. Please try again.' };
+            } catch (e) {
+                console.error('PIN validation error:', e);
+                return { valid: false, message: 'Verification failed. Please try again.' };
+            }
+        }
+
+        async function validateAttendantPin(pin) {
+            if (!pin || pin.length !== 4) return false;
+            
+            // Check admin pins first (admin can always authorize)
+            const adminResult = await validateAdminPin(pin, { action: 'attendant_action' });
+            if (adminResult.valid) return true;
+
+            // Check attendant's own PIN (hashed)
+            if (userData && userData.attendantPinHash) {
+                const inputHash = await hashPin(pin, currentUser.uid);
+                if (inputHash === userData.attendantPinHash) return true;
+            }
+
+            return false;
+        }
+
         window.addEventListener('error', function(e) {
             showDebug('UNCAUGHT ERROR: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
         });
@@ -1663,102 +1747,128 @@
             return userData && (userData.role === 'admin' || userData.role === 'super_admin');
         }
 
+        // ============================================
+        // FIXED: requireAdminPin uses proper hash verification
+        // ============================================
         function requireAdminPin(action, callback) {
             if (isAdmin()) {
                 callback();
                 return;
             }
+            // Use unique IDs to avoid collision
+            const uniqueId = 'admin_' + Date.now();
             showModal('Admin PIN Required',
                 '<p style="text-align: center; margin-bottom: 20px;">Enter any <strong>admin PIN</strong> to ' + action + '</p>' +
                 '<div class="pin-input-container">' +
-                '<input type="password" maxlength="1" class="pin-input" id="pin1">' +
-                '<input type="password" maxlength="1" class="pin-input" id="pin2">' +
-                '<input type="password" maxlength="1" class="pin-input" id="pin3">' +
-                '<input type="password" maxlength="1" class="pin-input" id="pin4">' +
+                '<input type="password" maxlength="1" class="pin-input" id="' + uniqueId + '_pin1">' +
+                '<input type="password" maxlength="1" class="pin-input" id="' + uniqueId + '_pin2">' +
+                '<input type="password" maxlength="1" class="pin-input" id="' + uniqueId + '_pin3">' +
+                '<input type="password" maxlength="1" class="pin-input" id="' + uniqueId + '_pin4">' +
                 '</div>' +
                 '<div style="text-align: center; margin-bottom: 15px;">' +
-                '<i class="fas fa-eye" id="togglePinEye" style="cursor: pointer; color: var(--gray); font-size: 1.2rem;" onclick="window._togglePinVisibility()" title="Show/Hide PIN"></i>' +
+                '<i class="fas fa-eye" id="' + uniqueId + '_toggleEye" style="cursor: pointer; color: var(--gray); font-size: 1.2rem;" title="Show/Hide PIN"></i>' +
                 '</div>' +
-                '<button class="btn btn-primary" id="verifyPinBtn" style="width: 100%;">Verify</button>'
+                '<button class="btn btn-primary" id="' + uniqueId + '_verifyBtn" style="width: 100%;">Verify</button>'
             );
-            document.getElementById('pin1').focus();
-            document.querySelectorAll('#modalOverlay .pin-input').forEach(function(inp, i, arr) {
-                inp.addEventListener('input', function(e) {
-                    if (e.target.value && i < arr.length - 1) arr[i + 1].focus();
-                });
-            });
-            window._togglePinVisibility = function() {
-                const inputs = document.querySelectorAll('#modalOverlay .pin-input');
-                const eye = document.getElementById('togglePinEye');
-                const isPassword = inputs[0].type === 'password';
-                inputs.forEach(function(inp) {
-                    inp.type = isPassword ? 'text' : 'password';
-                });
+            document.getElementById(uniqueId + '_pin1').focus();
+            
+            // Set up input navigation
+            for (let i = 1; i <= 4; i++) {
+                const inp = document.getElementById(uniqueId + '_pin' + i);
+                if (inp) {
+                    inp.addEventListener('input', function(e) {
+                        if (e.target.value && i < 4) {
+                            document.getElementById(uniqueId + '_pin' + (i + 1))?.focus();
+                        }
+                    });
+                }
+            }
+
+            // Toggle visibility
+            document.getElementById(uniqueId + '_toggleEye').onclick = function() {
+                const eye = document.getElementById(uniqueId + '_toggleEye');
+                const isPassword = document.getElementById(uniqueId + '_pin1').type === 'password';
+                for (let i = 1; i <= 4; i++) {
+                    const inp = document.getElementById(uniqueId + '_pin' + i);
+                    if (inp) inp.type = isPassword ? 'text' : 'password';
+                }
                 eye.classList.toggle('fa-eye', !isPassword);
                 eye.classList.toggle('fa-eye-slash', isPassword);
             };
-            document.getElementById('verifyPinBtn').onclick = async function() {
-                const pin = ['pin1', 'pin2', 'pin3', 'pin4'].map(function(id) {
-                    return document.getElementById(id).value;
+
+            document.getElementById(uniqueId + '_verifyBtn').onclick = async function() {
+                const pin = [1,2,3,4].map(function(i) {
+                    return document.getElementById(uniqueId + '_pin' + i)?.value || '';
                 }).join('');
-                const adminsSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['admin',
-                    'super_admin'
-                ]), where('status', '==', 'active')));
-                let valid = false;
-                adminsSnap.forEach(function(d) {
-                    const a = d.data();
-                    if (pin === (a.adminPin || a.attendantPin)) valid = true;
-                });
-                if (!valid && pin === '1234') valid = true;
-                if (valid) {
+                
+                const result = await validateAdminPin(pin, { action: action });
+                if (result.valid) {
                     hideModal();
                     callback();
-                } else showToast('Invalid admin PIN', 'error');
+                } else {
+                    showToast(result.message || 'Invalid PIN', 'error');
+                }
             };
         }
 
+        // ============================================
+        // FIXED: requireAttendantPin uses proper hash verification
+        // ============================================
         function requireAttendantPin(action, callback) {
             if (isAdmin()) {
                 callback();
                 return;
             }
+            const uniqueId = 'att_' + Date.now();
             showModal('PIN Required',
                 '<p style="text-align: center; margin-bottom: 20px;">Enter your <strong>PIN</strong> to ' + action + '</p>' +
                 '<div class="pin-input-container">' +
-                '<input type="password" maxlength="1" class="pin-input" id="pin1">' +
-                '<input type="password" maxlength="1" class="pin-input" id="pin2">' +
-                '<input type="password" maxlength="1" class="pin-input" id="pin3">' +
-                '<input type="password" maxlength="1" class="pin-input" id="pin4">' +
+                '<input type="password" maxlength="1" class="pin-input" id="' + uniqueId + '_pin1">' +
+                '<input type="password" maxlength="1" class="pin-input" id="' + uniqueId + '_pin2">' +
+                '<input type="password" maxlength="1" class="pin-input" id="' + uniqueId + '_pin3">' +
+                '<input type="password" maxlength="1" class="pin-input" id="' + uniqueId + '_pin4">' +
                 '</div>' +
                 '<div style="text-align: center; margin-bottom: 15px;">' +
-                '<i class="fas fa-eye" id="togglePinEye" style="cursor: pointer; color: var(--gray); font-size: 1.2rem;" onclick="window._togglePinVisibility()" title="Show/Hide PIN"></i>' +
+                '<i class="fas fa-eye" id="' + uniqueId + '_toggleEye" style="cursor: pointer; color: var(--gray); font-size: 1.2rem;" title="Show/Hide PIN"></i>' +
                 '</div>' +
-                '<button class="btn btn-primary" id="verifyPinBtn" style="width: 100%;">Verify</button>'
+                '<button class="btn btn-primary" id="' + uniqueId + '_verifyBtn" style="width: 100%;">Verify</button>'
             );
-            document.getElementById('pin1').focus();
-            document.querySelectorAll('#modalOverlay .pin-input').forEach(function(inp, i, arr) {
-                inp.addEventListener('input', function(e) {
-                    if (e.target.value && i < arr.length - 1) arr[i + 1].focus();
-                });
-            });
-            window._togglePinVisibility = function() {
-                const inputs = document.querySelectorAll('#modalOverlay .pin-input');
-                const eye = document.getElementById('togglePinEye');
-                const isPassword = inputs[0].type === 'password';
-                inputs.forEach(function(inp) {
-                    inp.type = isPassword ? 'text' : 'password';
-                });
+            document.getElementById(uniqueId + '_pin1').focus();
+            
+            for (let i = 1; i <= 4; i++) {
+                const inp = document.getElementById(uniqueId + '_pin' + i);
+                if (inp) {
+                    inp.addEventListener('input', function(e) {
+                        if (e.target.value && i < 4) {
+                            document.getElementById(uniqueId + '_pin' + (i + 1))?.focus();
+                        }
+                    });
+                }
+            }
+
+            document.getElementById(uniqueId + '_toggleEye').onclick = function() {
+                const eye = document.getElementById(uniqueId + '_toggleEye');
+                const isPassword = document.getElementById(uniqueId + '_pin1').type === 'password';
+                for (let i = 1; i <= 4; i++) {
+                    const inp = document.getElementById(uniqueId + '_pin' + i);
+                    if (inp) inp.type = isPassword ? 'text' : 'password';
+                }
                 eye.classList.toggle('fa-eye', !isPassword);
                 eye.classList.toggle('fa-eye-slash', isPassword);
             };
-            document.getElementById('verifyPinBtn').onclick = function() {
-                const pin = ['pin1', 'pin2', 'pin3', 'pin4'].map(function(id) {
-                    return document.getElementById(id).value;
+
+            document.getElementById(uniqueId + '_verifyBtn').onclick = async function() {
+                const pin = [1,2,3,4].map(function(i) {
+                    return document.getElementById(uniqueId + '_pin' + i)?.value || '';
                 }).join('');
-                if (pin === ((userData && userData.attendantPin) || '1234')) {
+                
+                const isValid = await validateAttendantPin(pin);
+                if (isValid) {
                     hideModal();
                     callback();
-                } else showToast('Invalid PIN', 'error');
+                } else {
+                    showToast('Invalid PIN', 'error');
+                }
             };
         }
 
@@ -1801,6 +1911,7 @@
                 'return_exchange': '↩️🔄 Exchange Return',
                 'exchange_sale': '🔄💰 Exchange Sale',
                 'inventory_to_store_sale': '📦→🏪 Borrowed for Wholesale',
+                'return_replacement_issue': '🔧 Replacement Issued',
                 'reject': '🚫 Rejected',
                 'adjustment': '🔧 Adjustment'
             };
@@ -1809,7 +1920,7 @@
 
         function getMovementTypeBadge(type) {
             const warningTypes = ['inventory_to_store_sale', 'return_damaged', 'reject'];
-            const successTypes = ['return_restock', 'add', 'initial'];
+            const successTypes = ['return_restock', 'add', 'initial', 'return_replacement_issue'];
             const infoTypes = ['sale', 'wholesale_sale', 'exchange_sale'];
             const purpleTypes = ['return_exchange', 'edit'];
             
@@ -1848,7 +1959,8 @@
                 if (s.status === 'returned' || !s.items) return;
                 s.items.forEach(function(item) {
                     if (item.id !== itemId) return;
-                    const qty = safeNumber(item.quantity, 0);
+                    // FIXED: Handle both quantity AND pieces (wholesale items use pieces)
+                    const qty = safeNumber(item.quantity || item.pieces, 0);
                     const price = safeNumber(item.unitPrice, 0);
                     const size = (item.sizeLabel || item.size || 'unit').toString().toLowerCase();
                     result.totalRevenue += qty * price;
@@ -1905,6 +2017,9 @@
             return result;
         }
 
+        // ============================================
+        // FIXED: Movement breakdown - borrowed items NOT double-counted as sold
+        // ============================================
         function getMovementBreakdown(itemId) {
             const movements = allMovements.filter(function(m) {
                 return m.itemId === itemId;
@@ -1945,19 +2060,20 @@
                     addedUnit += safeNumber(change.unit, 0);
                     addedHalf += safeNumber(change.half, 0);
                     addedQuarter += safeNumber(change.quarter, 0);
-                } else if (m.movementType === 'sale' || m.movementType === 'wholesale_sale') {
+                } else if (m.movementType === 'sale' || m.movementType === 'wholesale_sale' || m.movementType === 'exchange_sale' || m.movementType === 'return_replacement_issue') {
                     soldUnit += Math.abs(safeNumber(change.unit, 0));
                     soldHalf += Math.abs(safeNumber(change.half, 0));
                     soldQuarter += Math.abs(safeNumber(change.quarter, 0));
-                } else if (m.movementType === 'return' || m.movementType === 'return_restock') {
+                } else if (m.movementType === 'return' || m.movementType === 'return_restock' || m.movementType === 'return_exchange') {
                     returnedUnit += safeNumber(change.unit, 0);
                     returnedHalf += safeNumber(change.half, 0);
                     returnedQuarter += safeNumber(change.quarter, 0);
                 } else if (m.movementType === 'return_damaged') {
                     // Damaged returns don't restore stock
                 } else if (m.movementType === 'inventory_to_store_sale') {
+                    // FIXED: Only count as borrowed, NOT as sold (sale movement already handles the deduction)
                     borrowedOut += Math.abs(safeNumber(change.unit, 0));
-                    soldUnit += Math.abs(safeNumber(change.unit, 0));
+                    // REMOVED: soldUnit += Math.abs(safeNumber(change.unit, 0)); // ← This was double-counting!
                 } else if (m.movementType === 'reject') {
                     addedUnit -= safeNumber(change.unit, 0);
                     addedHalf -= safeNumber(change.half, 0);
@@ -2055,9 +2171,6 @@
             return '🔧 General';
         }
 
-        // ============================================
-        // FIXED: Orphan detection only for existing items
-        // ============================================
         function getSuspiciousActivities() {
             const alerts = [];
             const now = new Date();
@@ -2085,21 +2198,17 @@
                 return m.movementType === 'sale' || m.movementType === 'wholesale_sale';
             });
 
-            // Build set of existing item IDs
             const existingItemIds = new Set(allItems.map(function(i) { return i.id; }));
 
             const allTxns = todaySales.concat(todayWholesale);
             allTxns.forEach(function(sale) {
                 if (!sale.items) return;
                 sale.items.forEach(function(si) {
-                    // SKIP: Item doesn't exist anymore (deleted)
                     if (!existingItemIds.has(si.id)) return;
-
                     const receiptRef = 'Receipt ' + sale.receiptNumber;
                     const hasMovement = saleMovements.some(function(m) {
                         return m.itemId === si.id && m.reference === receiptRef;
                     });
-
                     if (!hasMovement && si.quantity > 0) {
                         alerts.push({
                             item: si.name || si.id,
@@ -2135,7 +2244,7 @@
                 return;
             }
 
-            if (!confirm('This will create adjustment movements to reconcile all stock discrepancies and create missing sale movements for orphaned sales. Continue?')) {
+            if (!confirm('This will create adjustment movements to reconcile all stock discrepancies. Continue?')) {
                 return;
             }
 
@@ -2143,9 +2252,7 @@
 
             const batch = writeBatch(db);
             let fixedItems = 0;
-            let fixedOrphans = 0;
 
-            // Fix stock discrepancies
             for (const item of allItems) {
                 const mov = getMovementBreakdown(item.id);
                 const itemType = item.itemType || 'general';
@@ -2178,70 +2285,15 @@
                 }
             }
 
-            // Fix orphaned sales
-            const saleMovements = allMovements.filter(function(m) {
-                return m.movementType === 'sale' || m.movementType === 'wholesale_sale';
-            });
-
-            const existingItemIds = new Set(allItems.map(function(i) { return i.id; }));
-            const allTxns = allSales.concat(allWholesaleSales);
-
-            for (const sale of allTxns) {
-                if (!sale.items || sale.status === 'returned') continue;
-
-                for (const si of sale.items) {
-                    if (si.isNonInventory || !si.id) continue;
-                    if (!existingItemIds.has(si.id)) continue;
-
-                    const receiptRef = 'Receipt ' + sale.receiptNumber;
-                    const hasMovement = saleMovements.some(function(m) {
-                        return m.itemId === si.id && m.reference === receiptRef;
-                    });
-
-                    if (!hasMovement && si.quantity > 0) {
-                        const movRef = doc(collection(db, 'stock_movements'));
-                        const size = (si.size || '1').toString();
-                        const sizeLabel = (si.sizeLabel || 'unit').toString().toLowerCase();
-                        const change = {};
-                        const qty = safeNumber(si.quantity, 0);
-
-                        if (size === '0.5' || size === '½' || size === 'half' || sizeLabel === '½' || sizeLabel === 'half') {
-                            change.half = -qty;
-                        } else if (size === '0.25' || size === '¼' || size === 'quarter' || sizeLabel === '¼' || sizeLabel === 'quarter') {
-                            change.quarter = -qty;
-                        } else if (size === 'pack' || sizeLabel === 'pack' || sizeLabel === '📦 pack') {
-                            change.unit = -qty;
-                        } else if (size === 'bundle' || sizeLabel === 'bundle' || sizeLabel === '📦 bundle') {
-                            change.unit = -qty;
-                        } else {
-                            change.unit = -qty;
-                        }
-
-                        batch.set(movRef, {
-                            itemId: si.id,
-                            itemName: si.name || 'Unknown',
-                            movementType: 'sale',
-                            change: change,
-                            reference: receiptRef,
-                            performedBy: sale.attendantId || 'system',
-                            performedByName: sale.attendantName || 'System',
-                            performedAt: sale.createdAt || serverTimestamp()
-                        });
-                        fixedOrphans++;
-                    }
-                }
-            }
-
-            if (fixedItems === 0 && fixedOrphans === 0) {
+            if (fixedItems === 0) {
                 showToast('No discrepancies found! Everything is in sync.', 'success');
                 return;
             }
 
             try {
                 await batch.commit();
-                await logAudit('fix_discrepancies',
-                    'Fixed ' + fixedItems + ' stock discrepancies and ' + fixedOrphans + ' orphaned sales');
-                showToast('Fixed ' + fixedItems + ' discrepancies and ' + fixedOrphans + ' orphaned sales! Refresh to see changes.', 'success');
+                await logAudit('fix_discrepancies', 'Fixed ' + fixedItems + ' stock discrepancies');
+                showToast('Fixed ' + fixedItems + ' discrepancies! Refresh to see changes.', 'success');
             } catch (e) {
                 showToast('Failed: ' + e.message, 'error');
             }
@@ -2266,7 +2318,7 @@
             const todayRevenue = todaySalesOnly.concat(todayWholesaleOnly).reduce(function(sum, s) {
                 if (!s.items) return sum;
                 return sum + s.items.reduce(function(ss, i) {
-                    return ss + safeNumber(i.quantity, 0) * safeNumber(i.unitPrice, 0);
+                    return ss + safeNumber(i.quantity || i.pieces, 0) * safeNumber(i.unitPrice, 0);
                 }, 0);
             }, 0);
 
@@ -2283,11 +2335,6 @@
             const todayBorrowed = allMovements.filter(function(m) {
                 const d = m.performedAt && m.performedAt.toDate ? m.performedAt.toDate() : null;
                 return d && d >= todayStart && m.movementType === 'inventory_to_store_sale';
-            });
-
-            const todayRestocks = allMovements.filter(function(m) {
-                const d = m.performedAt && m.performedAt.toDate ? m.performedAt.toDate() : null;
-                return d && d >= todayStart && (m.movementType === 'return_restock' || m.movementType === 'return');
             });
 
             const discrepancyItems = allItems.filter(function(i) {
@@ -2436,7 +2483,6 @@
             const msg = document.getElementById('lowStockMsg');
             if (lowAndOut.length > 0) { banner.style.display = 'flex'; msg.textContent = lowAndOut.length + ' item(s) with low stock.'; } else { banner.style.display = 'none'; }
 
-            // Borrowed items banner
             let totalBorrowedToday = 0;
             const now = new Date();
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -2744,16 +2790,103 @@
         window.saveEdit = function() { if (!isAdmin()) return; const id = pendingEditId; if (!id) return; const name = document.getElementById('editName')?.value?.trim(); if (!name) { showToast('Name required', 'error'); return; } const item = allItems.find(function(i) { return i.id === id; }); const type = item?.itemType || 'general'; let updateData = { name, category: document.getElementById('editCategory')?.value, updatedAt: serverTimestamp() }; let oldUnit = item ? safeNumber(item.unitQty, 0) : 0, oldHalf = item ? safeNumber(item.halfQty, 0) : 0, oldQuarter = item ? safeNumber(item.quarterQty, 0) : 0; if (type === 'general' || type === 'pack_bundle') { updateData.unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0; updateData.unitPrice = parseFloat(document.getElementById('editUnitPrice')?.value) || 0; updateData.threshold = parseInt(document.getElementById('editThreshold')?.value) || 10; } else if (type === 'fashion') { updateData.unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0; updateData.halfQty = parseInt(document.getElementById('editHalfQty')?.value) || 0; updateData.quarterQty = parseInt(document.getElementById('editQuarterQty')?.value) || 0; updateData.unitPrice = parseFloat(document.getElementById('editUnitPrice')?.value) || 0; updateData.halfPrice = parseFloat(document.getElementById('editHalfPrice')?.value) || 0; updateData.quarterPrice = parseFloat(document.getElementById('editQuarterPrice')?.value) || 0; } updateDoc(doc(db, 'stock_items', id), updateData).then(async function() { const changeUnit = (updateData.unitQty || 0) - oldUnit; const changeHalf = (updateData.halfQty || 0) - oldHalf; const changeQuarter = (updateData.quarterQty || 0) - oldQuarter; if (changeUnit !== 0 || changeHalf !== 0 || changeQuarter !== 0) { await logMovement(id, name, 'edit', { unit: changeUnit, half: changeHalf, quarter: changeQuarter }, 'Qty adjustment'); } await logAudit('edit_item', 'Updated: ' + name); showToast('Updated!', 'success'); hideModal(); }).catch(function(e) { showToast('Failed: ' + e.message, 'error'); }); };
 
         window.deleteItem = function(id) { if (!isAdmin()) { showToast('Only admin can delete', 'error'); return; } const item = allItems.find(function(i) { return i.id === id; }); if (!item) return; if (!confirm('Delete "' + item.name + '"?')) return; deleteDoc(doc(db, 'stock_items', id)).then(async function() { await logAudit('delete_item', 'Deleted: ' + item.name); showToast('Deleted!', 'success'); }).catch(function(e) { showToast('Failed: ' + e.message, 'error'); }); };
-        window.deleteAllInventory = function() { if (!isAdmin()) { showToast('Only admin can delete all', 'error'); return; } if (!confirm('DELETE ALL INVENTORY?')) return; requireAdminPin('delete all inventory', async function() { try { const snap = await getDocs(collection(db, 'stock_items')); const batch = writeBatch(db); snap.forEach(function(d) { batch.delete(d.ref); }); await batch.commit(); await logAudit('delete_all', 'All inventory deleted'); showToast('All items deleted', 'success'); } catch (e) { showToast('Failed: ' + e.message, 'error'); } }); };
+        
+        // FIXED: Delete all now requires double confirmation
+        window.deleteAllInventory = function() { 
+            if (!isAdmin()) { showToast('Only admin can delete all', 'error'); return; } 
+            if (!confirm('⚠️ WARNING: This will permanently delete ALL inventory items. This action cannot be undone. Are you sure?')) return;
+            if (!confirm('FINAL WARNING: Type "DELETE" to confirm deletion of all ' + allItems.length + ' items.')) return;
+            requireAdminPin('delete all inventory', async function() { 
+                try { 
+                    const snap = await getDocs(collection(db, 'stock_items')); 
+                    // FIXED: Batch in chunks of 450 to avoid Firestore limit
+                    const allDocs = snap.docs;
+                    for (let i = 0; i < allDocs.length; i += 450) {
+                        const batch = writeBatch(db);
+                        const chunk = allDocs.slice(i, i + 450);
+                        chunk.forEach(function(d) { batch.delete(d.ref); });
+                        await batch.commit();
+                    }
+                    await logAudit('delete_all', 'All ' + allDocs.length + ' inventory items deleted'); 
+                    showToast('All ' + allDocs.length + ' items deleted', 'success'); 
+                } catch (e) { showToast('Failed: ' + e.message, 'error'); } 
+            }); 
+        };
+        
         window.rejectItem = function(id) { if (!isAdmin()) { showToast('Only admin can reject', 'error'); return; } const item = allItems.find(function(i) { return i.id === id; }); if (!item) return; showModal('Reject Item', '<p>Reject <strong>' + item.name + '</strong>?</p><div class="form-group"><label>Reason *</label><textarea class="form-control" id="rejectionReason" rows="3"></textarea></div><div style="display:flex;gap:10px;"><button class="btn btn-warning" onclick="confirmRejectItem(\'' + id + '\')"><i class="fas fa-ban"></i> Reject</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'); };
         window.confirmRejectItem = async function(id) { const reason = document.getElementById('rejectionReason')?.value?.trim(); if (!reason) { showToast('Reason required', 'error'); return; } const item = allItems.find(function(i) { return i.id === id; }); if (!item) return; try { await addDoc(collection(db, 'rejected_inventory'), { name: item.name, category: item.category, itemType: item.itemType, unitQty: safeNumber(item.unitQty, 0), halfQty: safeNumber(item.halfQty, 0), quarterQty: safeNumber(item.quarterQty, 0), originalId: id, rejectionReason: reason, rejectedBy: currentUser?.uid, rejectedByName: userData?.fullName || 'Admin', rejectedAt: serverTimestamp() }); await deleteDoc(doc(db, 'stock_items', id)); await logMovement(id, item.name, 'reject', { unit: -safeNumber(item.unitQty, 0), half: -safeNumber(item.halfQty, 0), quarter: -safeNumber(item.quarterQty, 0) }, 'Rejected: ' + reason); await logAudit('reject_item', 'Rejected: ' + item.name); showToast('Rejected!', 'success'); hideModal(); } catch (e) { showToast('Failed: ' + e.message, 'error'); } };
         window.permanentlyDeleteItem = function(id) { if (!isAdmin()) return; const item = allRejectedItems.find(function(i) { return i.id === id; }); if (!item) return; if (!confirm('Delete "' + item.name + '"?')) return; deleteDoc(doc(db, 'rejected_inventory', id)).then(async function() { await logAudit('perm_delete', item.name); showToast('Deleted!', 'success'); }).catch(function(e) { showToast('Failed: ' + e.message, 'error'); }); };
         window.openEditRejectedItem = function(id) { if (!isAdmin()) return; const item = allRejectedItems.find(function(i) { return i.id === id; }); if (!item) return; pendingRejectedEditId = id; let form = '<div style="background:rgba(239,68,68,0.1);border-left:4px solid var(--danger);padding:12px;margin-bottom:16px;border-radius:8px;"><span style="font-size:0.8rem;color:var(--danger);"><strong>Reason:</strong> ' + (item.rejectionReason || '—') + '</span></div><div class="form-group"><label>Item Name</label><input class="form-control" id="rejEditName" value="' + (item.name || '') + '"></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEditRejectedItem()"><i class="fas fa-paper-plane"></i> Resubmit</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'; showModal('Fix: ' + item.name, form); };
         window.saveEditRejectedItem = async function() { if (!isAdmin()) return; const id = pendingRejectedEditId; if (!id) return; const item = allRejectedItems.find(function(i) { return i.id === id; }); if (!item) return; const name = document.getElementById('rejEditName')?.value?.trim(); if (!name) { showToast('Name required', 'error'); return; } let newData = { ...item, name, updatedAt: serverTimestamp(), status: 'available' }; try { const targetId = item.originalId || id; await setDoc(doc(db, 'stock_items', targetId), newData); await deleteDoc(doc(db, 'rejected_inventory', id)); await logMovement(targetId, name, 'add', { unit: safeNumber(newData.unitQty, 0), half: safeNumber(newData.halfQty, 0), quarter: safeNumber(newData.quarterQty, 0) }, 'Resubmitted'); await logAudit('resubmit_item', name); showToast('Resubmitted!', 'success'); hideModal(); document.querySelector('.tab[data-tab="all"]').click(); } catch (e) { showToast('Failed: ' + e.message, 'error'); } };
 
+        // FIXED: CSV import with batch chunking and duplicate detection
         window.openCsvUploadModal = function() { if (!isAdmin()) { showToast('Only admin can import', 'error'); return; } showModal('Import CSV', '<p>Upload a CSV file.</p><p><span class="csv-template-link" onclick="downloadCsvTemplate()"><i class="fas fa-download"></i> Download Template</span></p><div class="form-group"><label>CSV File *</label><input type="file" class="form-control" id="csvFile" accept=".csv"></div><button class="btn btn-primary" onclick="processCsvUpload()"><i class="fas fa-upload"></i> Upload</button><button class="btn btn-outline" onclick="hideModal()" style="margin-top:8px;">Cancel</button>'); };
         window.downloadCsvTemplate = function() { const csv = 'name,category,itemType,measuredSubType,unitQty,unitPrice,halfQty,halfPrice,quarterQty,quarterPrice,packSize,packPrice,bundleQty,bundlePrice,yardQty,pricePerYard,threshold\nExample,rhinestones,fashion,,100,500,20,300,10,150,,,,,,10'; const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventory_template.csv'; a.click(); };
-        window.processCsvUpload = async function() { if (!isAdmin()) return; const file = document.getElementById('csvFile')?.files[0]; if (!file) { showToast('Select file', 'error'); return; } const text = await file.text(); const lines = text.split('\n').filter(function(l) { return l.trim(); }); if (lines.length < 2) { showToast('CSV needs header + data', 'error'); return; } const headers = lines[0].split(',').map(function(h) { return h.trim().toLowerCase(); }); let added = 0, errors = 0; const batch = writeBatch(db); for (let i = 1; i < lines.length; i++) { const vals = lines[i].split(',').map(function(v) { return v.trim(); }); if (vals.length < headers.length) continue; const row = {}; headers.forEach(function(h, idx) { row[h] = vals[idx]; }); const name = row.name; if (!name) { errors++; continue; } const data = { name, category: row.category || 'other', itemType: row.itemtype || 'general', measuredSubType: row.measuredsubtype || 'yard', unitQty: parseInt(row.unitqty) || 0, unitPrice: parseFloat(row.unitprice) || 0, halfQty: parseInt(row.halfqty) || 0, halfPrice: parseFloat(row.halfprice) || 0, quarterQty: parseInt(row.quarterqty) || 0, quarterPrice: parseFloat(row.quarterprice) || 0, packSize: parseInt(row.packsize) || 0, packPrice: parseFloat(row.packprice) || 0, bundleQty: parseInt(row.bundleqty) || 0, bundlePrice: parseFloat(row.bundleprice) || 0, yardQty: parseInt(row.yardqty) || 0, pricePerYard: parseFloat(row.priceperyard) || 0, threshold: parseInt(row.threshold) || 10, initialUnitQty: parseInt(row.unitqty) || 0, initialHalfQty: parseInt(row.halfqty) || 0, initialQuarterQty: parseInt(row.quarterqty) || 0, status: 'available', createdBy: currentUser?.uid, createdByName: userData?.fullName || 'Staff', createdAt: serverTimestamp(), updatedAt: serverTimestamp() }; const ref = doc(collection(db, 'stock_items')); batch.set(ref, data); added++; } if (added > 0) { await batch.commit(); await logAudit('csv_import', 'Imported ' + added + ' items'); } showToast('Imported ' + added + '. ' + errors + ' errors.', 'success'); hideModal(); };
+        window.processCsvUpload = async function() { 
+            if (!isAdmin()) return; 
+            const file = document.getElementById('csvFile')?.files[0]; 
+            if (!file) { showToast('Select file', 'error'); return; } 
+            const text = await file.text(); 
+            const lines = text.split('\n').filter(function(l) { return l.trim(); }); 
+            if (lines.length < 2) { showToast('CSV needs header + data', 'error'); return; } 
+            const headers = lines[0].split(',').map(function(h) { return h.trim().toLowerCase(); }); 
+            let added = 0, errors = 0, skipped = 0;
+            
+            // FIXED: Build set of existing names for duplicate detection
+            const existingNames = new Set(allItems.map(function(i) { return (i.name || '').toLowerCase(); }));
+            
+            // FIXED: Batch in chunks of 450
+            const BATCH_SIZE = 450;
+            const rows = [];
+            for (let i = 1; i < lines.length; i++) {
+                const vals = lines[i].split(',').map(function(v) { return v.trim(); });
+                if (vals.length < headers.length) continue;
+                const row = {};
+                headers.forEach(function(h, idx) { row[h] = vals[idx]; });
+                const name = row.name;
+                if (!name) { errors++; continue; }
+                
+                // FIXED: Check for duplicates
+                if (existingNames.has(name.toLowerCase())) {
+                    skipped++;
+                    continue;
+                }
+                existingNames.add(name.toLowerCase());
+                rows.push(row);
+            }
+            
+            for (let chunkStart = 0; chunkStart < rows.length; chunkStart += BATCH_SIZE) {
+                const batch = writeBatch(db);
+                const chunk = rows.slice(chunkStart, chunkStart + BATCH_SIZE);
+                chunk.forEach(function(row) {
+                    const data = { 
+                        name: row.name, category: row.category || 'other', itemType: row.itemtype || 'general', 
+                        measuredSubType: row.measuredsubtype || 'yard', unitQty: parseInt(row.unitqty) || 0, 
+                        unitPrice: parseFloat(row.unitprice) || 0, halfQty: parseInt(row.halfqty) || 0, 
+                        halfPrice: parseFloat(row.halfprice) || 0, quarterQty: parseInt(row.quarterqty) || 0, 
+                        quarterPrice: parseFloat(row.quarterprice) || 0, packSize: parseInt(row.packsize) || 0, 
+                        packPrice: parseFloat(row.packprice) || 0, bundleQty: parseInt(row.bundleqty) || 0, 
+                        bundlePrice: parseFloat(row.bundleprice) || 0, yardQty: parseInt(row.yardqty) || 0, 
+                        pricePerYard: parseFloat(row.priceperyard) || 0, threshold: parseInt(row.threshold) || 10, 
+                        initialUnitQty: parseInt(row.unitqty) || 0, initialHalfQty: parseInt(row.halfqty) || 0, 
+                        initialQuarterQty: parseInt(row.quarterqty) || 0, status: 'available', 
+                        createdBy: currentUser?.uid, createdByName: userData?.fullName || 'Staff', 
+                        createdAt: serverTimestamp(), updatedAt: serverTimestamp() 
+                    };
+                    const ref = doc(collection(db, 'stock_items'));
+                    batch.set(ref, data);
+                    added++;
+                });
+                await batch.commit();
+            }
+            
+            if (added > 0) { await logAudit('csv_import', 'Imported ' + added + ' items'); }
+            let msg = 'Imported ' + added + '. ';
+            if (skipped > 0) msg += skipped + ' duplicates skipped. ';
+            if (errors > 0) msg += errors + ' errors.';
+            showToast(msg, 'success'); 
+            hideModal(); 
+        };
         window.exportData = function(format) { if (!isAdmin()) { showToast('Only admin can export', 'error'); return; } const headers = ['Name','Category','Type','Initial U','Initial ½','Initial ¼','Unit Sold','Half Sold','Quarter Sold','Pack/Bundle Sold','Borrowed Out','Unit Avail','Half Avail','Quarter Avail','Pack/Bundle Avail','Unit Price','Half Price','Quarter Price','Pack/Bundle Price','Revenue','Status']; const rows = allItems.map(function(i) { const b = getSoldBreakdown(i.id); const m = getMovementBreakdown(i.id); const pack = i.packSize ? (i.packSize + '/pk') : i.yardQty ? (safeNumber(i.yardQty, 0) + 'yds') : ''; return [i.name||'',i.category||'',i.itemType||'general',m.initialUnit,m.initialHalf,m.initialQuarter,b.unitSold,b.halfSold,b.quarterSold,b.packSold+b.bundleSold,m.borrowedOut,safeNumber(i.unitQty,0),safeNumber(i.halfQty,0),safeNumber(i.quarterQty,0),pack,safeNumber(i.unitPrice,0),safeNumber(i.halfPrice,0),safeNumber(i.quarterPrice,0),safeNumber(i.packPrice||i.bundlePrice||i.pricePerYard,0),getItemRevenue(i),getLowStockFlags(i).join(', ')||'available']; }); const csv = [headers.join(','), ...rows.map(function(r) { return r.map(function(c) { return '"' + c + '"'; }).join(','); })].join('\n'); const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventory_' + new Date().toISOString().split('T')[0] + '.csv'; a.click(); showToast('Exported', 'success'); };
         window.refreshInventory = function() { loadInventory(); showToast('Refreshed', 'success'); };
 
@@ -2762,7 +2895,7 @@
         window.restockFromThirdParty = function(id) { hideModal(); navigateTo('purchases.html'); };
         window.viewHistory = async function(id) { const item = allItems.find(function(i) { return i.id === id; }); if (!item) return; try { const snap = await getDocs(query(collection(db, 'audit_logs'), orderBy('performedAt', 'desc'))); let html = '<h4>' + item.name + '</h4>'; const logs = snap.docs.map(function(d) { return d.data(); }).filter(function(l) { return l.note && l.note.indexOf(item.name) !== -1; }); if (logs.length === 0) html += '<p>No history</p>'; else { html += '<table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Action</th><th>By</th></tr>'; logs.forEach(function(l) { html += '<tr><td>' + formatDate(l.performedAt) + '</td><td>' + (l.actionType||'-') + '</td><td>' + (l.performedByName||'-') + '</td></tr>'; }); html += '</table>'; } html += '<button class="btn btn-primary" onclick="hideModal()" style="margin-top:16px;width:100%;">Close</button>'; showModal('Audit History', html); } catch (e) { showToast('Error', 'error'); } };
 
-        window.openHelpGuide = function() { showModal('📖 Help', '<div class="guide-section"><h4>📦 Item Types</h4><p>General, Fashion, Pack/Bundle, Measured.</p></div><div class="guide-section"><h4>📦 Borrowed Items</h4><p>When store stock runs low during wholesale, items are <strong>borrowed from inventory</strong>. These show in the "Borrowed Out" column and in movement history.</p></div><div class="guide-section"><h4>🔐 Roles</h4><p>Admin: full access. Attendant: view only.</p></div><div class="guide-section"><h4>🔧 Fix All Button</h4><p>Click <strong>Fix All</strong> to reconcile stock discrepancies and create missing sale movements.</p></div><button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close</button>'); };
+        window.openHelpGuide = function() { showModal('📖 Help', '<div class="guide-section"><h4>📦 Item Types</h4><p>General, Fashion, Pack/Bundle, Measured.</p></div><div class="guide-section"><h4>📦 Borrowed Items</h4><p>When store stock runs low during wholesale, items are <strong>borrowed from inventory</strong>. These show in the "Borrowed Out" column and in movement history.</p></div><div class="guide-section"><h4>🔐 Roles</h4><p>Admin: full access. Attendant: view only.</p></div><div class="guide-section"><h4>🔧 Fix All Button</h4><p>Click <strong>Fix All</strong> to reconcile stock discrepancies. This creates adjustment movements to match calculated stock to actual stock.</p></div><button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close</button>'); };
 
         document.getElementById('searchInput').addEventListener('input', renderInventory);
         document.getElementById('categoryFilter').addEventListener('change', renderInventory);
