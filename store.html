@@ -298,33 +298,15 @@
     </header>
 
     <div class="content-wrapper">
-
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-header"><span>Total Store Items</span><div class="stat-icon"><i class="fas fa-boxes"></i></div></div>
-          <div class="stat-value" id="totalStoreItems">0</div>
-          <div class="stat-sub" id="totalCategories">0 categories</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-header"><span>Total Units</span><div class="stat-icon"><i class="fas fa-cubes"></i></div></div>
-          <div class="stat-value" id="totalUnits">0</div>
-          <div class="stat-sub" id="borrowedUnits">0 borrowed from inventory</div>
-        </div>
-        <div class="stat-card value-locked" id="totalStoreValueCard">
-          <div class="stat-header"><span>Store Value</span><div class="stat-icon"><i class="fas fa-naira-sign"></i></div></div>
-          <div class="stat-value" id="totalStoreValue">₦••••••</div>
-          <div class="value-hint" onclick="revealStoreValue()"><i class="fas fa-lock"></i> Tap to unlock with PIN</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-header"><span>Pending Incoming</span><div class="stat-icon"><i class="fas fa-truck-loading"></i></div></div>
-          <div class="stat-value" id="pendingIncoming">0</div>
-          <div class="stat-sub" id="pendingPieces">0 pieces waiting</div>
-        </div>
+        <div class="stat-card"><div class="stat-header"><span>Total Store Items</span><div class="stat-icon"><i class="fas fa-boxes"></i></div></div><div class="stat-value" id="totalStoreItems">0</div><div class="stat-sub" id="totalCategories">0 categories</div></div>
+        <div class="stat-card"><div class="stat-header"><span>Total Units</span><div class="stat-icon"><i class="fas fa-cubes"></i></div></div><div class="stat-value" id="totalUnits">0</div><div class="stat-sub" id="borrowedUnits">0 borrowed from inventory</div></div>
+        <div class="stat-card value-locked" id="totalStoreValueCard"><div class="stat-header"><span>Store Value</span><div class="stat-icon"><i class="fas fa-naira-sign"></i></div></div><div class="stat-value" id="totalStoreValue">₦••••••</div><div class="value-hint" onclick="revealStoreValue()"><i class="fas fa-lock"></i> Tap to unlock with PIN</div></div>
+        <div class="stat-card"><div class="stat-header"><span>Pending Incoming</span><div class="stat-icon"><i class="fas fa-truck-loading"></i></div></div><div class="stat-value" id="pendingIncoming">0</div><div class="stat-sub" id="pendingPieces">0 pieces waiting</div></div>
       </div>
 
       <div class="lowstock-banner" id="storeLowBanner" style="display: none;">
-        <i class="fas fa-box-open"></i>
-        <div style="flex: 1;"><strong>Low Stock Alert</strong> — <span id="storeLowMsg"></span></div>
+        <i class="fas fa-box-open"></i><div style="flex: 1;"><strong>Low Stock Alert</strong> — <span id="storeLowMsg"></span></div>
         <button class="btn btn-sm btn-warning" onclick="navigateTo('purchases.html')"><i class="fas fa-shopping-cart"></i> Buy from Third Party</button>
       </div>
 
@@ -340,40 +322,12 @@
           <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search store items..."></div>
           <select class="filter-select" id="categoryFilter"><option value="all">All Categories</option></select>
           <select class="filter-select" id="statusFilter"><option value="all">All Status</option><option value="available">In Stock</option><option value="low">Low Stock</option><option value="out_of_stock">Out of Stock</option></select>
-          <div class="export-dropdown">
-            <button class="btn btn-outline" id="exportDropdownBtn"><i class="fas fa-download"></i> Export</button>
-            <div class="export-menu" id="exportMenu">
-              <div class="export-item" onclick="exportData('csv')"><i class="fas fa-file-csv"></i> CSV</div>
-              <div class="export-item" onclick="exportData('excel')"><i class="fas fa-file-excel"></i> Excel</div>
-            </div>
-          </div>
+          <div class="export-dropdown"><button class="btn btn-outline" id="exportDropdownBtn"><i class="fas fa-download"></i> Export</button><div class="export-menu" id="exportMenu"><div class="export-item" onclick="exportData('csv')"><i class="fas fa-file-csv"></i> CSV</div><div class="export-item" onclick="exportData('excel')"><i class="fas fa-file-excel"></i> Excel</div></div></div>
           <button class="btn btn-primary" onclick="openAddStoreItemModal()"><i class="fas fa-plus"></i> Add Store Item</button>
         </div>
         <div class="panel">
-          <div class="panel-header">
-            <h3><i class="fas fa-warehouse"></i> Store Stock Items</h3>
-            <button class="btn btn-outline btn-sm" onclick="refreshStore()"><i class="fas fa-sync-alt"></i> Refresh</button>
-          </div>
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Item Name</th>
-                  <th>Category</th>
-                  <th>Inv. Type</th>
-                  <th>Linked Inventory</th>
-                  <th>Total Units</th>
-                  <th>Unit Cost</th>
-                  <th>Total Value</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="storeTable">
-                <tr><td colspan="9"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
-              </tbody>
-            </table>
-          </div>
+          <div class="panel-header"><h3><i class="fas fa-warehouse"></i> Store Stock Items</h3><button class="btn btn-outline btn-sm" onclick="refreshStore()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+          <div class="table-wrapper"><table class="data-table"><thead><tr><th>Item Name</th><th>Category</th><th>Inv. Type</th><th>Linked Inventory</th><th>Total Units</th><th>Unit Cost</th><th>Total Value</th><th>Status</th><th>Actions</th></tr></thead><tbody id="storeTable"><tr><td colspan="9"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
         </div>
       </div>
 
@@ -384,102 +338,34 @@
           <button class="tab" data-incoming-tab="pack_bundle"><i class="fas fa-box"></i> Pack/Bundle</button>
           <button class="tab" data-incoming-tab="measured"><i class="fas fa-ruler"></i> Measured</button>
         </div>
-
-        <div id="incomingGeneralPanel" class="panel" style="display: block;">
-          <div class="panel-header"><h3><i class="fas fa-cube"></i> General – Pending Incoming</h3></div>
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead><tr><th>Store Item</th><th>Units Transferring</th><th>Target Inventory</th><th>Price</th><th>Requested By</th><th>Date</th><th>Action</th></tr></thead>
-              <tbody id="incomingGeneralTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-cube"></i><p>No pending general items</p></div></td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div id="incomingFashionPanel" class="panel" style="display: none;">
-          <div class="panel-header"><h3><i class="fas fa-tshirt"></i> Fashion – Pending Incoming</h3></div>
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead><tr><th>Store Item</th><th>Units Transferring</th><th>→ Units</th><th>→ ½</th><th>→ ¼</th><th>Target Inventory</th><th>Prices (U/½/¼)</th><th>Requested By</th><th>Date</th><th>Action</th></tr></thead>
-              <tbody id="incomingFashionTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-tshirt"></i><p>No pending fashion items</p></div></td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div id="incomingPackBundlePanel" class="panel" style="display: none;">
-          <div class="panel-header"><h3><i class="fas fa-box"></i> Pack/Bundle – Pending Incoming</h3></div>
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead><tr><th>Store Item</th><th>Units Transferring</th><th>→ Pieces</th><th>→ Packs</th><th>Pack Size</th><th>Target Inventory</th><th>Prices (U/Pk)</th><th>Requested By</th><th>Date</th><th>Action</th></tr></thead>
-              <tbody id="incomingPackBundleTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div id="incomingMeasuredPanel" class="panel" style="display: none;">
-          <div class="panel-header"><h3><i class="fas fa-ruler"></i> Measured – Pending Incoming</h3></div>
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead><tr><th>Store Item</th><th>Units Transferring</th><th>→ Yards</th><th>→ Bundles</th><th>Yards/Bundle</th><th>Target Inventory</th><th>Prices (Yd/Bdl)</th><th>Requested By</th><th>Date</th><th>Action</th></tr></thead>
-              <tbody id="incomingMeasuredTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-ruler"></i><p>No pending measured items</p></div></td></tr></tbody>
-            </table>
-          </div>
-        </div>
+        <div id="incomingGeneralPanel" class="panel" style="display: block;"><div class="panel-header"><h3><i class="fas fa-cube"></i> General – Pending Incoming</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Store Item</th><th>Units Transferring</th><th>Target Inventory</th><th>Price</th><th>Requested By</th><th>Date</th><th>Action</th></tr></thead><tbody id="incomingGeneralTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-cube"></i><p>No pending general items</p></div></td></tr></tbody></table></div></div>
+        <div id="incomingFashionPanel" class="panel" style="display: none;"><div class="panel-header"><h3><i class="fas fa-tshirt"></i> Fashion – Pending Incoming</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Store Item</th><th>Units Transferring</th><th>→ Units</th><th>→ ½</th><th>→ ¼</th><th>Target Inventory</th><th>Prices (U/½/¼)</th><th>Requested By</th><th>Date</th><th>Action</th></tr></thead><tbody id="incomingFashionTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-tshirt"></i><p>No pending fashion items</p></div></td></tr></tbody></table></div></div>
+        <div id="incomingPackBundlePanel" class="panel" style="display: none;"><div class="panel-header"><h3><i class="fas fa-box"></i> Pack/Bundle – Pending Incoming</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Store Item</th><th>Units Transferring</th><th>→ Pieces</th><th>→ Packs</th><th>Pack Size</th><th>Target Inventory</th><th>Prices (U/Pk)</th><th>Requested By</th><th>Date</th><th>Action</th></tr></thead><tbody id="incomingPackBundleTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr></tbody></table></div></div>
+        <div id="incomingMeasuredPanel" class="panel" style="display: none;"><div class="panel-header"><h3><i class="fas fa-ruler"></i> Measured – Pending Incoming</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Store Item</th><th>Units Transferring</th><th>→ Yards</th><th>→ Bundles</th><th>Yards/Bundle</th><th>Target Inventory</th><th>Prices (Yd/Bdl)</th><th>Requested By</th><th>Date</th><th>Action</th></tr></thead><tbody id="incomingMeasuredTable"><tr><td colspan="10"><div class="empty-state"><i class="fas fa-ruler"></i><p>No pending measured items</p></div></td></tr></tbody></table></div></div>
       </div>
 
       <div id="movementsPanel" class="page-view">
         <div class="filter-bar">
           <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="movementSearchInput" placeholder="Search by item name or reference..."></div>
-          <select class="filter-select" id="movementTypeFilter">
-            <option value="all">All Movements</option>
-            <option value="wholesale_sale">Wholesale Sales</option>
-            <option value="inventory_to_store_sale">Borrowed from Inventory</option>
-            <option value="return_restock">Return Restock</option>
-            <option value="return_damaged">Return Damaged</option>
-            <option value="incoming_transfer">Incoming Transfer</option>
-          </select>
+          <select class="filter-select" id="movementTypeFilter"><option value="all">All Movements</option><option value="wholesale_sale">Wholesale Sales</option><option value="inventory_to_store_sale">Borrowed from Inventory</option><option value="return_restock">Return Restock</option><option value="return_damaged">Return Damaged</option><option value="incoming_transfer">Incoming Transfer</option></select>
         </div>
         <div class="panel">
-          <div class="panel-header">
-            <h3><i class="fas fa-exchange-alt"></i> Stock Movement History</h3>
-            <button class="btn btn-outline btn-sm" onclick="refreshStore()"><i class="fas fa-sync-alt"></i> Refresh</button>
-          </div>
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr><th>Date</th><th>Item</th><th>Movement Type</th><th>Change</th><th>Reference</th><th>Performed By</th><th>Condition</th></tr>
-              </thead>
-              <tbody id="movementsTable">
-                <tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading movements...</p></div></td></tr>
-              </tbody>
-            </table>
-          </div>
+          <div class="panel-header"><h3><i class="fas fa-exchange-alt"></i> Stock Movement History</h3><button class="btn btn-outline btn-sm" onclick="refreshStore()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+          <div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Item</th><th>Movement Type</th><th>Change</th><th>Reference</th><th>Performed By</th><th>Condition</th></tr></thead><tbody id="movementsTable"><tr><td colspan="7"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading movements...</p></div></td></tr></tbody></table></div>
         </div>
       </div>
 
       <div id="historyPanel" class="page-view">
         <div class="panel">
           <div class="panel-header"><h3><i class="fas fa-history"></i> Wholesale Sales History</h3></div>
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr><th>Date</th><th>Receipt #</th><th>Customer</th><th>Pack Size</th><th>Items</th><th>Total Pieces</th><th>Total Amount</th><th>Payment</th><th>Borrowed</th><th>Attendant</th><th>Actions</th></tr>
-              </thead>
-              <tbody id="wholesaleHistoryTable">
-                <tr><td colspan="11"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
-              </tbody>
-            </table>
-          </div>
+          <div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Receipt #</th><th>Customer</th><th>Pack Size</th><th>Items</th><th>Total Pieces</th><th>Total Amount</th><th>Payment</th><th>Borrowed</th><th>Attendant</th><th>Actions</th></tr></thead><tbody id="wholesaleHistoryTable"><tr><td colspan="11"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div>
         </div>
       </div>
-
     </div>
   </main>
 
   <div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
-      <div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="hideModal()">&times;</button></div>
-      <div id="modalContent"></div>
-    </div>
+    <div class="modal"><div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="hideModal()">&times;</button></div><div id="modalContent"></div></div>
   </div>
   <div class="toast-container" id="toastContainer"></div>
 
@@ -505,236 +391,110 @@
     const db = getFirestore(app);
 
     try {
-      enableIndexedDbPersistence(db).then(function() {
-        console.log('Store: Offline persistence enabled');
-      }).catch(function(err) {
-        console.warn('Store: Persistence error:', err.code);
-      });
-    } catch (e) {
-      console.warn('Store: Persistence setup error:', e);
-    }
+      enableIndexedDbPersistence(db).then(function() { console.log('Store: Offline persistence enabled'); })
+      .catch(function(err) { console.warn('Store: Persistence error:', err.code); });
+    } catch (e) { console.warn('Store: Persistence setup error:', e); }
 
-    let currentUser = null;
-    let userData = null;
-    let unsubscribes = [];
-    let storeItems = [];
-    let wholesaleSales = [];
-    let categories = [];
-    let incomingItems = [];
-    let allInventoryItems = [];
-    let stockMovements = [];
-    let currentTab = 'stock';
-    let incomingTab = 'general';
-    let storeValueRevealed = false;
-    let measuredSubType = 'yard';
-    let isOnline = navigator.onLine;
-    let adminPins = new Set();
+    let currentUser = null, userData = null, unsubscribes = [];
+    let storeItems = [], wholesaleSales = [], categories = [], incomingItems = [], allInventoryItems = [], stockMovements = [];
+    let currentTab = 'stock', incomingTab = 'general', storeValueRevealed = false, measuredSubType = 'yard', isOnline = navigator.onLine;
 
-    function safeNumber(val, fallback) {
-      fallback = (typeof fallback === 'undefined') ? 0 : fallback;
-      if (typeof val === 'number') return val;
-      if (typeof val === 'string') { var parsed = parseFloat(val); return isNaN(parsed) ? fallback : parsed; }
-      if (typeof val === 'object' && val !== null) return fallback;
-      return fallback;
-    }
-
+    function safeNumber(val, fallback) { fallback = (typeof fallback === 'undefined') ? 0 : fallback; if (typeof val === 'number') return val; if (typeof val === 'string') { var parsed = parseFloat(val); return isNaN(parsed) ? fallback : parsed; } if (typeof val === 'object' && val !== null) return fallback; return fallback; }
     function formatCurrency(n) { return '₦' + (safeNumber(n, 0)).toLocaleString(); }
-
-    function formatDate(d) {
-      if (!d) return '-';
-      var date;
-      if (d.toDate) date = d.toDate();
-      else if (d.seconds) date = new Date(d.seconds * 1000);
-      else if (typeof d === 'string') date = new Date(d);
-      else if (d instanceof Date) date = d;
-      else date = new Date();
-      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
-    }
-
-    function formatDateTime(d) {
-      if (!d) return '-';
-      var date;
-      if (d.toDate) date = d.toDate();
-      else if (d.seconds) date = new Date(d.seconds * 1000);
-      else if (typeof d === 'string') date = new Date(d);
-      else if (d instanceof Date) date = d;
-      else date = new Date();
-      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) + ' ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    }
-
+    function formatDate(d) { if (!d) return '-'; var date; if (d.toDate) date = d.toDate(); else if (d.seconds) date = new Date(d.seconds * 1000); else if (typeof d === 'string') date = new Date(d); else if (d instanceof Date) date = d; else date = new Date(); return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }); }
+    function formatDateTime(d) { if (!d) return '-'; var date; if (d.toDate) date = d.toDate(); else if (d.seconds) date = new Date(d.seconds * 1000); else if (typeof d === 'string') date = new Date(d); else if (d instanceof Date) date = d; else date = new Date(); return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) + ' ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }
     function navigateTo(url) { window.location.href = url; }
     window.navigateTo = navigateTo;
 
-    function showToast(msg, type) {
-      type = type || 'success';
-      var c = document.getElementById('toastContainer');
-      if (!c) return;
-      var t = document.createElement('div');
-      t.className = 'toast ' + type;
-      var icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle';
-      t.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + msg;
-      c.appendChild(t);
-      setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = 'all 0.3s ease'; setTimeout(function() { t.remove(); }, 300); }, 4000);
-    }
+    function showToast(msg, type) { type = type || 'success'; var c = document.getElementById('toastContainer'); if (!c) return; var t = document.createElement('div'); t.className = 'toast ' + type; var icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'; t.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + msg; c.appendChild(t); setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = 'all 0.3s ease'; setTimeout(function() { t.remove(); }, 300); }, 4000); }
 
     async function logAudit(action, note, extraData) {
-      try {
-        var auditData = { actionType: action, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff', performedByRole: userData ? (userData.role || 'attendant') : 'unknown', performedAt: serverTimestamp(), note: note || '', deviceInfo: navigator.userAgent, isOnline: isOnline };
-        if (extraData) Object.assign(auditData, extraData);
-        await addDoc(collection(db, 'audit_logs'), auditData);
-      } catch (e) {}
+      try { var auditData = { actionType: action, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff', performedByRole: userData ? (userData.role || 'attendant') : 'unknown', performedAt: serverTimestamp(), note: note || '', deviceInfo: navigator.userAgent, isOnline: isOnline }; if (extraData) Object.assign(auditData, extraData); await addDoc(collection(db, 'audit_logs'), auditData); } catch (e) {}
     }
 
     function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
     window.hideModal = hideModal;
-
-    function showModal(title, content) {
-      document.getElementById('modalTitle').textContent = title;
-      document.getElementById('modalContent').innerHTML = content;
-      document.getElementById('modalOverlay').classList.add('active');
-    }
-
+    function showModal(title, content) { document.getElementById('modalTitle').textContent = title; document.getElementById('modalContent').innerHTML = content; document.getElementById('modalOverlay').classList.add('active'); }
     function cleanup() { unsubscribes.forEach(function(u) { try { u(); } catch (e) {} }); unsubscribes = []; }
-
-    window.toggleSidebar = function() {
-      var s = document.getElementById('sidebar'), o = document.getElementById('sidebarOverlay');
-      if (s.classList.contains('mobile-open')) { s.classList.remove('mobile-open'); o.classList.remove('active'); document.body.style.overflow = ''; }
-      else { s.classList.add('mobile-open'); o.classList.add('active'); document.body.style.overflow = 'hidden'; }
-    };
-
-    window.closeSidebar = function() {
-      document.getElementById('sidebar').classList.remove('mobile-open');
-      document.getElementById('sidebarOverlay').classList.remove('active');
-      document.body.style.overflow = '';
-    };
-
+    window.toggleSidebar = function() { var s = document.getElementById('sidebar'), o = document.getElementById('sidebarOverlay'); if (s.classList.contains('mobile-open')) { s.classList.remove('mobile-open'); o.classList.remove('active'); document.body.style.overflow = ''; } else { s.classList.add('mobile-open'); o.classList.add('active'); document.body.style.overflow = 'hidden'; } };
+    window.closeSidebar = function() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('active'); document.body.style.overflow = ''; };
     document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { hideModal(); closeSidebar(); } });
-
     function isAdmin() { return userData && (userData.role === 'admin' || userData.role === 'super_admin'); }
+
+    // ============================================
+    // FIXED: Proper PIN hashing (matches kiosk settings & inventory page)
+    // ============================================
+    async function hashPin(pin, adminId) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(pin + '_admin_salt_' + adminId + '_secure_hash_2024');
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+    }
 
     async function verifyPin(pin, requiredRole) {
       if (!pin || pin.length < 4) return false;
-      if (requiredRole === 'admin') return adminPins.has(pin);
-      if (requiredRole === 'attendant') {
-        if (userData && pin === userData.attendantPin) return true;
-        if (adminPins.has(pin)) return true;
-        return false;
-      }
-      if (adminPins.has(pin)) return true;
-      if (userData && pin === userData.attendantPin) return true;
-      return false;
-    }
-
-    async function loadAdminPins() {
+      
+      // 1. Check admin_pins collection (synced from kiosk settings)
       try {
-        var snap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['admin', 'super_admin']), where('status', '==', 'active')));
-        adminPins.clear();
-        snap.forEach(function(d) { var data = d.data(); if (data.adminPin) adminPins.add(data.adminPin); if (data.attendantPin) adminPins.add(data.attendantPin); });
-      } catch (e) {}
+        const pinsQuery = query(collection(db, 'admin_pins'), where('isActive', '==', true));
+        const pinsSnap = await getDocs(pinsQuery);
+        for (const docSnap of pinsSnap.docs) {
+          const data = docSnap.data();
+          if (!data.pinHash) continue;
+          const inputHash = await hashPin(pin, data.adminId);
+          if (inputHash === data.pinHash) {
+            if (docSnap.id !== '_master_fallback') {
+              updateDoc(doc(db, 'admin_pins', docSnap.id), { lastUsedAt: serverTimestamp(), lastUsedFor: 'store_action', lastUsedBy: currentUser?.uid || 'unknown' }).catch(function(){});
+            }
+            return true;
+          }
+        }
+      } catch (e) { console.warn('admin_pins check failed:', e.message); }
+      
+      // 2. Check master fallback from system_settings
+      try {
+        const kioskSnap = await getDoc(doc(db, 'system_settings', 'kiosk'));
+        if (kioskSnap.exists()) {
+          const masterHash = kioskSnap.data().masterFallbackPinHash;
+          if (masterHash) {
+            const inputHash = await hashPin(pin, 'system');
+            if (inputHash === masterHash) return true;
+          }
+        }
+      } catch (e) { console.warn('master fallback check failed:', e.message); }
+      
+      // 3. Check attendant's own hashed PIN
+      if (requiredRole === 'attendant' && userData && userData.attendantPinHash) {
+        try { const inputHash = await hashPin(pin, currentUser.uid); if (inputHash === userData.attendantPinHash) return true; } catch (e) {}
+      }
+      
+      // 4. Legacy fallback: plain text attendant PIN
+      if (requiredRole === 'attendant' && userData && pin === userData.attendantPin) return true;
+      
+      return false;
     }
 
     function showPinModal(title, action, onSuccess, requiredRole) {
       requiredRole = requiredRole || 'attendant';
-      showModal(title,
-        '<p style="text-align: center; margin-bottom: 20px;">Enter your PIN to ' + action + '</p>' +
-        '<p style="text-align:center;font-size:0.7rem;color:var(--gray);margin-bottom:10px;">' + (requiredRole === 'admin' ? '🔒 Admin authorization required' : '🔑 Attendant or Admin PIN accepted') + '</p>' +
-        '<div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div>' +
-        '<button class="btn btn-primary" id="verifyPinBtn" style="width: 100%;">Verify</button>'
-      );
-      var pin1El = document.getElementById('pin1');
-      if (pin1El) pin1El.focus();
+      showModal(title, '<p style="text-align: center; margin-bottom: 20px;">Enter your PIN to ' + action + '</p><p style="text-align:center;font-size:0.7rem;color:var(--gray);margin-bottom:10px;">' + (requiredRole === 'admin' ? '🔒 Admin authorization required' : '🔑 Attendant or Admin PIN accepted') + '</p><div class="pin-input-container"><input type="password" maxlength="1" class="pin-input" id="pin1"><input type="password" maxlength="1" class="pin-input" id="pin2"><input type="password" maxlength="1" class="pin-input" id="pin3"><input type="password" maxlength="1" class="pin-input" id="pin4"></div><button class="btn btn-primary" id="verifyPinBtn" style="width: 100%;">Verify</button>');
+      var pin1El = document.getElementById('pin1'); if (pin1El) pin1El.focus();
       document.querySelectorAll('#modalOverlay .pin-input').forEach(function(inp, i, arr) { inp.addEventListener('input', function(e) { if (e.target.value && i < arr.length - 1) arr[i + 1].focus(); }); });
       var verifyBtn = document.getElementById('verifyPinBtn');
-      if (verifyBtn) {
-        verifyBtn.onclick = async function() {
-          var pin = '';
-          for (var i = 1; i <= 4; i++) { var el = document.getElementById('pin' + i); pin += el ? el.value : ''; }
-          var isValid = await verifyPin(pin, requiredRole);
-          if (isValid) { hideModal(); await logAudit('pin_verified', 'PIN verified for: ' + action, { requiredRole: requiredRole }); onSuccess(); }
-          else { showToast('Invalid PIN. Please try again.', 'error'); await logAudit('pin_failed', 'Failed PIN attempt for: ' + action, { requiredRole: requiredRole }); }
-        };
-      }
+      if (verifyBtn) { verifyBtn.onclick = async function() { var pin = ''; for (var i = 1; i <= 4; i++) { var el = document.getElementById('pin' + i); pin += el ? el.value : ''; } var isValid = await verifyPin(pin, requiredRole); if (isValid) { hideModal(); await logAudit('pin_verified', 'PIN verified for: ' + action, { requiredRole: requiredRole }); onSuccess(); } else { showToast('Invalid PIN. Please try again.', 'error'); await logAudit('pin_failed', 'Failed PIN attempt for: ' + action, { requiredRole: requiredRole }); } }; }
     }
 
-    window.revealStoreValue = function() {
-      if (storeValueRevealed) return;
-      if (isAdmin()) { storeValueRevealed = true; updateStoreValueDisplay(); logAudit('reveal_store_value', 'Admin auto-revealed store value'); return; }
-      showPinModal('Unlock Store Value', 'view total store value', function() { storeValueRevealed = true; updateStoreValueDisplay(); showToast('Store value unlocked', 'success'); }, 'admin');
-    };
+    window.revealStoreValue = function() { if (storeValueRevealed) return; if (isAdmin()) { storeValueRevealed = true; updateStoreValueDisplay(); logAudit('reveal_store_value', 'Admin auto-revealed store value'); return; } showPinModal('Unlock Store Value', 'view total store value', function() { storeValueRevealed = true; updateStoreValueDisplay(); showToast('Store value unlocked', 'success'); }, 'admin'); };
 
-    function buildSidebar() {
-      var nav = document.getElementById('sidebarNav');
-      if (!nav) return;
-      var dashboardLink = isAdmin() ? 'admin-dashboard.html' : 'attendant-dashboard.html';
-      var html = '<div class="nav-section"><div class="nav-section-title">OVERVIEW</div>';
-      html += '<button class="nav-item" onclick="navigateTo(\'' + dashboardLink + '\')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>';
-      html += (isAdmin() ? '<button class="nav-item" onclick="navigateTo(\'approvals.html\')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>' : '');
-      html += '</div><div class="nav-section"><div class="nav-section-title">OPERATIONS</div>';
-      html += '<button class="nav-item" onclick="navigateTo(\'inventory.html\')"><i class="fas fa-box"></i><span>Inventory</span></button>';
-      html += '<button class="nav-item active"><i class="fas fa-store"></i><span>Store</span></button>';
-      html += '<button class="nav-item" onclick="navigateTo(\'purchases.html\')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>';
-      html += '<button class="nav-item" onclick="navigateTo(\'customers.html\')"><i class="fas fa-users"></i><span>Customers</span></button>';
-      html += '<button class="nav-item" onclick="navigateTo(\'sales.html\')"><i class="fas fa-cash-register"></i><span>Sales</span></button>';
-      html += '</div>';
-      if (isAdmin()) {
-        html += '<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>';
-        html += '<button class="nav-item" onclick="navigateTo(\'staff-management.html\')"><i class="fas fa-users-cog"></i><span>Staff</span></button>';
-        html += '<button class="nav-item" onclick="navigateTo(\'finance.html\')"><i class="fas fa-chart-line"></i><span>Finance</span></button>';
-        html += '<button class="nav-item" onclick="navigateTo(\'audit.html\')"><i class="fas fa-history"></i><span>Audit</span></button>';
-        html += '</div>';
-      }
-      html += '<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>';
-      nav.innerHTML = html;
-      var logoutBtn = document.getElementById('logoutBtn');
-      if (logoutBtn) { logoutBtn.addEventListener('click', async function() { try { await logAudit('logout', 'User logged out from store'); } catch (e) {} await signOut(auth); window.location.href = 'auth.html'; }); }
-    }
+    function buildSidebar() { var nav = document.getElementById('sidebarNav'); if (!nav) return; var dashboardLink = isAdmin() ? 'admin-dashboard.html' : 'attendant-dashboard.html'; var html = '<div class="nav-section"><div class="nav-section-title">OVERVIEW</div><button class="nav-item" onclick="navigateTo(\'' + dashboardLink + '\')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>' + (isAdmin() ? '<button class="nav-item" onclick="navigateTo(\'approvals.html\')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>' : '') + '</div><div class="nav-section"><div class="nav-section-title">OPERATIONS</div><button class="nav-item" onclick="navigateTo(\'inventory.html\')"><i class="fas fa-box"></i><span>Inventory</span></button><button class="nav-item active"><i class="fas fa-store"></i><span>Store</span></button><button class="nav-item" onclick="navigateTo(\'purchases.html\')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button><button class="nav-item" onclick="navigateTo(\'customers.html\')"><i class="fas fa-users"></i><span>Customers</span></button><button class="nav-item" onclick="navigateTo(\'sales.html\')"><i class="fas fa-cash-register"></i><span>Sales</span></button></div>' + (isAdmin() ? '<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div><button class="nav-item" onclick="navigateTo(\'staff-management.html\')"><i class="fas fa-users-cog"></i><span>Staff</span></button><button class="nav-item" onclick="navigateTo(\'finance.html\')"><i class="fas fa-chart-line"></i><span>Finance</span></button><button class="nav-item" onclick="navigateTo(\'audit.html\')"><i class="fas fa-history"></i><span>Audit</span></button></div>' : '') + '<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>'; nav.innerHTML = html; var logoutBtn = document.getElementById('logoutBtn'); if (logoutBtn) { logoutBtn.addEventListener('click', async function() { try { await logAudit('logout', 'User logged out from store'); } catch (e) {} await signOut(auth); window.location.href = 'auth.html'; }); } }
 
-    async function loadCategories() {
-      try {
-        var snap = await getDocs(collection(db, 'categories'));
-        if (!snap.empty) { categories = snap.docs.map(function(d) { return d.data().name; }); }
-        else { categories = ['rhinestones', 'beads', 'bridal', 'paperstones', 'other']; await Promise.all(categories.map(function(c) { return setDoc(doc(db, 'categories', c), { name: c, createdAt: serverTimestamp() }); })); }
-      } catch (e) { categories = ['rhinestones', 'beads', 'bridal', 'paperstones', 'other']; }
-      updateCategoryDropdowns();
-    }
+    async function loadCategories() { try { var snap = await getDocs(collection(db, 'categories')); if (!snap.empty) { categories = snap.docs.map(function(d) { return d.data().name; }); } else { categories = ['rhinestones', 'beads', 'bridal', 'paperstones', 'other']; await Promise.all(categories.map(function(c) { return setDoc(doc(db, 'categories', c), { name: c, createdAt: serverTimestamp() }); })); } } catch (e) { categories = ['rhinestones', 'beads', 'bridal', 'paperstones', 'other']; } updateCategoryDropdowns(); }
+    function updateCategoryDropdowns() { var filterEl = document.getElementById('categoryFilter'); if (filterEl) { filterEl.innerHTML = '<option value="all">All Categories</option>' + categories.map(function(c) { return '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>'; }).join(''); } ['storeItemCategory', 's2iNewCategory'].forEach(function(id) { var el = document.getElementById(id); if (el) { el.innerHTML = categories.map(function(c) { return '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>'; }).join(''); } }); }
+    window.addCategoryFromModal = async function() { var nameInput = document.getElementById('newCategoryInput'); var name = nameInput ? nameInput.value.trim().toLowerCase() : ''; if (!name) { showToast('Enter category name', 'error'); return; } if (categories.indexOf(name) !== -1) { showToast('Already exists', 'error'); return; } try { await setDoc(doc(db, 'categories', name), { name: name, createdAt: serverTimestamp() }); categories.push(name); updateCategoryDropdowns(); showToast('"' + name + '" added', 'success'); hideModal(); await logAudit('add_category', 'Added category: ' + name); } catch (e) { showToast('Failed: ' + e.message, 'error'); } };
+    window.showAddCategoryModal = function() { showModal('Add Category', '<div class="form-group"><label>Category Name *</label><input class="form-control" id="newCategoryInput" placeholder="e.g., Accessories"></div><div style="display: flex; gap: 10px;"><button class="btn btn-primary" onclick="addCategoryFromModal()"><i class="fas fa-plus"></i> Add</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'); };
 
-    function updateCategoryDropdowns() {
-      var filterEl = document.getElementById('categoryFilter');
-      if (filterEl) { filterEl.innerHTML = '<option value="all">All Categories</option>' + categories.map(function(c) { return '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>'; }).join(''); }
-      ['storeItemCategory', 's2iNewCategory'].forEach(function(id) { var el = document.getElementById(id); if (el) { el.innerHTML = categories.map(function(c) { return '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>'; }).join(''); } });
-    }
-
-    window.addCategoryFromModal = async function() {
-      var nameInput = document.getElementById('newCategoryInput');
-      var name = nameInput ? nameInput.value.trim().toLowerCase() : '';
-      if (!name) { showToast('Enter category name', 'error'); return; }
-      if (categories.indexOf(name) !== -1) { showToast('Already exists', 'error'); return; }
-      try { await setDoc(doc(db, 'categories', name), { name: name, createdAt: serverTimestamp() }); categories.push(name); updateCategoryDropdowns(); showToast('"' + name + '" added', 'success'); hideModal(); await logAudit('add_category', 'Added category: ' + name); }
-      catch (e) { showToast('Failed: ' + e.message, 'error'); }
-    };
-
-    window.showAddCategoryModal = function() {
-      showModal('Add Category',
-        '<div class="form-group"><label>Category Name *</label><input class="form-control" id="newCategoryInput" placeholder="e.g., Accessories"></div>' +
-        '<div style="display: flex; gap: 10px;"><button class="btn btn-primary" onclick="addCategoryFromModal()"><i class="fas fa-plus"></i> Add</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'
-      );
-    };
-
-    function getStoreItemStatus(item) {
-      if ((item.unitQty || 0) === 0) return 'out_of_stock';
-      if ((item.unitQty || 0) <= (item.threshold || 5)) return 'low';
-      return 'available';
-    }
-
-    function updateStoreValueDisplay() {
-      var card = document.getElementById('totalStoreValueCard'), valEl = document.getElementById('totalStoreValue');
-      if (storeValueRevealed && card && valEl) {
-        card.classList.remove('value-locked');
-        var totalValue = storeItems.reduce(function(s, i) { return s + (i.unitQty || 0) * (i.unitCost || 0); }, 0);
-        valEl.textContent = formatCurrency(totalValue); valEl.style.filter = 'none';
-        var hint = card.querySelector('.value-hint'); if (hint) hint.style.display = 'none';
-      }
-    }
+    function getStoreItemStatus(item) { if ((item.unitQty || 0) === 0) return 'out_of_stock'; if ((item.unitQty || 0) <= (item.threshold || 5)) return 'low'; return 'available'; }
+    function updateStoreValueDisplay() { var card = document.getElementById('totalStoreValueCard'), valEl = document.getElementById('totalStoreValue'); if (storeValueRevealed && card && valEl) { card.classList.remove('value-locked'); var totalValue = storeItems.reduce(function(s, i) { return s + (i.unitQty || 0) * (i.unitCost || 0); }, 0); valEl.textContent = formatCurrency(totalValue); valEl.style.filter = 'none'; var hint = card.querySelector('.value-hint'); if (hint) hint.style.display = 'none'; } }
 
     function renderStoreStock() {
       var search = (document.getElementById('searchInput') && document.getElementById('searchInput').value || '').toLowerCase();
@@ -744,7 +504,6 @@
       if (search) filtered = filtered.filter(function(i) { return (i.name || '').toLowerCase().indexOf(search) !== -1; });
       if (cat !== 'all') filtered = filtered.filter(function(i) { return (i.category || '').toLowerCase() === cat.toLowerCase(); });
       if (statusFilter !== 'all') filtered = filtered.filter(function(i) { return getStoreItemStatus(i) === statusFilter; });
-
       var uniqueCategories = new Set(storeItems.map(function(i) { return i.category || 'other'; }));
       document.getElementById('totalStoreItems').textContent = storeItems.length;
       document.getElementById('totalCategories').textContent = uniqueCategories.size + ' categories';
@@ -755,35 +514,15 @@
       var pendingPieces = incomingItems.filter(function(r) { return r.status === 'pending'; }).reduce(function(s, r) { return s + (r.totalPieces || 0); }, 0);
       document.getElementById('pendingPieces').textContent = pendingPieces + ' pieces waiting';
       updateStoreValueDisplay();
-
       var lowCount = storeItems.filter(function(i) { return ['low', 'out_of_stock'].indexOf(getStoreItemStatus(i)) !== -1; }).length;
-      var banner = document.getElementById('storeLowBanner');
-      if (banner) { banner.style.display = lowCount > 0 ? 'flex' : 'none'; if (lowCount > 0) document.getElementById('storeLowMsg').textContent = lowCount + ' item(s) running low. Restock from inventory or purchase more.'; }
-
+      var banner = document.getElementById('storeLowBanner'); if (banner) { banner.style.display = lowCount > 0 ? 'flex' : 'none'; if (lowCount > 0) document.getElementById('storeLowMsg').textContent = lowCount + ' item(s) running low.'; }
       var tbody = document.getElementById('storeTable');
-      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-store"></i><p>No store items found. Add stock to get started.</p></div></td></tr>'; return; }
-
-      tbody.innerHTML = filtered.map(function(item) {
-        var st = getStoreItemStatus(item), sb = st === 'available' ? 'success' : st === 'low' ? 'warning' : 'danger';
-        var totalValue = (item.unitQty || 0) * (item.unitCost || 0);
-        var linkedDisplay = item.linkedInventoryId ? '<span class="badge badge-info" title="' + (item.linkedInventoryName || 'Linked Item') + '">🔗 ' + (item.linkedInventoryName || 'Linked') + '</span>' : '<span style="color:var(--gray);font-size:0.7rem;">—</span>';
-        return '<tr><td><strong>' + (item.name || '-') + '</strong></td><td><span class="badge badge-purple">' + (item.category || '-') + '</span></td><td><span class="badge badge-info">' + (item.inventoryItemType || 'general').replace(/_/g, ' ') + '</span></td><td>' + linkedDisplay + '</td><td style="font-weight: 600;">' + (item.unitQty || 0).toLocaleString() + '</td><td>' + formatCurrency(item.unitCost || 0) + '</td><td style="font-weight: 600;">' + formatCurrency(totalValue) + '</td><td><span class="badge badge-' + sb + '">' + st.replace(/_/g, ' ') + '</span></td><td><div style="display: flex; gap: 4px; flex-wrap: wrap;"><button class="btn btn-sm btn-success" onclick="openRestockModal(\'' + item.id + '\')"><i class="fas fa-boxes"></i> Restock</button><button class="btn btn-sm btn-outline" onclick="openEditStoreItem(\'' + item.id + '\')"><i class="fas fa-edit"></i></button>' + (isAdmin() ? '<button class="btn btn-sm btn-danger" onclick="deleteStoreItem(\'' + item.id + '\')"><i class="fas fa-trash"></i></button>' : '') + '</div></td></tr>';
-      }).join('');
+      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-store"></i><p>No store items found.</p></div></td></tr>'; return; }
+      tbody.innerHTML = filtered.map(function(item) { var st = getStoreItemStatus(item), sb = st === 'available' ? 'success' : st === 'low' ? 'warning' : 'danger'; var totalValue = (item.unitQty || 0) * (item.unitCost || 0); var linkedDisplay = item.linkedInventoryId ? '<span class="badge badge-info">🔗 ' + (item.linkedInventoryName || 'Linked') + '</span>' : '<span style="color:var(--gray);font-size:0.7rem;">—</span>'; return '<tr><td><strong>' + (item.name || '-') + '</strong></td><td><span class="badge badge-purple">' + (item.category || '-') + '</span></td><td><span class="badge badge-info">' + (item.inventoryItemType || 'general').replace(/_/g, ' ') + '</span></td><td>' + linkedDisplay + '</td><td style="font-weight:600;">' + (item.unitQty || 0).toLocaleString() + '</td><td>' + formatCurrency(item.unitCost || 0) + '</td><td style="font-weight:600;">' + formatCurrency(totalValue) + '</td><td><span class="badge badge-' + sb + '">' + st.replace(/_/g, ' ') + '</span></td><td><div style="display:flex;gap:4px;flex-wrap:wrap;"><button class="btn btn-sm btn-success" onclick="openRestockModal(\'' + item.id + '\')"><i class="fas fa-boxes"></i> Restock</button><button class="btn btn-sm btn-outline" onclick="openEditStoreItem(\'' + item.id + '\')"><i class="fas fa-edit"></i></button>' + (isAdmin() ? '<button class="btn btn-sm btn-danger" onclick="deleteStoreItem(\'' + item.id + '\')"><i class="fas fa-trash"></i></button>' : '') + '</div></td></tr>'; }).join('');
     }
 
-    function getMovementLabel(type) {
-      var labels = { 'wholesale_sale': '🏷️ Wholesale Sale', 'inventory_to_store_sale': '📦 Borrowed from Inventory', 'return_restock': '↩️ Return Restock', 'return_damaged': '⚠️ Return Damaged', 'incoming_transfer': '📥 Incoming Transfer', 'sale': '💰 Regular Sale' };
-      return labels[type] || type.replace(/_/g, ' ');
-    }
-
-    function getMovementBadge(type) {
-      if (type === 'return_restock') return 'badge-success';
-      if (type === 'return_damaged') return 'badge-danger';
-      if (type === 'inventory_to_store_sale') return 'badge-warning';
-      if (type === 'wholesale_sale') return 'badge-info';
-      if (type === 'incoming_transfer') return 'badge-purple';
-      return 'badge-info';
-    }
+    function getMovementLabel(type) { var labels = { 'wholesale_sale': '🏷️ Wholesale Sale', 'inventory_to_store_sale': '📦 Borrowed from Inventory', 'return_restock': '↩️ Return Restock', 'return_damaged': '⚠️ Return Damaged', 'incoming_transfer': '📥 Incoming Transfer', 'sale': '💰 Regular Sale' }; return labels[type] || type.replace(/_/g, ' '); }
+    function getMovementBadge(type) { if (type === 'return_restock') return 'badge-success'; if (type === 'return_damaged') return 'badge-danger'; if (type === 'inventory_to_store_sale') return 'badge-warning'; if (type === 'wholesale_sale') return 'badge-info'; if (type === 'incoming_transfer') return 'badge-purple'; return 'badge-info'; }
 
     function renderStockMovements() {
       var tbody = document.getElementById('movementsTable');
@@ -794,13 +533,7 @@
       if (typeFilter !== 'all') filtered = filtered.filter(function(m) { return m.movementType === typeFilter; });
       filtered.sort(function(a, b) { return (b.performedAt && b.performedAt.seconds || 0) - (a.performedAt && a.performedAt.seconds || 0); });
       if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-exchange-alt"></i><p>No stock movements recorded yet</p></div></td></tr>'; return; }
-      tbody.innerHTML = filtered.map(function(m) {
-        var changeText = '';
-        if (m.change) { var parts = []; if (m.change.unit) parts.push('Units: ' + (m.change.unit > 0 ? '+' : '') + m.change.unit); if (m.change.half) parts.push('½: ' + (m.change.half > 0 ? '+' : '') + m.change.half); if (m.change.quarter) parts.push('¼: ' + (m.change.quarter > 0 ? '+' : '') + m.change.quarter); changeText = parts.join(', ') || '-'; }
-        var conditionBadge = m.condition ? ' <span class="badge badge-' + (m.condition === 'resellable' ? 'success' : 'danger') + '" style="font-size:0.6rem;">' + m.condition + '</span>' : '';
-        var rowClass = (m.movementType === 'inventory_to_store_sale') ? 'row-borrow' : (m.movementType && m.movementType.indexOf('return') !== -1 ? 'row-return' : '');
-        return '<tr class="' + rowClass + '"><td>' + formatDateTime(m.performedAt) + '</td><td><strong>' + (m.itemName || '-') + '</strong></td><td><span class="badge ' + getMovementBadge(m.movementType) + '">' + getMovementLabel(m.movementType) + '</span></td><td style="font-size:0.8rem;">' + changeText + '</td><td style="font-size:0.8rem;">' + (m.reference || '-') + '</td><td>' + (m.performedByName || '-') + '</td><td>' + (conditionBadge || '<span class="badge badge-info">—</span>') + '</td></tr>';
-      }).join('');
+      tbody.innerHTML = filtered.map(function(m) { var changeText = ''; if (m.change) { var parts = []; if (m.change.unit) parts.push('Units: ' + (m.change.unit > 0 ? '+' : '') + m.change.unit); if (m.change.half) parts.push('½: ' + (m.change.half > 0 ? '+' : '') + m.change.half); if (m.change.quarter) parts.push('¼: ' + (m.change.quarter > 0 ? '+' : '') + m.change.quarter); changeText = parts.join(', ') || '-'; } var conditionBadge = m.condition ? ' <span class="badge badge-' + (m.condition === 'resellable' ? 'success' : 'danger') + '" style="font-size:0.6rem;">' + m.condition + '</span>' : ''; var rowClass = (m.movementType === 'inventory_to_store_sale') ? 'row-borrow' : (m.movementType && m.movementType.indexOf('return') !== -1 ? 'row-return' : ''); return '<tr class="' + rowClass + '"><td>' + formatDateTime(m.performedAt) + '</td><td><strong>' + (m.itemName || '-') + '</strong></td><td><span class="badge ' + getMovementBadge(m.movementType) + '">' + getMovementLabel(m.movementType) + '</span></td><td style="font-size:0.8rem;">' + changeText + '</td><td style="font-size:0.8rem;">' + (m.reference || '-') + '</td><td>' + (m.performedByName || '-') + '</td><td>' + (conditionBadge || '<span class="badge badge-info">—</span>') + '</td></tr>'; }).join('');
     }
 
     function renderIncomingInventory() {
@@ -808,639 +541,116 @@
       document.getElementById('pendingIncoming').textContent = pending.length;
       var pendingPieces = pending.reduce(function(s, r) { return s + (r.totalPieces || 0); }, 0);
       document.getElementById('pendingPieces').textContent = pendingPieces + ' pieces waiting';
-
       var generalItems = pending.filter(function(i) { return i.inventoryItemType === 'general'; });
       var fashionItems = pending.filter(function(i) { return i.inventoryItemType === 'fashion'; });
       var packItems = pending.filter(function(i) { return i.inventoryItemType === 'pack_bundle'; });
       var measuredItems = pending.filter(function(i) { return i.inventoryItemType === 'measured'; });
-
-      document.getElementById('incomingGeneralTable').innerHTML = generalItems.length ?
-        generalItems.map(function(i) { return '<tr><td><strong>' + (i.storeItemName || '-') + '</strong></td><td>' + (i.totalPieces || 0) + '</td><td>' + (i.targetInventoryName || 'New: ' + (i.targetInventoryName || i.storeItemName)) + '</td><td>' + formatCurrency(i.prices && i.prices.unit || 0) + '</td><td>' + (i.requestedByName || '-') + '</td><td>' + formatDate(i.createdAt) + '</td><td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer(\'' + i.id + '\')"><i class="fas fa-check"></i> Confirm</button></td></tr>'; }).join('') :
-        '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-cube"></i><p>No pending general items</p></div></td></tr>';
-
-      document.getElementById('incomingFashionTable').innerHTML = fashionItems.length ?
-        fashionItems.map(function(i) { return '<tr><td><strong>' + (i.storeItemName || '-') + '</strong></td><td>' + (i.totalPieces || 0) + '</td><td>' + (i.allocation && i.allocation.unit || 0) + '</td><td>' + (i.allocation && i.allocation.half || 0) + '</td><td>' + (i.allocation && i.allocation.quarter || 0) + '</td><td>' + (i.targetInventoryName || 'New: ' + (i.storeItemName || '-')) + '</td><td style="font-size:0.75rem;">' + formatCurrency(i.prices && i.prices.unit || 0) + ' / ' + formatCurrency(i.prices && i.prices.half || 0) + ' / ' + formatCurrency(i.prices && i.prices.quarter || 0) + '</td><td>' + (i.requestedByName || '-') + '</td><td>' + formatDate(i.createdAt) + '</td><td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer(\'' + i.id + '\')"><i class="fas fa-check"></i> Confirm</button></td></tr>'; }).join('') :
-        '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-tshirt"></i><p>No pending fashion items</p></div></td></tr>';
-
-      document.getElementById('incomingPackBundleTable').innerHTML = packItems.length ?
-        packItems.map(function(i) { return '<tr><td><strong>' + (i.storeItemName || '-') + '</strong></td><td>' + (i.totalPieces || 0) + '</td><td>' + (i.allocation && i.allocation.unit || 0) + '</td><td>' + (i.allocation && i.allocation.pack || 0) + '</td><td>' + (i.packSize || 12) + '</td><td>' + (i.targetInventoryName || 'New: ' + (i.storeItemName || '-')) + '</td><td style="font-size:0.75rem;">' + formatCurrency(i.prices && i.prices.unit || 0) + ' / ' + formatCurrency(i.prices && i.prices.pack || 0) + '</td><td>' + (i.requestedByName || '-') + '</td><td>' + formatDate(i.createdAt) + '</td><td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer(\'' + i.id + '\')"><i class="fas fa-check"></i> Confirm</button></td></tr>'; }).join('') :
-        '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr>';
-
-      document.getElementById('incomingMeasuredTable').innerHTML = measuredItems.length ?
-        measuredItems.map(function(i) {
-          var subType = i.measuredSubType || 'yard';
-          var yardsQty = (i.allocation && i.allocation.unit) || 0;
-          var bundleQty = (i.allocation && i.allocation.bundle) || 0;
-          var bundleSize = i.bundleSize || 50;
-          return '<tr><td><strong>' + (i.storeItemName || '-') + '</strong></td><td>' + (i.totalPieces || 0) + '</td><td>' + yardsQty + '</td><td>' + bundleQty + '</td><td>' + bundleSize + '</td><td>' + (i.targetInventoryName || 'New: ' + (i.storeItemName || '-')) + '</td><td style="font-size:0.75rem;">' + formatCurrency(i.prices && i.prices.unit || 0) + ' / ' + formatCurrency(i.prices && i.prices.bundle || 0) + '</td><td>' + (i.requestedByName || '-') + '</td><td>' + formatDate(i.createdAt) + '</td><td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer(\'' + i.id + '\')"><i class="fas fa-check"></i> Confirm</button></td></tr>';
-        }).join('') :
-        '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-ruler"></i><p>No pending measured items</p></div></td></tr>';
+      document.getElementById('incomingGeneralTable').innerHTML = generalItems.length ? generalItems.map(function(i) { return '<tr><td><strong>' + (i.storeItemName || '-') + '</strong></td><td>' + (i.totalPieces || 0) + '</td><td>' + (i.targetInventoryName || 'New: ' + (i.storeItemName || '-')) + '</td><td>' + formatCurrency(i.prices && i.prices.unit || 0) + '</td><td>' + (i.requestedByName || '-') + '</td><td>' + formatDate(i.createdAt) + '</td><td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer(\'' + i.id + '\')"><i class="fas fa-check"></i> Confirm</button></td></tr>'; }).join('') : '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-cube"></i><p>No pending general items</p></div></td></tr>';
+      document.getElementById('incomingFashionTable').innerHTML = fashionItems.length ? fashionItems.map(function(i) { return '<tr><td><strong>' + (i.storeItemName || '-') + '</strong></td><td>' + (i.totalPieces || 0) + '</td><td>' + (i.allocation && i.allocation.unit || 0) + '</td><td>' + (i.allocation && i.allocation.half || 0) + '</td><td>' + (i.allocation && i.allocation.quarter || 0) + '</td><td>' + (i.targetInventoryName || 'New: ' + (i.storeItemName || '-')) + '</td><td style="font-size:0.75rem;">' + formatCurrency(i.prices && i.prices.unit || 0) + ' / ' + formatCurrency(i.prices && i.prices.half || 0) + ' / ' + formatCurrency(i.prices && i.prices.quarter || 0) + '</td><td>' + (i.requestedByName || '-') + '</td><td>' + formatDate(i.createdAt) + '</td><td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer(\'' + i.id + '\')"><i class="fas fa-check"></i> Confirm</button></td></tr>'; }).join('') : '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-tshirt"></i><p>No pending fashion items</p></div></td></tr>';
+      document.getElementById('incomingPackBundleTable').innerHTML = packItems.length ? packItems.map(function(i) { return '<tr><td><strong>' + (i.storeItemName || '-') + '</strong></td><td>' + (i.totalPieces || 0) + '</td><td>' + (i.allocation && i.allocation.unit || 0) + '</td><td>' + (i.allocation && i.allocation.pack || 0) + '</td><td>' + (i.packSize || 12) + '</td><td>' + (i.targetInventoryName || 'New: ' + (i.storeItemName || '-')) + '</td><td style="font-size:0.75rem;">' + formatCurrency(i.prices && i.prices.unit || 0) + ' / ' + formatCurrency(i.prices && i.prices.pack || 0) + '</td><td>' + (i.requestedByName || '-') + '</td><td>' + formatDate(i.createdAt) + '</td><td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer(\'' + i.id + '\')"><i class="fas fa-check"></i> Confirm</button></td></tr>'; }).join('') : '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-box"></i><p>No pending pack/bundle items</p></div></td></tr>';
+      document.getElementById('incomingMeasuredTable').innerHTML = measuredItems.length ? measuredItems.map(function(i) { return '<tr><td><strong>' + (i.storeItemName || '-') + '</strong></td><td>' + (i.totalPieces || 0) + '</td><td>' + (i.allocation && i.allocation.unit || 0) + '</td><td>' + (i.allocation && i.allocation.bundle || 0) + '</td><td>' + (i.bundleSize || 50) + '</td><td>' + (i.targetInventoryName || 'New: ' + (i.storeItemName || '-')) + '</td><td style="font-size:0.75rem;">' + formatCurrency(i.prices && i.prices.unit || 0) + ' / ' + formatCurrency(i.prices && i.prices.bundle || 0) + '</td><td>' + (i.requestedByName || '-') + '</td><td>' + formatDate(i.createdAt) + '</td><td><button class="btn btn-sm btn-success" onclick="confirmIncomingTransfer(\'' + i.id + '\')"><i class="fas fa-check"></i> Confirm</button></td></tr>'; }).join('') : '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-ruler"></i><p>No pending measured items</p></div></td></tr>';
     }
 
-    function renderWholesaleHistory() {
-      var tbody = document.getElementById('wholesaleHistoryTable');
-      if (!wholesaleSales.length) { tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><i class="fas fa-history"></i><p>No wholesale sales yet. Wholesale sales are processed from the Sales page.</p></div></td></tr>'; return; }
-      tbody.innerHTML = wholesaleSales.map(function(s) {
-        var packSize = s.wholesalePackSize || 50;
-        var totalPieces = s.totalPieces || (s.items ? s.items.reduce(function(sum, i) { return sum + (i.pieces || 0); }, 0) : 0);
-        var exceededBadge = s.exceededPackSize ? ' <span class="badge badge-warning">+' + s.extraPieces + ' extra</span>' : '';
-        var borrowedBadge = s._borrowedItems && s._borrowedItems.length > 0 ? ' <span class="badge badge-borrow">📦 ' + s._borrowedItems.length + ' borrowed</span>' : '';
-        return '<tr><td>' + formatDate(s.createdAt) + '</td><td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td><td>' + (s.customerName || 'Walk-in') + '</td><td><span class="badge badge-purple">' + packSize + ' pcs</span></td><td>' + (s.items ? s.items.length : 0) + ' items</td><td style="font-weight: 600;">' + totalPieces + ' pcs' + exceededBadge + '</td><td><strong>' + formatCurrency(s.totalAmount) + '</strong></td><td><span class="badge badge-success">' + (s.paymentMethod || 'cash') + '</span></td><td>' + (borrowedBadge || '<span class="badge badge-success">None</span>') + '</td><td>' + (s.attendantName || '-') + '</td><td><button class="btn btn-sm btn-outline" onclick="viewWholesaleReceipt(\'' + s.id + '\')"><i class="fas fa-receipt"></i></button></td></tr>';
-      }).join('');
-    }
+    function renderWholesaleHistory() { var tbody = document.getElementById('wholesaleHistoryTable'); if (!wholesaleSales.length) { tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><i class="fas fa-history"></i><p>No wholesale sales yet.</p></div></td></tr>'; return; } tbody.innerHTML = wholesaleSales.map(function(s) { var packSize = s.wholesalePackSize || 50; var totalPieces = s.totalPieces || (s.items ? s.items.reduce(function(sum, i) { return sum + (i.pieces || 0); }, 0) : 0); var exceededBadge = s.exceededPackSize ? ' <span class="badge badge-warning">+' + s.extraPieces + ' extra</span>' : ''; var borrowedBadge = s._borrowedItems && s._borrowedItems.length > 0 ? ' <span class="badge badge-borrow">📦 ' + s._borrowedItems.length + ' borrowed</span>' : ''; return '<tr><td>' + formatDate(s.createdAt) + '</td><td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td><td>' + (s.customerName || 'Walk-in') + '</td><td><span class="badge badge-purple">' + packSize + ' pcs</span></td><td>' + (s.items ? s.items.length : 0) + ' items</td><td style="font-weight:600;">' + totalPieces + ' pcs' + exceededBadge + '</td><td><strong>' + formatCurrency(s.totalAmount) + '</strong></td><td><span class="badge badge-success">' + (s.paymentMethod || 'cash') + '</span></td><td>' + (borrowedBadge || '<span class="badge badge-success">None</span>') + '</td><td>' + (s.attendantName || '-') + '</td><td><button class="btn btn-sm btn-outline" onclick="viewWholesaleReceipt(\'' + s.id + '\')"><i class="fas fa-receipt"></i></button></td></tr>'; }).join(''); }
 
     // ============================================
-    // FIXED: confirmIncomingTransfer
+    // confirmIncomingTransfer
     // ============================================
-    window.confirmIncomingTransfer = function(incomingId) {
-      var inc = incomingItems.find(function(i) { return i.id === incomingId; });
-      if (!inc) return;
-      showPinModal('Confirm Transfer', 'add to live inventory from store', async function() {
-        try {
-          var batch = writeBatch(db);
-          // Deduct from store (store always deducts in units)
-          batch.update(doc(db, 'store_items', inc.storeItemId), {
-            unitQty: increment(-(inc.totalPieces || 0)),
-            updatedAt: serverTimestamp()
-          });
-          // Delete incoming record
-          batch.delete(doc(db, 'incoming_inventory', incomingId));
-
-          var inventoryRef = inc.targetInventoryId ? doc(db, 'stock_items', inc.targetInventoryId) : doc(collection(db, 'stock_items'));
-
-          if (!inc.targetInventoryId) {
-            var newItem = {
-              name: inc.targetInventoryName || inc.storeItemName,
-              category: inc.newInventoryCategory || inc.storeItemCategory || 'other',
-              itemType: inc.inventoryItemType,
-              unitQty: (inc.allocation && inc.allocation.unit) || 0,
-              halfQty: (inc.allocation && inc.allocation.half) || 0,
-              quarterQty: (inc.allocation && inc.allocation.quarter) || 0,
-              unitPrice: (inc.prices && inc.prices.unit) || 0,
-              halfPrice: (inc.prices && inc.prices.half) || 0,
-              quarterPrice: (inc.prices && inc.prices.quarter) || 0,
-              packSize: inc.packSize || 12,
-              packPrice: (inc.prices && inc.prices.pack) || 0,
-              packQty: (inc.allocation && inc.allocation.pack) || 0,
-              bundleSize: inc.bundleSize || 50,
-              bundlePrice: (inc.prices && inc.prices.bundle) || 0,
-              bundleQty: (inc.allocation && inc.allocation.bundle) || 0,
-              threshold: 10, status: 'available',
-              initialUnitQty: (inc.allocation && inc.allocation.unit) || 0,
-              initialHalfQty: (inc.allocation && inc.allocation.half) || 0,
-              initialQuarterQty: (inc.allocation && inc.allocation.quarter) || 0,
-              createdBy: currentUser ? currentUser.uid : '',
-              createdByName: userData ? (userData.fullName || 'Staff') : 'Staff',
-              createdAt: serverTimestamp(), updatedAt: serverTimestamp()
-            };
-            if (inc.inventoryItemType === 'measured') {
-              newItem.measuredSubType = inc.measuredSubType || 'yard';
-              newItem.measureUnit = newItem.measuredSubType;
-              if (inc.measuredSubType === 'yard') { newItem.yardQty = (inc.allocation && inc.allocation.unit) || 0; newItem.pricePerYard = (inc.prices && inc.prices.unit) || 0; }
-              else { newItem.bundleQty = (inc.allocation && inc.allocation.bundle) || 0; newItem.bundlePrice = (inc.prices && inc.prices.bundle) || 0; }
-            }
-            batch.set(inventoryRef, newItem);
-          } else {
-            var updates = { updatedAt: serverTimestamp() };
-            if (inc.allocation && inc.allocation.unit) updates.unitQty = increment(inc.allocation.unit);
-            if (inc.allocation && inc.allocation.half) updates.halfQty = increment(inc.allocation.half);
-            if (inc.allocation && inc.allocation.quarter) updates.quarterQty = increment(inc.allocation.quarter);
-            if (inc.allocation && inc.allocation.pack) updates.packQty = increment(inc.allocation.pack);
-            if (inc.allocation && inc.allocation.bundle) updates.bundleQty = increment(inc.allocation.bundle);
-            batch.update(inventoryRef, updates);
-          }
-
-          var movRef = doc(collection(db, 'stock_movements'));
-          batch.set(movRef, {
-            itemId: inc.targetInventoryId || inventoryRef.id,
-            itemName: inc.targetInventoryName || inc.storeItemName,
-            movementType: 'incoming_transfer',
-            change: { unit: (inc.allocation && inc.allocation.unit) || 0, half: (inc.allocation && inc.allocation.half) || 0, quarter: (inc.allocation && inc.allocation.quarter) || 0 },
-            reference: 'Incoming Transfer - ' + inc.storeItemName + ' | ' + inc.totalPieces + ' units transferred',
-            performedBy: currentUser ? currentUser.uid : 'unknown',
-            performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
-            performedAt: serverTimestamp()
-          });
-
-          await batch.commit();
-          await logAudit('confirm_incoming', 'Confirmed incoming: ' + inc.storeItemName + ' → ' + (inc.targetInventoryName || inc.storeItemName), { storeItemId: inc.storeItemId, targetInventoryId: inc.targetInventoryId || inventoryRef.id, totalPieces: inc.totalPieces, inventoryType: inc.inventoryItemType });
-          showToast('Inventory updated successfully! ✅', 'success');
-        } catch (e) { console.error('Confirm transfer failed:', e); showToast('Failed: ' + e.message, 'error'); }
-      }, isAdmin() ? 'attendant' : 'admin');
-    };
+    window.confirmIncomingTransfer = function(incomingId) { var inc = incomingItems.find(function(i) { return i.id === incomingId; }); if (!inc) return; showPinModal('Confirm Transfer', 'add to live inventory from store', async function() { try { var batch = writeBatch(db); batch.update(doc(db, 'store_items', inc.storeItemId), { unitQty: increment(-(inc.totalPieces || 0)), updatedAt: serverTimestamp() }); batch.delete(doc(db, 'incoming_inventory', incomingId)); var inventoryRef = inc.targetInventoryId ? doc(db, 'stock_items', inc.targetInventoryId) : doc(collection(db, 'stock_items')); if (!inc.targetInventoryId) { var newItem = { name: inc.targetInventoryName || inc.storeItemName, category: inc.newInventoryCategory || inc.storeItemCategory || 'other', itemType: inc.inventoryItemType, unitQty: (inc.allocation && inc.allocation.unit) || 0, halfQty: (inc.allocation && inc.allocation.half) || 0, quarterQty: (inc.allocation && inc.allocation.quarter) || 0, unitPrice: (inc.prices && inc.prices.unit) || 0, halfPrice: (inc.prices && inc.prices.half) || 0, quarterPrice: (inc.prices && inc.prices.quarter) || 0, packSize: inc.packSize || 12, packPrice: (inc.prices && inc.prices.pack) || 0, packQty: (inc.allocation && inc.allocation.pack) || 0, bundleSize: inc.bundleSize || 50, bundlePrice: (inc.prices && inc.prices.bundle) || 0, bundleQty: (inc.allocation && inc.allocation.bundle) || 0, threshold: 10, status: 'available', initialUnitQty: (inc.allocation && inc.allocation.unit) || 0, initialHalfQty: (inc.allocation && inc.allocation.half) || 0, initialQuarterQty: (inc.allocation && inc.allocation.quarter) || 0, createdBy: currentUser ? currentUser.uid : '', createdByName: userData ? (userData.fullName || 'Staff') : 'Staff', createdAt: serverTimestamp(), updatedAt: serverTimestamp() }; if (inc.inventoryItemType === 'measured') { newItem.measuredSubType = inc.measuredSubType || 'yard'; newItem.measureUnit = newItem.measuredSubType; if (inc.measuredSubType === 'yard') { newItem.yardQty = (inc.allocation && inc.allocation.unit) || 0; newItem.pricePerYard = (inc.prices && inc.prices.unit) || 0; } else { newItem.bundleQty = (inc.allocation && inc.allocation.bundle) || 0; newItem.bundlePrice = (inc.prices && inc.prices.bundle) || 0; } } batch.set(inventoryRef, newItem); } else { var updates = { updatedAt: serverTimestamp() }; if (inc.allocation && inc.allocation.unit) updates.unitQty = increment(inc.allocation.unit); if (inc.allocation && inc.allocation.half) updates.halfQty = increment(inc.allocation.half); if (inc.allocation && inc.allocation.quarter) updates.quarterQty = increment(inc.allocation.quarter); if (inc.allocation && inc.allocation.pack) updates.packQty = increment(inc.allocation.pack); if (inc.allocation && inc.allocation.bundle) updates.bundleQty = increment(inc.allocation.bundle); batch.update(inventoryRef, updates); } var movRef = doc(collection(db, 'stock_movements')); batch.set(movRef, { itemId: inc.targetInventoryId || inventoryRef.id, itemName: inc.targetInventoryName || inc.storeItemName, movementType: 'incoming_transfer', change: { unit: (inc.allocation && inc.allocation.unit) || 0, half: (inc.allocation && inc.allocation.half) || 0, quarter: (inc.allocation && inc.allocation.quarter) || 0 }, reference: 'Incoming Transfer - ' + inc.storeItemName + ' | ' + inc.totalPieces + ' units', performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff', performedAt: serverTimestamp() }); await batch.commit(); await logAudit('confirm_incoming', 'Confirmed incoming: ' + inc.storeItemName + ' → ' + (inc.targetInventoryName || inc.storeItemName), { storeItemId: inc.storeItemId, totalPieces: inc.totalPieces }); showToast('Inventory updated successfully! ✅', 'success'); } catch (e) { console.error('Confirm transfer failed:', e); showToast('Failed: ' + e.message, 'error'); } }, isAdmin() ? 'attendant' : 'admin'); };
 
     // ============================================
-    // FIXED: Restock Modal - Store to Inventory (SELL TO INVENTORY)
-    // The user specifies how many UNITS to take from store,
-    // then allocates those units to inventory forms.
-    // Store always deducts in units. The allocation determines
-    // how those units get distributed into inventory (unit/½/¼/pack/bundle/yard).
+    // FIXED: Restock Modal — Store to Inventory
     // ============================================
     window.openRestockModal = async function(storeItemId) {
-      var item = storeItems.find(function(i) { return i.id === storeItemId; });
-      if (!item) return;
-
+      var item = storeItems.find(function(i) { return i.id === storeItemId; }); if (!item) return;
       var invSnap = await getDocs(query(collection(db, 'stock_items'), where('itemType', '==', item.inventoryItemType)));
       var invItems = invSnap.docs.map(function(d) { return { id: d.id, name: d.data().name || '', itemType: d.data().itemType || 'general', measuredSubType: d.data().measuredSubType || 'yard' }; });
-
       var invOptions = invItems.length ? invItems.map(function(i) { return '<option value="' + i.id + '">' + i.name + '</option>'; }).join('') : '<option value="" disabled>No existing items of this type</option>';
-
-      var invType = item.inventoryItemType;
-      measuredSubType = 'yard';
-
-      // Build allocation title based on type
-      var allocationTitle = '';
-      if (invType === 'general') allocationTitle = 'These units go directly into inventory as units';
-      else if (invType === 'fashion') allocationTitle = 'Distribute units into Unit / ½ / ¼ forms (1 half = 0.5 unit, 1 quarter = 0.25 unit)';
-      else if (invType === 'pack_bundle') allocationTitle = 'Split units into individual pieces and packs (each pack takes ' + (item.packSize || 12) + ' pieces from store)';
-      else if (invType === 'measured') allocationTitle = 'Split units into yards and bundles (each bundle takes yards from store)';
+      var invType = item.inventoryItemType; measuredSubType = 'yard';
+      var allocationTitle = invType === 'general' ? 'These units go directly into inventory as units' : invType === 'fashion' ? 'Distribute units into Unit / ½ / ¼ forms (1 half = 0.5 unit, 1 quarter = 0.25 unit)' : invType === 'pack_bundle' ? 'Split units into individual pieces and packs (each pack takes pieces from store)' : 'Split units into yards and bundles (each bundle takes yards from store)';
 
       showModal('Restock Inventory from: ' + item.name,
-        // Store item info card
-        '<div style="background:var(--primary-soft);padding:14px;border-radius:14px;margin-bottom:16px;">' +
-        '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">' +
-        '<div><strong style="font-size:0.7rem;color:var(--gray);">Store Item</strong><br>' + item.name + '</div>' +
-        '<div><strong style="font-size:0.7rem;color:var(--gray);">Available</strong><br>' + (item.unitQty || 0).toLocaleString() + ' units</div>' +
-        '<div><strong style="font-size:0.7rem;color:var(--gray);">Cost/Unit</strong><br>' + formatCurrency(item.unitCost || 0) + '</div>' +
-        '<div><strong style="font-size:0.7rem;color:var(--gray);">Type</strong><br>' + (invType || 'general').replace(/_/g, ' ') + '</div>' +
-        '</div></div>' +
-
-        // FIXED: Only ask for total units to transfer (no bulk packs)
-        '<div class="form-group"><label>Total Units to Transfer *</label>' +
-        '<input type="number" class="form-control" id="s2iTotalUnits" value="0" min="1" max="' + (item.unitQty || 0) + '" style="font-size:1.3rem;font-weight:700;text-align:center;">' +
-        '<p style="font-size:0.7rem;color:var(--gray);">How many units/pieces to move from store to inventory</p></div>' +
-
-        '<div class="form-group"><label>Target Inventory Item</label>' +
-        '<select class="form-control" id="s2iInventorySelect" style="width:100%;"><option value="new">+ Create New Inventory Item</option>' + invOptions + '</select></div>' +
-
-        '<div id="s2iNewItemFields">' +
-        '<div class="form-row"><div class="form-group"><label>New Item Name *</label><input class="form-control" id="s2iNewName" value="' + item.name + '"></div>' +
-        '<div class="form-group"><label>Category</label><select class="form-control" id="s2iNewCategory">' +
-        categories.map(function(c) { return '<option value="' + c + '"' + (c === item.category ? ' selected' : '') + '>' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>'; }).join('') + '</select></div></div>' +
-
-        // Measured sub-type toggle
-        (invType === 'measured' ?
-          '<div class="measured-sub-toggle" id="measuredSubToggle">' +
-          '<div class="measured-sub-btn active" onclick="switchMeasuredSub(\'yard\')"><i class="fas fa-ruler"></i> Yard<span class="sub-label">By yardage</span></div>' +
-          '<div class="measured-sub-btn" onclick="switchMeasuredSub(\'bundle\')"><i class="fas fa-box"></i> Bundle<span class="sub-label">By bundle</span></div>' +
-          '</div>' : '') +
-        '</div>' +
-
-        // Allocation section
-        '<div style="background:var(--gray-light);padding:14px;border-radius:12px;margin-top:12px;">' +
-        '<strong>' + allocationTitle + '</strong>' +
-        '<div id="s2iAllocation" style="margin-top:10px;"></div>' +
-        '<p id="s2iValidationMsg" style="color:var(--danger);font-size:0.8rem;text-align:center;display:none;margin-top:10px;">⚠️ Allocated pieces must equal total units being transferred.</p>' +
-        '</div>' +
-
+        '<div style="background:var(--primary-soft);padding:14px;border-radius:14px;margin-bottom:16px;"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;"><div><strong style="font-size:0.7rem;color:var(--gray);">Store Item</strong><br>' + item.name + '</div><div><strong style="font-size:0.7rem;color:var(--gray);">Available</strong><br>' + (item.unitQty || 0).toLocaleString() + ' units</div><div><strong style="font-size:0.7rem;color:var(--gray);">Cost/Unit</strong><br>' + formatCurrency(item.unitCost || 0) + '</div><div><strong style="font-size:0.7rem;color:var(--gray);">Type</strong><br>' + (invType || 'general').replace(/_/g, ' ') + '</div></div></div>' +
+        '<div class="form-group"><label>Total Units to Transfer *</label><input type="number" class="form-control" id="s2iTotalUnits" value="0" min="1" max="' + (item.unitQty || 0) + '" style="font-size:1.3rem;font-weight:700;text-align:center;"><p style="font-size:0.7rem;color:var(--gray);">How many units/pieces to move from store to inventory</p></div>' +
+        '<div class="form-group"><label>Target Inventory Item</label><select class="form-control" id="s2iInventorySelect" style="width:100%;"><option value="new">+ Create New Inventory Item</option>' + invOptions + '</select></div>' +
+        '<div id="s2iNewItemFields"><div class="form-row"><div class="form-group"><label>New Item Name *</label><input class="form-control" id="s2iNewName" value="' + item.name + '"></div><div class="form-group"><label>Category</label><select class="form-control" id="s2iNewCategory">' + categories.map(function(c) { return '<option value="' + c + '"' + (c === item.category ? ' selected' : '') + '>' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>'; }).join('') + '</select></div></div>' + (invType === 'measured' ? '<div class="measured-sub-toggle" id="measuredSubToggle"><div class="measured-sub-btn active" onclick="switchMeasuredSub(\'yard\')"><i class="fas fa-ruler"></i> Yard<span class="sub-label">By yardage</span></div><div class="measured-sub-btn" onclick="switchMeasuredSub(\'bundle\')"><i class="fas fa-box"></i> Bundle<span class="sub-label">By bundle</span></div></div>' : '') + '</div>' +
+        '<div style="background:var(--gray-light);padding:14px;border-radius:12px;margin-top:12px;"><strong>' + allocationTitle + '</strong><div id="s2iAllocation" style="margin-top:10px;"></div><p id="s2iValidationMsg" style="color:var(--danger);font-size:0.8rem;text-align:center;display:none;margin-top:10px;">⚠️ Allocated pieces must equal total units being transferred.</p></div>' +
         '<p style="font-size:0.75rem;color:var(--warning);margin-top:8px;"><i class="fas fa-info-circle"></i> This will be saved as <strong>Incoming Inventory</strong> for review before going live.</p>' +
-
-        '<div style="display:flex;gap:10px;margin-top:16px;">' +
-        '<button class="btn btn-primary" onclick="submitIncomingRestock(\'' + storeItemId + '\')"><i class="fas fa-paper-plane"></i> Send to Incoming</button>' +
-        '<button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'
+        '<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn btn-primary" onclick="submitIncomingRestock(\'' + storeItemId + '\')"><i class="fas fa-paper-plane"></i> Send to Incoming</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'
       );
 
-      // FIXED: switchMeasuredSub now also re-renders allocation
-      window.switchMeasuredSub = function(subType) {
-        measuredSubType = subType;
-        document.querySelectorAll('#measuredSubToggle .measured-sub-btn').forEach(function(btn) {
-          var onclick = btn.getAttribute('onclick') || '';
-          btn.classList.toggle('active', onclick.indexOf("'" + subType + "'") !== -1);
-        });
-        renderAllocationForm(invType);
-      };
+      window.switchMeasuredSub = function(subType) { measuredSubType = subType; document.querySelectorAll('#measuredSubToggle .measured-sub-btn').forEach(function(btn) { var onclick = btn.getAttribute('onclick') || ''; btn.classList.toggle('active', onclick.indexOf("'" + subType + "'") !== -1); }); renderAllocationForm(invType); };
+      var totalUnitsInput = document.getElementById('s2iTotalUnits'), allocationDiv = document.getElementById('s2iAllocation'), selectEl = document.getElementById('s2iInventorySelect'), newFields = document.getElementById('s2iNewItemFields');
 
-      var totalUnitsInput = document.getElementById('s2iTotalUnits');
-      var allocationDiv = document.getElementById('s2iAllocation');
-      var selectEl = document.getElementById('s2iInventorySelect');
-      var newFields = document.getElementById('s2iNewItemFields');
-
-      // FIXED: Render allocation form based on total units and inventory type
       function renderAllocationForm(type) {
-        var totalUnits = parseInt(totalUnitsInput.value) || 0;
-        var html = '';
-
-        if (type === 'general') {
-          // General: all units go directly as unit quantity
-          html = '<div class="form-group"><label>Unit Quantity (goes to inventory)</label>' +
-            '<input type="number" class="form-control" value="' + totalUnits + '" readonly>' +
-            '<p style="font-size:0.7rem;color:var(--gray);">All ' + totalUnits + ' units go directly as units</p></div>' +
-            '<div class="form-group"><label>Unit Price ₦ *</label>' +
-            '<input type="number" class="form-control" id="s2iUnitPrice" value="' + (item.unitCost || 0) + '" step="0.01"></div>';
-        } else if (type === 'fashion') {
-          // Fashion: split into unit, half, quarter
-          // 1 unit = 1 unit from store, 1 half = 0.5 unit from store, 1 quarter = 0.25 unit from store
-          html = '<p style="font-size:0.75rem;color:var(--gray);margin-bottom:8px;">Total units from store: <strong>' + totalUnits + '</strong>. ' +
-            'Allocate how many go as units, halves (each half = 0.5 unit), and quarters (each quarter = 0.25 unit). ' +
-            'The total must equal ' + totalUnits + '.</p>' +
-            '<div class="form-row-3">' +
-            '<div class="form-group"><label>→ As Units</label><input type="number" class="form-control s2i-qty" data-form="unit" value="' + totalUnits + '" min="0" step="1"></div>' +
-            '<div class="form-group"><label>→ As ½ (halves)</label><input type="number" class="form-control s2i-qty" data-form="half" value="0" min="0" step="1"><p style="font-size:0.6rem;color:var(--gray);">Each half = 0.5 store unit</p></div>' +
-            '<div class="form-group"><label>→ As ¼ (quarters)</label><input type="number" class="form-control s2i-qty" data-form="quarter" value="0" min="0" step="1"><p style="font-size:0.6rem;color:var(--gray);">Each quarter = 0.25 store unit</p></div>' +
-            '</div>' +
-            '<div class="form-row-3">' +
-            '<div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="' + (item.unitCost || 0) + '" step="0.01"></div>' +
-            '<div class="form-group"><label>½ Price ₦</label><input type="number" class="form-control" id="s2iHalfPrice" value="0" step="0.01"></div>' +
-            '<div class="form-group"><label>¼ Price ₦</label><input type="number" class="form-control" id="s2iQuarterPrice" value="0" step="0.01"></div>' +
-            '</div>';
-        } else if (type === 'pack_bundle') {
-          // Pack/Bundle: split into individual pieces and packs
-          var defaultPackSize = 12;
-          html = '<p style="font-size:0.75rem;color:var(--gray);margin-bottom:8px;">Total units from store: <strong>' + totalUnits + '</strong>. ' +
-            'Allocate how many stay as individual pieces and how many go into packs.</p>' +
-            '<div class="form-row">' +
-            '<div class="form-group"><label>→ Individual Pieces</label><input type="number" class="form-control s2i-qty" data-form="unit" value="' + totalUnits + '" min="0" step="1"></div>' +
-            '<div class="form-group"><label>→ Packs</label><input type="number" class="form-control s2i-qty" data-form="pack" value="0" min="0" step="1"><p style="font-size:0.6rem;color:var(--gray);">Each pack takes pieces from store</p></div>' +
-            '</div>' +
-            '<div class="form-group"><label>Pack Size (pieces per pack)</label><input type="number" class="form-control" id="s2iPackSize" value="' + defaultPackSize + '" min="1"></div>' +
-            '<div class="form-row">' +
-            '<div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="' + (item.unitCost || 0) + '" step="0.01"></div>' +
-            '<div class="form-group"><label>Pack Price ₦</label><input type="number" class="form-control" id="s2iPackPrice" value="0" step="0.01"></div>' +
-            '</div>';
-        } else if (type === 'measured') {
-          var sub = measuredSubType || 'yard';
-          var defaultBundleSize = 50;
-          html = '<p style="font-size:0.75rem;color:var(--gray);margin-bottom:8px;">Total units from store: <strong>' + totalUnits + '</strong>. ' +
-            'Split into yards and bundles. Each bundle takes yards from store.</p>';
-          if (sub === 'yard') {
-            html += '<div class="form-row">' +
-              '<div class="form-group"><label>→ Yards</label><input type="number" class="form-control s2i-qty" data-form="unit" value="' + totalUnits + '" min="0" step="1"></div>' +
-              '<div class="form-group"><label>→ Bundles</label><input type="number" class="form-control s2i-qty" data-form="bundle" value="0" min="0" step="1"><p style="font-size:0.6rem;color:var(--gray);">Each bundle takes yards from store</p></div>' +
-              '</div>' +
-              '<div class="form-group"><label>Yards per Bundle</label><input type="number" class="form-control" id="s2iBundleSize" value="' + defaultBundleSize + '" min="1"></div>';
-          } else {
-            html += '<div class="form-row">' +
-              '<div class="form-group"><label>→ Bundles</label><input type="number" class="form-control s2i-qty" data-form="bundle" value="' + Math.floor(totalUnits / defaultBundleSize) + '" min="0" step="1"></div>' +
-              '<div class="form-group"><label>→ Remaining Units</label><input type="number" class="form-control s2i-qty" data-form="unit" value="' + (totalUnits % defaultBundleSize) + '" min="0" step="1" readonly></div>' +
-              '</div>' +
-              '<div class="form-group"><label>Units per Bundle</label><input type="number" class="form-control" id="s2iBundleSize" value="' + defaultBundleSize + '" min="1"></div>';
-          }
-          html += '<div class="form-row">' +
-            '<div class="form-group"><label>Price per Yard ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="' + (item.unitCost || 0) + '" step="0.01"></div>' +
-            '<div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="s2iBundlePrice" value="0" step="0.01"></div>' +
-            '</div>';
-        }
-
+        var totalUnits = parseInt(totalUnitsInput.value) || 0, html = '';
+        if (type === 'general') { html = '<div class="form-group"><label>Unit Quantity (goes to inventory)</label><input type="number" class="form-control" value="' + totalUnits + '" readonly><p style="font-size:0.7rem;color:var(--gray);">All ' + totalUnits + ' units go directly as units</p></div><div class="form-group"><label>Unit Price ₦ *</label><input type="number" class="form-control" id="s2iUnitPrice" value="' + (item.unitCost || 0) + '" step="0.01"></div>'; }
+        else if (type === 'fashion') { html = '<p style="font-size:0.75rem;color:var(--gray);margin-bottom:8px;">Total units from store: <strong>' + totalUnits + '</strong>. Allocate how many go as units, halves, and quarters. Total must equal ' + totalUnits + '.</p><div class="form-row-3"><div class="form-group"><label>→ As Units</label><input type="number" class="form-control s2i-qty" data-form="unit" value="' + totalUnits + '" min="0" step="1"></div><div class="form-group"><label>→ As ½ (halves)</label><input type="number" class="form-control s2i-qty" data-form="half" value="0" min="0" step="1"><p style="font-size:0.6rem;color:var(--gray);">Each half = 0.5 store unit</p></div><div class="form-group"><label>→ As ¼ (quarters)</label><input type="number" class="form-control s2i-qty" data-form="quarter" value="0" min="0" step="1"><p style="font-size:0.6rem;color:var(--gray);">Each quarter = 0.25 store unit</p></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="' + (item.unitCost || 0) + '" step="0.01"></div><div class="form-group"><label>½ Price ₦</label><input type="number" class="form-control" id="s2iHalfPrice" value="0" step="0.01"></div><div class="form-group"><label>¼ Price ₦</label><input type="number" class="form-control" id="s2iQuarterPrice" value="0" step="0.01"></div></div>'; }
+        else if (type === 'pack_bundle') { html = '<p style="font-size:0.75rem;color:var(--gray);margin-bottom:8px;">Total units from store: <strong>' + totalUnits + '</strong>. Allocate individual pieces and packs.</p><div class="form-row"><div class="form-group"><label>→ Individual Pieces</label><input type="number" class="form-control s2i-qty" data-form="unit" value="' + totalUnits + '" min="0" step="1"></div><div class="form-group"><label>→ Packs</label><input type="number" class="form-control s2i-qty" data-form="pack" value="0" min="0" step="1"><p style="font-size:0.6rem;color:var(--gray);">Each pack takes pieces from store</p></div></div><div class="form-group"><label>Pack Size (pieces per pack)</label><input type="number" class="form-control" id="s2iPackSize" value="12" min="1"></div><div class="form-row"><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="' + (item.unitCost || 0) + '" step="0.01"></div><div class="form-group"><label>Pack Price ₦</label><input type="number" class="form-control" id="s2iPackPrice" value="0" step="0.01"></div></div>'; }
+        else if (type === 'measured') { var sub = measuredSubType || 'yard', defaultBundleSize = 50; html = '<p style="font-size:0.75rem;color:var(--gray);margin-bottom:8px;">Total units from store: <strong>' + totalUnits + '</strong>. Split into yards and bundles.</p>'; if (sub === 'yard') { html += '<div class="form-row"><div class="form-group"><label>→ Yards</label><input type="number" class="form-control s2i-qty" data-form="unit" value="' + totalUnits + '" min="0" step="1"></div><div class="form-group"><label>→ Bundles</label><input type="number" class="form-control s2i-qty" data-form="bundle" value="0" min="0" step="1"><p style="font-size:0.6rem;color:var(--gray);">Each bundle takes yards from store</p></div></div><div class="form-group"><label>Yards per Bundle</label><input type="number" class="form-control" id="s2iBundleSize" value="' + defaultBundleSize + '" min="1"></div>'; } else { html += '<div class="form-row"><div class="form-group"><label>→ Bundles</label><input type="number" class="form-control s2i-qty" data-form="bundle" value="' + Math.floor(totalUnits / defaultBundleSize) + '" min="0" step="1"></div><div class="form-group"><label>→ Remaining Units</label><input type="number" class="form-control s2i-qty" data-form="unit" value="' + (totalUnits % defaultBundleSize) + '" min="0" step="1" readonly></div></div><div class="form-group"><label>Units per Bundle</label><input type="number" class="form-control" id="s2iBundleSize" value="' + defaultBundleSize + '" min="1"></div>'; } html += '<div class="form-row"><div class="form-group"><label>Price per Yard ₦</label><input type="number" class="form-control" id="s2iUnitPrice" value="' + (item.unitCost || 0) + '" step="0.01"></div><div class="form-group"><label>Bundle Price ₦</label><input type="number" class="form-control" id="s2iBundlePrice" value="0" step="0.01"></div></div>'; }
         allocationDiv.innerHTML = html;
-        // Bind validation
         document.querySelectorAll('.s2i-qty').forEach(function(inp) { inp.addEventListener('input', validateAllocation); });
-        var bundleSizeInput = document.getElementById('s2iBundleSize');
-        if (bundleSizeInput) bundleSizeInput.addEventListener('input', function() { validateAllocation(); if (type === 'measured' && measuredSubType === 'bundle') renderAllocationForm(type); });
-        var packSizeInput = document.getElementById('s2iPackSize');
-        if (packSizeInput) packSizeInput.addEventListener('input', validateAllocation);
+        var bundleSizeInput = document.getElementById('s2iBundleSize'); if (bundleSizeInput) bundleSizeInput.addEventListener('input', function() { validateAllocation(); if (type === 'measured' && measuredSubType === 'bundle') renderAllocationForm(type); });
+        var packSizeInput = document.getElementById('s2iPackSize'); if (packSizeInput) packSizeInput.addEventListener('input', validateAllocation);
         validateAllocation();
       }
 
-      // FIXED: Validate that allocated units match total units being transferred
-      function validateAllocation() {
-        var totalUnits = parseInt(totalUnitsInput.value) || 0;
-        var allocatedStore = 0;
-        document.querySelectorAll('.s2i-qty').forEach(function(inp) {
-          var qty = parseInt(inp.value) || 0;
-          var form = inp.dataset.form;
-          if (form === 'half') allocatedStore += qty * 0.5;
-          else if (form === 'quarter') allocatedStore += qty * 0.25;
-          else if (form === 'pack') {
-            var packSize = parseInt(document.getElementById('s2iPackSize') ? document.getElementById('s2iPackSize').value : 12) || 12;
-            allocatedStore += qty * packSize;
-          } else if (form === 'bundle') {
-            var bundleSize = parseInt(document.getElementById('s2iBundleSize') ? document.getElementById('s2iBundleSize').value : 50) || 50;
-            allocatedStore += qty * bundleSize;
-          } else {
-            allocatedStore += qty; // unit / yard
-          }
-        });
-        var msg = document.getElementById('s2iValidationMsg');
-        if (msg) {
-          var diff = Math.abs(allocatedStore - totalUnits);
-          if (diff > 0.001 && totalUnits > 0) {
-            msg.style.display = 'block';
-            msg.innerHTML = '⚠️ Allocated pieces (' + allocatedStore.toFixed(1) + ') must equal total units transferring (' + totalUnits + '). Difference: ' + diff.toFixed(1);
-          } else {
-            msg.style.display = 'none';
-          }
-        }
-      }
+      function validateAllocation() { var totalUnits = parseInt(totalUnitsInput.value) || 0, allocatedStore = 0; document.querySelectorAll('.s2i-qty').forEach(function(inp) { var qty = parseInt(inp.value) || 0, form = inp.dataset.form; if (form === 'half') allocatedStore += qty * 0.5; else if (form === 'quarter') allocatedStore += qty * 0.25; else if (form === 'pack') { var packSize = parseInt(document.getElementById('s2iPackSize') ? document.getElementById('s2iPackSize').value : 12) || 12; allocatedStore += qty * packSize; } else if (form === 'bundle') { var bundleSize = parseInt(document.getElementById('s2iBundleSize') ? document.getElementById('s2iBundleSize').value : 50) || 50; allocatedStore += qty * bundleSize; } else allocatedStore += qty; }); var msg = document.getElementById('s2iValidationMsg'); if (msg) { var diff = Math.abs(allocatedStore - totalUnits); if (diff > 0.001 && totalUnits > 0) { msg.style.display = 'block'; msg.innerHTML = '⚠️ Allocated (' + allocatedStore.toFixed(1) + ') must equal total units (' + totalUnits + '). Diff: ' + diff.toFixed(1); } else msg.style.display = 'none'; } }
 
-      totalUnitsInput.addEventListener('input', function() {
-        var val = parseInt(this.value) || 0;
-        var max = parseInt(this.max) || 0;
-        if (val > max) { this.value = max; }
-        if (val < 0) { this.value = 0; }
-        renderAllocationForm(invType);
-      });
-
-      selectEl.addEventListener('change', function() {
-        newFields.style.display = selectEl.value === 'new' ? 'block' : 'none';
-        if (selectEl.value !== 'new' && invType === 'measured') {
-          var target = invItems.find(function(i) { return i.id === selectEl.value; });
-          if (target) { measuredSubType = target.measuredSubType || 'yard'; }
-        }
-        renderAllocationForm(invType);
-      });
-
+      totalUnitsInput.addEventListener('input', function() { var val = parseInt(this.value) || 0, max = parseInt(this.max) || 0; if (val > max) this.value = max; if (val < 0) this.value = 0; renderAllocationForm(invType); });
+      selectEl.addEventListener('change', function() { newFields.style.display = selectEl.value === 'new' ? 'block' : 'none'; if (selectEl.value !== 'new' && invType === 'measured') { var target = invItems.find(function(i) { return i.id === selectEl.value; }); if (target) measuredSubType = target.measuredSubType || 'yard'; } renderAllocationForm(invType); });
       renderAllocationForm(invType);
-
       setTimeout(function() { $('#s2iInventorySelect').select2({ width: '100%', dropdownParent: $('#modalOverlay') }); }, 150);
     };
 
     // ============================================
-    // FIXED: submitIncomingRestock with corrected allocation
+    // FIXED: submitIncomingRestock
     // ============================================
     window.submitIncomingRestock = function(storeItemId) {
-      var item = storeItems.find(function(i) { return i.id === storeItemId; });
-      if (!item) return;
-
+      var item = storeItems.find(function(i) { return i.id === storeItemId; }); if (!item) return;
       var totalUnits = parseInt(document.getElementById('s2iTotalUnits') ? document.getElementById('s2iTotalUnits').value : 0) || 0;
-      if (totalUnits <= 0) { showToast('Enter the number of units to transfer', 'error'); return; }
-      if (totalUnits > (item.unitQty || 0)) { showToast('Not enough stock. Available: ' + (item.unitQty || 0).toLocaleString() + ' units. You entered: ' + totalUnits.toLocaleString(), 'error'); return; }
-
-      var inventoryId = document.getElementById('s2iInventorySelect') ? document.getElementById('s2iInventorySelect').value : '';
-      var inventoryName = item.name;
-      if (inventoryId === 'new') {
-        var newNameEl = document.getElementById('s2iNewName');
-        inventoryName = newNameEl ? newNameEl.value.trim() : '';
-        if (!inventoryName) { showToast('Name required for new inventory item', 'error'); return; }
-      } else if (inventoryId) {
-        var selectedInv = allInventoryItems.find(function(i) { return i.id === inventoryId; });
-        if (selectedInv) inventoryName = selectedInv.name || item.name;
-      }
-
-      // Collect allocation
-      var allocation = {};
-      document.querySelectorAll('.s2i-qty').forEach(function(inp) { allocation[inp.dataset.form] = parseInt(inp.value) || 0; });
-
-      var prices = {
-        unit: parseFloat(document.getElementById('s2iUnitPrice') ? document.getElementById('s2iUnitPrice').value : 0) || 0,
-        half: parseFloat(document.getElementById('s2iHalfPrice') ? document.getElementById('s2iHalfPrice').value : 0) || 0,
-        quarter: parseFloat(document.getElementById('s2iQuarterPrice') ? document.getElementById('s2iQuarterPrice').value : 0) || 0,
-        pack: parseFloat(document.getElementById('s2iPackPrice') ? document.getElementById('s2iPackPrice').value : 0) || 0,
-        bundle: parseFloat(document.getElementById('s2iBundlePrice') ? document.getElementById('s2iBundlePrice').value : 0) || 0
-      };
-
-      var packSize = parseInt(document.getElementById('s2iPackSize') ? document.getElementById('s2iPackSize').value : 12) || 12;
-      var bundleSize = parseInt(document.getElementById('s2iBundleSize') ? document.getElementById('s2iBundleSize').value : 50) || 50;
-
-      // FIXED: Validate allocation matches total units
-      var allocatedStore = 0;
-      for (var key in allocation) {
-        if (allocation.hasOwnProperty(key)) {
-          var qty = allocation[key];
-          if (key === 'half') allocatedStore += qty * 0.5;
-          else if (key === 'quarter') allocatedStore += qty * 0.25;
-          else if (key === 'pack') allocatedStore += qty * packSize;
-          else if (key === 'bundle') allocatedStore += qty * bundleSize;
-          else allocatedStore += qty;
-        }
-      }
-
-      if (Math.abs(allocatedStore - totalUnits) > 0.001) {
-        showToast('Allocation (' + allocatedStore.toFixed(1) + ') must equal total units (' + totalUnits + ')', 'error');
-        return;
-      }
-
-      var incomingData = {
-        storeItemId: storeItemId,
-        storeItemName: item.name,
-        storeItemCategory: item.category,
-        totalPieces: totalUnits,
-        targetInventoryId: inventoryId === 'new' ? null : inventoryId,
-        targetInventoryName: inventoryId === 'new' ? inventoryName : (allInventoryItems.find(function(i) { return i.id === inventoryId; }) || {}).name || inventoryName,
-        newInventoryCategory: inventoryId === 'new' ? (document.getElementById('s2iNewCategory') ? document.getElementById('s2iNewCategory').value : item.category || 'other') : null,
-        allocation: allocation,
-        prices: prices,
-        packSize: packSize,
-        bundleSize: bundleSize,
-        inventoryItemType: item.inventoryItemType,
-        requestedBy: currentUser ? currentUser.uid : '',
-        requestedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
-        status: 'pending',
-        createdAt: serverTimestamp()
-      };
-
-      if (item.inventoryItemType === 'measured') { incomingData.measuredSubType = measuredSubType; }
-
-      showPinModal('Send to Incoming Inventory', 'queue for review: ' + inventoryName, async function() {
-        try {
-          await addDoc(collection(db, 'incoming_inventory'), incomingData);
-          await logAudit('incoming_inventory_queued', 'Incoming queued: ' + item.name + ' → ' + inventoryName + ' | ' + totalUnits + ' units', { storeItemId: storeItemId, targetInventoryId: incomingData.targetInventoryId, totalPieces: totalUnits, inventoryType: item.inventoryItemType });
-          showToast('Sent to Incoming Inventory for review! 📥', 'success');
-          hideModal();
-        } catch (e) { showToast('Failed: ' + e.message, 'error'); }
-      }, 'attendant');
+      if (totalUnits <= 0) { showToast('Enter units to transfer', 'error'); return; }
+      if (totalUnits > (item.unitQty || 0)) { showToast('Not enough stock. Available: ' + (item.unitQty || 0).toLocaleString() + '. You entered: ' + totalUnits.toLocaleString(), 'error'); return; }
+      var inventoryId = document.getElementById('s2iInventorySelect') ? document.getElementById('s2iInventorySelect').value : '', inventoryName = item.name;
+      if (inventoryId === 'new') { var newNameEl = document.getElementById('s2iNewName'); inventoryName = newNameEl ? newNameEl.value.trim() : ''; if (!inventoryName) { showToast('Name required', 'error'); return; } } else if (inventoryId) { var selectedInv = allInventoryItems.find(function(i) { return i.id === inventoryId; }); if (selectedInv) inventoryName = selectedInv.name || item.name; }
+      var allocation = {}; document.querySelectorAll('.s2i-qty').forEach(function(inp) { allocation[inp.dataset.form] = parseInt(inp.value) || 0; });
+      var prices = { unit: parseFloat(document.getElementById('s2iUnitPrice') ? document.getElementById('s2iUnitPrice').value : 0) || 0, half: parseFloat(document.getElementById('s2iHalfPrice') ? document.getElementById('s2iHalfPrice').value : 0) || 0, quarter: parseFloat(document.getElementById('s2iQuarterPrice') ? document.getElementById('s2iQuarterPrice').value : 0) || 0, pack: parseFloat(document.getElementById('s2iPackPrice') ? document.getElementById('s2iPackPrice').value : 0) || 0, bundle: parseFloat(document.getElementById('s2iBundlePrice') ? document.getElementById('s2iBundlePrice').value : 0) || 0 };
+      var packSize = parseInt(document.getElementById('s2iPackSize') ? document.getElementById('s2iPackSize').value : 12) || 12, bundleSize = parseInt(document.getElementById('s2iBundleSize') ? document.getElementById('s2iBundleSize').value : 50) || 50;
+      var allocatedStore = 0; for (var key in allocation) { if (allocation.hasOwnProperty(key)) { var qty = allocation[key]; if (key === 'half') allocatedStore += qty * 0.5; else if (key === 'quarter') allocatedStore += qty * 0.25; else if (key === 'pack') allocatedStore += qty * packSize; else if (key === 'bundle') allocatedStore += qty * bundleSize; else allocatedStore += qty; } }
+      if (Math.abs(allocatedStore - totalUnits) > 0.001) { showToast('Allocation (' + allocatedStore.toFixed(1) + ') must equal total units (' + totalUnits + ')', 'error'); return; }
+      var incomingData = { storeItemId: storeItemId, storeItemName: item.name, storeItemCategory: item.category, totalPieces: totalUnits, targetInventoryId: inventoryId === 'new' ? null : inventoryId, targetInventoryName: inventoryId === 'new' ? inventoryName : (allInventoryItems.find(function(i) { return i.id === inventoryId; }) || {}).name || inventoryName, newInventoryCategory: inventoryId === 'new' ? (document.getElementById('s2iNewCategory') ? document.getElementById('s2iNewCategory').value : item.category || 'other') : null, allocation: allocation, prices: prices, packSize: packSize, bundleSize: bundleSize, inventoryItemType: item.inventoryItemType, requestedBy: currentUser ? currentUser.uid : '', requestedByName: userData ? (userData.fullName || 'Staff') : 'Staff', status: 'pending', createdAt: serverTimestamp() };
+      if (item.inventoryItemType === 'measured') incomingData.measuredSubType = measuredSubType;
+      showPinModal('Send to Incoming', 'queue: ' + inventoryName, async function() { try { await addDoc(collection(db, 'incoming_inventory'), incomingData); await logAudit('incoming_queued', 'Incoming: ' + item.name + ' → ' + inventoryName + ' | ' + totalUnits + ' units'); showToast('Sent to Incoming! 📥', 'success'); hideModal(); } catch (e) { showToast('Failed: ' + e.message, 'error'); } }, 'attendant');
     };
 
-    window.openAddStoreItemModal = async function() {
-      var invSnap = await getDocs(collection(db, 'stock_items'));
-      var invItems = invSnap.docs.map(function(d) { return { id: d.id, name: d.data().name || '', category: d.data().category || '', itemType: d.data().itemType || 'general' }; });
-      var invOptions = invItems.length ? '<option value="">-- Select Inventory Item (Optional) --</option>' + invItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + i.name + '" data-category="' + i.category + '" data-type="' + i.itemType + '">' + i.name + ' (' + i.itemType.replace(/_/g, ' ') + ')</option>'; }).join('') : '<option value="">No inventory items available</option>';
-      var invTypes = ['general', 'fashion', 'pack_bundle', 'measured'];
-      var typeOptions = invTypes.map(function(t) { return '<option value="' + t + '">' + t.replace(/_/g, ' ') + '</option>'; }).join('');
-      showModal('Add Store Item',
-        '<div class="form-group"><label>Link to Inventory Item (Optional)</label><select class="form-control" id="storeLinkedInventory" style="width:100%;" onchange="populateFromInventory()">' + invOptions + '</select><p style="font-size:0.7rem;color:var(--gray);">Select an existing inventory item to auto-fill details and enable wholesale borrowing.</p></div>' +
-        '<div class="form-row"><div class="form-group"><label>Item Name *</label><input class="form-control" id="storeItemName" placeholder="e.g., Stone Beads Bulk"></div><div class="form-group"><label>Category *</label><div style="display:flex;gap:8px;"><select class="form-control" id="storeItemCategory">' + categories.map(function(c) { return '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>'; }).join('') + '</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div>' +
-        '<div class="form-row"><div class="form-group"><label>Total Unit Quantity *</label><input type="number" class="form-control" id="storeUnitQty" value="0" min="1" placeholder="e.g., 500"><p style="font-size:0.7rem;color:var(--gray);">Total pieces in stock</p></div><div class="form-group"><label>Cost per Unit ₦ *</label><input type="number" class="form-control" id="storeUnitCost" value="0" step="0.01" min="0" placeholder="e.g., 50"><p style="font-size:0.7rem;color:var(--gray);">Your cost price per piece</p></div></div>' +
-        '<div class="form-row"><div class="form-group"><label>Inventory Type *</label><select class="form-control" id="storeInvType">' + typeOptions + '</select><p style="font-size:0.7rem;color:var(--gray);">Determines how items split when restocking</p></div><div class="form-group"><label>Low Stock Threshold</label><input type="number" class="form-control" id="storeThreshold" value="5" min="1"><p style="font-size:0.7rem;color:var(--gray);">Alert when units fall below this</p></div></div>' +
-        '<div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addStoreItem()"><i class="fas fa-plus"></i> Add to Store</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'
-      );
-      setTimeout(function() { $('#storeLinkedInventory').select2({ placeholder: 'Search inventory...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }); }, 150);
-    };
+    window.openAddStoreItemModal = async function() { var invSnap = await getDocs(collection(db, 'stock_items')); var invItems = invSnap.docs.map(function(d) { return { id: d.id, name: d.data().name || '', category: d.data().category || '', itemType: d.data().itemType || 'general' }; }); var invOptions = invItems.length ? '<option value="">-- Select Inventory Item (Optional) --</option>' + invItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + i.name + '" data-category="' + i.category + '" data-type="' + i.itemType + '">' + i.name + ' (' + i.itemType.replace(/_/g, ' ') + ')</option>'; }).join('') : '<option value="">No inventory items available</option>'; var invTypes = ['general', 'fashion', 'pack_bundle', 'measured']; var typeOptions = invTypes.map(function(t) { return '<option value="' + t + '">' + t.replace(/_/g, ' ') + '</option>'; }).join(''); showModal('Add Store Item', '<div class="form-group"><label>Link to Inventory (Optional)</label><select class="form-control" id="storeLinkedInventory" style="width:100%;" onchange="populateFromInventory()">' + invOptions + '</select></div><div class="form-row"><div class="form-group"><label>Item Name *</label><input class="form-control" id="storeItemName"></div><div class="form-group"><label>Category *</label><div style="display:flex;gap:8px;"><select class="form-control" id="storeItemCategory">' + categories.map(function(c) { return '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>'; }).join('') + '</select><button class="btn btn-outline btn-sm" onclick="showAddCategoryModal()" type="button"><i class="fas fa-plus"></i></button></div></div></div><div class="form-row"><div class="form-group"><label>Unit Qty *</label><input type="number" class="form-control" id="storeUnitQty" value="0" min="1"></div><div class="form-group"><label>Cost/Unit ₦ *</label><input type="number" class="form-control" id="storeUnitCost" value="0" step="0.01" min="0"></div></div><div class="form-row"><div class="form-group"><label>Inventory Type *</label><select class="form-control" id="storeInvType">' + typeOptions + '</select></div><div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="storeThreshold" value="5" min="1"></div></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="addStoreItem()"><i class="fas fa-plus"></i> Add</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'); setTimeout(function() { $('#storeLinkedInventory').select2({ placeholder: 'Search inventory...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }); }, 150); };
+    window.populateFromInventory = function() { var select = document.getElementById('storeLinkedInventory'); if (!select || !select.value) return; var option = select.options[select.selectedIndex]; var nameEl = document.getElementById('storeItemName'), catEl = document.getElementById('storeItemCategory'), typeEl = document.getElementById('storeInvType'); if (nameEl) nameEl.value = option.getAttribute('data-name') || ''; if (catEl) catEl.value = option.getAttribute('data-category') || ''; if (typeEl) typeEl.value = option.getAttribute('data-type') || 'general'; };
+    window.addStoreItem = async function() { var name = (document.getElementById('storeItemName') ? document.getElementById('storeItemName').value.trim() : ''), category = (document.getElementById('storeItemCategory') ? document.getElementById('storeItemCategory').value : 'other'), unitQty = parseInt(document.getElementById('storeUnitQty') ? document.getElementById('storeUnitQty').value : 0) || 0, unitCost = parseFloat(document.getElementById('storeUnitCost') ? document.getElementById('storeUnitCost').value : 0) || 0, invType = (document.getElementById('storeInvType') ? document.getElementById('storeInvType').value : 'general'), threshold = parseInt(document.getElementById('storeThreshold') ? document.getElementById('storeThreshold').value : 5) || 5; if (!name) { showToast('Name required', 'error'); return; } if (unitQty <= 0) { showToast('Qty > 0', 'error'); return; } if (unitCost <= 0) { showToast('Cost > 0', 'error'); return; } showPinModal('Confirm Add', 'add: ' + name, async function() { try { var linkedInventoryId = document.getElementById('storeLinkedInventory') ? document.getElementById('storeLinkedInventory').value : '', linkedInventoryName = ''; if (linkedInventoryId) { var linkedInv = allInventoryItems.find(function(i) { return i.id === linkedInventoryId; }); linkedInventoryName = linkedInv ? (linkedInv.name || '') : ''; } var docData = { name, category, unitQty, unitCost, inventoryItemType: invType, threshold, status: unitQty <= threshold ? 'low' : 'available', linkedInventoryId: linkedInventoryId || null, linkedInventoryName: linkedInventoryName || null, createdBy: currentUser ? currentUser.uid : '', createdByName: userData ? (userData.fullName || 'Staff') : 'Staff', createdAt: serverTimestamp(), updatedAt: serverTimestamp() }; await addDoc(collection(db, 'store_items'), docData); showToast('Added!', 'success'); hideModal(); } catch (e) { showToast('Failed: ' + e.message, 'error'); } }, 'attendant'); };
 
-    window.populateFromInventory = function() {
-      var select = document.getElementById('storeLinkedInventory');
-      if (!select || !select.value) return;
-      var option = select.options[select.selectedIndex];
-      var nameEl = document.getElementById('storeItemName'), catEl = document.getElementById('storeItemCategory'), typeEl = document.getElementById('storeInvType');
-      if (nameEl) nameEl.value = option.getAttribute('data-name') || '';
-      if (catEl) catEl.value = option.getAttribute('data-category') || '';
-      if (typeEl) typeEl.value = option.getAttribute('data-type') || 'general';
-    };
+    window.openEditStoreItem = function(id) { var item = storeItems.find(function(i) { return i.id === id; }); if (!item) return; var linkedOptions = '<option value="">-- None --</option>'; allInventoryItems.forEach(function(inv) { var selected = inv.id === item.linkedInventoryId ? ' selected' : ''; linkedOptions += '<option value="' + inv.id + '"' + selected + '>' + (inv.name || '-') + ' (' + (inv.itemType || 'general').replace(/_/g, ' ') + ')</option>'; }); showModal('Edit: ' + item.name, '<div class="form-group"><label>Name</label><input class="form-control" value="' + (item.name || '') + '" readonly></div><div class="form-row"><div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="editUnitQty" value="' + (item.unitQty || 0) + '" min="0"></div><div class="form-group"><label>Unit Cost ₦</label><input type="number" class="form-control" id="editUnitCost" value="' + (item.unitCost || 0) + '" step="0.01" min="0"></div></div><div class="form-row"><div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="' + (item.threshold || 5) + '" min="1"></div><div class="form-group"><label>Type</label><input class="form-control" value="' + (item.inventoryItemType || 'general').replace(/_/g, ' ') + '" readonly></div></div><div class="form-group"><label>Linked Inventory</label><select class="form-control" id="editLinkedInventory" style="width:100%;">' + linkedOptions + '</select></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveStoreEdit(\'' + id + '\')"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'); setTimeout(function() { $('#editLinkedInventory').select2({ placeholder: 'Search...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }); }, 150); };
+    window.saveStoreEdit = async function(id) { var unitQty = parseInt(document.getElementById('editUnitQty') ? document.getElementById('editUnitQty').value : 0) || 0, unitCost = parseFloat(document.getElementById('editUnitCost') ? document.getElementById('editUnitCost').value : 0) || 0, threshold = parseInt(document.getElementById('editThreshold') ? document.getElementById('editThreshold').value : 5) || 5, linkedInventoryId = document.getElementById('editLinkedInventory') ? document.getElementById('editLinkedInventory').value : '', linkedInventoryName = ''; if (linkedInventoryId) { var linkedInv = allInventoryItems.find(function(i) { return i.id === linkedInventoryId; }); linkedInventoryName = linkedInv ? (linkedInv.name || '') : ''; } showPinModal('Confirm Edit', 'save changes', async function() { try { await updateDoc(doc(db, 'store_items', id), { unitQty, unitCost, threshold, linkedInventoryId: linkedInventoryId || null, linkedInventoryName: linkedInventoryName || null, status: unitQty <= threshold ? 'low' : 'available', updatedAt: serverTimestamp() }); showToast('Updated!', 'success'); hideModal(); } catch (e) { showToast('Failed: ' + e.message, 'error'); } }, 'attendant'); };
+    window.deleteStoreItem = async function(id) { if (!isAdmin()) { showToast('Only admin', 'error'); return; } if (!confirm('Delete this store item?')) return; showPinModal('Confirm Delete', 'delete store item', async function() { try { var item = storeItems.find(function(i) { return i.id === id; }); await deleteDoc(doc(db, 'store_items', id)); await logAudit('delete_store_item', 'Deleted: ' + (item ? item.name : id)); showToast('Deleted!', 'success'); } catch (e) { showToast('Failed: ' + e.message, 'error'); } }, 'admin'); };
+    window.viewWholesaleReceipt = function(id) { var s = wholesaleSales.find(function(x) { return x.id === id; }); if (!s) return; showModal('Wholesale Receipt', '<p>Receipt #' + (s.receiptNumber || 'N/A') + '</p><p>Customer: ' + (s.customerName || 'Walk-in') + '</p><p>Total: ' + formatCurrency(s.totalAmount) + '</p><button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close</button>'); };
+    window.openHelpGuide = function() { showModal('📖 Guide', '<p>Store items are in units/pieces.</p><p>Restock to convert store items into sellable inventory.</p><button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close</button>'); };
+    window.exportData = function(format) { var h = ['Name', 'Category', 'Type', 'Units', 'Unit Cost', 'Total Value', 'Status']; var rows = storeItems.map(function(i) { return [i.name || '', i.category || '', (i.inventoryItemType || 'general').replace(/_/g, ' '), i.unitQty || 0, i.unitCost || 0, (i.unitQty || 0) * (i.unitCost || 0), getStoreItemStatus(i)]; }); var csv = [h.join(','), ...rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(','); })].join('\n'); var blob = new Blob([csv], { type: 'text/csv' }); var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'store_' + new Date().toISOString().split('T')[0] + '.csv'; a.click(); document.getElementById('exportMenu').classList.remove('show'); showToast('Exported', 'success'); };
+    window.refreshStore = function() { loadStore(); showToast('Refreshed', 'success'); };
 
-    window.addStoreItem = async function() {
-      var name = (document.getElementById('storeItemName') ? document.getElementById('storeItemName').value.trim() : '');
-      var category = (document.getElementById('storeItemCategory') ? document.getElementById('storeItemCategory').value : 'other');
-      var unitQty = parseInt(document.getElementById('storeUnitQty') ? document.getElementById('storeUnitQty').value : 0) || 0;
-      var unitCost = parseFloat(document.getElementById('storeUnitCost') ? document.getElementById('storeUnitCost').value : 0) || 0;
-      var invType = (document.getElementById('storeInvType') ? document.getElementById('storeInvType').value : 'general');
-      var threshold = parseInt(document.getElementById('storeThreshold') ? document.getElementById('storeThreshold').value : 5) || 5;
-      if (!name) { showToast('Item name required', 'error'); return; }
-      if (unitQty <= 0) { showToast('Unit quantity must be greater than 0', 'error'); return; }
-      if (unitCost <= 0) { showToast('Unit cost must be greater than 0', 'error'); return; }
-      showPinModal('Confirm Add', 'add store item: ' + name, async function() {
-        try {
-          var linkedInventoryId = document.getElementById('storeLinkedInventory') ? document.getElementById('storeLinkedInventory').value : '';
-          var linkedInventoryName = '';
-          if (linkedInventoryId) { var linkedInv = allInventoryItems.find(function(i) { return i.id === linkedInventoryId; }); linkedInventoryName = linkedInv ? (linkedInv.name || '') : ''; }
-          var docData = { name: name, category: category, unitQty: unitQty, unitCost: unitCost, inventoryItemType: invType, threshold: threshold, status: unitQty <= threshold ? 'low' : 'available', linkedInventoryId: linkedInventoryId || null, linkedInventoryName: linkedInventoryName || null, createdBy: currentUser ? currentUser.uid : '', createdByName: userData ? (userData.fullName || 'Staff') : 'Staff', createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
-          await addDoc(collection(db, 'store_items'), docData);
-          await logAudit('add_store_item', 'Added store item: ' + name + ' x' + unitQty + ' @ ' + formatCurrency(unitCost), { name: name, category: category, unitQty: unitQty, unitCost: unitCost, inventoryType: invType, linkedInventoryId: linkedInventoryId });
-          showToast('Store item "' + name + '" added successfully!', 'success');
-          hideModal();
-        } catch (e) { showToast('Failed: ' + e.message, 'error'); }
-      }, 'attendant');
-    };
-
-    window.openEditStoreItem = function(id) {
-      var item = storeItems.find(function(i) { return i.id === id; });
-      if (!item) return;
-      var linkedOptions = '<option value="">-- None --</option>';
-      allInventoryItems.forEach(function(inv) { var selected = inv.id === item.linkedInventoryId ? ' selected' : ''; linkedOptions += '<option value="' + inv.id + '"' + selected + '>' + (inv.name || '-') + ' (' + (inv.itemType || 'general').replace(/_/g, ' ') + ')</option>'; });
-      showModal('Edit: ' + item.name,
-        '<div class="form-group"><label>Item Name</label><input class="form-control" value="' + (item.name || '') + '" readonly></div>' +
-        '<div class="form-row"><div class="form-group"><label>Unit Quantity</label><input type="number" class="form-control" id="editUnitQty" value="' + (item.unitQty || 0) + '" min="0"></div><div class="form-group"><label>Unit Cost ₦</label><input type="number" class="form-control" id="editUnitCost" value="' + (item.unitCost || 0) + '" step="0.01" min="0"></div></div>' +
-        '<div class="form-row"><div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="' + (item.threshold || 5) + '" min="1"></div><div class="form-group"><label>Inventory Type</label><input class="form-control" value="' + (item.inventoryItemType || 'general').replace(/_/g, ' ') + '" readonly></div></div>' +
-        '<div class="form-group"><label>Linked Inventory Item (for wholesale borrowing)</label><select class="form-control" id="editLinkedInventory" style="width:100%;">' + linkedOptions + '</select><p style="font-size:0.7rem;color:var(--gray);">When store stock runs low during wholesale, borrow from this inventory item</p></div>' +
-        '<div style="display: flex; gap: 10px;"><button class="btn btn-primary" onclick="saveStoreEdit(\'' + id + '\')"><i class="fas fa-save"></i> Save Changes</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'
-      );
-      setTimeout(function() { $('#editLinkedInventory').select2({ placeholder: 'Search inventory...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }); }, 150);
-    };
-
-    window.saveStoreEdit = async function(id) {
-      var unitQty = parseInt(document.getElementById('editUnitQty') ? document.getElementById('editUnitQty').value : 0) || 0;
-      var unitCost = parseFloat(document.getElementById('editUnitCost') ? document.getElementById('editUnitCost').value : 0) || 0;
-      var threshold = parseInt(document.getElementById('editThreshold') ? document.getElementById('editThreshold').value : 5) || 5;
-      var linkedInventoryId = document.getElementById('editLinkedInventory') ? document.getElementById('editLinkedInventory').value : '';
-      var linkedInventoryName = '';
-      if (linkedInventoryId) { var linkedInv = allInventoryItems.find(function(i) { return i.id === linkedInventoryId; }); linkedInventoryName = linkedInv ? (linkedInv.name || '') : ''; }
-      showPinModal('Confirm Edit', 'save changes', async function() {
-        try {
-          var updates = { unitQty: unitQty, unitCost: unitCost, threshold: threshold, linkedInventoryId: linkedInventoryId || null, linkedInventoryName: linkedInventoryName || null, status: unitQty <= threshold ? 'low' : 'available', updatedAt: serverTimestamp() };
-          await updateDoc(doc(db, 'store_items', id), updates);
-          await logAudit('edit_store_item', 'Edited store item: ' + id, { unitQty: unitQty, unitCost: unitCost, linkedInventoryId: linkedInventoryId });
-          showToast('Updated successfully', 'success'); hideModal();
-        } catch (e) { showToast('Failed: ' + e.message, 'error'); }
-      }, 'attendant');
-    };
-
-    window.deleteStoreItem = async function(id) {
-      if (!isAdmin()) { showToast('Only admin can delete store items', 'error'); return; }
-      if (!confirm('Are you sure you want to permanently delete this store item? This cannot be undone.')) return;
-      showPinModal('Confirm Delete', 'permanently delete this store item', async function() {
-        try { var item = storeItems.find(function(i) { return i.id === id; }); await deleteDoc(doc(db, 'store_items', id)); await logAudit('delete_store_item', 'Deleted store item: ' + (item ? item.name : id), { storeItemId: id }); showToast('Store item deleted', 'success'); }
-        catch (e) { showToast('Failed: ' + e.message, 'error'); }
-      }, 'admin');
-    };
-
-    window.viewWholesaleReceipt = function(id) {
-      var s = wholesaleSales.find(function(x) { return x.id === id; });
-      if (!s) return;
-      var saleDate = s.createdAt ? (s.createdAt.toDate ? s.createdAt.toDate() : new Date(s.createdAt.seconds ? s.createdAt.seconds * 1000 : s.createdAt)) : new Date();
-      var dateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-      var timeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-      var itemsHtml = (s.items || []).map(function(i) { return '<div class="receipt-item"><span>' + (i.pieces || 0) + ' pcs × ' + (i.name || 'Item') + (i.borrowed ? ' <span class="borrow-badge">📦 Borrowed</span>' : '') + '</span><span>' + formatCurrency((i.pieces || 0) * (i.unitPrice || 0)) + '</span></div>'; }).join('');
-      var borrowInfo = (s._borrowedItems && s._borrowedItems.length > 0) ? '<p class="rec" style="color:#f59e0b;font-size:0.7rem;">* ' + s._borrowedItems.length + ' item(s) borrowed from inventory</p>' : '';
-      showModal('Wholesale Receipt',
-        '<div class="receipt-container"><div class="receipt-header"><h2 style="font-weight:bold;">✨ OmoCreations ✨</h2><p class="addr" style="font-weight:bold;">3 Oyebo Street, Abiola Way</p><p class="addr" style="font-weight:bold;">Behind Laroy Suite, Abeokuta 111101</p><p class="addr" style="font-weight:bold;">Ogun State, Nigeria</p><p class="addr" style="font-weight:bold;">📞 0807 734 0294</p><p class="rec" style="margin-top:6px;">#' + (s.receiptNumber || 'N/A') + ' (Wholesale)</p><p class="rec">' + dateStr + ' ' + timeStr + '</p><p class="rec">Pack Size: ' + (s.wholesalePackSize || 50) + ' pieces | Sold: ' + (s.totalPieces || 0) + ' pieces</p>' + borrowInfo + '</div><p class="cust-info"><strong>Customer:</strong> ' + (s.customerName || 'Walk-in') + '<br><strong>Payment:</strong> ' + (s.paymentMethod || 'cash') + '<br><strong>Served by:</strong> ' + (s.attendantName || 'Staff') + '</p><div class="receipt-items">' + itemsHtml + '</div><div class="receipt-total"><span>Total (' + (s.totalPieces || 0) + ' pcs):</span><span>' + formatCurrency(s.totalAmount) + '</span></div><p class="thanks">Thank you for your patronage!</p></div>' +
-        '<button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close</button>'
-      );
-    };
-
-    window.openHelpGuide = function() {
-      showModal('📖 Store Management Guide',
-        '<div style="font-size:0.9rem; line-height:1.7;">' +
-        '<h4>🏬 Store Stock</h4><p>Store items track <strong>bulk inventory</strong> purchased from third parties as individual units/pieces.</p>' +
-        '<h4>📥 Restock to Inventory (Sell to Inventory)</h4><p>Use the <strong>Restock</strong> button to convert store items into sellable inventory. Enter how many <strong>units</strong> to transfer, then allocate those units to inventory forms:</p>' +
-        '<ul style="margin-left:20px;font-size:0.85rem;">' +
-        '<li><strong>General:</strong> All units go directly as units</li>' +
-        '<li><strong>Fashion:</strong> Split into units, halves (½), and quarters (¼). Each half = 0.5 unit, each quarter = 0.25 unit</li>' +
-        '<li><strong>Pack/Bundle:</strong> Split into individual pieces and packs. Each pack takes pieces from store</li>' +
-        '<li><strong>Measured:</strong> Split into yards and bundles. Each bundle takes yards from store</li>' +
-        '</ul>' +
-        '<p>Items go to <strong>Incoming</strong> for review before being added to live inventory.</p>' +
-        '<h4>🔗 Linked Inventory</h4><p>Link a store item to its corresponding inventory item for wholesale borrowing.</p>' +
-        '</div>' +
-        '<button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close Guide</button>'
-      );
-    };
-
-    window.exportData = function(format) {
-      var h = ['Name', 'Category', 'Type', 'Linked Inventory', 'Units', 'Unit Cost', 'Total Value', 'Status'];
-      var rows = storeItems.map(function(i) { return [i.name || '', i.category || '', (i.inventoryItemType || 'general').replace(/_/g, ' '), i.linkedInventoryName || '—', i.unitQty || 0, i.unitCost || 0, (i.unitQty || 0) * (i.unitCost || 0), getStoreItemStatus(i)]; });
-      var csv = [h.join(','), ...rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(','); })].join('\n');
-      var blob = new Blob([csv], { type: format === 'csv' ? 'text/csv' : 'application/vnd.ms-excel' });
-      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'store_inventory_' + new Date().toISOString().split('T')[0] + '.' + format; a.click();
-      document.getElementById('exportMenu').classList.remove('show');
-      logAudit('export_store', 'Exported store data as ' + format.toUpperCase(), { itemCount: storeItems.length });
-      showToast('Exported ' + storeItems.length + ' items as ' + format.toUpperCase(), 'success');
-    };
-
-    window.refreshStore = function() { loadStore(); showToast('Store data refreshed', 'success'); };
-
-    function loadStore() {
-      cleanup();
-      unsubscribes.push(onSnapshot(collection(db, 'store_items'), function(snap) {
-        storeItems = snap.docs.map(function(d) { return { id: d.id, name: d.data().name || '', category: d.data().category || '', unitQty: safeNumber(d.data().unitQty, 0), unitCost: safeNumber(d.data().unitCost, 0), inventoryItemType: d.data().inventoryItemType || 'general', threshold: safeNumber(d.data().threshold, 5), status: d.data().status || 'available', linkedInventoryId: d.data().linkedInventoryId || null, linkedInventoryName: d.data().linkedInventoryName || null }; });
-        storeItems.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
-        if (currentTab === 'stock') renderStoreStock();
-      }));
-      unsubscribes.push(onSnapshot(collection(db, 'incoming_inventory'), function(snap) { incomingItems = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); }); if (currentTab === 'incoming') renderIncomingInventory(); renderStoreStock(); }));
-      unsubscribes.push(onSnapshot(query(collection(db, 'wholesale_sales'), orderBy('createdAt', 'desc')), function(snap) { wholesaleSales = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); }); if (currentTab === 'history') renderWholesaleHistory(); }));
-      unsubscribes.push(onSnapshot(query(collection(db, 'stock_movements'), orderBy('performedAt', 'desc')), function(snap) { stockMovements = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); }); if (currentTab === 'movements') renderStockMovements(); }));
-      unsubscribes.push(onSnapshot(collection(db, 'stock_items'), function(snap) { allInventoryItems = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); }); }));
-    }
+    function loadStore() { cleanup(); unsubscribes.push(onSnapshot(collection(db, 'store_items'), function(snap) { storeItems = snap.docs.map(function(d) { return { id: d.id, name: d.data().name || '', category: d.data().category || '', unitQty: safeNumber(d.data().unitQty, 0), unitCost: safeNumber(d.data().unitCost, 0), inventoryItemType: d.data().inventoryItemType || 'general', threshold: safeNumber(d.data().threshold, 5), status: d.data().status || 'available', linkedInventoryId: d.data().linkedInventoryId || null, linkedInventoryName: d.data().linkedInventoryName || null }; }); storeItems.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); }); if (currentTab === 'stock') renderStoreStock(); })); unsubscribes.push(onSnapshot(collection(db, 'incoming_inventory'), function(snap) { incomingItems = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); }); if (currentTab === 'incoming') renderIncomingInventory(); renderStoreStock(); })); unsubscribes.push(onSnapshot(query(collection(db, 'wholesale_sales'), orderBy('createdAt', 'desc')), function(snap) { wholesaleSales = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); }); if (currentTab === 'history') renderWholesaleHistory(); })); unsubscribes.push(onSnapshot(query(collection(db, 'stock_movements'), orderBy('performedAt', 'desc')), function(snap) { stockMovements = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); }); if (currentTab === 'movements') renderStockMovements(); })); unsubscribes.push(onSnapshot(collection(db, 'stock_items'), function(snap) { allInventoryItems = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); }); })); }
 
     document.getElementById('searchInput').addEventListener('input', renderStoreStock);
     document.getElementById('categoryFilter').addEventListener('change', renderStoreStock);
     document.getElementById('statusFilter').addEventListener('change', renderStoreStock);
-    var movementSearchInput = document.getElementById('movementSearchInput');
-    var movementTypeFilter = document.getElementById('movementTypeFilter');
-    if (movementSearchInput) movementSearchInput.addEventListener('input', renderStockMovements);
-    if (movementTypeFilter) movementTypeFilter.addEventListener('change', renderStockMovements);
+    var movementSearchInput = document.getElementById('movementSearchInput'); if (movementSearchInput) movementSearchInput.addEventListener('input', renderStockMovements);
+    var movementTypeFilter = document.getElementById('movementTypeFilter'); if (movementTypeFilter) movementTypeFilter.addEventListener('change', renderStockMovements);
     document.getElementById('exportDropdownBtn').addEventListener('click', function(e) { e.stopPropagation(); document.getElementById('exportMenu').classList.toggle('show'); });
     document.addEventListener('click', function() { document.getElementById('exportMenu').classList.remove('show'); });
-
-    document.querySelectorAll('.tabs-container > .tab').forEach(function(t) {
-      t.addEventListener('click', function() {
-        currentTab = this.dataset.tab;
-        document.querySelectorAll('.tabs-container > .tab').forEach(function(x) { x.classList.remove('active'); });
-        this.classList.add('active');
-        document.querySelectorAll('.page-view').forEach(function(p) { p.classList.remove('active'); });
-        var panel = document.getElementById(currentTab + 'Panel');
-        if (panel) panel.classList.add('active');
-        if (currentTab === 'stock') renderStoreStock();
-        else if (currentTab === 'incoming') renderIncomingInventory();
-        else if (currentTab === 'movements') renderStockMovements();
-        else if (currentTab === 'history') renderWholesaleHistory();
-      });
-    });
-
-    document.querySelectorAll('[data-incoming-tab]').forEach(function(t) {
-      t.addEventListener('click', function() {
-        incomingTab = this.dataset.incomingTab;
-        document.querySelectorAll('[data-incoming-tab]').forEach(function(x) { x.classList.remove('active'); });
-        this.classList.add('active');
-        ['incomingGeneralPanel', 'incomingFashionPanel', 'incomingPackBundlePanel', 'incomingMeasuredPanel'].forEach(function(id) { var panel = document.getElementById(id); if (panel) panel.style.display = 'none'; });
-        var map = { general: 'incomingGeneralPanel', fashion: 'incomingFashionPanel', pack_bundle: 'incomingPackBundlePanel', measured: 'incomingMeasuredPanel' };
-        var targetPanel = document.getElementById(map[incomingTab]);
-        if (targetPanel) targetPanel.style.display = 'block';
-      });
-    });
-
+    document.querySelectorAll('.tabs-container > .tab').forEach(function(t) { t.addEventListener('click', function() { currentTab = this.dataset.tab; document.querySelectorAll('.tabs-container > .tab').forEach(function(x) { x.classList.remove('active'); }); this.classList.add('active'); document.querySelectorAll('.page-view').forEach(function(p) { p.classList.remove('active'); }); var panel = document.getElementById(currentTab + 'Panel'); if (panel) panel.classList.add('active'); if (currentTab === 'stock') renderStoreStock(); else if (currentTab === 'incoming') renderIncomingInventory(); else if (currentTab === 'movements') renderStockMovements(); else if (currentTab === 'history') renderWholesaleHistory(); }); });
+    document.querySelectorAll('[data-incoming-tab]').forEach(function(t) { t.addEventListener('click', function() { incomingTab = this.dataset.incomingTab; document.querySelectorAll('[data-incoming-tab]').forEach(function(x) { x.classList.remove('active'); }); this.classList.add('active'); ['incomingGeneralPanel','incomingFashionPanel','incomingPackBundlePanel','incomingMeasuredPanel'].forEach(function(id) { var panel = document.getElementById(id); if (panel) panel.style.display = 'none'; }); var map = { general: 'incomingGeneralPanel', fashion: 'incomingFashionPanel', pack_bundle: 'incomingPackBundlePanel', measured: 'incomingMeasuredPanel' }; var targetPanel = document.getElementById(map[incomingTab]); if (targetPanel) targetPanel.style.display = 'block'; }); });
     window.addEventListener('online', function() { isOnline = true; var banner = document.getElementById('offlineBanner'); if (banner) banner.classList.remove('show'); document.getElementById('syncStatus').textContent = ''; showToast('Back online!', 'success'); });
     window.addEventListener('offline', function() { isOnline = false; var banner = document.getElementById('offlineBanner'); if (banner) banner.classList.add('show'); document.getElementById('syncStatus').textContent = '⚠️ Offline'; showToast('You are offline.', 'warning'); });
     if (!navigator.onLine) { isOnline = false; var banner = document.getElementById('offlineBanner'); if (banner) banner.classList.add('show'); document.getElementById('syncStatus').textContent = '⚠️ Offline'; }
 
-    onAuthStateChanged(auth, async function(u) {
-      if (!u) { window.location.href = 'auth.html'; return; }
-      currentUser = u;
-      try {
-        var snap = await getDoc(doc(db, 'users', u.uid));
-        if (!snap.exists() || snap.data().status !== 'active') { await signOut(auth); window.location.href = 'auth.html'; return; }
-        userData = snap.data();
-        if (isAdmin()) { storeValueRevealed = true; }
-        document.getElementById('userName').textContent = (userData.fullName || 'Staff').split(' ')[0];
-        document.getElementById('userRole').textContent = (userData.role || '').replace('_', ' ');
-        document.getElementById('userAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
-        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-        await loadAdminPins();
-        buildSidebar();
-        await loadCategories();
-        loadStore();
-        if (storeValueRevealed) updateStoreValueDisplay();
-        await logAudit('view_store', 'Viewed store management page');
-      } catch (e) { console.error('Init error:', e); showToast('Error loading store data', 'error'); }
-    });
-
+    onAuthStateChanged(auth, async function(u) { if (!u) { window.location.href = 'auth.html'; return; } currentUser = u; try { var snap = await getDoc(doc(db, 'users', u.uid)); if (!snap.exists() || snap.data().status !== 'active') { await signOut(auth); window.location.href = 'auth.html'; return; } userData = snap.data(); if (isAdmin()) storeValueRevealed = true; document.getElementById('userName').textContent = (userData.fullName || 'Staff').split(' ')[0]; document.getElementById('userRole').textContent = (userData.role || '').replace('_', ' '); document.getElementById('userAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase(); document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); buildSidebar(); await loadCategories(); loadStore(); if (storeValueRevealed) updateStoreValueDisplay(); await logAudit('view_store', 'Viewed store'); } catch (e) { console.error('Init error:', e); showToast('Error', 'error'); } });
     window.addEventListener('beforeunload', cleanup);
   </script>
 </body>
