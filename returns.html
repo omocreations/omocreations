@@ -132,7 +132,7 @@
     .sale-info-card { background:var(--primary-soft); padding:16px; border-radius:14px; margin-bottom:16px; }
     .sale-info-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; }
 
-    .return-item-card { background:var(--gray-light); border-radius:16px; padding:18px; margin-bottom:14px; border:1px solid rgba(0,0,0,0.04); transition:all 0.2s; }
+    .return-item-card { background:var(--gray-light); border-radius:16px; padding:18px; margin-bottom:14px; border:1px solid rgba(0,0,0,0.04); transition:all 0.2s; overflow:visible !important; }
     .return-item-card:hover { border-color:var(--primary); }
     .return-item-header { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
     .return-item-details { display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
@@ -143,8 +143,8 @@
     .return-action-btn:hover { transform:translateY(-1px); }
     .return-action-btn.selected { border-color:var(--primary); background:var(--primary-soft); color:var(--primary); box-shadow:0 2px 8px rgba(255,77,166,0.15); }
 
-    .exchange-panel { background:white; border:2px solid var(--primary); border-radius:16px; padding:16px; margin-top:12px; display:none; }
-    .exchange-panel.show { display:block; animation: fadeInUp 0.3s ease; }
+    .exchange-panel { background:white; border:2px solid var(--primary); border-radius:16px; padding:16px; margin-top:12px; display:none; overflow:visible !important; }
+    .exchange-panel.show { display:block; animation:fadeInUp 0.3s ease; overflow:visible !important; }
     .exchange-item-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.04); }
     .exchange-summary { background:var(--gray-light); border-radius:12px; padding:14px; margin-top:12px; }
 
@@ -166,6 +166,15 @@
     .receipt-header h2 { font-weight:bold; margin:0; }
     .receipt-item { display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:5px; }
     .receipt-total { border-top:1px dashed #ccc; padding-top:10px; font-weight:bold; font-size:1.1rem; display:flex; justify-content:space-between; }
+
+    /* FIX: Ensure Select2 dropdown appears above everything and isn't clipped */
+    .return-exchange-dropdown { z-index: 99999 !important; }
+    .select2-container { z-index: 99999 !important; }
+    .select2-dropdown { z-index: 99999 !important; }
+    #returnItemsContainer { overflow: visible !important; }
+    #returnFormPanel { overflow: visible !important; }
+    #lookupPanel { overflow: visible !important; }
+    .content-wrapper { overflow: visible !important; }
 
     @media (max-width:768px) {
       .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; }
@@ -661,7 +670,6 @@
     addDebugLog('Item ' + idx + ' action set to: ' + action, 'info');
     var panel = safeGetEl('exchangePanel-' + idx);
     if (panel) {
-      // FIX: Both exchange AND replace should show the stock picker
       if (action === 'exchange' || action === 'replace') { 
         panel.classList.add('show'); 
         buildExchangePanel(idx, action); 
@@ -674,7 +682,6 @@
     updateReturnTotal();
   };
 
-  // FIX: buildExchangePanel now accepts actionType parameter
   function buildExchangePanel(idx, actionType) {
     actionType = actionType || 'exchange';
     var panel = safeGetEl('exchangePanel-' + idx);
@@ -684,6 +691,7 @@
     var unitPrice = parseFloat(card.getAttribute('data-unit-price')) || 0;
     var returnItemName = card.getAttribute('data-item-name') || '';
 
+    // FIX: Build stock options showing ALL items with availability info
     var stockOptionsHtml = '';
     allStockItems.forEach(function(si) {
       var label = getItemTypeLabel(si.itemType || 'general');
@@ -696,7 +704,6 @@
     var firstItem = allStockItems[0];
     var firstSizeOpts = firstItem ? getSizeOptions(firstItem).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
 
-    // FIX: Different icon and title for exchange vs replace
     var icon = actionType === 'replace' ? 'fa-sync-alt' : 'fa-exchange-alt';
     var titleText = actionType === 'replace' ? 'Replace "' + escapeHtml(returnItemName) + '" with:' : 'Exchange "' + escapeHtml(returnItemName) + '" for:';
     var subtitleText = actionType === 'replace' ? 'A replacement will be issued from stock. The returned item will be restocked if resellable.' : 'Return value: <strong>' + formatCurrency(unitPrice) + ' each</strong> — Price difference calculated automatically';
@@ -706,7 +713,7 @@
       '<p style="font-size:0.7rem;color:var(--gray);margin-top:4px;">' + subtitleText + '</p>' +
       '</div>' +
       '<div class="exchange-item-row">' +
-        '<select class="form-control exchange-select" data-idx="' + idx + '" style="flex:3;min-width:180px;"><option value="">-- Select ' + allStockItems.length + ' products --</option>' + stockOptionsHtml + '</select>' +
+        '<select class="form-control exchange-select" data-idx="' + idx + '" style="flex:3;min-width:180px;"><option value="">-- Select from ' + allStockItems.length + ' products --</option>' + stockOptionsHtml + '</select>' +
         '<select class="form-control exchange-size" data-idx="' + idx + '" style="flex:1.5;min-width:100px;">' + firstSizeOpts + '</select>' +
         '<input type="number" class="form-control exchange-qty" data-idx="' + idx + '" value="1" min="1" style="flex:0.8;min-width:70px;" onchange="updateExchangeDiff(' + idx + ')" oninput="updateExchangeDiff(' + idx + ')">' +
       '</div>' +
@@ -714,13 +721,15 @@
       '<div id="exchangeActionSection-' + idx + '" style="display:none;margin-top:8px;"></div>' +
       '<div id="exchangeStockWarning-' + idx + '" style="display:none;margin-top:6px;color:var(--danger);font-size:0.75rem;text-align:center;"></div>';
 
+    // FIX: Use body as dropdown parent so Select2 isn't clipped by panel overflow
     setTimeout(function() {
       var $select = $('.exchange-select[data-idx="' + idx + '"]');
       $select.select2({ 
-        placeholder: 'Search all stock items...', 
+        placeholder: 'Search all ' + allStockItems.length + ' stock items...', 
         allowClear: true, 
-        width: '100%', 
-        dropdownParent: $('#modalOverlay') 
+        width: '100%',
+        dropdownParent: $('body'),
+        dropdownCssClass: 'return-exchange-dropdown'
       }).on('change', function() { 
         var selectEl = this;
         var row = $(this).closest('.exchange-item-row')[0];
@@ -749,6 +758,8 @@
       });
 
       $('.exchange-size[data-idx="' + idx + '"]').on('change', function() { updateExchangeDiff(idx); });
+      
+      addDebugLog('Select2 initialized for item ' + idx + ' with ' + allStockItems.length + ' options', 'info');
     }, 150);
   }
 
@@ -812,7 +823,6 @@
     if (diffDisplay) {
       diffDisplay.style.background = '';
       if (actionType === 'replace') {
-        // For replace, no price comparison - just show what's being picked
         diffDisplay.innerHTML = '<span style="color:var(--success);font-weight:600;">🔧 Replacement: ' + exQty + '× ' + escapeHtml(opt.getAttribute('data-name') || '') + ' (' + sizeLabel + ') will be issued from stock</span>';
         diffDisplay.style.background = 'rgba(16,185,129,0.06)';
         card.setAttribute('data-exchange-diff', '0');
@@ -832,7 +842,6 @@
 
     if (actionSection) {
       if (actionType === 'replace') {
-        // For replace, no payment needed
         actionSection.style.display = 'none';
       } else if (Math.abs(diff) < 0.01) {
         actionSection.style.display = 'none';
@@ -898,30 +907,15 @@
       var unitPrice = parseFloat(card.getAttribute('data-unit-price')) || 0;
       var action = card.getAttribute('data-selected-action') || 'refund';
       var amount = qty * unitPrice;
-      
-      if (action === 'exchange') {
-        var exDiff = parseFloat(card.getAttribute('data-exchange-diff')) || 0;
-        if (exDiff > 0) {
-          amount = qty * unitPrice;
-        } else {
-          amount = qty * unitPrice;
-        }
-      }
       grandTotal += amount;
       var amountSpan = card.querySelector('.return-item-amount');
       if (amountSpan) {
         amountSpan.textContent = formatCurrency(amount);
-        if (action === 'exchange') {
-          amountSpan.style.color = 'var(--info)';
-        } else if (action === 'refund') {
-          amountSpan.style.color = 'var(--danger)';
-        } else if (action === 'store_credit') {
-          amountSpan.style.color = 'var(--warning)';
-        } else if (action === 'replace') {
-          amountSpan.style.color = 'var(--success)';
-        } else {
-          amountSpan.style.color = 'var(--gray)';
-        }
+        if (action === 'exchange') amountSpan.style.color = 'var(--info)';
+        else if (action === 'refund') amountSpan.style.color = 'var(--danger)';
+        else if (action === 'store_credit') amountSpan.style.color = 'var(--warning)';
+        else if (action === 'replace') amountSpan.style.color = 'var(--success)';
+        else amountSpan.style.color = 'var(--gray)';
       }
     });
     safeGetEl('returnGrandTotal').textContent = formatCurrency(grandTotal);
@@ -950,7 +944,6 @@
       hasItems = true;
       var action = card.getAttribute('data-selected-action') || 'refund';
 
-      // FIX: Validate both exchange AND replace items
       if (action === 'exchange' || action === 'replace') {
         var isValid = card.getAttribute('data-exchange-valid');
         if (isValid === 'false') {
@@ -981,20 +974,11 @@
 
       var itemData = { 
         originalIndex: parseInt(card.getAttribute('data-item-index')), 
-        id: itemId, 
-        name: itemName, 
-        originalQuantity: parseInt(card.getAttribute('data-original-qty')) || 1, 
-        returnedQuantity: qty, 
-        size: itemSize, 
-        sizeLabel: sizeLabel, 
-        unitPrice: unitPrice, 
-        refundAmount: qty * unitPrice, 
-        condition: condition, 
-        isNonInventory: isNonInv, 
-        action: action 
+        id: itemId, name: itemName, originalQuantity: parseInt(card.getAttribute('data-original-qty')) || 1, 
+        returnedQuantity: qty, size: itemSize, sizeLabel: sizeLabel, unitPrice: unitPrice, 
+        refundAmount: qty * unitPrice, condition: condition, isNonInventory: isNonInv, action: action 
       };
 
-      // FIX: Handle both exchange and replace with stock picker
       if (action === 'exchange' || action === 'replace') {
         if (action === 'exchange') needsExchange = true;
         if (action === 'replace') needsReplacement = true;
@@ -1034,7 +1018,7 @@
     var totalRefund = allItems.reduce(function(sum, i) { return sum + i.refundAmount; }, 0);
     var needsAdmin = monthsSinceSale > 11 || totalRefund > 50000 || needsReplacement;
 
-    addDebugLog('Return summary: ' + allItems.length + ' items, total: ' + formatCurrency(totalRefund) + ', needsAdmin: ' + needsAdmin + ', monthsSinceSale: ' + monthsSinceSale, 'info');
+    addDebugLog('Return summary: ' + allItems.length + ' items, total: ' + formatCurrency(totalRefund) + ', needsAdmin: ' + needsAdmin, 'info');
 
     showPinModal('Process Returns', 'process ' + allItems.length + ' item(s) worth ' + formatCurrency(totalRefund), function() {
       processReturnsFinal(allItems, reason, saleIdentifier, needsRefund, needsExchange, needsStoreCredit, needsReplacement);
@@ -1061,7 +1045,6 @@
         returnItems.push(item);
         totalRefundAmount += item.refundAmount;
 
-        // Restock for refund, store_credit, and replace (if resellable)
         if (item.action === 'refund' || item.action === 'store_credit' || item.action === 'replace') {
           if (item.id && !item.isNonInventory && item.condition === 'resellable') {
             var stockItem = allStockItems.find(function(si) { return si.id === item.id; });
@@ -1080,7 +1063,6 @@
 
         if (item.action === 'store_credit') { storeCreditAmount += item.refundAmount; }
         
-        // FIX: Handle both exchange AND replace with selected stock item
         if ((item.action === 'exchange' || item.action === 'replace') && item.exchangeItemId) {
           if (item.action === 'exchange') {
             exchangeItems.push({ id: item.exchangeItemId, name: item.exchangeItemName, quantity: item.exchangeItemQty || 1, size: item.exchangeItemSize || '1', sizeLabel: item.exchangeItemSizeLabel || 'Unit', unitPrice: item.exchangeItemPrice || 0 });
@@ -1088,7 +1070,6 @@
             overallExchangeDiff += item.exchangeDiff || 0;
             exchangePaymentMethod = item.exchangePayMethod || 'cash';
           }
-          // Deduct the chosen item from stock (for both exchange and replace)
           var exStockItem = allStockItems.find(function(si) { return si.id === item.exchangeItemId; });
           if (exStockItem) {
             var exUpdate = { updatedAt: serverTimestamp() }; var exChange = {}; var exSize = item.exchangeItemSize || '1'; var exQty = item.exchangeItemQty || 1;
@@ -1102,7 +1083,6 @@
             batch.update(doc(db, 'stock_items', item.exchangeItemId), exUpdate);
             movements.push({ itemId: item.exchangeItemId, itemName: item.exchangeItemName, movementType: moveType, change: exChange, reference: moveRef + returnNumber + ' - Receipt ' + (currentSale.receiptNumber || ''), performedBy: currentUser?.uid || 'unknown', performedByName: userData?.fullName || 'Staff' });
           }
-          // For exchange, also restock the returned item if resellable
           if (item.action === 'exchange' && item.id && !item.isNonInventory && item.condition === 'resellable') {
             var retStockItem = allStockItems.find(function(si) { return si.id === item.id; });
             if (retStockItem) {
@@ -1123,25 +1103,14 @@
 
       var returnRef = doc(collection(db, 'returns'));
       batch.set(returnRef, { 
-        returnNumber: returnNumber,
-        saleId: currentSale.id || '', 
-        saleReceiptNumber: currentSale.receiptNumber || '', 
-        customerId: currentSale.customerId || '', 
-        customerName: currentSale.customerName || 'Walk-in', 
-        customerPhone: currentSale.customerPhone || '', 
-        returnedItems: returnItems, 
-        totalRefund: totalRefundAmount, 
+        returnNumber: returnNumber, saleId: currentSale.id || '', saleReceiptNumber: currentSale.receiptNumber || '', 
+        customerId: currentSale.customerId || '', customerName: currentSale.customerName || 'Walk-in', 
+        customerPhone: currentSale.customerPhone || '', returnedItems: returnItems, totalRefund: totalRefundAmount, 
         returnAction: needsExchange ? 'exchange' : (needsStoreCredit ? 'store_credit' : (needsReplacement ? 'replace' : 'refund')), 
-        exchangeItems: exchangeItems.length > 0 ? exchangeItems : null, 
-        exchangeTotal: totalExchangeAmount, 
-        exchangeDifference: overallExchangeDiff, 
-        exchangePayment: exchangePaymentMethod, 
-        reason: reason, 
-        processedBy: currentUser?.uid || 'unknown', 
-        processedByName: userData?.fullName || 'Staff', 
-        createdAt: serverTimestamp(), 
-        isPartialReturn: !checkIfFullReturn(allItems), 
-        originalTotal: currentSale.totalAmount || 0 
+        exchangeItems: exchangeItems.length > 0 ? exchangeItems : null, exchangeTotal: totalExchangeAmount, 
+        exchangeDifference: overallExchangeDiff, exchangePayment: exchangePaymentMethod, reason: reason, 
+        processedBy: currentUser?.uid || 'unknown', processedByName: userData?.fullName || 'Staff', 
+        createdAt: serverTimestamp(), isPartialReturn: !checkIfFullReturn(allItems), originalTotal: currentSale.totalAmount || 0 
       });
 
       if (checkIfFullReturn(allItems)) { 
@@ -1158,22 +1127,7 @@
       
       if (storeCreditAmount > 0) { 
         var creditRef = doc(collection(db, 'store_credits')); 
-        batch.set(creditRef, { 
-          returnNumber: returnNumber,
-          saleId: currentSale.id || '', 
-          saleReceiptNumber: currentSale.receiptNumber || '', 
-          customerId: currentSale.customerId || '', 
-          customerName: currentSale.customerName || 'Walk-in', 
-          customerPhone: currentSale.customerPhone || '', 
-          amount: storeCreditAmount, 
-          returnedItems: returnItems.filter(function(it) { return it.action === 'store_credit'; }), 
-          reason: reason, 
-          status: 'active', 
-          createdBy: currentUser?.uid || 'unknown', 
-          createdByName: userData?.fullName || 'Staff', 
-          createdAt: serverTimestamp(), 
-          expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) 
-        }); 
+        batch.set(creditRef, { returnNumber: returnNumber, saleId: currentSale.id || '', saleReceiptNumber: currentSale.receiptNumber || '', customerId: currentSale.customerId || '', customerName: currentSale.customerName || 'Walk-in', customerPhone: currentSale.customerPhone || '', amount: storeCreditAmount, returnedItems: returnItems.filter(function(it) { return it.action === 'store_credit'; }), reason: reason, status: 'active', createdBy: currentUser?.uid || 'unknown', createdByName: userData?.fullName || 'Staff', createdAt: serverTimestamp(), expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) }); 
         addDebugLog('Store credit issued: ' + formatCurrency(storeCreditAmount), 'info');
       }
 
@@ -1195,30 +1149,18 @@
   function checkIfFullReturn(returnedItems) {
     if (!currentSale || !currentSale.items) return true;
     var returnedMap = {};
-    returnedItems.forEach(function(item) {
-      var idx = item.originalIndex;
-      returnedMap[idx] = (returnedMap[idx] || 0) + item.returnedQuantity;
-    });
+    returnedItems.forEach(function(item) { var idx = item.originalIndex; returnedMap[idx] = (returnedMap[idx] || 0) + item.returnedQuantity; });
     var saleIdentifier = currentSale.id || currentSale._localId || '';
     if (returnHistory[saleIdentifier] && returnHistory[saleIdentifier].items) {
-      Object.keys(returnHistory[saleIdentifier].items).forEach(function(idx) {
-        returnedMap[idx] = (returnedMap[idx] || 0) + (returnHistory[saleIdentifier].items[idx] || 0);
-      });
+      Object.keys(returnHistory[saleIdentifier].items).forEach(function(idx) { returnedMap[idx] = (returnedMap[idx] || 0) + (returnHistory[saleIdentifier].items[idx] || 0); });
     }
-    for (var i = 0; i < currentSale.items.length; i++) {
-      var originalQty = currentSale.items[i].quantity || currentSale.items[i].pieces || 1;
-      if ((returnedMap[i] || 0) < originalQty) return false;
-    }
+    for (var i = 0; i < currentSale.items.length; i++) { var originalQty = currentSale.items[i].quantity || currentSale.items[i].pieces || 1; if ((returnedMap[i] || 0) < originalQty) return false; }
     return true;
   }
 
   function trackPartialReturn(saleId, returnedItems) {
     if (!returnHistory[saleId]) returnHistory[saleId] = { totalReturned: 0, items: {} };
-    returnedItems.forEach(function(item) { 
-      var idx = item.originalIndex; 
-      returnHistory[saleId].items[idx] = (returnHistory[saleId].items[idx] || 0) + item.returnedQuantity; 
-      returnHistory[saleId].totalReturned += item.returnedQuantity; 
-    });
+    returnedItems.forEach(function(item) { var idx = item.originalIndex; returnHistory[saleId].items[idx] = (returnHistory[saleId].items[idx] || 0) + item.returnedQuantity; returnHistory[saleId].totalReturned += item.returnedQuantity; });
     saveReturnHistory();
     addDebugLog('Return history updated for sale ' + saleId + ': ' + returnHistory[saleId].totalReturned + ' total returned', 'info');
   }
@@ -1241,12 +1183,7 @@
 
     showModal('Return Receipt',
       '<div class="receipt-container">' +
-        '<div class="receipt-header">' +
-          '<h2>✨ OmoCreations ✨</h2>' +
-          '<p style="font-weight:bold;">3 Oyebo Street, Abiola Way</p>' +
-          '<p style="font-size:0.8rem;">Return Receipt</p>' +
-          '<p class="receipt-total" style="justify-content:center;font-size:1.2rem;">#' + returnNumber + '</p>' +
-        '</div>' +
+        '<div class="receipt-header"><h2>✨ OmoCreations ✨</h2><p style="font-weight:bold;">3 Oyebo Street, Abiola Way</p><p style="font-size:0.8rem;">Return Receipt</p><p class="receipt-total" style="justify-content:center;font-size:1.2rem;">#' + returnNumber + '</p></div>' +
         '<p><strong>Original Receipt:</strong> ' + escapeHtml(currentSale.receiptNumber || 'N/A') + '</p>' +
         '<p><strong>Customer:</strong> ' + escapeHtml(currentSale.customerName || 'Walk-in') + '</p>' +
         '<p><strong>Reason:</strong> ' + escapeHtml(reason) + '</p>' +
@@ -1262,7 +1199,6 @@
         '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>' +
       '</div>'
     );
-
     window._lastReturnReceiptData = { allItems, reason, returnNumber, totalRefund, totalExchange, exchangeDiff, exchangePayMethod, storeCredit };
   }
 
@@ -1283,14 +1219,10 @@
   };
 
   function resetReturnForm() { 
-    currentSale = null; 
-    exchangePaymentMethods = {};
-    safeGetEl('returnFormPanel').style.display = 'none'; 
-    safeGetEl('returnItemsContainer').innerHTML = ''; 
-    safeGetEl('returnGrandTotal').textContent = '₦0'; 
-    safeGetEl('returnItemCount').textContent = '0 items selected'; 
-    safeGetEl('receiptLookup').value = ''; 
-    safeGetEl('lookupResult').innerHTML = '';
+    currentSale = null; exchangePaymentMethods = {};
+    safeGetEl('returnFormPanel').style.display = 'none'; safeGetEl('returnItemsContainer').innerHTML = ''; 
+    safeGetEl('returnGrandTotal').textContent = '₦0'; safeGetEl('returnItemCount').textContent = '0 items selected'; 
+    safeGetEl('receiptLookup').value = ''; safeGetEl('lookupResult').innerHTML = '';
     addDebugLog('Return form reset', 'info');
   }
 
@@ -1316,11 +1248,7 @@
     }
   }
 
-  window.viewReturnReceipt = function(returnId) {
-    addDebugLog('Viewing return receipt: ' + returnId, 'info');
-    showToast('Loading return details...', 'info');
-  };
-
+  window.viewReturnReceipt = function(returnId) { addDebugLog('Viewing return receipt: ' + returnId, 'info'); showToast('Loading return details...', 'info'); };
   window.loadReturnHistory = loadReturnHistory;
   window.resetReturnForm = resetReturnForm;
 
@@ -1362,16 +1290,12 @@
       buildSidebar();
       loadReturnHistory();
 
-      // FIX: Auto-trigger return lookup when coming from sales page
       var saleId = sessionStorage.getItem('returnSaleId');
       if (saleId) { 
         addDebugLog('Return sale ID found in session: ' + saleId + ' - auto-loading...', 'info');
         sessionStorage.removeItem('returnSaleId'); 
         safeGetEl('receiptLookup').value = saleId;
-        // Small delay to ensure DOM and data are fully ready
-        setTimeout(function() {
-          lookupReceipt();
-        }, 600);
+        setTimeout(function() { lookupReceipt(); }, 600);
       }
 
       var receiptInput = safeGetEl('receiptLookup');
