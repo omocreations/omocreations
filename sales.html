@@ -192,6 +192,41 @@
     .payment-method { flex:1; min-width:80px; text-align:center; padding:12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:12px; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; font-size:0.8rem; }
     .payment-method.selected { border-color:var(--primary); background:var(--primary-soft); font-weight:600; }
 
+    /* FIX: Company payment container selected state */
+    #companyPaymentContainer .payment-method.selected {
+      background: var(--primary-soft) !important;
+      color: var(--primary) !important;
+      border-color: var(--primary) !important;
+      font-weight: 700;
+    }
+
+    /* FIX: Wholesale payment button selected state */
+    .ws-pay {
+      padding: 10px 20px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.8rem;
+      border: 2px solid rgba(0,0,0,0.08);
+      background: white;
+      color: var(--dark);
+      transition: all 0.25s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+    .ws-pay:hover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      transform: translateY(-2px);
+    }
+    .ws-pay.selected {
+      background: var(--primary) !important;
+      color: white !important;
+      border-color: var(--primary) !important;
+      font-weight: 700;
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(255,77,166,0.3);
+    }
+
     .item-row { display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-wrap:wrap; }
     .item-row .item-select { flex:3; min-width:180px; }
     .item-row .item-size { flex:1; min-width:100px; }
@@ -495,7 +530,6 @@
     html += '<div class="debug-item"><strong>🏢 Co Payment:</strong> ' + companySelectedPayment + '</div>';
     html += '<div class="debug-item"><strong>📦 WS Payment:</strong> ' + wholesalePayment + '</div>';
     
-    // Show active draft details
     if (activeDraftId) {
       var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
       if (draft) {
@@ -1740,14 +1774,22 @@
   document.addEventListener('click', function(e) {
     var target = e.target;
     
-    // Handle payment-method buttons (regular sale + company)
+    // Handle regular sale payment-method buttons
     if (target.classList.contains('payment-method') && target.dataset.method) {
       var container = target.closest('.payment-methods');
       if (container) {
+        // Remove selected class from all buttons in THIS container only
         container.querySelectorAll('.payment-method').forEach(function(el) {
           el.classList.remove('selected');
+          el.style.background = '';
+          el.style.color = '';
+          el.style.borderColor = '';
         });
+        // Add selected styling to clicked button
         target.classList.add('selected');
+        target.style.background = 'var(--primary-soft)';
+        target.style.color = 'var(--primary)';
+        target.style.borderColor = 'var(--primary)';
         
         var method = target.dataset.method;
         var containerId = container.id;
@@ -1767,10 +1809,23 @@
     
     // Handle wholesale payment buttons (.ws-pay with data-m)
     if (target.classList.contains('ws-pay') && target.dataset.m) {
+      // Remove selected styling from all ws-pay buttons
       document.querySelectorAll('.ws-pay').forEach(function(el) {
         el.classList.remove('selected');
+        el.style.background = '';
+        el.style.color = '';
+        el.style.borderColor = '';
+        el.style.transform = '';
+        el.style.boxShadow = '';
       });
+      // Add selected styling to clicked button
       target.classList.add('selected');
+      target.style.background = 'var(--primary)';
+      target.style.color = 'white';
+      target.style.borderColor = 'var(--primary)';
+      target.style.transform = 'scale(1.05)';
+      target.style.boxShadow = '0 4px 12px rgba(255,77,166,0.3)';
+      
       wholesalePayment = target.dataset.m;
       console.log('🐛 DEBUG: Wholesale payment selected:', wholesalePayment);
       if (typeof window._markDraftDirty === 'function') window._markDraftDirty();
@@ -2207,7 +2262,6 @@
       $('.item-size').on('change', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       $('.item-custom-price').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       
-      // FIX: Explicitly set saved values after Select2 is ready for company drafts
       if (draft.items && draft.items.length > 0) {
         draft.items.forEach(function(item, idx) {
           var row = document.querySelectorAll('#companyItems .item-row')[idx];
@@ -2477,7 +2531,7 @@
       '<button class="btn btn-outline btn-sm" onclick="window._addWSItem()"><i class="fas fa-plus"></i> Add Item</button>' +
       '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;"><div style="display:flex;justify-content:space-between;"><span>Total Pieces:</span><span id="wsTotalPieces" style="font-weight:700;">0</span></div><div style="display:flex;justify-content:space-between;"><span>Required:</span><span id="wsRequiredPieces" style="font-weight:700;color:var(--primary);">50</span></div><p id="wsStatusMsg" style="font-size:0.75rem;color:var(--danger);text-align:center;margin-top:4px;"></p></div>' +
       '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;"><span style="font-weight:700;">Total Amount: </span><span id="wsTotalAmount" style="font-size:1.2rem;font-weight:800;">₦0</span></div>' +
-      '<div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;" id="wsPaymentContainer"><button class="btn btn-outline ws-pay' + (wholesalePayment === 'cash' ? ' selected' : '') + '" data-m="cash">💵 Cash</button><button class="btn btn-outline ws-pay' + (wholesalePayment === 'transfer' ? ' selected' : '') + '" data-m="transfer">🏦 Transfer</button><button class="btn btn-outline ws-pay' + (wholesalePayment === 'pos' ? ' selected' : '') + '" data-m="pos">💳 POS</button></div></div>' +
+      '<div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;" id="wsPaymentContainer"><button class="btn btn-outline ws-pay' + (wholesalePayment === 'cash' ? ' selected' : '') + '" data-m="cash" style="' + (wholesalePayment === 'cash' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">💵 Cash</button><button class="btn btn-outline ws-pay' + (wholesalePayment === 'transfer' ? ' selected' : '') + '" data-m="transfer" style="' + (wholesalePayment === 'transfer' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">🏦 Transfer</button><button class="btn btn-outline ws-pay' + (wholesalePayment === 'pos' ? ' selected' : '') + '" data-m="pos" style="' + (wholesalePayment === 'pos' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">💳 POS</button></div></div>' +
       '<button class="btn btn-primary" onclick="window._processWS()" style="width:100%;margin-top:12px;"><i class="fas fa-check-circle"></i> Complete Wholesale Sale</button>'
     );
 
@@ -2524,7 +2578,6 @@
         }
       });
       
-      // FIX: Explicitly set saved values after Select2 is ready
       if (draft.items && draft.items.length > 0) {
         draft.items.forEach(function(item, idx) {
           var row = document.querySelectorAll('.ws-item-row')[idx];
@@ -2535,12 +2588,10 @@
           var priceInput = row.querySelector('.ws-price');
           var borrowIndicator = row.querySelector('.ws-borrow-indicator');
           
-          // Set select value
           if (select && item.id) {
             $(select).val(item.id).trigger('change');
           }
           
-          // Set qty and price AFTER a small delay to let Select2 trigger
           setTimeout(function() {
             if (qtyInput) qtyInput.value = item.pieces || 0;
             if (priceInput) priceInput.value = item.unitPrice || 0;
@@ -2610,7 +2661,7 @@
       '<button class="btn btn-outline btn-sm" onclick="window._addWSItem()"><i class="fas fa-plus"></i> Add Item</button>' +
       '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;"><div style="display:flex;justify-content:space-between;"><span>Total Pieces:</span><span id="wsTotalPieces" style="font-weight:700;">0</span></div><div style="display:flex;justify-content:space-between;"><span>Required:</span><span id="wsRequiredPieces" style="font-weight:700;color:var(--primary);">50</span></div><p id="wsStatusMsg" style="font-size:0.75rem;color:var(--danger);text-align:center;margin-top:4px;"></p></div>' +
       '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;"><span style="font-weight:700;">Total Amount: </span><span id="wsTotalAmount" style="font-size:1.2rem;font-weight:800;">₦0</span></div>' +
-      '<div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;" id="wsPaymentContainer"><button class="btn btn-outline ws-pay selected" data-m="cash">💵 Cash</button><button class="btn btn-outline ws-pay" data-m="transfer">🏦 Transfer</button><button class="btn btn-outline ws-pay" data-m="pos">💳 POS</button></div></div>' +
+      '<div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;" id="wsPaymentContainer"><button class="btn btn-outline ws-pay selected" data-m="cash" style="background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);">💵 Cash</button><button class="btn btn-outline ws-pay" data-m="transfer">🏦 Transfer</button><button class="btn btn-outline ws-pay" data-m="pos">💳 POS</button></div></div>' +
       '<button class="btn btn-primary" onclick="window._processWS()" style="width:100%;margin-top:12px;"><i class="fas fa-check-circle"></i> Complete Wholesale Sale</button>'
     );
 
