@@ -204,7 +204,7 @@
     <div class="panel" id="lookupPanel">
       <div class="panel-header">
         <h3><i class="fas fa-search"></i> Look Up Sale</h3>
-        <span style="font-size:0.75rem;color:var(--gray);">Enter receipt number or scan</span>
+        <span style="font-size:0.75rem;color:var(--gray);">Enter receipt number or use Return button on Sales page</span>
       </div>
       <div class="filter-bar">
         <div class="search-wrapper" style="flex:2;">
@@ -661,10 +661,11 @@
     addDebugLog('Item ' + idx + ' action set to: ' + action, 'info');
     var panel = safeGetEl('exchangePanel-' + idx);
     if (panel) {
-      if (action === 'exchange') { 
+      // FIX: Both exchange AND replace should show the stock picker
+      if (action === 'exchange' || action === 'replace') { 
         panel.classList.add('show'); 
-        buildExchangePanel(idx); 
-        addDebugLog('Exchange panel opened for item ' + idx, 'info');
+        buildExchangePanel(idx, action); 
+        addDebugLog((action === 'exchange' ? 'Exchange' : 'Replace') + ' panel opened for item ' + idx, 'info');
       } else { 
         panel.classList.remove('show'); 
         panel.innerHTML = ''; 
@@ -673,7 +674,9 @@
     updateReturnTotal();
   };
 
-  function buildExchangePanel(idx) {
+  // FIX: buildExchangePanel now accepts actionType parameter
+  function buildExchangePanel(idx, actionType) {
+    actionType = actionType || 'exchange';
     var panel = safeGetEl('exchangePanel-' + idx);
     if (!panel) return;
     var card = panel.closest('.return-item-card');
@@ -693,9 +696,14 @@
     var firstItem = allStockItems[0];
     var firstSizeOpts = firstItem ? getSizeOptions(firstItem).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
 
+    // FIX: Different icon and title for exchange vs replace
+    var icon = actionType === 'replace' ? 'fa-sync-alt' : 'fa-exchange-alt';
+    var titleText = actionType === 'replace' ? 'Replace "' + escapeHtml(returnItemName) + '" with:' : 'Exchange "' + escapeHtml(returnItemName) + '" for:';
+    var subtitleText = actionType === 'replace' ? 'A replacement will be issued from stock. The returned item will be restocked if resellable.' : 'Return value: <strong>' + formatCurrency(unitPrice) + ' each</strong> — Price difference calculated automatically';
+
     panel.innerHTML = '<div style="background:rgba(255,77,166,0.05);padding:12px;border-radius:10px;margin-bottom:8px;">' +
-      '<span style="font-weight:600;color:var(--primary);"><i class="fas fa-exchange-alt"></i> Exchange "' + escapeHtml(returnItemName) + '" for:</span>' +
-      '<p style="font-size:0.7rem;color:var(--gray);margin-top:4px;">Return value: <strong>' + formatCurrency(unitPrice) + ' each</strong> — Price difference calculated automatically</p>' +
+      '<span style="font-weight:600;color:var(--primary);"><i class="fas ' + icon + '"></i> ' + titleText + '</span>' +
+      '<p style="font-size:0.7rem;color:var(--gray);margin-top:4px;">' + subtitleText + '</p>' +
       '</div>' +
       '<div class="exchange-item-row">' +
         '<select class="form-control exchange-select" data-idx="' + idx + '" style="flex:3;min-width:180px;"><option value="">-- Select ' + allStockItems.length + ' products --</option>' + stockOptionsHtml + '</select>' +
@@ -736,7 +744,7 @@
         };
         var options = getSizeOptions(itemData);
         sizeEl.innerHTML = options.map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('');
-        addDebugLog('Exchange product selected for item ' + idx + ': ' + (opt.getAttribute('data-name') || 'Unknown'), 'info');
+        addDebugLog((actionType === 'replace' ? 'Replacement' : 'Exchange') + ' product selected for item ' + idx + ': ' + (opt.getAttribute('data-name') || 'Unknown'), 'info');
         updateExchangeDiff(idx);
       });
 
@@ -751,6 +759,7 @@
     var returnQty = parseInt(qtyInput && qtyInput.value) || 0;
     var unitPrice = parseFloat(card.getAttribute('data-unit-price')) || 0;
     var returnValue = returnQty * unitPrice;
+    var actionType = card.getAttribute('data-selected-action') || 'refund';
 
     var panel = safeGetEl('exchangePanel-' + idx);
     if (!panel || !panel.classList.contains('show')) return;
@@ -762,7 +771,7 @@
     var stockWarning = safeGetEl('exchangeStockWarning-' + idx);
 
     if (!select || !select.value || !qtyEl) { 
-      if (diffDisplay) diffDisplay.innerHTML = '<span style="color:var(--gray);">👆 Select a product to exchange for</span>'; 
+      if (diffDisplay) diffDisplay.innerHTML = '<span style="color:var(--gray);">👆 Select a product to ' + (actionType === 'replace' ? 'replace with' : 'exchange for') + '</span>'; 
       if (actionSection) actionSection.style.display = 'none'; 
       if (stockWarning) stockWarning.style.display = 'none';
       return; 
@@ -802,7 +811,13 @@
 
     if (diffDisplay) {
       diffDisplay.style.background = '';
-      if (Math.abs(diff) < 0.01) {
+      if (actionType === 'replace') {
+        // For replace, no price comparison - just show what's being picked
+        diffDisplay.innerHTML = '<span style="color:var(--success);font-weight:600;">🔧 Replacement: ' + exQty + '× ' + escapeHtml(opt.getAttribute('data-name') || '') + ' (' + sizeLabel + ') will be issued from stock</span>';
+        diffDisplay.style.background = 'rgba(16,185,129,0.06)';
+        card.setAttribute('data-exchange-diff', '0');
+        card.setAttribute('data-exchange-value', exchangeValue);
+      } else if (Math.abs(diff) < 0.01) {
         diffDisplay.innerHTML = '<span class="diff-badge even">✅ <strong>EVEN EXCHANGE</strong> — ' + exQty + '× ' + escapeHtml(opt.getAttribute('data-name') || '') + ' (' + sizeLabel + ') = ' + formatCurrency(exchangeValue) + ' | No money changes hands</span>';
         diffDisplay.style.background = 'rgba(16,185,129,0.08)';
       } else if (diff > 0) {
@@ -812,11 +827,14 @@
         diffDisplay.innerHTML = '<span class="diff-badge refund">💵 <strong>REFUND TO CUSTOMER: ' + formatCurrency(Math.abs(diff)) + '</strong></span><br><small style="color:var(--gray);">Exchange value: ' + formatCurrency(exchangeValue) + ' | Return value: ' + formatCurrency(returnValue) + '</small>';
         diffDisplay.style.background = 'rgba(239,68,68,0.06)';
       }
-      addDebugLog('Exchange diff for item ' + idx + ': ' + formatCurrency(diff) + ' (' + (diff > 0 ? 'customer pays' : diff < 0 ? 'refund' : 'even') + ')', 'info');
+      addDebugLog((actionType === 'replace' ? 'Replacement' : 'Exchange') + ' diff for item ' + idx + ': ' + formatCurrency(diff) + ' (' + (diff > 0 ? 'customer pays' : diff < 0 ? 'refund' : 'even') + ')', 'info');
     }
 
     if (actionSection) {
-      if (Math.abs(diff) < 0.01) {
+      if (actionType === 'replace') {
+        // For replace, no payment needed
+        actionSection.style.display = 'none';
+      } else if (Math.abs(diff) < 0.01) {
         actionSection.style.display = 'none';
       } else if (diff > 0) {
         actionSection.style.display = 'block';
@@ -932,11 +950,12 @@
       hasItems = true;
       var action = card.getAttribute('data-selected-action') || 'refund';
 
-      if (action === 'exchange') {
+      // FIX: Validate both exchange AND replace items
+      if (action === 'exchange' || action === 'replace') {
         var isValid = card.getAttribute('data-exchange-valid');
         if (isValid === 'false') {
-          showToast('Insufficient stock for exchange item in row ' + (parseInt(card.getAttribute('data-item-index')) + 1), 'error');
-          addDebugLog('Exchange validation failed for item ' + idx + ': insufficient stock', 'error');
+          showToast('Insufficient stock for ' + action + ' item in row ' + (parseInt(card.getAttribute('data-item-index')) + 1), 'error');
+          addDebugLog(action + ' validation failed for item ' + idx + ': insufficient stock', 'error');
           hasItems = false;
           return;
         }
@@ -944,8 +963,8 @@
         if (panel) {
           var exSelect = panel.querySelector('.exchange-select');
           if (!exSelect || !exSelect.value) {
-            showToast('Please select an exchange product for "' + card.getAttribute('data-item-name') + '"', 'error');
-            addDebugLog('Exchange validation failed for item ' + idx + ': no product selected', 'error');
+            showToast('Please select a ' + action + ' product for "' + card.getAttribute('data-item-name') + '"', 'error');
+            addDebugLog(action + ' validation failed for item ' + idx + ': no product selected', 'error');
             hasItems = false;
             return;
           }
@@ -975,8 +994,10 @@
         action: action 
       };
 
-      if (action === 'exchange') {
-        needsExchange = true;
+      // FIX: Handle both exchange and replace with stock picker
+      if (action === 'exchange' || action === 'replace') {
+        if (action === 'exchange') needsExchange = true;
+        if (action === 'replace') needsReplacement = true;
         itemData.exchangeDiff = parseFloat(card.getAttribute('data-exchange-diff')) || 0;
         itemData.exchangeValue = parseFloat(card.getAttribute('data-exchange-value')) || 0;
         itemData.diffResolution = card.getAttribute('data-diff-resolution') || '';
@@ -1002,8 +1023,7 @@
           }
         }
       } else if (action === 'refund') { needsRefund = true; } 
-      else if (action === 'store_credit') { needsStoreCredit = true; } 
-      else if (action === 'replace') { needsReplacement = true; }
+      else if (action === 'store_credit') { needsStoreCredit = true; }
       allItems.push(itemData);
     });
 
@@ -1041,6 +1061,7 @@
         returnItems.push(item);
         totalRefundAmount += item.refundAmount;
 
+        // Restock for refund, store_credit, and replace (if resellable)
         if (item.action === 'refund' || item.action === 'store_credit' || item.action === 'replace') {
           if (item.id && !item.isNonInventory && item.condition === 'resellable') {
             var stockItem = allStockItems.find(function(si) { return si.id === item.id; });
@@ -1059,23 +1080,30 @@
 
         if (item.action === 'store_credit') { storeCreditAmount += item.refundAmount; }
         
-        if (item.action === 'exchange' && item.exchangeItemId) {
-          exchangeItems.push({ id: item.exchangeItemId, name: item.exchangeItemName, quantity: item.exchangeItemQty || 1, size: item.exchangeItemSize || '1', sizeLabel: item.exchangeItemSizeLabel || 'Unit', unitPrice: item.exchangeItemPrice || 0 });
-          totalExchangeAmount += (item.exchangeItemPrice || 0) * (item.exchangeItemQty || 1);
-          overallExchangeDiff += item.exchangeDiff || 0;
-          exchangePaymentMethod = item.exchangePayMethod || 'cash';
+        // FIX: Handle both exchange AND replace with selected stock item
+        if ((item.action === 'exchange' || item.action === 'replace') && item.exchangeItemId) {
+          if (item.action === 'exchange') {
+            exchangeItems.push({ id: item.exchangeItemId, name: item.exchangeItemName, quantity: item.exchangeItemQty || 1, size: item.exchangeItemSize || '1', sizeLabel: item.exchangeItemSizeLabel || 'Unit', unitPrice: item.exchangeItemPrice || 0 });
+            totalExchangeAmount += (item.exchangeItemPrice || 0) * (item.exchangeItemQty || 1);
+            overallExchangeDiff += item.exchangeDiff || 0;
+            exchangePaymentMethod = item.exchangePayMethod || 'cash';
+          }
+          // Deduct the chosen item from stock (for both exchange and replace)
           var exStockItem = allStockItems.find(function(si) { return si.id === item.exchangeItemId; });
           if (exStockItem) {
             var exUpdate = { updatedAt: serverTimestamp() }; var exChange = {}; var exSize = item.exchangeItemSize || '1'; var exQty = item.exchangeItemQty || 1;
+            var moveType = item.action === 'replace' ? 'return_replacement_issue' : 'exchange_sale';
+            var moveRef = item.action === 'replace' ? 'Replacement ' : 'Exchange ';
             if (exSize === 'pack') { var dq = exQty * (parseInt(exStockItem.packSize) || 12); exUpdate.packQty = safeNumber(exStockItem.packQty, 0) - exQty; exUpdate.unitQty = safeNumber(exStockItem.unitQty, 0) - dq; exChange.unit = -dq; }
             else if (exSize === 'bundle') { var dq = exQty * (parseInt(exStockItem.bundleSize) || 50); exUpdate.bundleQty = safeNumber(exStockItem.bundleQty, 0) - exQty; exUpdate.unitQty = safeNumber(exStockItem.unitQty, 0) - dq; exChange.unit = -dq; }
             else if (exSize === '0.5' || exSize === '½') { exUpdate.halfQty = safeNumber(exStockItem.halfQty, 0) - exQty; exChange.half = -exQty; }
             else if (exSize === '0.25' || exSize === '¼') { exUpdate.quarterQty = safeNumber(exStockItem.quarterQty, 0) - exQty; exChange.quarter = -exQty; }
             else { exUpdate.unitQty = safeNumber(exStockItem.unitQty, 0) - exQty; exChange.unit = -exQty; }
             batch.update(doc(db, 'stock_items', item.exchangeItemId), exUpdate);
-            movements.push({ itemId: item.exchangeItemId, itemName: item.exchangeItemName, movementType: 'exchange_sale', change: exChange, reference: 'Exchange ' + returnNumber + ' - Receipt ' + (currentSale.receiptNumber || ''), performedBy: currentUser?.uid || 'unknown', performedByName: userData?.fullName || 'Staff' });
+            movements.push({ itemId: item.exchangeItemId, itemName: item.exchangeItemName, movementType: moveType, change: exChange, reference: moveRef + returnNumber + ' - Receipt ' + (currentSale.receiptNumber || ''), performedBy: currentUser?.uid || 'unknown', performedByName: userData?.fullName || 'Staff' });
           }
-          if (item.id && !item.isNonInventory && item.condition === 'resellable') {
+          // For exchange, also restock the returned item if resellable
+          if (item.action === 'exchange' && item.id && !item.isNonInventory && item.condition === 'resellable') {
             var retStockItem = allStockItems.find(function(si) { return si.id === item.id; });
             if (retStockItem) {
               var retUpdate = { updatedAt: serverTimestamp() }; var retChange = {}; var retSize = item.size || '1'; var retQty = item.returnedQuantity;
@@ -1087,20 +1115,6 @@
               batch.update(doc(db, 'stock_items', item.id), retUpdate);
               movements.push({ itemId: item.id, itemName: item.name, movementType: 'return_restock_exchange', change: retChange, reference: 'Return ' + returnNumber + ' (exchanged) - Receipt ' + (currentSale.receiptNumber || ''), performedBy: currentUser?.uid || 'unknown', performedByName: userData?.fullName || 'Staff', condition: item.condition });
             }
-          }
-        }
-
-        if (item.action === 'replace' && item.id && !item.isNonInventory) {
-          var repStockItem = allStockItems.find(function(si) { return si.id === item.id; });
-          if (repStockItem) {
-            var repUpdate = { updatedAt: serverTimestamp() }; var repChange = {}; var repSize = item.size || '1'; var repQty = item.returnedQuantity;
-            if (repSize === 'pack') { var dq = repQty * (parseInt(repStockItem.packSize) || 12); repUpdate.packQty = safeNumber(repStockItem.packQty, 0) - repQty; repUpdate.unitQty = safeNumber(repStockItem.unitQty, 0) - dq; repChange.unit = -dq; }
-            else if (repSize === 'bundle') { var dq = repQty * (parseInt(repStockItem.bundleSize) || 50); repUpdate.bundleQty = safeNumber(repStockItem.bundleQty, 0) - repQty; repUpdate.unitQty = safeNumber(repStockItem.unitQty, 0) - dq; repChange.unit = -dq; }
-            else if (repSize === '0.5' || repSize === '½') { repUpdate.halfQty = safeNumber(repStockItem.halfQty, 0) - repQty; repChange.half = -repQty; }
-            else if (repSize === '0.25' || repSize === '¼') { repUpdate.quarterQty = safeNumber(repStockItem.quarterQty, 0) - repQty; repChange.quarter = -repQty; }
-            else { repUpdate.unitQty = safeNumber(repStockItem.unitQty, 0) - repQty; repChange.unit = -repQty; }
-            batch.update(doc(db, 'stock_items', item.id), repUpdate);
-            movements.push({ itemId: item.id, itemName: item.name, movementType: 'return_replacement', change: repChange, reference: 'Replacement ' + returnNumber + ' - Receipt ' + (currentSale.receiptNumber || ''), performedBy: currentUser?.uid || 'unknown', performedByName: userData?.fullName || 'Staff' });
           }
         }
       }
@@ -1214,8 +1228,8 @@
     allItems.forEach(function(item) {
       var actionLabel = item.action === 'exchange' ? '🔄 Exchanged' : item.action === 'store_credit' ? '🏦 Store Credit' : item.action === 'replace' ? '🔧 Replaced' : '💰 Refunded';
       itemsHtml += '<div class="receipt-item"><span>' + item.returnedQuantity + '× ' + escapeHtml(item.name) + ' (' + (item.sizeLabel || 'Unit') + ') - ' + actionLabel + '</span><span>' + formatCurrency(item.refundAmount) + '</span></div>';
-      if (item.action === 'exchange' && item.exchangeItemName) {
-        itemsHtml += '<div class="receipt-item" style="padding-left:20px;font-size:0.8rem;color:var(--primary);"><span>↪ Exchanged for: ' + item.exchangeItemQty + '× ' + escapeHtml(item.exchangeItemName) + ' (' + (item.exchangeItemSizeLabel || 'Unit') + ')</span><span>' + formatCurrency(item.exchangeItemPrice * item.exchangeItemQty) + '</span></div>';
+      if ((item.action === 'exchange' || item.action === 'replace') && item.exchangeItemName) {
+        itemsHtml += '<div class="receipt-item" style="padding-left:20px;font-size:0.8rem;color:var(--primary);"><span>↪ ' + (item.action === 'replace' ? 'Replaced with: ' : 'Exchanged for: ') + item.exchangeItemQty + '× ' + escapeHtml(item.exchangeItemName) + ' (' + (item.exchangeItemSizeLabel || 'Unit') + ')</span><span>' + formatCurrency(item.exchangeItemPrice * item.exchangeItemQty) + '</span></div>';
       }
     });
     var diffHtml = '';
@@ -1259,7 +1273,7 @@
     d.allItems.forEach(function(item) {
       var actionLabel = item.action === 'exchange' ? 'Exchanged' : item.action === 'store_credit' ? 'Store Credit' : item.action === 'replace' ? 'Replaced' : 'Refunded';
       itemsHtml += '<div class="item"><span>' + item.returnedQuantity + 'x ' + escapeHtml(item.name) + ' (' + (item.sizeLabel || 'Unit') + ') - ' + actionLabel + '</span><span>' + formatCurrency(item.refundAmount) + '</span></div>';
-      if (item.action === 'exchange' && item.exchangeItemName) {
+      if ((item.action === 'exchange' || item.action === 'replace') && item.exchangeItemName) {
         itemsHtml += '<div class="item" style="padding-left:15px;font-size:9pt;color:#ff4da6;"><span>-> ' + item.exchangeItemQty + 'x ' + escapeHtml(item.exchangeItemName) + ' (' + (item.exchangeItemSizeLabel || 'Unit') + ')</span><span>' + formatCurrency(item.exchangeItemPrice * item.exchangeItemQty) + '</span></div>';
       }
     });
@@ -1348,12 +1362,16 @@
       buildSidebar();
       loadReturnHistory();
 
+      // FIX: Auto-trigger return lookup when coming from sales page
       var saleId = sessionStorage.getItem('returnSaleId');
       if (saleId) { 
-        addDebugLog('Return sale ID found in session: ' + saleId, 'info');
+        addDebugLog('Return sale ID found in session: ' + saleId + ' - auto-loading...', 'info');
         sessionStorage.removeItem('returnSaleId'); 
-        safeGetEl('receiptLookup').value = saleId; 
-        lookupReceipt(); 
+        safeGetEl('receiptLookup').value = saleId;
+        // Small delay to ensure DOM and data are fully ready
+        setTimeout(function() {
+          lookupReceipt();
+        }, 600);
       }
 
       var receiptInput = safeGetEl('receiptLookup');
