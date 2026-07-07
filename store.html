@@ -422,7 +422,7 @@
     function isAdmin() { return userData && (userData.role === 'admin' || userData.role === 'super_admin'); }
 
     // ============================================
-    // FIXED: Proper PIN hashing (matches kiosk settings & inventory page)
+    // PROPER PIN HASHING
     // ============================================
     async function hashPin(pin, adminId) {
       const encoder = new TextEncoder();
@@ -435,7 +435,6 @@
     async function verifyPin(pin, requiredRole) {
       if (!pin || pin.length < 4) return false;
       
-      // 1. Check admin_pins collection (synced from kiosk settings)
       try {
         const pinsQuery = query(collection(db, 'admin_pins'), where('isActive', '==', true));
         const pinsSnap = await getDocs(pinsQuery);
@@ -452,7 +451,6 @@
         }
       } catch (e) { console.warn('admin_pins check failed:', e.message); }
       
-      // 2. Check master fallback from system_settings
       try {
         const kioskSnap = await getDoc(doc(db, 'system_settings', 'kiosk'));
         if (kioskSnap.exists()) {
@@ -464,12 +462,10 @@
         }
       } catch (e) { console.warn('master fallback check failed:', e.message); }
       
-      // 3. Check attendant's own hashed PIN
       if (requiredRole === 'attendant' && userData && userData.attendantPinHash) {
         try { const inputHash = await hashPin(pin, currentUser.uid); if (inputHash === userData.attendantPinHash) return true; } catch (e) {}
       }
       
-      // 4. Legacy fallback: plain text attendant PIN
       if (requiredRole === 'attendant' && userData && pin === userData.attendantPin) return true;
       
       return false;
@@ -554,12 +550,140 @@
     function renderWholesaleHistory() { var tbody = document.getElementById('wholesaleHistoryTable'); if (!wholesaleSales.length) { tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><i class="fas fa-history"></i><p>No wholesale sales yet.</p></div></td></tr>'; return; } tbody.innerHTML = wholesaleSales.map(function(s) { var packSize = s.wholesalePackSize || 50; var totalPieces = s.totalPieces || (s.items ? s.items.reduce(function(sum, i) { return sum + (i.pieces || 0); }, 0) : 0); var exceededBadge = s.exceededPackSize ? ' <span class="badge badge-warning">+' + s.extraPieces + ' extra</span>' : ''; var borrowedBadge = s._borrowedItems && s._borrowedItems.length > 0 ? ' <span class="badge badge-borrow">📦 ' + s._borrowedItems.length + ' borrowed</span>' : ''; return '<tr><td>' + formatDate(s.createdAt) + '</td><td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td><td>' + (s.customerName || 'Walk-in') + '</td><td><span class="badge badge-purple">' + packSize + ' pcs</span></td><td>' + (s.items ? s.items.length : 0) + ' items</td><td style="font-weight:600;">' + totalPieces + ' pcs' + exceededBadge + '</td><td><strong>' + formatCurrency(s.totalAmount) + '</strong></td><td><span class="badge badge-success">' + (s.paymentMethod || 'cash') + '</span></td><td>' + (borrowedBadge || '<span class="badge badge-success">None</span>') + '</td><td>' + (s.attendantName || '-') + '</td><td><button class="btn btn-sm btn-outline" onclick="viewWholesaleReceipt(\'' + s.id + '\')"><i class="fas fa-receipt"></i></button></td></tr>'; }).join(''); }
 
     // ============================================
-    // confirmIncomingTransfer
+    // FIXED: confirmIncomingTransfer - properly creates inventory items with movement logs
     // ============================================
-    window.confirmIncomingTransfer = function(incomingId) { var inc = incomingItems.find(function(i) { return i.id === incomingId; }); if (!inc) return; showPinModal('Confirm Transfer', 'add to live inventory from store', async function() { try { var batch = writeBatch(db); batch.update(doc(db, 'store_items', inc.storeItemId), { unitQty: increment(-(inc.totalPieces || 0)), updatedAt: serverTimestamp() }); batch.delete(doc(db, 'incoming_inventory', incomingId)); var inventoryRef = inc.targetInventoryId ? doc(db, 'stock_items', inc.targetInventoryId) : doc(collection(db, 'stock_items')); if (!inc.targetInventoryId) { var newItem = { name: inc.targetInventoryName || inc.storeItemName, category: inc.newInventoryCategory || inc.storeItemCategory || 'other', itemType: inc.inventoryItemType, unitQty: (inc.allocation && inc.allocation.unit) || 0, halfQty: (inc.allocation && inc.allocation.half) || 0, quarterQty: (inc.allocation && inc.allocation.quarter) || 0, unitPrice: (inc.prices && inc.prices.unit) || 0, halfPrice: (inc.prices && inc.prices.half) || 0, quarterPrice: (inc.prices && inc.prices.quarter) || 0, packSize: inc.packSize || 12, packPrice: (inc.prices && inc.prices.pack) || 0, packQty: (inc.allocation && inc.allocation.pack) || 0, bundleSize: inc.bundleSize || 50, bundlePrice: (inc.prices && inc.prices.bundle) || 0, bundleQty: (inc.allocation && inc.allocation.bundle) || 0, threshold: 10, status: 'available', initialUnitQty: (inc.allocation && inc.allocation.unit) || 0, initialHalfQty: (inc.allocation && inc.allocation.half) || 0, initialQuarterQty: (inc.allocation && inc.allocation.quarter) || 0, createdBy: currentUser ? currentUser.uid : '', createdByName: userData ? (userData.fullName || 'Staff') : 'Staff', createdAt: serverTimestamp(), updatedAt: serverTimestamp() }; if (inc.inventoryItemType === 'measured') { newItem.measuredSubType = inc.measuredSubType || 'yard'; newItem.measureUnit = newItem.measuredSubType; if (inc.measuredSubType === 'yard') { newItem.yardQty = (inc.allocation && inc.allocation.unit) || 0; newItem.pricePerYard = (inc.prices && inc.prices.unit) || 0; } else { newItem.bundleQty = (inc.allocation && inc.allocation.bundle) || 0; newItem.bundlePrice = (inc.prices && inc.prices.bundle) || 0; } } batch.set(inventoryRef, newItem); } else { var updates = { updatedAt: serverTimestamp() }; if (inc.allocation && inc.allocation.unit) updates.unitQty = increment(inc.allocation.unit); if (inc.allocation && inc.allocation.half) updates.halfQty = increment(inc.allocation.half); if (inc.allocation && inc.allocation.quarter) updates.quarterQty = increment(inc.allocation.quarter); if (inc.allocation && inc.allocation.pack) updates.packQty = increment(inc.allocation.pack); if (inc.allocation && inc.allocation.bundle) updates.bundleQty = increment(inc.allocation.bundle); batch.update(inventoryRef, updates); } var movRef = doc(collection(db, 'stock_movements')); batch.set(movRef, { itemId: inc.targetInventoryId || inventoryRef.id, itemName: inc.targetInventoryName || inc.storeItemName, movementType: 'incoming_transfer', change: { unit: (inc.allocation && inc.allocation.unit) || 0, half: (inc.allocation && inc.allocation.half) || 0, quarter: (inc.allocation && inc.allocation.quarter) || 0 }, reference: 'Incoming Transfer - ' + inc.storeItemName + ' | ' + inc.totalPieces + ' units', performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff', performedAt: serverTimestamp() }); await batch.commit(); await logAudit('confirm_incoming', 'Confirmed incoming: ' + inc.storeItemName + ' → ' + (inc.targetInventoryName || inc.storeItemName), { storeItemId: inc.storeItemId, totalPieces: inc.totalPieces }); showToast('Inventory updated successfully! ✅', 'success'); } catch (e) { console.error('Confirm transfer failed:', e); showToast('Failed: ' + e.message, 'error'); } }, isAdmin() ? 'attendant' : 'admin'); };
+    window.confirmIncomingTransfer = function(incomingId) {
+      var inc = incomingItems.find(function(i) { return i.id === incomingId; });
+      if (!inc) return;
+      
+      showPinModal('Confirm Transfer', 'add to live inventory from store', async function() {
+        try {
+          var batch = writeBatch(db);
+          
+          // 1. Deduct from store
+          batch.update(doc(db, 'store_items', inc.storeItemId), { 
+            unitQty: increment(-(inc.totalPieces || 0)), 
+            updatedAt: serverTimestamp() 
+          });
+          
+          // 2. Delete the incoming_inventory document
+          batch.delete(doc(db, 'incoming_inventory', incomingId));
+          
+          // 3. Create or update inventory item
+          var inventoryRef;
+          var isNewItem = !inc.targetInventoryId;
+          var inventoryItemId;
+          
+          if (inc.targetInventoryId) {
+            // Update existing inventory item
+            inventoryRef = doc(db, 'stock_items', inc.targetInventoryId);
+            inventoryItemId = inc.targetInventoryId;
+            var updates = { updatedAt: serverTimestamp() };
+            if (inc.allocation && inc.allocation.unit) updates.unitQty = increment(inc.allocation.unit);
+            if (inc.allocation && inc.allocation.half) updates.halfQty = increment(inc.allocation.half);
+            if (inc.allocation && inc.allocation.quarter) updates.quarterQty = increment(inc.allocation.quarter);
+            if (inc.allocation && inc.allocation.pack) updates.packQty = increment(inc.allocation.pack);
+            if (inc.allocation && inc.allocation.bundle) updates.bundleQty = increment(inc.allocation.bundle);
+            batch.update(inventoryRef, updates);
+          } else {
+            // Create new inventory item
+            inventoryRef = doc(collection(db, 'stock_items'));
+            inventoryItemId = inventoryRef.id;
+            var newItem = {
+              name: inc.targetInventoryName || inc.storeItemName,
+              category: inc.newInventoryCategory || inc.storeItemCategory || 'other',
+              itemType: inc.inventoryItemType || 'general',
+              unitQty: (inc.allocation && inc.allocation.unit) || 0,
+              halfQty: (inc.allocation && inc.allocation.half) || 0,
+              quarterQty: (inc.allocation && inc.allocation.quarter) || 0,
+              unitPrice: (inc.prices && inc.prices.unit) || 0,
+              halfPrice: (inc.prices && inc.prices.half) || 0,
+              quarterPrice: (inc.prices && inc.prices.quarter) || 0,
+              packSize: inc.packSize || 12,
+              packPrice: (inc.prices && inc.prices.pack) || 0,
+              packQty: (inc.allocation && inc.allocation.pack) || 0,
+              bundleSize: inc.bundleSize || 50,
+              bundlePrice: (inc.prices && inc.prices.bundle) || 0,
+              bundleQty: (inc.allocation && inc.allocation.bundle) || 0,
+              threshold: 10,
+              status: 'available',
+              initialUnitQty: (inc.allocation && inc.allocation.unit) || 0,
+              initialHalfQty: (inc.allocation && inc.allocation.half) || 0,
+              initialQuarterQty: (inc.allocation && inc.allocation.quarter) || 0,
+              createdBy: currentUser ? currentUser.uid : '',
+              createdByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            };
+            if (inc.inventoryItemType === 'measured') {
+              newItem.measuredSubType = inc.measuredSubType || 'yard';
+              newItem.measureUnit = newItem.measuredSubType;
+              if (inc.measuredSubType === 'yard') {
+                newItem.yardQty = (inc.allocation && inc.allocation.unit) || 0;
+                newItem.pricePerYard = (inc.prices && inc.prices.unit) || 0;
+              } else {
+                newItem.bundleQty = (inc.allocation && inc.allocation.bundle) || 0;
+                newItem.bundlePrice = (inc.prices && inc.prices.bundle) || 0;
+              }
+            }
+            batch.set(inventoryRef, newItem);
+          }
+          
+          // 4. Create stock movement for the STORE (outgoing)
+          var storeMovRef = doc(collection(db, 'stock_movements'));
+          batch.set(storeMovRef, {
+            itemId: inc.storeItemId,
+            itemName: inc.storeItemName,
+            movementType: 'incoming_transfer',
+            change: { unit: -(inc.totalPieces || 0) },
+            reference: 'Transfer to Inventory → ' + (inc.targetInventoryName || inc.storeItemName),
+            performedBy: currentUser ? currentUser.uid : 'unknown',
+            performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+            performedAt: serverTimestamp(),
+            storeItemId: inc.storeItemId,
+            storeItemName: inc.storeItemName
+          });
+          
+          // 5. Create stock movement for the INVENTORY (incoming) - THIS IS THE KEY FIX
+          var invMovRef = doc(collection(db, 'stock_movements'));
+          var movementChange = {
+            unit: (inc.allocation && inc.allocation.unit) || 0,
+            half: (inc.allocation && inc.allocation.half) || 0,
+            quarter: (inc.allocation && inc.allocation.quarter) || 0
+          };
+          batch.set(invMovRef, {
+            itemId: inventoryItemId,
+            itemName: inc.targetInventoryName || inc.storeItemName,
+            movementType: 'add',
+            change: movementChange,
+            reference: 'Store Transfer - ' + inc.storeItemName + ' | ' + inc.totalPieces + ' units transferred | Confirmed by ' + (userData ? (userData.fullName || 'Staff') : 'Staff'),
+            performedBy: currentUser ? currentUser.uid : 'unknown',
+            performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+            performedAt: serverTimestamp(),
+            storeItemId: inc.storeItemId,
+            storeItemName: inc.storeItemName,
+            note: 'Transferred ' + inc.totalPieces + ' total units from store. Allocated as: Unit=' + (inc.allocation && inc.allocation.unit || 0) + ', Half=' + (inc.allocation && inc.allocation.half || 0) + ', Quarter=' + (inc.allocation && inc.allocation.quarter || 0)
+          });
+          
+          await batch.commit();
+          
+          await logAudit('confirm_incoming', 'Confirmed incoming: ' + inc.storeItemName + ' → ' + (inc.targetInventoryName || inc.storeItemName), {
+            storeItemId: inc.storeItemId,
+            totalPieces: inc.totalPieces,
+            inventoryItemId: inventoryItemId,
+            isNewItem: isNewItem
+          });
+          
+          showToast('Inventory updated successfully! ✅ Item now appears in inventory.', 'success');
+        } catch (e) {
+          console.error('Confirm transfer failed:', e);
+          showToast('Failed: ' + e.message, 'error');
+        }
+      }, isAdmin() ? 'attendant' : 'admin');
+    };
 
     // ============================================
-    // FIXED: Restock Modal — Store to Inventory
+    // REST OF THE STORE FUNCTIONS (unchanged from original)
     // ============================================
     window.openRestockModal = async function(storeItemId) {
       var item = storeItems.find(function(i) { return i.id === storeItemId; }); if (!item) return;
@@ -603,9 +727,6 @@
       setTimeout(function() { $('#s2iInventorySelect').select2({ width: '100%', dropdownParent: $('#modalOverlay') }); }, 150);
     };
 
-    // ============================================
-    // FIXED: submitIncomingRestock
-    // ============================================
     window.submitIncomingRestock = function(storeItemId) {
       var item = storeItems.find(function(i) { return i.id === storeItemId; }); if (!item) return;
       var totalUnits = parseInt(document.getElementById('s2iTotalUnits') ? document.getElementById('s2iTotalUnits').value : 0) || 0;
