@@ -141,6 +141,8 @@
     .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
     .badge-purple { background: rgba(139,92,246,0.1); color: var(--purple); }
     .badge-store { background: rgba(139,92,246,0.1); color: var(--purple); }
+    .badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
+    .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
     
     .btn { 
       padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; 
@@ -173,6 +175,19 @@
     .page-view { display: none; } 
     .page-view.active { display: block; }
     
+    .pin-input-container { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
+    .pin-input { width: 55px; height: 65px; text-align: center; font-size: 1.8rem; font-weight: 700; border: 2px solid rgba(255,77,166,0.2); border-radius: 14px; outline: none; font-family: 'Poppins', sans-serif; }
+    .pin-input:focus { border-color: var(--primary); }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: white; border-radius: 28px; padding: 28px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; animation: fadeInUp 0.3s ease; }
+    @keyframes fadeInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray); padding: 5px; transition: all 0.2s; }
+    .modal-close:hover { color: var(--danger); transform: rotate(90deg); }
+    
     @media (max-width: 768px) { 
       .content-wrapper { padding: 16px; } 
       .top-bar { padding: 0 16px; }
@@ -201,6 +216,7 @@
     <div class="tabs-container">
       <button class="tab active" data-tab="items"><i class="fas fa-box"></i> Stock Items <span class="count" id="itemCount">0</span></button>
       <button class="tab" data-tab="storeToInventory"><i class="fas fa-store-alt"></i> Store→Inventory <span class="count" id="storeToInventoryCount">0</span></button>
+      <button class="tab" data-tab="incoming"><i class="fas fa-truck-loading"></i> Incoming <span class="count" id="incomingCount">0</span></button>
       <button class="tab" data-tab="purchases"><i class="fas fa-shopping-cart"></i> Purchases <span class="count" id="purchaseCount">0</span></button>
       <button class="tab" data-tab="customers"><i class="fas fa-users"></i> Customers <span class="count" id="customerCount">0</span></button>
       <button class="tab" data-tab="leave"><i class="fas fa-calendar"></i> Leave <span class="count" id="leaveCount">0</span></button>
@@ -221,6 +237,14 @@
         <div class="table-wrapper"><table class="data-table"><thead><tr><th>Store Item</th><th>Bulk→Units</th><th>Retail Prices</th><th>Requested By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="storeToInventoryTable"><tr><td colspan="6"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody></table></div>
       </div>
     </div>
+
+    <!-- INCOMING INVENTORY TAB (NEW) -->
+    <div id="incomingPanel" class="page-view">
+      <div class="panel">
+        <div class="panel-header"><h3><i class="fas fa-truck-loading"></i> Pending Incoming Inventory (Store → Inventory Transfers)</h3><button class="btn btn-outline btn-sm" onclick="refreshAll()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Store Item</th><th>Units</th><th>Target Inventory</th><th>Type</th><th>Allocation</th><th>Prices</th><th>Requested By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="incomingTable"><tr><td colspan="9"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody></table></div>
+      </div>
+    </div>
     
     <!-- PURCHASES TAB -->
     <div id="purchasesPanel" class="page-view">
@@ -234,7 +258,7 @@
     <div id="customersPanel" class="page-view">
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-users"></i> Pending Customer Approvals</h3><button class="btn btn-outline btn-sm" onclick="refreshAll()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Birthday</th><th>Added By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="customersTable"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody></table></div>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Address</th><th>Birthday</th><th>Added By</th><th>Date</th><th>Actions</th></tr></thead><tbody id="customersTable"><tr><td colspan="8"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody></table></div>
       </div>
     </div>
     
@@ -249,12 +273,19 @@
   </div>
 </main>
 
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="hideModal()">&times;</button></div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, addDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp, addDoc, getDocs, deleteDoc, writeBatch, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = { apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI", authDomain: "fashion-46e5d.firebaseapp.com", projectId: "fashion-46e5d", storageBucket: "fashion-46e5d.firebasestorage.app", messagingSenderId: "408062284317", appId: "1:408062284317:web:eb905bce68926c10a0ecf4" };
   const app = initializeApp(firebaseConfig); 
@@ -268,6 +299,12 @@
     return date.toLocaleDateString('en-GB', {day:'2-digit',month:'short'}); 
   }
   
+  function formatDateTime(d) { 
+    if (!d) return '-'; 
+    const date = d.toDate ? d.toDate() : new Date(d); 
+    return date.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'2-digit'}) + ' ' + date.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}); 
+  }
+  
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   
   function showToast(msg, type='success') { 
@@ -279,6 +316,10 @@
     setTimeout(() => t.classList.add('show'), 10); 
     setTimeout(() => t.remove(), 4000); 
   }
+  
+  function hideModal() { document.getElementById('modalOverlay').classList.remove('active'); }
+  window.hideModal = hideModal;
+  function showModal(title, content) { document.getElementById('modalTitle').textContent = title; document.getElementById('modalContent').innerHTML = content; document.getElementById('modalOverlay').classList.add('active'); }
   
   async function logAudit(action, note) { 
     try { 
@@ -330,7 +371,6 @@
     await logAudit('approve_item', 'Approved stock item'); showToast('Item approved', 'success'); 
   };
   
-  // ✅ FIXED: Reject now moves item to rejected_inventory
   window.rejectItem = async (id) => {
     try {
       const itemSnap = await getDoc(doc(db, 'stock_items', id));
@@ -391,7 +431,6 @@
       if (!reqSnap.exists()) return;
       const req = reqSnap.data();
       
-      // Deduct bulk from store
       const storeRef = doc(db, 'store_items', req.storeItemId);
       const storeSnap = await getDoc(storeRef);
       if (storeSnap.exists()) {
@@ -405,7 +444,6 @@
         });
       }
       
-      // Add to inventory as unit/half/quarter
       const totalQty = req.totalUnits;
       const threshold = 10;
       await addDoc(collection(db, 'stock_items'), {
@@ -429,7 +467,6 @@
         updatedAt: serverTimestamp()
       });
       
-      // Update request status
       await updateDoc(doc(db, 'store_to_inventory_requests', id), {
         status: 'approved',
         approvedBy: currentUser.uid,
@@ -452,6 +489,204 @@
     });
     await logAudit('reject_store_to_inventory', 'Rejected store to inventory request');
     showToast('Request rejected', 'info');
+  };
+
+  // ========== INCOMING INVENTORY (NEW) ==========
+  function loadIncoming() {
+    const q = query(collection(db, 'incoming_inventory'), where('status', '==', 'pending'));
+    unsubscribes.push(onSnapshot(q, (snap) => {
+      const incoming = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      incoming.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      updateCountBadge('incomingCount', incoming.length);
+      const tbody = document.getElementById('incomingTable'); tbody.innerHTML = '';
+      if (incoming.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-truck-loading"></i><p>No pending incoming inventory transfers</p></div></td></tr>'; return;
+      }
+      incoming.forEach(inc => {
+        // Build allocation display
+        let allocParts = [];
+        if (inc.allocation) {
+          if (inc.allocation.unit) allocParts.push('Unit: ' + inc.allocation.unit);
+          if (inc.allocation.half) allocParts.push('½: ' + inc.allocation.half);
+          if (inc.allocation.quarter) allocParts.push('¼: ' + inc.allocation.quarter);
+          if (inc.allocation.pack) allocParts.push('Pack: ' + inc.allocation.pack);
+          if (inc.allocation.bundle) allocParts.push('Bundle: ' + inc.allocation.bundle);
+        }
+        let allocDisplay = allocParts.length ? allocParts.join(', ') : '—';
+        
+        // Build prices display
+        let priceParts = [];
+        if (inc.prices) {
+          if (inc.prices.unit) priceParts.push('U: ' + formatCurrency(inc.prices.unit));
+          if (inc.prices.half) priceParts.push('½: ' + formatCurrency(inc.prices.half));
+          if (inc.prices.quarter) priceParts.push('¼: ' + formatCurrency(inc.prices.quarter));
+          if (inc.prices.pack) priceParts.push('Pk: ' + formatCurrency(inc.prices.pack));
+          if (inc.prices.bundle) priceParts.push('Bdl: ' + formatCurrency(inc.prices.bundle));
+        }
+        let priceDisplay = priceParts.length ? priceParts.join(' / ') : '—';
+        
+        let typeLabel = (inc.inventoryItemType || 'general').replace(/_/g, ' ');
+        let targetDisplay = inc.targetInventoryName || inc.storeItemName || '—';
+        
+        tbody.innerHTML += `<tr>
+          <td><strong>${inc.storeItemName||'-'}</strong></td>
+          <td><strong>${inc.totalPieces||0}</strong> units</td>
+          <td>${targetDisplay} ${inc.targetInventoryId ? '<span class="badge badge-info">Existing</span>' : '<span class="badge badge-purple">New</span>'}</td>
+          <td><span class="badge badge-info">${typeLabel}</span></td>
+          <td style="font-size:0.75rem;">${allocDisplay}</td>
+          <td style="font-size:0.75rem;">${priceDisplay}</td>
+          <td>${inc.requestedByName||'-'}</td>
+          <td>${formatDate(inc.createdAt)}</td>
+          <td style="display:flex;gap:5px;">
+            <button class="btn btn-sm btn-success" onclick="window.approveIncoming('${inc.id}')"><i class="fas fa-check"></i> Approve</button>
+            <button class="btn btn-sm btn-danger" onclick="window.rejectIncoming('${inc.id}')"><i class="fas fa-times"></i> Reject</button>
+          </td>
+        </tr>`;
+      });
+    }));
+  }
+
+  window.approveIncoming = async function(incomingId) {
+    try {
+      const incSnap = await getDoc(doc(db, 'incoming_inventory', incomingId));
+      if (!incSnap.exists()) { showToast('Request not found', 'error'); return; }
+      const inc = incSnap.data();
+      
+      const batch = writeBatch(db);
+      
+      // 1. Deduct from store
+      batch.update(doc(db, 'store_items', inc.storeItemId), { 
+        unitQty: increment(-(inc.totalPieces || 0)), 
+        updatedAt: serverTimestamp() 
+      });
+      
+      // 2. Delete incoming document
+      batch.delete(doc(db, 'incoming_inventory', incomingId));
+      
+      // 3. Create or update inventory item
+      let inventoryItemId;
+      
+      if (inc.targetInventoryId) {
+        // Update existing
+        inventoryItemId = inc.targetInventoryId;
+        const updates = { updatedAt: serverTimestamp() };
+        if (inc.allocation && inc.allocation.unit) updates.unitQty = increment(inc.allocation.unit);
+        if (inc.allocation && inc.allocation.half) updates.halfQty = increment(inc.allocation.half);
+        if (inc.allocation && inc.allocation.quarter) updates.quarterQty = increment(inc.allocation.quarter);
+        if (inc.allocation && inc.allocation.pack) updates.packQty = increment(inc.allocation.pack);
+        if (inc.allocation && inc.allocation.bundle) updates.bundleQty = increment(inc.allocation.bundle);
+        batch.update(doc(db, 'stock_items', inc.targetInventoryId), updates);
+      } else {
+        // Create new
+        const inventoryRef = doc(collection(db, 'stock_items'));
+        inventoryItemId = inventoryRef.id;
+        const newItem = {
+          name: inc.targetInventoryName || inc.storeItemName,
+          category: inc.newInventoryCategory || inc.storeItemCategory || 'other',
+          itemType: inc.inventoryItemType || 'general',
+          unitQty: (inc.allocation && inc.allocation.unit) || 0,
+          halfQty: (inc.allocation && inc.allocation.half) || 0,
+          quarterQty: (inc.allocation && inc.allocation.quarter) || 0,
+          unitPrice: (inc.prices && inc.prices.unit) || 0,
+          halfPrice: (inc.prices && inc.prices.half) || 0,
+          quarterPrice: (inc.prices && inc.prices.quarter) || 0,
+          packSize: inc.packSize || 12,
+          packPrice: (inc.prices && inc.prices.pack) || 0,
+          packQty: (inc.allocation && inc.allocation.pack) || 0,
+          bundleSize: inc.bundleSize || 50,
+          bundlePrice: (inc.prices && inc.prices.bundle) || 0,
+          bundleQty: (inc.allocation && inc.allocation.bundle) || 0,
+          threshold: 10,
+          status: 'available',
+          initialUnitQty: (inc.allocation && inc.allocation.unit) || 0,
+          initialHalfQty: (inc.allocation && inc.allocation.half) || 0,
+          initialQuarterQty: (inc.allocation && inc.allocation.quarter) || 0,
+          createdBy: currentUser.uid,
+          createdByName: userData.fullName,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        if (inc.inventoryItemType === 'measured') {
+          newItem.measuredSubType = inc.measuredSubType || 'yard';
+          newItem.measureUnit = newItem.measuredSubType;
+          if (inc.measuredSubType === 'yard') {
+            newItem.yardQty = (inc.allocation && inc.allocation.unit) || 0;
+            newItem.pricePerYard = (inc.prices && inc.prices.unit) || 0;
+          } else {
+            newItem.bundleQty = (inc.allocation && inc.allocation.bundle) || 0;
+            newItem.bundlePrice = (inc.prices && inc.prices.bundle) || 0;
+          }
+        }
+        batch.set(inventoryRef, newItem);
+      }
+      
+      // 4. Store movement (outgoing)
+      const storeMovRef = doc(collection(db, 'stock_movements'));
+      batch.set(storeMovRef, {
+        itemId: inc.storeItemId,
+        itemName: inc.storeItemName,
+        movementType: 'incoming_transfer',
+        change: { unit: -(inc.totalPieces || 0) },
+        reference: 'Transfer to Inventory → ' + (inc.targetInventoryName || inc.storeItemName) + ' | Approved by ' + (userData?.fullName || 'Admin'),
+        performedBy: currentUser.uid,
+        performedByName: userData?.fullName || 'Admin',
+        performedAt: serverTimestamp(),
+        storeItemId: inc.storeItemId,
+        storeItemName: inc.storeItemName
+      });
+      
+      // 5. Inventory movement (incoming)
+      const invMovRef = doc(collection(db, 'stock_movements'));
+      batch.set(invMovRef, {
+        itemId: inventoryItemId,
+        itemName: inc.targetInventoryName || inc.storeItemName,
+        movementType: 'add',
+        change: {
+          unit: (inc.allocation && inc.allocation.unit) || 0,
+          half: (inc.allocation && inc.allocation.half) || 0,
+          quarter: (inc.allocation && inc.allocation.quarter) || 0
+        },
+        reference: 'Store Transfer - ' + inc.storeItemName + ' | ' + inc.totalPieces + ' units | Approved via Approvals by ' + (userData?.fullName || 'Admin'),
+        performedBy: currentUser.uid,
+        performedByName: userData?.fullName || 'Admin',
+        performedAt: serverTimestamp(),
+        storeItemId: inc.storeItemId,
+        storeItemName: inc.storeItemName,
+        note: 'Approved from Approvals Center. ' + inc.totalPieces + ' total units transferred.'
+      });
+      
+      await batch.commit();
+      
+      await logAudit('approve_incoming', 'Approved incoming: ' + inc.storeItemName + ' → ' + (inc.targetInventoryName || inc.storeItemName) + ' | ' + inc.totalPieces + ' units');
+      showToast('Incoming transfer approved! Inventory updated. ✅', 'success');
+    } catch (e) {
+      console.error('Approve incoming failed:', e);
+      showToast('Failed: ' + e.message, 'error');
+    }
+  };
+
+  window.rejectIncoming = async function(incomingId) {
+    try {
+      const incSnap = await getDoc(doc(db, 'incoming_inventory', incomingId));
+      if (!incSnap.exists()) { showToast('Request not found', 'error'); return; }
+      const inc = incSnap.data();
+      
+      const reason = prompt('Rejection reason:') || 'No reason provided';
+      
+      await updateDoc(doc(db, 'incoming_inventory', incomingId), {
+        status: 'rejected',
+        rejectedBy: currentUser.uid,
+        rejectedByName: userData?.fullName || 'Admin',
+        rejectedAt: serverTimestamp(),
+        rejectionReason: reason
+      });
+      
+      await logAudit('reject_incoming', 'Rejected incoming: ' + inc.storeItemName + ' → ' + (inc.targetInventoryName || inc.storeItemName) + ' | Reason: ' + reason);
+      showToast('Incoming transfer rejected.', 'info');
+    } catch (e) {
+      console.error('Reject incoming failed:', e);
+      showToast('Failed: ' + e.message, 'error');
+    }
   };
 
   // ========== PURCHASES ==========
@@ -499,12 +734,17 @@
       updateCountBadge('customerCount', customers.length);
       const tbody = document.getElementById('customersTable'); tbody.innerHTML = '';
       if (customers.length === 0) { 
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No pending customers</p></div></td></tr>'; return; 
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-users"></i><p>No pending customers</p></div></td></tr>'; return; 
       }
       customers.forEach(c => { 
         tbody.innerHTML += `<tr>
-          <td><strong>${c.fullName||'-'}</strong></td><td>${c.phone||'-'}</td><td>${c.email||'-'}</td>
-          <td>${c.birthday||'-'}</td><td>${c.createdByName||'-'}</td><td>${formatDate(c.createdAt)}</td>
+          <td><strong>${c.fullName||'-'}</strong></td>
+          <td>${c.phone||'-'}</td>
+          <td>${c.email||'-'}</td>
+          <td>${c.address||c.location||'-'}</td>
+          <td>${c.birthday||'-'}</td>
+          <td>${c.createdByName||'-'}</td>
+          <td>${formatDate(c.createdAt)}</td>
           <td style="display:flex;gap:5px;"><button class="btn btn-sm btn-success" onclick="window.approveCustomer('${c.id}')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-sm btn-danger" onclick="window.rejectCustomer('${c.id}')"><i class="fas fa-times"></i> Reject</button></td>
         </tr>`; 
       });
@@ -564,7 +804,7 @@
     showToast('Leave rejected', 'info'); 
   };
 
-  window.refreshAll = () => { cleanup(); loadItems(); loadStoreToInventory(); loadPurchases(); loadCustomers(); loadLeave(); };
+  window.refreshAll = () => { cleanup(); loadItems(); loadStoreToInventory(); loadIncoming(); loadPurchases(); loadCustomers(); loadLeave(); };
 
   // Tab switching
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function() { 
@@ -572,7 +812,8 @@
     this.classList.add('active'); 
     const tabName = this.dataset.tab;
     document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active')); 
-    document.getElementById(tabName + 'Panel').classList.add('active'); 
+    const targetPanel = document.getElementById(tabName + 'Panel');
+    if (targetPanel) targetPanel.classList.add('active'); 
   }));
 
   onAuthStateChanged(auth, async (u) => { 
