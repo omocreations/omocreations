@@ -1182,6 +1182,19 @@
         .recon-value.negative {
             color: var(--danger);
         }
+
+        /* Adjustments tab styles */
+        .adj-positive {
+            color: #10b981;
+            font-weight: 700;
+        }
+        .adj-negative {
+            color: #ef4444;
+            font-weight: 700;
+        }
+        .adj-neutral {
+            color: var(--gray);
+        }
         
         @media (max-width: 1400px) {
             .stats-grid {
@@ -1343,6 +1356,7 @@
             <div class="tabs-container">
                 <button class="tab active" data-tab="all"><i class="fas fa-warehouse"></i> All Items <span class="count" id="allCount">0</span></button>
                 <button class="tab" data-tab="low"><i class="fas fa-exclamation-triangle"></i> Low Stock <span class="count" id="lowCount">0</span></button>
+                <button class="tab" data-tab="adjustments"><i class="fas fa-list-alt"></i> Adjustments <span class="count" id="adjustmentsCount">0</span></button>
                 <button class="tab" data-tab="rejected"><i class="fas fa-ban"></i> Rejected <span class="count" id="rejectedCount">0</span></button>
                 <button class="tab" data-tab="reconciliation" id="reconciliationTab"><i class="fas fa-balance-scale"></i> Reports</button>
             </div>
@@ -1441,6 +1455,57 @@
                 </div>
             </div>
 
+            <div id="adjustmentsPanel" class="page-view">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-list-alt"></i> Stock Adjustment Ledger</h3>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <select class="filter-select" id="adjustmentTypeFilter" onchange="renderAdjustments()">
+                                <option value="all">All Types</option>
+                                <option value="add">➕ Added (Store Transfer)</option>
+                                <option value="edit">✏️ Manual Edit</option>
+                                <option value="sale">💰 Sale Deduction</option>
+                                <option value="wholesale_sale">📦 Wholesale Deduction</option>
+                                <option value="return_restock">↩️ Return Restock</option>
+                                <option value="return_damaged">🗑️ Return Damaged</option>
+                                <option value="inventory_to_store_sale">📦→🏪 Borrowed for Wholesale</option>
+                                <option value="incoming_transfer">📥 Store→Inventory Transfer</option>
+                                <option value="adjustment">🔧 Reconciliation</option>
+                                <option value="initial">🔰 Initial Stock</option>
+                                <option value="reject">🚫 Rejected</option>
+                                <option value="exchange_sale">🔄 Exchange Sale</option>
+                                <option value="return_exchange">↩️🔄 Exchange Return</option>
+                            </select>
+                            <select class="filter-select" id="adjustmentItemFilter" onchange="renderAdjustments()">
+                                <option value="all">All Items</option>
+                            </select>
+                            <button class="btn btn-outline btn-sm" onclick="renderAdjustments()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table" style="min-width: 1400px;">
+                            <thead>
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>Item</th>
+                                    <th>Type</th>
+                                    <th>Unit Δ</th>
+                                    <th>½ Δ</th>
+                                    <th>¼ Δ</th>
+                                    <th>Pack/Bundle Δ</th>
+                                    <th>Reference</th>
+                                    <th>Performed By</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adjustmentsTable">
+                                <tr><td colspan="10"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading adjustments...</p></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <div id="rejectedPanel" class="page-view">
                 <div class="panel">
                     <div class="panel-header"><h3><i class="fas fa-ban"></i> Rejected Inventory</h3></div>
@@ -1508,9 +1573,6 @@
         let pendingEditId = null;
         let pendingRejectedEditId = null;
 
-        // ============================================
-        // FIXED: Proper PIN hashing (matches kiosk settings)
-        // ============================================
         async function hashPin(pin, adminId) {
             const encoder = new TextEncoder();
             const data = encoder.encode(pin + '_admin_salt_' + adminId + '_secure_hash_2024');
@@ -1526,7 +1588,6 @@
             }
 
             try {
-                // Check admin_pins collection (synced from kiosk settings)
                 const pinsQuery = query(collection(db, 'admin_pins'), where('isActive', '==', true));
                 const pinsSnap = await getDocs(pinsQuery);
 
@@ -1535,7 +1596,6 @@
                     if (!data.pinHash) continue;
                     const inputHash = await hashPin(pin, data.adminId);
                     if (inputHash === data.pinHash) {
-                        // Update last used
                         if (docSnap.id !== '_master_fallback') {
                             updateDoc(doc(db, 'admin_pins', docSnap.id), {
                                 lastUsedAt: serverTimestamp(),
@@ -1552,7 +1612,6 @@
                     }
                 }
 
-                // Check master fallback from system_settings
                 const kioskSnap = await getDoc(doc(db, 'system_settings', 'kiosk'));
                 if (kioskSnap.exists()) {
                     const masterHash = kioskSnap.data().masterFallbackPinHash;
@@ -1579,11 +1638,9 @@
         async function validateAttendantPin(pin) {
             if (!pin || pin.length !== 4) return false;
             
-            // Check admin pins first (admin can always authorize)
             const adminResult = await validateAdminPin(pin, { action: 'attendant_action' });
             if (adminResult.valid) return true;
 
-            // Check attendant's own PIN (hashed)
             if (userData && userData.attendantPinHash) {
                 const inputHash = await hashPin(pin, currentUser.uid);
                 if (inputHash === userData.attendantPinHash) return true;
@@ -1747,15 +1804,11 @@
             return userData && (userData.role === 'admin' || userData.role === 'super_admin');
         }
 
-        // ============================================
-        // FIXED: requireAdminPin uses proper hash verification
-        // ============================================
         function requireAdminPin(action, callback) {
             if (isAdmin()) {
                 callback();
                 return;
             }
-            // Use unique IDs to avoid collision
             const uniqueId = 'admin_' + Date.now();
             showModal('Admin PIN Required',
                 '<p style="text-align: center; margin-bottom: 20px;">Enter any <strong>admin PIN</strong> to ' + action + '</p>' +
@@ -1772,7 +1825,6 @@
             );
             document.getElementById(uniqueId + '_pin1').focus();
             
-            // Set up input navigation
             for (let i = 1; i <= 4; i++) {
                 const inp = document.getElementById(uniqueId + '_pin' + i);
                 if (inp) {
@@ -1784,7 +1836,6 @@
                 }
             }
 
-            // Toggle visibility
             document.getElementById(uniqueId + '_toggleEye').onclick = function() {
                 const eye = document.getElementById(uniqueId + '_toggleEye');
                 const isPassword = document.getElementById(uniqueId + '_pin1').type === 'password';
@@ -1811,9 +1862,6 @@
             };
         }
 
-        // ============================================
-        // FIXED: requireAttendantPin uses proper hash verification
-        // ============================================
         function requireAttendantPin(action, callback) {
             if (isAdmin()) {
                 callback();
@@ -1895,14 +1943,11 @@
             return fallback;
         }
 
-        // ============================================
-        // MOVEMENT TYPE LABELS
-        // ============================================
         function getMovementTypeLabel(type) {
             const labels = {
                 'initial': '🔰 Initial Stock',
-                'add': '➕ Added',
-                'edit': '✏️ Edited',
+                'add': '➕ Added (Store Transfer)',
+                'edit': '✏️ Manual Edit',
                 'sale': '💰 Sale',
                 'wholesale_sale': '📦 Wholesale',
                 'return': '↩️ Return',
@@ -1913,7 +1958,7 @@
                 'inventory_to_store_sale': '📦→🏪 Borrowed for Wholesale',
                 'return_replacement_issue': '🔧 Replacement Issued',
                 'reject': '🚫 Rejected',
-                'adjustment': '🔧 Adjustment'
+                'adjustment': '🔧 Reconciliation'
             };
             return labels[type] || type || '—';
         }
@@ -1931,9 +1976,6 @@
             return 'badge-info';
         }
 
-        // ============================================
-        // BORROWED ITEMS TRACKING
-        // ============================================
         function getBorrowedOut(itemId) {
             let total = 0;
             allMovements.forEach(function(m) {
@@ -1959,7 +2001,6 @@
                 if (s.status === 'returned' || !s.items) return;
                 s.items.forEach(function(item) {
                     if (item.id !== itemId) return;
-                    // FIXED: Handle both quantity AND pieces (wholesale items use pieces)
                     const qty = safeNumber(item.quantity || item.pieces, 0);
                     const price = safeNumber(item.unitPrice, 0);
                     const size = (item.sizeLabel || item.size || 'unit').toString().toLowerCase();
@@ -2017,9 +2058,6 @@
             return result;
         }
 
-        // ============================================
-        // FIXED: Movement breakdown - borrowed items NOT double-counted as sold
-        // ============================================
         function getMovementBreakdown(itemId) {
             const movements = allMovements.filter(function(m) {
                 return m.itemId === itemId;
@@ -2068,12 +2106,8 @@
                     returnedUnit += safeNumber(change.unit, 0);
                     returnedHalf += safeNumber(change.half, 0);
                     returnedQuarter += safeNumber(change.quarter, 0);
-                } else if (m.movementType === 'return_damaged') {
-                    // Damaged returns don't restore stock
                 } else if (m.movementType === 'inventory_to_store_sale') {
-                    // FIXED: Only count as borrowed, NOT as sold (sale movement already handles the deduction)
                     borrowedOut += Math.abs(safeNumber(change.unit, 0));
-                    // REMOVED: soldUnit += Math.abs(safeNumber(change.unit, 0)); // ← This was double-counting!
                 } else if (m.movementType === 'reject') {
                     addedUnit -= safeNumber(change.unit, 0);
                     addedHalf -= safeNumber(change.half, 0);
@@ -2235,9 +2269,6 @@
             return alerts.slice(0, 10);
         }
 
-        // ============================================
-        // FIX ALL DISCREPANCIES BUTTON
-        // ============================================
         window.fixAllDiscrepancies = async function() {
             if (!isAdmin()) {
                 showToast('Only admin can fix discrepancies', 'error');
@@ -2369,9 +2400,6 @@
             content.innerHTML = html || '<div class="empty-state"><i class="fas fa-chart-bar"></i><p>No data available for reports yet.</p></div>';
         }
 
-        // ============================================
-        // SALES HISTORY MODALS
-        // ============================================
         window.showUnitSalesHistory = function(itemId, itemName) {
             const b = getSoldBreakdown(itemId);
             const txns = b.allTransactions.filter(function(t) { return t.size === 'unit' || (!t.size || t.size === ''); });
@@ -2451,6 +2479,120 @@
             showModal('Movement Ledger', html);
         };
 
+        // ============================================
+        // NEW: ADJUSTMENTS TAB RENDERING
+        // ============================================
+        function renderAdjustments() {
+            var tbody = document.getElementById('adjustmentsTable');
+            if (!tbody) return;
+            
+            var typeFilter = (document.getElementById('adjustmentTypeFilter') && document.getElementById('adjustmentTypeFilter').value) || 'all';
+            var itemFilter = (document.getElementById('adjustmentItemFilter') && document.getElementById('adjustmentItemFilter').value) || 'all';
+            
+            // Build item filter dropdown if needed
+            var itemFilterEl = document.getElementById('adjustmentItemFilter');
+            if (itemFilterEl && itemFilterEl.options.length <= 1) {
+                var currentVal = itemFilterEl.value;
+                var itemOptions = '<option value="all">All Items</option>';
+                allItems.forEach(function(item) {
+                    itemOptions += '<option value="' + item.id + '">' + (item.name || 'Unknown') + '</option>';
+                });
+                itemFilterEl.innerHTML = itemOptions;
+                itemFilterEl.value = currentVal;
+            }
+            
+            var filtered = allMovements.slice();
+            
+            if (typeFilter !== 'all') {
+                filtered = filtered.filter(function(m) { return m.movementType === typeFilter; });
+            }
+            
+            if (itemFilter !== 'all') {
+                filtered = filtered.filter(function(m) { return m.itemId === itemFilter; });
+            }
+            
+            // Sort newest first
+            filtered.sort(function(a, b) {
+                return (b.performedAt && b.performedAt.seconds || 0) - (a.performedAt && a.performedAt.seconds || 0);
+            });
+            
+            // Update count badge
+            var countEl = document.getElementById('adjustmentsCount');
+            if (countEl) countEl.textContent = filtered.length;
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-list-alt"></i><p>No adjustments found matching your filters.</p></div></td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filtered.map(function(m) {
+                var typeLabel = getMovementTypeLabel(m.movementType);
+                var badgeClass = getMovementTypeBadge(m.movementType);
+                var unitChange = safeNumber(m.change && m.change.unit, 0);
+                var halfChange = safeNumber(m.change && m.change.half, 0);
+                var quarterChange = safeNumber(m.change && m.change.quarter, 0);
+                var packChange = safeNumber(m.change && m.change.pack, 0) || safeNumber(m.change && m.change.bundle, 0);
+                
+                // Color coding for +/-
+                var unitDisplay, halfDisplay, quarterDisplay, packDisplay;
+                
+                if (unitChange > 0) {
+                    unitDisplay = '<span class="adj-positive">+' + unitChange + '</span>';
+                } else if (unitChange < 0) {
+                    unitDisplay = '<span class="adj-negative">' + unitChange + '</span>';
+                } else {
+                    unitDisplay = '<span class="adj-neutral">—</span>';
+                }
+                
+                if (halfChange > 0) {
+                    halfDisplay = '<span class="adj-positive">+' + halfChange + '</span>';
+                } else if (halfChange < 0) {
+                    halfDisplay = '<span class="adj-negative">' + halfChange + '</span>';
+                } else {
+                    halfDisplay = '<span class="adj-neutral">—</span>';
+                }
+                
+                if (quarterChange > 0) {
+                    quarterDisplay = '<span class="adj-positive">+' + quarterChange + '</span>';
+                } else if (quarterChange < 0) {
+                    quarterDisplay = '<span class="adj-negative">' + quarterChange + '</span>';
+                } else {
+                    quarterDisplay = '<span class="adj-neutral">—</span>';
+                }
+                
+                if (packChange > 0) {
+                    packDisplay = '<span class="adj-positive">+' + packChange + '</span>';
+                } else if (packChange < 0) {
+                    packDisplay = '<span class="adj-negative">' + packChange + '</span>';
+                } else {
+                    packDisplay = '<span class="adj-neutral">—</span>';
+                }
+                
+                var detailsHtml = '';
+                if (m.storeItemName) {
+                    detailsHtml += '<small style="color:var(--gray);">Store: ' + m.storeItemName + '</small>';
+                }
+                if (m.note) {
+                    if (detailsHtml) detailsHtml += '<br>';
+                    detailsHtml += '<small style="color:var(--gray);">' + m.note + '</small>';
+                }
+                if (!detailsHtml) detailsHtml = '—';
+                
+                return '<tr>' +
+                    '<td style="white-space:nowrap;">' + formatDateTime(m.performedAt) + '</td>' +
+                    '<td><strong>' + (m.itemName || '—') + '</strong></td>' +
+                    '<td><span class="badge ' + badgeClass + '">' + typeLabel + '</span></td>' +
+                    '<td>' + unitDisplay + '</td>' +
+                    '<td>' + halfDisplay + '</td>' +
+                    '<td>' + quarterDisplay + '</td>' +
+                    '<td>' + packDisplay + '</td>' +
+                    '<td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (m.reference || '').replace(/"/g, '&quot;') + '">' + (m.reference || '—') + '</td>' +
+                    '<td>' + (m.performedByName || '—') + '</td>' +
+                    '<td>' + detailsHtml + '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
         function renderInventory() {
             const search = (document.getElementById('searchInput') && document.getElementById('searchInput').value || '').toLowerCase();
             const catFilter = (document.getElementById('categoryFilter') && document.getElementById('categoryFilter').value || 'all');
@@ -2470,6 +2612,11 @@
             document.getElementById('lowCount').textContent = lowAndOut.length;
             document.getElementById('rejectedCount').textContent = rejected.length;
             document.getElementById('productCount').textContent = available.length + ' items';
+            
+            // Update adjustments count
+            var adjCountEl = document.getElementById('adjustmentsCount');
+            if (adjCountEl) adjCountEl.textContent = allMovements.length;
+            
             updateRevenueDisplay();
 
             const rejectedAlert = document.getElementById('rejectedAlert');
@@ -2612,6 +2759,7 @@
             }
 
             if (currentTab === 'reconciliation') renderReconciliationReport();
+            if (currentTab === 'adjustments') renderAdjustments();
             updateRoleBasedUI();
         }
 
@@ -2787,11 +2935,10 @@
         };
 
         window.openEditItem = function(id) { if (!isAdmin()) { showToast('Only admin can edit', 'error'); return; } const item = allItems.find(function(i) { return i.id === id; }); if (!item) return; pendingEditId = id; const type = item.itemType || 'general'; let form = '<div class="form-group"><label>Item Name</label><input class="form-control" id="editName" value="' + (item.name || '') + '"></div><div class="form-row"><div class="form-group"><label>Category</label><select class="form-control" id="editCategory">' + categories.map(function(c) { return '<option value="' + c + '" ' + (item.category === c ? 'selected' : '') + '>' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>'; }).join('') + '</select></div></div><div class="form-group"><label>Type</label><input class="form-control" value="' + getItemTypeLabel(item) + '" readonly></div>'; if (type === 'general' || type === 'pack_bundle') { form += '<div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="editUnitQty" value="' + safeNumber(item.unitQty, 0) + '" min="0"></div><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="editUnitPrice" value="' + safeNumber(item.unitPrice, 0) + '" step="0.01" min="0"></div><div class="form-group"><label>Threshold</label><input type="number" class="form-control" id="editThreshold" value="' + safeNumber(item.threshold, 10) + '" min="1"></div>'; } else if (type === 'fashion') { form += '<div class="form-row-3"><div class="form-group"><label>Unit Qty</label><input type="number" class="form-control" id="editUnitQty" value="' + safeNumber(item.unitQty, 0) + '" min="0"></div><div class="form-group"><label>Half Qty</label><input type="number" class="form-control" id="editHalfQty" value="' + safeNumber(item.halfQty, 0) + '" min="0"></div><div class="form-group"><label>Quarter Qty</label><input type="number" class="form-control" id="editQuarterQty" value="' + safeNumber(item.quarterQty, 0) + '" min="0"></div></div><div class="form-row-3"><div class="form-group"><label>Unit Price ₦</label><input type="number" class="form-control" id="editUnitPrice" value="' + safeNumber(item.unitPrice, 0) + '" step="0.01" min="0"></div><div class="form-group"><label>Half Price ₦</label><input type="number" class="form-control" id="editHalfPrice" value="' + safeNumber(item.halfPrice, 0) + '" step="0.01" min="0"></div><div class="form-group"><label>Quarter Price ₦</label><input type="number" class="form-control" id="editQuarterPrice" value="' + safeNumber(item.quarterPrice, 0) + '" step="0.01" min="0"></div></div>'; } form += '<div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEdit()"><i class="fas fa-save"></i> Save</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'; showModal('Edit: ' + item.name, form); };
-        window.saveEdit = function() { if (!isAdmin()) return; const id = pendingEditId; if (!id) return; const name = document.getElementById('editName')?.value?.trim(); if (!name) { showToast('Name required', 'error'); return; } const item = allItems.find(function(i) { return i.id === id; }); const type = item?.itemType || 'general'; let updateData = { name, category: document.getElementById('editCategory')?.value, updatedAt: serverTimestamp() }; let oldUnit = item ? safeNumber(item.unitQty, 0) : 0, oldHalf = item ? safeNumber(item.halfQty, 0) : 0, oldQuarter = item ? safeNumber(item.quarterQty, 0) : 0; if (type === 'general' || type === 'pack_bundle') { updateData.unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0; updateData.unitPrice = parseFloat(document.getElementById('editUnitPrice')?.value) || 0; updateData.threshold = parseInt(document.getElementById('editThreshold')?.value) || 10; } else if (type === 'fashion') { updateData.unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0; updateData.halfQty = parseInt(document.getElementById('editHalfQty')?.value) || 0; updateData.quarterQty = parseInt(document.getElementById('editQuarterQty')?.value) || 0; updateData.unitPrice = parseFloat(document.getElementById('editUnitPrice')?.value) || 0; updateData.halfPrice = parseFloat(document.getElementById('editHalfPrice')?.value) || 0; updateData.quarterPrice = parseFloat(document.getElementById('editQuarterPrice')?.value) || 0; } updateDoc(doc(db, 'stock_items', id), updateData).then(async function() { const changeUnit = (updateData.unitQty || 0) - oldUnit; const changeHalf = (updateData.halfQty || 0) - oldHalf; const changeQuarter = (updateData.quarterQty || 0) - oldQuarter; if (changeUnit !== 0 || changeHalf !== 0 || changeQuarter !== 0) { await logMovement(id, name, 'edit', { unit: changeUnit, half: changeHalf, quarter: changeQuarter }, 'Qty adjustment'); } await logAudit('edit_item', 'Updated: ' + name); showToast('Updated!', 'success'); hideModal(); }).catch(function(e) { showToast('Failed: ' + e.message, 'error'); }); };
+        window.saveEdit = function() { if (!isAdmin()) return; const id = pendingEditId; if (!id) return; const name = document.getElementById('editName')?.value?.trim(); if (!name) { showToast('Name required', 'error'); return; } const item = allItems.find(function(i) { return i.id === id; }); const type = item?.itemType || 'general'; let updateData = { name, category: document.getElementById('editCategory')?.value, updatedAt: serverTimestamp() }; let oldUnit = item ? safeNumber(item.unitQty, 0) : 0, oldHalf = item ? safeNumber(item.halfQty, 0) : 0, oldQuarter = item ? safeNumber(item.quarterQty, 0) : 0; if (type === 'general' || type === 'pack_bundle') { updateData.unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0; updateData.unitPrice = parseFloat(document.getElementById('editUnitPrice')?.value) || 0; updateData.threshold = parseInt(document.getElementById('editThreshold')?.value) || 10; } else if (type === 'fashion') { updateData.unitQty = parseInt(document.getElementById('editUnitQty')?.value) || 0; updateData.halfQty = parseInt(document.getElementById('editHalfQty')?.value) || 0; updateData.quarterQty = parseInt(document.getElementById('editQuarterQty')?.value) || 0; updateData.unitPrice = parseFloat(document.getElementById('editUnitPrice')?.value) || 0; updateData.halfPrice = parseFloat(document.getElementById('editHalfPrice')?.value) || 0; updateData.quarterPrice = parseFloat(document.getElementById('editQuarterPrice')?.value) || 0; } updateDoc(doc(db, 'stock_items', id), updateData).then(async function() { const changeUnit = (updateData.unitQty || 0) - oldUnit; const changeHalf = (updateData.halfQty || 0) - oldHalf; const changeQuarter = (updateData.quarterQty || 0) - oldQuarter; if (changeUnit !== 0 || changeHalf !== 0 || changeQuarter !== 0) { await logMovement(id, name, 'edit', { unit: changeUnit, half: changeHalf, quarter: changeQuarter }, 'Manual quantity adjustment'); } await logAudit('edit_item', 'Updated: ' + name); showToast('Updated!', 'success'); hideModal(); }).catch(function(e) { showToast('Failed: ' + e.message, 'error'); }); };
 
         window.deleteItem = function(id) { if (!isAdmin()) { showToast('Only admin can delete', 'error'); return; } const item = allItems.find(function(i) { return i.id === id; }); if (!item) return; if (!confirm('Delete "' + item.name + '"?')) return; deleteDoc(doc(db, 'stock_items', id)).then(async function() { await logAudit('delete_item', 'Deleted: ' + item.name); showToast('Deleted!', 'success'); }).catch(function(e) { showToast('Failed: ' + e.message, 'error'); }); };
         
-        // FIXED: Delete all now requires double confirmation
         window.deleteAllInventory = function() { 
             if (!isAdmin()) { showToast('Only admin can delete all', 'error'); return; } 
             if (!confirm('⚠️ WARNING: This will permanently delete ALL inventory items. This action cannot be undone. Are you sure?')) return;
@@ -2799,7 +2946,6 @@
             requireAdminPin('delete all inventory', async function() { 
                 try { 
                     const snap = await getDocs(collection(db, 'stock_items')); 
-                    // FIXED: Batch in chunks of 450 to avoid Firestore limit
                     const allDocs = snap.docs;
                     for (let i = 0; i < allDocs.length; i += 450) {
                         const batch = writeBatch(db);
@@ -2817,9 +2963,8 @@
         window.confirmRejectItem = async function(id) { const reason = document.getElementById('rejectionReason')?.value?.trim(); if (!reason) { showToast('Reason required', 'error'); return; } const item = allItems.find(function(i) { return i.id === id; }); if (!item) return; try { await addDoc(collection(db, 'rejected_inventory'), { name: item.name, category: item.category, itemType: item.itemType, unitQty: safeNumber(item.unitQty, 0), halfQty: safeNumber(item.halfQty, 0), quarterQty: safeNumber(item.quarterQty, 0), originalId: id, rejectionReason: reason, rejectedBy: currentUser?.uid, rejectedByName: userData?.fullName || 'Admin', rejectedAt: serverTimestamp() }); await deleteDoc(doc(db, 'stock_items', id)); await logMovement(id, item.name, 'reject', { unit: -safeNumber(item.unitQty, 0), half: -safeNumber(item.halfQty, 0), quarter: -safeNumber(item.quarterQty, 0) }, 'Rejected: ' + reason); await logAudit('reject_item', 'Rejected: ' + item.name); showToast('Rejected!', 'success'); hideModal(); } catch (e) { showToast('Failed: ' + e.message, 'error'); } };
         window.permanentlyDeleteItem = function(id) { if (!isAdmin()) return; const item = allRejectedItems.find(function(i) { return i.id === id; }); if (!item) return; if (!confirm('Delete "' + item.name + '"?')) return; deleteDoc(doc(db, 'rejected_inventory', id)).then(async function() { await logAudit('perm_delete', item.name); showToast('Deleted!', 'success'); }).catch(function(e) { showToast('Failed: ' + e.message, 'error'); }); };
         window.openEditRejectedItem = function(id) { if (!isAdmin()) return; const item = allRejectedItems.find(function(i) { return i.id === id; }); if (!item) return; pendingRejectedEditId = id; let form = '<div style="background:rgba(239,68,68,0.1);border-left:4px solid var(--danger);padding:12px;margin-bottom:16px;border-radius:8px;"><span style="font-size:0.8rem;color:var(--danger);"><strong>Reason:</strong> ' + (item.rejectionReason || '—') + '</span></div><div class="form-group"><label>Item Name</label><input class="form-control" id="rejEditName" value="' + (item.name || '') + '"></div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveEditRejectedItem()"><i class="fas fa-paper-plane"></i> Resubmit</button><button class="btn btn-outline" onclick="hideModal()">Cancel</button></div>'; showModal('Fix: ' + item.name, form); };
-        window.saveEditRejectedItem = async function() { if (!isAdmin()) return; const id = pendingRejectedEditId; if (!id) return; const item = allRejectedItems.find(function(i) { return i.id === id; }); if (!item) return; const name = document.getElementById('rejEditName')?.value?.trim(); if (!name) { showToast('Name required', 'error'); return; } let newData = { ...item, name, updatedAt: serverTimestamp(), status: 'available' }; try { const targetId = item.originalId || id; await setDoc(doc(db, 'stock_items', targetId), newData); await deleteDoc(doc(db, 'rejected_inventory', id)); await logMovement(targetId, name, 'add', { unit: safeNumber(newData.unitQty, 0), half: safeNumber(newData.halfQty, 0), quarter: safeNumber(newData.quarterQty, 0) }, 'Resubmitted'); await logAudit('resubmit_item', name); showToast('Resubmitted!', 'success'); hideModal(); document.querySelector('.tab[data-tab="all"]').click(); } catch (e) { showToast('Failed: ' + e.message, 'error'); } };
+        window.saveEditRejectedItem = async function() { if (!isAdmin()) return; const id = pendingRejectedEditId; if (!id) return; const item = allRejectedItems.find(function(i) { return i.id === id; }); if (!item) return; const name = document.getElementById('rejEditName')?.value?.trim(); if (!name) { showToast('Name required', 'error'); return; } let newData = { ...item, name, updatedAt: serverTimestamp(), status: 'available' }; try { const targetId = item.originalId || id; await setDoc(doc(db, 'stock_items', targetId), newData); await deleteDoc(doc(db, 'rejected_inventory', id)); await logMovement(targetId, name, 'add', { unit: safeNumber(newData.unitQty, 0), half: safeNumber(newData.halfQty, 0), quarter: safeNumber(newData.quarterQty, 0) }, 'Resubmitted from rejected'); await logAudit('resubmit_item', name); showToast('Resubmitted!', 'success'); hideModal(); document.querySelector('.tab[data-tab="all"]').click(); } catch (e) { showToast('Failed: ' + e.message, 'error'); } };
 
-        // FIXED: CSV import with batch chunking and duplicate detection
         window.openCsvUploadModal = function() { if (!isAdmin()) { showToast('Only admin can import', 'error'); return; } showModal('Import CSV', '<p>Upload a CSV file.</p><p><span class="csv-template-link" onclick="downloadCsvTemplate()"><i class="fas fa-download"></i> Download Template</span></p><div class="form-group"><label>CSV File *</label><input type="file" class="form-control" id="csvFile" accept=".csv"></div><button class="btn btn-primary" onclick="processCsvUpload()"><i class="fas fa-upload"></i> Upload</button><button class="btn btn-outline" onclick="hideModal()" style="margin-top:8px;">Cancel</button>'); };
         window.downloadCsvTemplate = function() { const csv = 'name,category,itemType,measuredSubType,unitQty,unitPrice,halfQty,halfPrice,quarterQty,quarterPrice,packSize,packPrice,bundleQty,bundlePrice,yardQty,pricePerYard,threshold\nExample,rhinestones,fashion,,100,500,20,300,10,150,,,,,,10'; const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventory_template.csv'; a.click(); };
         window.processCsvUpload = async function() { 
@@ -2832,10 +2977,8 @@
             const headers = lines[0].split(',').map(function(h) { return h.trim().toLowerCase(); }); 
             let added = 0, errors = 0, skipped = 0;
             
-            // FIXED: Build set of existing names for duplicate detection
             const existingNames = new Set(allItems.map(function(i) { return (i.name || '').toLowerCase(); }));
             
-            // FIXED: Batch in chunks of 450
             const BATCH_SIZE = 450;
             const rows = [];
             for (let i = 1; i < lines.length; i++) {
@@ -2846,7 +2989,6 @@
                 const name = row.name;
                 if (!name) { errors++; continue; }
                 
-                // FIXED: Check for duplicates
                 if (existingNames.has(name.toLowerCase())) {
                     skipped++;
                     continue;
@@ -2895,11 +3037,11 @@
         window.restockFromThirdParty = function(id) { hideModal(); navigateTo('purchases.html'); };
         window.viewHistory = async function(id) { const item = allItems.find(function(i) { return i.id === id; }); if (!item) return; try { const snap = await getDocs(query(collection(db, 'audit_logs'), orderBy('performedAt', 'desc'))); let html = '<h4>' + item.name + '</h4>'; const logs = snap.docs.map(function(d) { return d.data(); }).filter(function(l) { return l.note && l.note.indexOf(item.name) !== -1; }); if (logs.length === 0) html += '<p>No history</p>'; else { html += '<table style="width:100%;font-size:0.8rem;"><tr><th>Date</th><th>Action</th><th>By</th></tr>'; logs.forEach(function(l) { html += '<tr><td>' + formatDate(l.performedAt) + '</td><td>' + (l.actionType||'-') + '</td><td>' + (l.performedByName||'-') + '</td></tr>'; }); html += '</table>'; } html += '<button class="btn btn-primary" onclick="hideModal()" style="margin-top:16px;width:100%;">Close</button>'; showModal('Audit History', html); } catch (e) { showToast('Error', 'error'); } };
 
-        window.openHelpGuide = function() { showModal('📖 Help', '<div class="guide-section"><h4>📦 Item Types</h4><p>General, Fashion, Pack/Bundle, Measured.</p></div><div class="guide-section"><h4>📦 Borrowed Items</h4><p>When store stock runs low during wholesale, items are <strong>borrowed from inventory</strong>. These show in the "Borrowed Out" column and in movement history.</p></div><div class="guide-section"><h4>🔐 Roles</h4><p>Admin: full access. Attendant: view only.</p></div><div class="guide-section"><h4>🔧 Fix All Button</h4><p>Click <strong>Fix All</strong> to reconcile stock discrepancies. This creates adjustment movements to match calculated stock to actual stock.</p></div><button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close</button>'); };
+        window.openHelpGuide = function() { showModal('📖 Help', '<div class="guide-section"><h4>📦 Item Types</h4><p>General, Fashion, Pack/Bundle, Measured.</p></div><div class="guide-section"><h4>📦 Borrowed Items</h4><p>When store stock runs low during wholesale, items are <strong>borrowed from inventory</strong>. These show in the "Borrowed Out" column and in movement history.</p></div><div class="guide-section"><h4>📋 Adjustments Tab</h4><p>The <strong>Adjustments</strong> tab shows every stock change across all items. Green = stock added (+), Red = stock removed (-). Filter by type or item to track specific changes.</p></div><div class="guide-section"><h4>🔐 Roles</h4><p>Admin: full access. Attendant: view only.</p></div><div class="guide-section"><h4>🔧 Fix All Button</h4><p>Click <strong>Fix All</strong> to reconcile stock discrepancies. This creates adjustment movements to match calculated stock to actual stock.</p></div><button class="btn btn-primary" onclick="hideModal()" style="width:100%;margin-top:20px;">Close</button>'); };
 
         document.getElementById('searchInput').addEventListener('input', renderInventory);
         document.getElementById('categoryFilter').addEventListener('change', renderInventory);
-        document.querySelectorAll('.tab').forEach(function(t) { t.addEventListener('click', function() { currentTab = this.dataset.tab; document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); }); this.classList.add('active'); document.querySelectorAll('.page-view').forEach(function(p) { p.classList.remove('active'); }); const targetPanel = document.getElementById(currentTab + 'Panel'); if (targetPanel) { targetPanel.classList.add('active'); if (currentTab === 'reconciliation') renderReconciliationReport(); else renderInventory(); } }); });
+        document.querySelectorAll('.tab').forEach(function(t) { t.addEventListener('click', function() { currentTab = this.dataset.tab; document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); }); this.classList.add('active'); document.querySelectorAll('.page-view').forEach(function(p) { p.classList.remove('active'); }); const targetPanel = document.getElementById(currentTab + 'Panel'); if (targetPanel) { targetPanel.classList.add('active'); if (currentTab === 'reconciliation') renderReconciliationReport(); else if (currentTab === 'adjustments') renderAdjustments(); else renderInventory(); } }); });
         window.switchToRejectedTab = function() { const tab = document.querySelector('.tab[data-tab="rejected"]'); if (tab) tab.click(); };
 
         onAuthStateChanged(auth, async function(u) { if (!u) { window.location.href = 'auth.html'; return; } currentUser = u; try { const snap = await getDoc(doc(db, 'users', u.uid)); if (!snap.exists() || snap.data().status !== 'active') { await signOut(auth); window.location.href = 'auth.html'; return; } userData = snap.data(); if (isAdmin()) revenueRevealed = true; document.getElementById('userName').textContent = (userData.fullName || 'Staff').split(' ')[0]; document.getElementById('userRole').textContent = (userData.role || '').replace('_', ' '); document.getElementById('userAvatar').textContent = (userData.fullName || 'A').charAt(0).toUpperCase(); document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); buildSidebar(); await loadCategories(); loadInventory(); await logAudit('view_inventory', 'Viewed inventory'); } catch (e) { showToast('Error', 'error'); } });
