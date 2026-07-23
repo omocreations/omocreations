@@ -192,7 +192,6 @@
     .payment-method { flex:1; min-width:80px; text-align:center; padding:12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:12px; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; font-size:0.8rem; }
     .payment-method.selected { border-color:var(--primary); background:var(--primary-soft); font-weight:600; }
 
-    /* FIX: Company payment container selected state */
     #companyPaymentContainer .payment-method.selected {
       background: var(--primary-soft) !important;
       color: var(--primary) !important;
@@ -200,7 +199,6 @@
       font-weight: 700;
     }
 
-    /* FIX: Wholesale payment button selected state */
     .ws-pay {
       padding: 10px 20px;
       border-radius: 14px;
@@ -1774,7 +1772,6 @@
   document.addEventListener('click', function(e) {
     var target = e.target;
     
-    // Handle regular sale payment-method buttons
     if (target.classList.contains('payment-method') && target.dataset.method) {
       var container = target.closest('.payment-methods');
       if (container) {
@@ -1805,7 +1802,6 @@
       }
     }
     
-    // Handle wholesale payment buttons (.ws-pay with data-m)
     if (target.classList.contains('ws-pay') && target.dataset.m) {
       document.querySelectorAll('.ws-pay').forEach(function(el) {
         el.classList.remove('selected');
@@ -2471,22 +2467,35 @@
   };
 
   // ============================================
-  // WHOLESALE SALE MODAL
+  // WHOLESALE SALE MODAL - UPDATED TO SHOW ALL INVENTORY ITEMS
   // ============================================
   async function openWholesaleSaleModalWithDraft(draft) {
     await loadCustomersAndStock();
     currentModalType = 'wholesale';
     
+    // FIX: Show ALL inventory items that have stock, regardless of store presence
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
+    
+    // FIX: ALL stock items with quantity > 0 are borrowable, not just those NOT in store
     var borrowableItems = allStockItems.filter(function(si) {
-      return (si.unitQty || 0) > 0 && !allStoreItems.some(function(store) { return store.id === si.id || store.name === si.name; });
+      return (si.unitQty || 0) > 0;  // Show ALL inventory items with stock
     });
     var hasBorrowable = borrowableItems.length > 0;
 
     var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>'; }).join('');
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
+    
+    // FIX: Show ALL inventory items as borrowable with clear indication
     var borrowOptions = borrowableItems.map(function(i) {
-      return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitPrice||i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '" data-borrow="true" class="borrow-option">📦 BORROW: ' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs in inventory)</option>';
+      var inStore = allStoreItems.some(function(store) { 
+        return store.id === i.id || store.name === i.name; 
+      });
+      var labelPrefix = inStore ? '📦 BORROW (Also in Store): ' : '📦 BORROW (Inventory Only): ';
+      return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + 
+             '" data-cost="' + (i.unitPrice||i.unitCost||0) + 
+             '" data-avail="' + (i.unitQty||0) + 
+             '" data-borrow="true" class="borrow-option">' + 
+             labelPrefix + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs)</option>';
     }).join('');
 
     wholesaleCustomerType = draft.wholesaleCustomerType || 'existing';
@@ -2495,17 +2504,24 @@
     var itemsHtml = '';
     if (draft.items && draft.items.length > 0) {
       itemsHtml = draft.items.map(function(item) {
+        var isBorrowed = item.borrowed || false;
         return '<div class="ws-item-row" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">' +
-          '<select class="form-control ws-select" style="flex:2;min-width:180px;"><option value="">-- Search item --</option>' + storeOptions + (hasBorrowable ? '<optgroup label="📦 Borrow from Inventory">' + borrowOptions + '</optgroup>' : '') + '</select>' +
+          '<select class="form-control ws-select" style="flex:2;min-width:180px;"><option value="">-- Search item --</option>' + 
+          storeOptions + 
+          (hasBorrowable ? '<optgroup label="📦 Borrow from Inventory">' + borrowOptions + '</optgroup>' : '') + 
+          '</select>' +
           '<input type="number" class="form-control ws-qty" value="' + (item.pieces || 0) + '" min="0" style="flex:0.8;min-width:70px;" placeholder="Pieces">' +
           '<input type="number" class="form-control ws-price" value="' + (item.unitPrice || 0) + '" placeholder="Price/pc ₦" step="0.01" style="flex:1;min-width:100px;">' +
-          '<span class="ws-borrow-indicator" style="display:' + (item.borrowed ? 'inline-flex' : 'none') + ';"><i class="fas fa-boxes"></i> Will borrow from inventory</span>' +
+          '<span class="ws-borrow-indicator" style="display:' + (isBorrowed ? 'inline-flex' : 'none') + ';"><i class="fas fa-boxes"></i> Will borrow from inventory</span>' +
           '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.ws-item-row\').remove();window._updateWSTotal();"><i class="fas fa-times"></i></button>' +
         '</div>';
       }).join('');
     } else {
       itemsHtml = '<div class="ws-item-row" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">' +
-        '<select class="form-control ws-select" style="flex:2;min-width:180px;"><option value="">-- Search item --</option>' + storeOptions + (hasBorrowable ? '<optgroup label="📦 Borrow from Inventory">' + borrowOptions + '</optgroup>' : '') + '</select>' +
+        '<select class="form-control ws-select" style="flex:2;min-width:180px;"><option value="">-- Search item --</option>' + 
+        storeOptions + 
+        (hasBorrowable ? '<optgroup label="📦 Borrow from Inventory">' + borrowOptions + '</optgroup>' : '') + 
+        '</select>' +
         '<input type="number" class="form-control ws-qty" value="0" min="0" style="flex:0.8;min-width:70px;" placeholder="Pieces">' +
         '<input type="number" class="form-control ws-price" placeholder="Price/pc ₦" step="0.01" style="flex:1;min-width:100px;">' +
         '<span class="ws-borrow-indicator" style="display:none;"><i class="fas fa-boxes"></i> Will borrow from inventory</span>' +
@@ -2516,7 +2532,7 @@
     showModal('New Wholesale Sale',
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
-        (hasBorrowable ? '<span class="borrow-badge"><i class="fas fa-boxes"></i> Inventory items available to borrow</span>' : '') +
+        (hasBorrowable ? '<span class="borrow-badge"><i class="fas fa-boxes"></i> ' + borrowableItems.length + ' inventory items available to borrow</span>' : '') +
         '<span style="margin-left:auto;font-size:0.7rem;color:var(--gray);">Draft: ' + escapeHtml(draft.label) + '</span>' +
       '</div>' +
       '<div class="customer-type-toggle"><button class="customer-type-btn' + (wholesaleCustomerType === 'existing' ? ' active' : '') + '" data-type="existing" onclick="window._switchWSType(\'existing\')"><i class="fas fa-users"></i> Existing</button><button class="customer-type-btn' + (wholesaleCustomerType === 'new' ? ' active' : '') + '" data-type="new" onclick="window._switchWSType(\'new\')"><i class="fas fa-user-plus"></i> New</button></div>' +
@@ -2553,6 +2569,8 @@
           
           if (opt && opt.getAttribute('data-borrow') === 'true') {
             borrowIndicator.show();
+            borrowIndicator.textContent = '📦 Will borrow from inventory';
+            borrowIndicator.css('color', '#b45309');
             if (priceInput) priceInput.val(parseFloat(opt.getAttribute('data-cost')) || 0);
           } else {
             borrowIndicator.hide();
@@ -2593,6 +2611,7 @@
             if (priceInput) priceInput.value = item.unitPrice || 0;
             if (borrowIndicator && item.borrowed) {
               borrowIndicator.style.display = 'inline-flex';
+              borrowIndicator.textContent = '📦 Will borrow from inventory';
             }
             window._updateWSTotal();
           }, 100);
@@ -2602,6 +2621,7 @@
       window._bindWSEvents();
       window._updateWSTotal();
       console.log('🐛 DEBUG: Wholesale draft restored - items:', draft.items.length, '| name:', draft.label);
+      console.log('🐛 DEBUG: Borrowable items count:', borrowableItems.length);
     }, 200);
   }
 
@@ -2620,16 +2640,30 @@
     currentModalType = 'wholesale';
     
     await loadCustomersAndStock();
+    
+    // FIX: Show ALL inventory items that have stock, regardless of store presence
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
+    
+    // FIX: ALL stock items with quantity > 0 are borrowable
     var borrowableItems = allStockItems.filter(function(si) {
-      return (si.unitQty || 0) > 0 && !allStoreItems.some(function(store) { return store.id === si.id || store.name === si.name; });
+      return (si.unitQty || 0) > 0;  // Show ALL inventory items with stock
     });
     var hasBorrowable = borrowableItems.length > 0;
 
     var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>'; }).join('');
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
+    
+    // FIX: Show ALL inventory items as borrowable with clear indication
     var borrowOptions = borrowableItems.map(function(i) {
-      return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitPrice||i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '" data-borrow="true" class="borrow-option">📦 BORROW: ' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs in inventory)</option>';
+      var inStore = allStoreItems.some(function(store) { 
+        return store.id === i.id || store.name === i.name; 
+      });
+      var labelPrefix = inStore ? '📦 BORROW (Also in Store): ' : '📦 BORROW (Inventory Only): ';
+      return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + 
+             '" data-cost="' + (i.unitPrice||i.unitCost||0) + 
+             '" data-avail="' + (i.unitQty||0) + 
+             '" data-borrow="true" class="borrow-option">' + 
+             labelPrefix + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs)</option>';
     }).join('');
 
     wholesaleCustomerType = 'existing';
@@ -2638,7 +2672,7 @@
     showModal('New Wholesale Sale',
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
-        (hasBorrowable ? '<span class="borrow-badge"><i class="fas fa-boxes"></i> Inventory items available to borrow</span>' : '') +
+        (hasBorrowable ? '<span class="borrow-badge"><i class="fas fa-boxes"></i> ' + borrowableItems.length + ' inventory items available to borrow</span>' : '') +
         '<span style="margin-left:auto;font-size:0.7rem;color:var(--gray);">Draft: ' + escapeHtml(draft.label) + '</span>' +
       '</div>' +
       '<div class="customer-type-toggle"><button class="customer-type-btn active" data-type="existing" onclick="window._switchWSType(\'existing\')"><i class="fas fa-users"></i> Existing</button><button class="customer-type-btn" data-type="new" onclick="window._switchWSType(\'new\')"><i class="fas fa-user-plus"></i> New</button></div>' +
@@ -2647,7 +2681,10 @@
       '<div class="wholesale-pack-size-box"><label>📦 Wholesale Pack Size (pieces required)</label><input type="number" class="form-control" id="wsPackSize" value="50" min="1" style="font-size:1.5rem;text-align:center;" onchange="window._updateWSTotal()"><p style="font-size:0.75rem;color:var(--gray);margin-top:4px;">Customer must buy at least this many pieces total</p></div>' +
       '<div id="wsItems">' +
         '<div class="ws-item-row" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">' +
-          '<select class="form-control ws-select" style="flex:2;min-width:180px;"><option value="">-- Search item --</option>' + storeOptions + (hasBorrowable ? '<optgroup label="📦 Borrow from Inventory">' + borrowOptions + '</optgroup>' : '') + '</select>' +
+          '<select class="form-control ws-select" style="flex:2;min-width:180px;"><option value="">-- Search item --</option>' + 
+          storeOptions + 
+          (hasBorrowable ? '<optgroup label="📦 Borrow from Inventory">' + borrowOptions + '</optgroup>' : '') + 
+          '</select>' +
           '<input type="number" class="form-control ws-qty" value="0" min="0" style="flex:0.8;min-width:70px;" placeholder="Pieces">' +
           '<input type="number" class="form-control ws-price" placeholder="Price/pc ₦" step="0.01" style="flex:1;min-width:100px;">' +
           '<span class="ws-borrow-indicator" style="display:none;"><i class="fas fa-boxes"></i> Will borrow from inventory</span>' +
@@ -2677,6 +2714,8 @@
         
         if (opt && opt.getAttribute('data-borrow') === 'true') {
           borrowIndicator.show();
+          borrowIndicator.textContent = '📦 Will borrow from inventory';
+          borrowIndicator.css('color', '#b45309');
           if (priceInput) priceInput.val(parseFloat(opt.getAttribute('data-cost')) || 0);
         } else {
           borrowIndicator.hide();
@@ -2689,6 +2728,7 @@
       });
       
       window._bindWSEvents();
+      console.log('🐛 DEBUG: Wholesale modal opened with ' + borrowableItems.length + ' borrowable items');
     }, 150);
   };
 
@@ -2703,17 +2743,32 @@
 
   window._addWSItem = function() {
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
+    
+    // FIX: ALL stock items with quantity > 0 are borrowable
     var borrowableItems = allStockItems.filter(function(si) {
-      return (si.unitQty || 0) > 0 && !allStoreItems.some(function(store) { return store.id === si.id || store.name === si.name; });
+      return (si.unitQty || 0) > 0;
     });
     
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
+    
+    // FIX: Show ALL inventory items as borrowable
     var borrowOptions = borrowableItems.map(function(i) {
-      return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitPrice||i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '" data-borrow="true" class="borrow-option">📦 BORROW: ' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs in inventory)</option>';
+      var inStore = allStoreItems.some(function(store) { 
+        return store.id === i.id || store.name === i.name; 
+      });
+      var labelPrefix = inStore ? '📦 BORROW (Also in Store): ' : '📦 BORROW (Inventory Only): ';
+      return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + 
+             '" data-cost="' + (i.unitPrice||i.unitCost||0) + 
+             '" data-avail="' + (i.unitQty||0) + 
+             '" data-borrow="true" class="borrow-option">' + 
+             labelPrefix + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs)</option>';
     }).join('');
     
     var div = document.createElement('div'); div.className = 'ws-item-row'; div.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap;';
-    div.innerHTML = '<select class="form-control ws-select" style="flex:2;min-width:180px;"><option value="">-- Search item --</option>' + storeOptions + (borrowableItems.length > 0 ? '<optgroup label="📦 Borrow from Inventory">' + borrowOptions + '</optgroup>' : '') + '</select>' +
+    div.innerHTML = '<select class="form-control ws-select" style="flex:2;min-width:180px;"><option value="">-- Search item --</option>' + 
+      storeOptions + 
+      (borrowableItems.length > 0 ? '<optgroup label="📦 Borrow from Inventory">' + borrowOptions + '</optgroup>' : '') + 
+      '</select>' +
       '<input type="number" class="form-control ws-qty" value="0" min="0" style="flex:0.8;min-width:70px;" placeholder="Pieces">' +
       '<input type="number" class="form-control ws-price" placeholder="Price/pc ₦" step="0.01" style="flex:1;min-width:100px;">' +
       '<span class="ws-borrow-indicator" style="display:none;"><i class="fas fa-boxes"></i> Will borrow from inventory</span>' +
@@ -2735,6 +2790,8 @@
       
       if (opt && opt.getAttribute('data-borrow') === 'true') {
         borrowIndicator.show();
+        borrowIndicator.textContent = '📦 Will borrow from inventory';
+        borrowIndicator.css('color', '#b45309');
         if (priceInput) priceInput.val(parseFloat(opt.getAttribute('data-cost')) || 0);
       } else {
         borrowIndicator.hide();
@@ -2767,6 +2824,8 @@
           var opt = sel.options[sel.selectedIndex];
           if (opt && opt.getAttribute('data-borrow') === 'true') {
             borrowIndicator.style.display = 'inline-flex';
+            borrowIndicator.textContent = '📦 Will borrow from inventory';
+            borrowIndicator.style.color = '#b45309';
           } else {
             borrowIndicator.style.display = 'none';
           }
@@ -2930,16 +2989,13 @@
       if (item.isNonInventory || !item.id) continue;
 
       if (saleType === 'wholesale') {
-        // Look up the item in store first
         var storeItem = allStoreItems.find(function(si) { return si.id === item.id; });
         var availableInStore = storeItem ? safeNumber(storeItem.unitQty, 0) : 0;
         var needed = item.pieces || item.quantity || 1;
         
-        // If no store item found, check if it exists in inventory
         if (!storeItem) {
           console.log('⚠️ Item not in store: ' + item.id + ' - checking inventory...');
           
-          // Search inventory by ID first, then by name
           var invItem = allStockItems.find(function(si) { return si.id === item.id; });
           if (!invItem) {
             invItem = allStockItems.find(function(si) { 
@@ -2948,7 +3004,6 @@
           }
           
           if (invItem && safeNumber(invItem.unitQty, 0) >= needed) {
-            // Item exists in inventory but NOT in store - borrow fully from inventory
             console.log('📦 Fully borrowing from inventory: ' + invItem.name + ' (' + needed + ' units)');
             
             borrowedItems.push({
@@ -2988,7 +3043,6 @@
             item.storeQty = 0;
             item.fullyBorrowed = true;
             
-            // Continue to next item since this one is handled
             continue;
           } else {
             showToast(
@@ -3001,12 +3055,10 @@
           }
         }
         
-        // Store item exists - calculate how much from store vs inventory
         var fromStore = Math.min(needed, availableInStore);
         var fromInventory = needed - fromStore;
         
         if (fromInventory > 0) {
-          // Need to borrow some from inventory
           var stockItem = null;
           
           if (storeItem.linkedInventoryId) {
@@ -3021,7 +3073,6 @@
           }
           
           if (stockItem && safeNumber(stockItem.unitQty, 0) >= fromInventory) {
-            // Borrow from inventory to supplement store
             console.log('📦 Borrowing from inventory: ' + stockItem.name + ' (' + fromInventory + ' units) to supplement store (' + fromStore + ' units)');
             
             borrowedItems.push({
@@ -3072,7 +3123,6 @@
           }
         }
         
-        // Deduct from store
         if (fromStore > 0) {
           stockUpdates.push({ 
             collection: 'store_items', 
@@ -3364,7 +3414,6 @@
           var price = i.unitPrice || 0;
           var total = qty * price;
           var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
-          // FIXED: No borrow badges on customer receipt - clean receipt
           itemsHtml += '<div class="receipt-item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
         });
       }
@@ -3457,7 +3506,6 @@
     currentModalType = prevModalType;
   };
 
-  // FIXED: Company record - shows stock sources for internal use
   window.viewCompanyRecord = function(id) {
     var s = findSaleByIdentifier(id);
     if (!s) { showToast('Sale not found', 'error'); return; }
@@ -3477,7 +3525,6 @@
     if (isWholesale) title = '🏢 Wholesale Company Record';
     else if (isCompany) title = '🏢 Company Sale Record';
     
-    // Build items with stock source information
     var itemsHtml = '';
     if (s.items && s.items.length > 0) {
       itemsHtml += '<table style="width:100%;font-size:0.85rem;border-collapse:collapse;">';
@@ -3495,7 +3542,6 @@
         var total = qty * price;
         var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
         
-        // Determine stock source
         var sourceHtml = '';
         if (i.fullyBorrowed) {
           sourceHtml = '<span style="color:#f59e0b;font-weight:700;">📦 Fully from Inventory<br><small>(' + (i.borrowedQty || qty) + ' pcs borrowed)</small></span>';
@@ -3519,7 +3565,6 @@
       itemsHtml += '</tbody></table>';
     }
     
-    // Build borrowed items summary
     var borrowSummaryHtml = '';
     if (s._borrowedItems && s._borrowedItems.length > 0) {
       borrowSummaryHtml = '<div style="background:rgba(245,158,11,0.08);border:1px dashed var(--warning);border-radius:12px;padding:14px;margin:16px 0;">' +
@@ -3599,7 +3644,6 @@
   };
 
   window.printCompanyRecord = function(id) {
-    // Open the company record modal briefly, then trigger print
     var s = findSaleByIdentifier(id);
     if (!s) { showToast('Sale not found', 'error'); return; }
     
@@ -3611,7 +3655,6 @@
     var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
     var isCompany = s.isCompanySale;
     
-    // Build items table
     var itemsRows = '';
     if (s.items && s.items.length > 0) {
       s.items.forEach(function(i) {
@@ -3638,7 +3681,6 @@
       });
     }
     
-    // Build borrow summary
     var borrowRows = '';
     if (s._borrowedItems && s._borrowedItems.length > 0) {
       s._borrowedItems.forEach(function(b) {
