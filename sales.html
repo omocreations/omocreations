@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#ff4da6">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#ff4da6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Sales · OmoCreations</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
   <style>
@@ -2467,13 +2467,13 @@
   };
 
   // ============================================
-  // WHOLESALE SALE MODAL - UPDATED TO SHOW ALL INVENTORY ITEMS
+  // WHOLESALE SALE MODAL - FIXED: ALL INVENTORY ITEMS SHOW IN BORROW
   // ============================================
   async function openWholesaleSaleModalWithDraft(draft) {
     await loadCustomersAndStock();
     currentModalType = 'wholesale';
     
-    // FIX: Show ALL inventory items that have stock, regardless of store presence
+    // Store items with stock
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
     
     // FIX: ALL stock items with quantity > 0 are borrowable, not just those NOT in store
@@ -2570,7 +2570,7 @@
           if (opt && opt.getAttribute('data-borrow') === 'true') {
             borrowIndicator.show();
             borrowIndicator.textContent = '📦 Will borrow from inventory';
-            borrowIndicator.css('color', '#b45309');
+            borrowIndicator.style.color = '#b45309';
             if (priceInput) priceInput.val(parseFloat(opt.getAttribute('data-cost')) || 0);
           } else {
             borrowIndicator.hide();
@@ -2641,7 +2641,7 @@
     
     await loadCustomersAndStock();
     
-    // FIX: Show ALL inventory items that have stock, regardless of store presence
+    // Store items with stock
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
     
     // FIX: ALL stock items with quantity > 0 are borrowable
@@ -2715,7 +2715,7 @@
         if (opt && opt.getAttribute('data-borrow') === 'true') {
           borrowIndicator.show();
           borrowIndicator.textContent = '📦 Will borrow from inventory';
-          borrowIndicator.css('color', '#b45309');
+          borrowIndicator.style.color = '#b45309';
           if (priceInput) priceInput.val(parseFloat(opt.getAttribute('data-cost')) || 0);
         } else {
           borrowIndicator.hide();
@@ -2791,7 +2791,7 @@
       if (opt && opt.getAttribute('data-borrow') === 'true') {
         borrowIndicator.show();
         borrowIndicator.textContent = '📦 Will borrow from inventory';
-        borrowIndicator.css('color', '#b45309');
+        borrowIndicator.style.color = '#b45309';
         if (priceInput) priceInput.val(parseFloat(opt.getAttribute('data-cost')) || 0);
       } else {
         borrowIndicator.hide();
@@ -3323,8 +3323,56 @@
   }
 
   // ============================================
-  // RECEIPTS
+  // RECEIPTS - FIXED: COMBINE DUPLICATE ITEMS
   // ============================================
+  
+  // Helper function to combine items with same name + size + price
+  function combineItems(items) {
+    if (!items || items.length === 0) return [];
+    
+    var combined = {};
+    items.forEach(function(item) {
+      // Create a unique key based on name + size + unitPrice
+      var key = (item.name || 'Item') + '|' + (item.size || '1') + '|' + (item.sizeLabel || 'Unit') + '|' + (item.unitPrice || 0);
+      
+      if (combined[key]) {
+        // Add quantity and total to existing entry
+        combined[key].quantity += (item.quantity || item.pieces || 1);
+        combined[key].total = combined[key].quantity * combined[key].unitPrice;
+      } else {
+        // Create new entry
+        combined[key] = {
+          name: item.name || 'Item',
+          size: item.size || '1',
+          sizeLabel: item.sizeLabel || 'Unit',
+          unitPrice: item.unitPrice || 0,
+          quantity: item.quantity || item.pieces || 1,
+          total: (item.quantity || item.pieces || 1) * (item.unitPrice || 0),
+          isNonInventory: item.isNonInventory || false,
+          borrowed: item.borrowed || false,
+          borrowedQty: item.borrowedQty || 0,
+          storeQty: item.storeQty || 0,
+          fullyBorrowed: item.fullyBorrowed || false,
+          condition: item.condition || null
+        };
+      }
+    });
+    
+    return Object.values(combined);
+  }
+
+  function getDisplayItems(items) {
+    if (!items || items.length === 0) return [];
+    
+    var combined = combineItems(items);
+    
+    combined.sort(function(a, b) {
+      return a.name.localeCompare(b.name);
+    });
+    
+    return combined;
+  }
+
   window.showReceiptModal = function(sale) {
     if (!sale) return;
     
@@ -3356,11 +3404,10 @@
       itemsHtml += '<div style="margin-top:8px;padding:8px;background:rgba(16,185,129,0.08);border-radius:8px;">';
       itemsHtml += '<p style="font-weight:700;color:#10b981;margin:0 0 8px 0;font-size:0.85rem;">↩ ITEMS RETURNED</p>';
       if (sale.returnedItems && sale.returnedItems.length > 0) {
-        sale.returnedItems.forEach(function(i) {
-          var qty = i.returnedQty || i.returnedQuantity || i.quantity || 1;
-          var price = i.unitPrice || 0;
-          var total = qty * price;
-          itemsHtml += '<div class="receipt-item"><span>↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#10b981;">+' + formatCurrency(total) + '</span></div>';
+        var returnedCombined = combineItems(sale.returnedItems);
+        returnedCombined.forEach(function(i) {
+          var total = i.quantity * i.unitPrice;
+          itemsHtml += '<div class="receipt-item"><span>↩ ' + i.quantity + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#10b981;">+' + formatCurrency(total) + '</span></div>';
         });
       }
       itemsHtml += '<div class="receipt-total" style="color:#10b981;border-top:1px dashed #10b981;"><span>Return Value:</span><span>' + formatCurrency(sale.totalRefund || sale.returnedValue || 0) + '</span></div>';
@@ -3369,11 +3416,10 @@
       itemsHtml += '<div style="margin-top:10px;padding:8px;background:rgba(255,77,166,0.08);border-radius:8px;">';
       itemsHtml += '<p style="font-weight:700;color:#ff4da6;margin:0 0 8px 0;font-size:0.85rem;">↪ ITEMS EXCHANGED FOR</p>';
       if (sale.exchangeItems && sale.exchangeItems.length > 0) {
-        sale.exchangeItems.forEach(function(i) {
-          var qty = i.quantity || 1;
-          var price = i.unitPrice || 0;
-          var total = qty * price;
-          itemsHtml += '<div class="receipt-item"><span>↪ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
+        var exchangeCombined = combineItems(sale.exchangeItems);
+        exchangeCombined.forEach(function(i) {
+          var total = i.quantity * i.unitPrice;
+          itemsHtml += '<div class="receipt-item"><span>↪ ' + i.quantity + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
         });
       }
       itemsHtml += '<div class="receipt-total" style="color:#ff4da6;border-top:1px dashed #ff4da6;"><span>Exchange Total:</span><span>' + formatCurrency(sale.exchangeTotal || 0) + '</span></div>';
@@ -3394,12 +3440,11 @@
       itemsHtml += '<div style="margin-top:8px;padding:8px;background:rgba(239,68,68,0.08);border-radius:8px;">';
       itemsHtml += '<p style="font-weight:700;color:#ef4444;margin:0 0 8px 0;font-size:0.85rem;">↩ RETURNED ITEMS</p>';
       if (sale.returnedItems && sale.returnedItems.length > 0) {
-        sale.returnedItems.forEach(function(i) {
-          var qty = i.returnedQty || i.returnedQuantity || i.quantity || 1;
-          var price = i.unitPrice || 0;
-          var total = qty * price;
+        var returnedCombined = combineItems(sale.returnedItems);
+        returnedCombined.forEach(function(i) {
+          var total = i.quantity * i.unitPrice;
           var conditionBadge = i.condition ? ' <small style="color:var(--gray);">(' + i.condition + ')</small>' : '';
-          itemsHtml += '<div class="receipt-item"><span>↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + conditionBadge + '</span><span style="color:#ef4444;">-' + formatCurrency(total) + '</span></div>';
+          itemsHtml += '<div class="receipt-item"><span>↩ ' + i.quantity + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + conditionBadge + '</span><span style="color:#ef4444;">-' + formatCurrency(total) + '</span></div>';
         });
       }
       itemsHtml += '<div class="receipt-total" style="color:#ef4444;border-top:1px dashed #ef4444;"><span>Total Refund:</span><span>-' + formatCurrency(sale.totalRefund || 0) + '</span></div>';
@@ -3408,12 +3453,15 @@
       var actionLabels = { 'refund': '💵 Full Refund', 'exchange': '🔄 Exchanged', 'store_credit': '🏦 Store Credit', 'replace': '🔄 Replaced' };
       itemsHtml += '<div style="text-align:center;margin-top:8px;padding:6px;background:var(--primary-soft);border-radius:8px;font-size:0.8rem;font-weight:600;">Action: ' + (actionLabels[sale.returnAction] || escapeHtml(sale.returnAction || 'Return')) + '</div>';
     } else {
+      // ===== FIX: USE COMBINED ITEMS ON RECEIPT =====
       if (sale.items && sale.items.length > 0) {
-        sale.items.forEach(function(i) {
-          var qty = i.quantity || i.pieces || 1;
+        var displayItems = getDisplayItems(sale.items);
+        displayItems.forEach(function(i) {
+          var qty = i.quantity || 1;
           var price = i.unitPrice || 0;
           var total = qty * price;
           var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
+          // Clean receipt - no borrow badges for customer
           itemsHtml += '<div class="receipt-item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
         });
       }
@@ -3506,6 +3554,9 @@
     currentModalType = prevModalType;
   };
 
+  // ============================================
+  // COMPANY RECORD VIEW - Shows stock sources
+  // ============================================
   window.viewCompanyRecord = function(id) {
     var s = findSaleByIdentifier(id);
     if (!s) { showToast('Sale not found', 'error'); return; }
@@ -3753,6 +3804,9 @@
     else showToast('Receipt not found', 'error');
   };
 
+  // ============================================
+  // PRINT RECEIPT - FIXED: COMBINE ITEMS
+  // ============================================
   window.printReceipt = function(id) {
     var s = findSaleByIdentifier(id);
     if (!s) { showToast('Sale not found for printing', 'error'); return; }
@@ -3774,8 +3828,9 @@
     if (isExchange) {
       itemsHtml += '<div style="font-weight:bold;color:#10b981;margin-top:8px;border-top:1px dashed #ccc;padding-top:4px;">RETURNED ITEMS</div>';
       if (s.returnedItems) {
-        s.returnedItems.forEach(function(i) {
-          var qty = i.returnedQty || i.returnedQuantity || i.quantity || 1;
+        var returnedCombined = combineItems(s.returnedItems);
+        returnedCombined.forEach(function(i) {
+          var qty = i.quantity || 1;
           var total = qty * (i.unitPrice || 0);
           itemsHtml += '<div class="item"><span>↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#10b981;">+' + formatCurrency(total) + '</span></div>';
         });
@@ -3784,7 +3839,8 @@
       
       itemsHtml += '<div style="font-weight:bold;color:#ff4da6;margin-top:8px;border-top:1px dashed #ccc;padding-top:4px;">EXCHANGE ITEMS</div>';
       if (s.exchangeItems) {
-        s.exchangeItems.forEach(function(i) {
+        var exchangeCombined = combineItems(s.exchangeItems);
+        exchangeCombined.forEach(function(i) {
           var qty = i.quantity || 1;
           var total = qty * (i.unitPrice || 0);
           itemsHtml += '<div class="item"><span>↪ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
@@ -3802,8 +3858,9 @@
     } else if (isReturn) {
       itemsHtml += '<div style="font-weight:bold;color:#ef4444;margin-top:8px;border-top:1px dashed #ccc;padding-top:4px;">RETURNED ITEMS</div>';
       if (s.returnedItems) {
-        s.returnedItems.forEach(function(i) {
-          var qty = i.returnedQty || i.returnedQuantity || i.quantity || 1;
+        var returnedCombined = combineItems(s.returnedItems);
+        returnedCombined.forEach(function(i) {
+          var qty = i.quantity || 1;
           var total = qty * (i.unitPrice || 0);
           itemsHtml += '<div class="item"><span>↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#ef4444;">-' + formatCurrency(total) + '</span></div>';
         });
@@ -3813,11 +3870,15 @@
       var actionLabels = { 'refund': 'Full Refund', 'exchange': 'Exchanged', 'store_credit': 'Store Credit', 'replace': 'Replaced' };
       itemsHtml += '<div style="text-align:center;margin-top:4px;font-weight:bold;">Action: ' + (actionLabels[s.returnAction] || escapeHtml(s.returnAction || 'Return')) + '</div>';
     } else {
+      // ===== FIX: USE COMBINED ITEMS =====
       if (s.items) {
-        s.items.forEach(function(i) {
-          var qty = i.quantity || i.pieces || 1;
+        var combinedItems = combineItems(s.items);
+        combinedItems.sort(function(a, b) { return a.name.localeCompare(b.name); });
+        combinedItems.forEach(function(i) {
+          var qty = i.quantity || 1;
           var total = qty * (i.unitPrice || 0);
-          itemsHtml += '<div class="item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
+          var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
+          itemsHtml += '<div class="item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
         });
       }
     }
