@@ -117,6 +117,9 @@
     .audit-info .audit-row { display: flex; justify-content: space-between; padding: 4px 0; flex-wrap: wrap; gap: 4px; }
     .audit-info .audit-row span:first-child { color: var(--gray); }
     .audit-info .audit-row span:last-child { font-weight: 600; }
+    .location-card { background: var(--primary-soft); border-radius: 12px; padding: 12px 16px; margin: 8px 0; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,77,166,0.2); }
+    .location-card i { color: var(--primary); font-size: 1.2rem; }
+    .location-card .location-text { font-weight: 600; color: var(--dark); }
     @media (max-width: 768px) { .content-wrapper { padding: 16px; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .modal { padding: 20px; } }
     @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
   </style>
@@ -373,7 +376,6 @@
       const saleType = sale._saleType || sale._type || 'regular';
       stats.saleTypes[saleType] = (stats.saleTypes[saleType] || 0) + 1;
       
-      // FIXED: Track all items bought
       if (sale.items && Array.isArray(sale.items)) {
         sale.items.forEach(item => {
           stats.allItems.push({
@@ -389,7 +391,6 @@
         });
       }
       
-      // FIXED: Track all attendants who served this customer
       if (sale.attendantName) {
         stats.attendants.add(sale.attendantName);
       }
@@ -405,7 +406,6 @@
       customerStats.set(customerId, stats);
     });
     
-    // Limit items list to prevent memory issues
     customerStats.forEach((stats, id) => {
       if (stats.allItems.length > 100) {
         stats.allItems = stats.allItems.slice(-100);
@@ -459,12 +459,10 @@
       const needsSync = Math.abs(storedSpent - calculatedSpent) > 1;
       if (needsSync) anyNeedsSync = true;
       
-      // FIXED: Show who added the customer
       const addedBy = c.createdByName || c.addedBy || '-';
       const addedByRole = c.createdByRole || '';
       const addedByTag = addedBy !== '-' ? '<br><small style="color:var(--gray);font-size:0.65rem;">by ' + addedBy + (addedByRole ? ' (' + addedByRole + ')' : '') + '</small>' : '';
       
-      // FIXED: Show sale type breakdown
       let saleTypeBreakdown = '';
       if (stats.saleTypes) {
         const types = [];
@@ -536,7 +534,6 @@
     });
   }
 
-  // FIXED: Complete customer history view with items, attendants, and audit trail
   window.viewCustomer = async (id) => { 
     const c = allCustomers.find(x => x.id === id); 
     if(!c) return;
@@ -577,7 +574,6 @@
       } 
     });
     
-    // FIXED: Build sale type breakdown
     let saleTypeInfo = '';
     if (stats.saleTypes) {
       const typeParts = [];
@@ -589,14 +585,12 @@
       }
     }
     
-    // FIXED: Build attendants list
     let attendantsList = '';
     if (stats.attendants && stats.attendants.size > 0) {
       const attArray = Array.from(stats.attendants);
       attendantsList = '<p><strong>👤 Served by:</strong> ' + attArray.map(a => '<span class="sold-by-tag">' + a + '</span>').join(' ') + '</p>';
     }
     
-    // FIXED: Build items history
     let itemsHtml = '';
     if (stats.allItems && stats.allItems.length > 0) {
       itemsHtml = '<div class="history-section">' +
@@ -604,7 +598,6 @@
         '<div style="max-height:300px;overflow-y:auto;">' +
         '<ul class="item-list">';
       
-      // Sort items by date (most recent first)
       const sortedItems = [...stats.allItems].sort((a,b) => {
         const aTime = a.date?.seconds || a.date?.toDate?.()?.getTime()/1000 || 0;
         const bTime = b.date?.seconds || b.date?.toDate?.()?.getTime()/1000 || 0;
@@ -630,12 +623,10 @@
       itemsHtml += '</ul></div></div>';
     }
     
-    // FIXED: Build audit trail for customer creation/approval
     let auditHtml = '<div class="history-section">' +
       '<h4><i class="fas fa-clipboard-check"></i> Account Audit Trail</h4>' +
       '<div class="audit-info">';
     
-    // Who created/added the customer
     auditHtml += '<div class="audit-row"><span>📝 Added by:</span><span>' + 
       (c.createdByName || c.addedBy || 'Unknown') + 
       (c.createdByRole ? ' (' + c.createdByRole + ')' : '') + 
@@ -643,7 +634,6 @@
     
     auditHtml += '<div class="audit-row"><span>📅 Added on:</span><span>' + formatDateTime(c.createdAt) + '</span></div>';
     
-    // Who approved the customer
     if (c.approvedByName) {
       auditHtml += '<div class="audit-row"><span>✅ Approved by:</span><span style="color:var(--success);">' + 
         c.approvedByName + '</span></div>';
@@ -653,10 +643,14 @@
       auditHtml += '<div class="audit-row"><span>✅ Approval:</span><span style="color:var(--warning);">Pending</span></div>';
     }
     
-    // Who last updated
     if (c.updatedAt) {
       auditHtml += '<div class="audit-row"><span>✏️ Last updated:</span><span>' + formatDateTime(c.updatedAt) + '</span></div>';
     }
+    
+    // FIXED: Show location with better formatting
+    const locationDisplay = c.location && c.location.trim() !== '' ? 
+      '<div class="location-card"><i class="fas fa-map-pin"></i><span class="location-text">' + escapeHtml(c.location) + '</span></div>' : 
+      '<p style="color:var(--gray);font-style:italic;"><i class="fas fa-map-pin"></i> No location specified</p>';
     
     auditHtml += '</div></div>';
     
@@ -671,7 +665,8 @@
       '<div style="margin-top:10px;"><small>Total Purchases: ' + stats.count + ' | Total Spent: ' + formatCurrency(stats.spent) + '</small></div></div>' +
       '<p><strong>📞</strong> ' + (c.phone||'-') + '</p>' +
       '<p><strong>📧</strong> ' + (c.email||'-') + '</p>' +
-      '<p><strong>📍</strong> ' + (c.location||'-') + '</p>' +
+      // FIXED: Display location prominently
+      '<div style="margin: 12px 0;"><strong>📍 Location:</strong><br>' + locationDisplay + '</div>' +
       '<p><strong>🎂</strong> ' + (c.birthday||'-') + '</p>' +
       '<p><strong>First Purchase:</strong> ' + (stats.firstPurchase ? formatDate(stats.firstPurchase) : '-') + '</p>' +
       '<p><strong>Last Purchase:</strong> ' + (stats.lastPurchase ? formatDate(stats.lastPurchase) : '-') + '</p>' +
@@ -702,6 +697,12 @@
     document.getElementById('modalContent').innerHTML = html; 
     document.getElementById('modalOverlay').style.display = 'flex';
   };
+
+  // Helper function for escaping HTML
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
   window.openAddCustomerModal = () => { 
     document.getElementById('modalTitle').textContent = 'Add New Customer'; 
@@ -734,26 +735,26 @@
     }
     
     showPinModal('Add Customer', 'add customer', async () => { 
-      // FIXED: Store who added the customer with their role
       await addDoc(collection(db, 'customers'), { 
-        fullName: name, phone, 
+        fullName: name, 
+        phone: phone, 
         email: document.getElementById('custEmail')?.value?.trim()||'', 
         location: location, 
         birthday: document.getElementById('custBirthday')?.value||'', 
-        totalSpent: 0, purchaseCount: 0, 
+        totalSpent: 0, 
+        purchaseCount: 0, 
         status: isAdmin() ? 'approved' : 'pending_approval',
         createdBy: currentUser.uid, 
         createdByName: userData.fullName || 'Staff',
         createdByRole: userData.role || 'attendant',
         createdAt: serverTimestamp(),
-        // If admin adds, auto-approve
         ...(isAdmin() ? {
           approvedBy: currentUser.uid,
           approvedByName: userData.fullName || 'Admin',
           approvedAt: serverTimestamp()
         } : {})
       }); 
-      await logAudit('add_customer', 'Added customer: ' + name + ' (' + phone + ') by ' + (userData.fullName || 'Staff'));
+      await logAudit('add_customer', 'Added customer: ' + name + ' (' + phone + ') at location: ' + location + ' by ' + (userData.fullName || 'Staff'));
       showToast(isAdmin() ? 'Customer added & approved successfully' : 'Customer added, pending admin approval', 'success'); 
       hideModal(); 
     }); 
@@ -772,6 +773,7 @@
       '<div class="audit-info" style="margin-bottom:15px;">' +
         '<div class="audit-row"><span>Added by:</span><span>' + (c.createdByName || c.addedBy || 'Unknown') + '</span></div>' +
         (c.approvedByName ? '<div class="audit-row"><span>Approved by:</span><span style="color:var(--success);">' + c.approvedByName + '</span></div>' : '') +
+        '<div class="audit-row"><span>Current Location:</span><span style="font-weight:700;color:var(--primary);">' + (c.location||'Not set') + '</span></div>' +
       '</div>' +
       '<button class="btn btn-primary" onclick="saveCustomerEdit(\'' + id + '\')">Save Changes</button>';
     document.getElementById('modalOverlay').style.display = 'flex';
@@ -782,6 +784,7 @@
     if (!c) return;
     const newName = document.getElementById('editName')?.value?.trim();
     const newPhone = document.getElementById('editPhone')?.value?.trim();
+    const newLocation = document.getElementById('editLocation')?.value?.trim();
     if (!newName) { showToast('Name is required', 'error'); return; }
     if (!newPhone) { showToast('Phone is required', 'error'); return; }
     
@@ -795,12 +798,13 @@
     }
     
     const oldName = c.fullName;
+    const oldLocation = c.location;
     showPinModal('Edit Customer', 'save changes', async () => {
       const updates = {
         fullName: newName,
         phone: newPhone,
         email: document.getElementById('editEmail')?.value,
-        location: document.getElementById('editLocation')?.value,
+        location: newLocation,
         birthday: document.getElementById('editBirthday')?.value,
         updatedAt: serverTimestamp(),
         updatedBy: currentUser?.uid,
@@ -817,7 +821,10 @@
         });
         await logAudit('edit_customer_name', 'Changed name of ' + id + ' from "' + oldName + '" to "' + newName + '"');
       }
-      showToast('Customer updated', 'success');
+      if (newLocation !== oldLocation) {
+        await logAudit('edit_customer_location', 'Changed location of ' + id + ' from "' + oldLocation + '" to "' + newLocation + '"');
+      }
+      showToast('Customer updated successfully', 'success');
       hideModal();
     });
   };
