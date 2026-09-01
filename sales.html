@@ -311,6 +311,179 @@
       font-weight: 600; animation: pulse 2s infinite;
     }
 
+    /* PROMO STYLES */
+    .promo-badge {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+      color: white;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      animation: pulse 1.5s infinite;
+    }
+
+    .bulk-badge {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+
+    .promo-banner {
+      background: linear-gradient(135deg, #ff6b6b22, #ee5a2422);
+      border: 2px dashed #ff6b6b;
+      border-radius: 14px;
+      padding: 16px;
+      margin: 12px 0;
+      position: relative;
+    }
+
+    .promo-banner .promo-title {
+      font-weight: 700;
+      color: #ff6b6b;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .promo-banner .promo-savings {
+      color: #ee5a24;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .qr-container {
+      display: flex;
+      justify-content: center;
+      margin: 10px 0;
+      padding: 10px;
+      background: white;
+      border-radius: 12px;
+    }
+
+    .qr-placeholder {
+      background: #f0f0f0;
+      padding: 16px 24px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.7rem;
+      color: var(--gray);
+      text-align: center;
+      border: 1px dashed #ccc;
+    }
+
+    .promo-conditions {
+      background: #fff5f5;
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin: 8px 0;
+      font-size: 0.8rem;
+      border-left: 3px solid #ff6b6b;
+    }
+
+    .discount-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      color: #ee5a24;
+      font-weight: 600;
+    }
+
+    .savings-total {
+      color: #ee5a24;
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+
+    .promo-edit-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      background: var(--gray-light);
+      padding: 8px 12px;
+      border-radius: 10px;
+      margin: 4px 0;
+    }
+
+    .promo-edit-row input, 
+    .promo-edit-row select {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.08);
+      font-size: 0.8rem;
+    }
+
+    .promo-toggle-btn {
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 2px solid #ff6b6b;
+      background: white;
+      color: #ff6b6b;
+      font-weight: 600;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .promo-toggle-btn:hover {
+      background: #ff6b6b;
+      color: white;
+      transform: scale(1.05);
+    }
+
+    .promo-toggle-btn.active {
+      background: #ff6b6b;
+      color: white;
+    }
+
+    .bulk-toggle-btn {
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 2px solid #f5576c;
+      background: white;
+      color: #f5576c;
+      font-weight: 600;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .bulk-toggle-btn:hover {
+      background: #f5576c;
+      color: white;
+      transform: scale(1.05);
+    }
+
+    .bulk-toggle-btn.active {
+      background: #f5576c;
+      color: white;
+    }
+
+    .promo-manager-btn {
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 2px solid #4a69bd;
+      background: white;
+      color: #4a69bd;
+      font-weight: 600;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .promo-manager-btn:hover {
+      background: #4a69bd;
+      color: white;
+      transform: scale(1.05);
+    }
+
     @media (max-width:1400px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:768px) {
       .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; } .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); }
@@ -473,6 +646,32 @@
   let wholesalePayment = 'cash';
   let companySelectedPayment = 'cash';
 
+  // PROMO STATE
+  let promoState = {
+    active: false,
+    type: null,
+    items: {},
+    conditions: {
+      startDate: null,
+      endDate: null,
+      terms: '',
+      promoCode: '',
+      qrLink: 'https://omocreations.com',
+      showOnReceipt: true,
+      name: ''
+    },
+    appliedToAll: false,
+    discountTotal: 0,
+    savingsTotal: 0
+  };
+
+  // Global promo settings
+  let promoManager = {
+    currentPromo: null,
+    promos: JSON.parse(localStorage.getItem('promoManager') || '[]'),
+    activePromoId: localStorage.getItem('activePromoId') || null
+  };
+
   function safeNumber(val, fallback) {
     fallback = (typeof fallback === 'undefined') ? 0 : fallback;
     if (typeof val === 'number') return val;
@@ -527,6 +726,8 @@
     html += '<div class="debug-item"><strong>💳 Reg Payment:</strong> ' + selectedPayment + '</div>';
     html += '<div class="debug-item"><strong>🏢 Co Payment:</strong> ' + companySelectedPayment + '</div>';
     html += '<div class="debug-item"><strong>📦 WS Payment:</strong> ' + wholesalePayment + '</div>';
+    html += '<div class="debug-item"><strong>🏷️ Promo:</strong> ' + (promoState.active ? promoState.type + ' (Save ' + formatCurrency(promoState.savingsTotal) + ')' : 'Inactive') + '</div>';
+    html += '<div class="debug-item"><strong>🏷️ Active Promo:</strong> ' + (promoManager.activePromoId ? promoManager.promos.find(p => p.id === promoManager.activePromoId)?.name || 'Unknown' : 'None') + '</div>';
     
     if (activeDraftId) {
       var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
@@ -537,6 +738,7 @@
         html += 'Customer: ' + escapeHtml(draft.customerName || 'none') + '<br>';
         html += 'Dirty: ' + (draft.isDirty ? '⚠️ Yes' : '✅ No') + '<br>';
         html += 'Payment: ' + (draft.type === 'wholesale' ? draft.wholesalePayment : draft.type === 'company' ? draft.companyPayment : draft.selectedPayment);
+        html += ' | Promo: ' + (draft.promoData ? 'Yes' : 'No');
         html += '</div>';
       }
     }
@@ -563,6 +765,7 @@
       console.log('Draft ' + (i+1) + ':', d.id, '| Type:', d.type, '| Items:', d.itemCount, '| Label:', d.label);
       console.log('  Items:', JSON.stringify(d.items));
       console.log('  Payment:', d.type === 'wholesale' ? d.wholesalePayment : d.type === 'company' ? d.companyPayment : d.selectedPayment);
+      console.log('  Promo:', d.promoData ? 'Yes' : 'No');
     });
     
     console.log('Modal open:', document.getElementById('modalOverlay').classList.contains('active'));
@@ -570,6 +773,8 @@
     console.log('Wholesale payment var:', wholesalePayment);
     console.log('Company payment var:', companySelectedPayment);
     console.log('Regular payment var:', selectedPayment);
+    console.log('Promo State:', promoState);
+    console.log('Promo Manager:', promoManager);
     
     var wsPayBtns = document.querySelectorAll('.ws-pay');
     console.log('WS pay buttons found:', wsPayBtns.length);
@@ -1226,6 +1431,7 @@
       var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
       var isExchange = s.isExchange || s.exchangeType;
       var hasBorrowed = (s._borrowedItems && s._borrowedItems.length > 0) || (s.items && s.items.some(function(it) { return it.borrowed || it.fullyBorrowed; }));
+      var hasPromo = s.promoData && s.promoData.type;
       var rowClass = isReturned ? 'returned-row' : (isOffline ? 'pending-sync' : (isPartiallyReturned ? 'returned-partial' : (hasBorrowed ? 'borrow-row' : (isExchange ? 'exchange-row' : ''))));
       var statusBadge = isReturned ? '<span class="badge badge-danger">Returned</span>' : 
                         (isPartiallyReturned ? '<span class="badge badge-warning">Partial Return</span>' :
@@ -1233,12 +1439,13 @@
       var typeBadge = isWholesale ? '<span class="badge badge-purple">Wholesale</span>' : 
                       (isExchange ? '<span class="badge" style="background:rgba(255,77,166,0.1);color:#ff4da6;">Exchange</span>' :
                       (s.isCompanySale ? '<span class="badge badge-info">Company</span>' : '<span class="badge badge-info">Regular</span>'));
+      var promoBadge = hasPromo ? '<span class="promo-badge">🔥 Promo</span>' : '';
       var newCustomerBadge = s._newCustomer ? ' <span class="badge badge-warning">New</span>' : (s.customerId ? ' <span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;">Existing</span>' : '');
       var borrowBadge = hasBorrowed ? ' <span class="badge badge-borrow">📦 Borrowed</span>' : '';
       
       var saleIdentifier = (s.id || s._localId || '').replace(/'/g, "\\'");
       
-      tbody.innerHTML += '<tr class="' + rowClass + '"><td>' + formatTime(s.createdAt) + '</td><td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;">' + escapeHtml(s.customerName || 'Walk-in') + newCustomerBadge + borrowBadge + '</td><td>' + escapeHtml(s.customerPhone || '-') + '</td><td>' + (s.items ? s.items.length : 0) + ' items</td><td><strong>' + (isReturned ? '-' : '') + formatCurrency(safeNumber(s.totalAmount, 0)) + '</strong></td><td><span class="badge badge-success">' + escapeHtml(s.paymentMethod || 'cash') + '</span></td><td>' + typeBadge + '</td><td>' + statusBadge + '</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-print"></i></button>' + (hasBorrowed ? '<button class="btn btn-sm btn-outline" onclick="viewCompanyRecord(\'' + saleIdentifier + '\')" title="Company Record (Stock Sources)" style="color:var(--warning);border-color:var(--warning);"><i class="fas fa-building"></i></button>' : '') + (!isReturned && !isWholesale && !isExchange ? '<button class="btn btn-sm btn-warning" onclick="openReturnPage(\'' + saleIdentifier + '\')"><i class="fas fa-undo"></i></button>' : '') + '</div></td></tr>';
+      tbody.innerHTML += '<tr class="' + rowClass + '"><td>' + formatTime(s.createdAt) + '</td><td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;">' + escapeHtml(s.customerName || 'Walk-in') + newCustomerBadge + borrowBadge + promoBadge + '</td><td>' + escapeHtml(s.customerPhone || '-') + '</td><td>' + (s.items ? s.items.length : 0) + ' items</td><td><strong>' + (isReturned ? '-' : '') + formatCurrency(safeNumber(s.totalAmount, 0)) + '</strong></td><td><span class="badge badge-success">' + escapeHtml(s.paymentMethod || 'cash') + '</span></td><td>' + typeBadge + '</td><td>' + statusBadge + '</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-print"></i></button>' + (hasBorrowed ? '<button class="btn btn-sm btn-outline" onclick="viewCompanyRecord(\'' + saleIdentifier + '\')" title="Company Record (Stock Sources)" style="color:var(--warning);border-color:var(--warning);"><i class="fas fa-building"></i></button>' : '') + (!isReturned && !isWholesale && !isExchange ? '<button class="btn btn-sm btn-warning" onclick="openReturnPage(\'' + saleIdentifier + '\')"><i class="fas fa-undo"></i></button>' : '') + '</div></td></tr>';
     });
     updateStats();
   }
@@ -1389,8 +1596,517 @@
   }
 
   // ============================================
-  // DRAFT SYSTEM
+  // PROMO FUNCTIONS
   // ============================================
+
+  function renderPromoControls() {
+    var activePromo = promoManager.promos.find(function(p) { return p.id === promoManager.activePromoId; });
+    var promoName = activePromo ? activePromo.name : 'No active promo';
+    
+    return `
+      <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap;align-items:center;">
+        <button class="promo-toggle-btn ${promoState.active && promoState.type === 'single' ? 'active' : ''}" 
+                onclick="window.togglePromo('single')">
+          <i class="fas fa-tag"></i> Promo
+        </button>
+        <button class="bulk-toggle-btn ${promoState.active && promoState.type === 'bulk' ? 'active' : ''}" 
+                onclick="window.togglePromo('bulk')">
+          <i class="fas fa-layer-group"></i> Bulk
+        </button>
+        <button class="promo-manager-btn" onclick="window.openPromoManager()">
+          <i class="fas fa-cog"></i> Manage
+        </button>
+        ${promoState.active ? `<button class="btn btn-sm btn-danger" onclick="window.clearPromo()"><i class="fas fa-times"></i> Clear</button>` : ''}
+        <span style="font-size:0.65rem;color:var(--gray);margin-left:auto;">
+          ${promoState.active ? '🔥 ' + (promoState.type === 'single' ? 'Promo' : 'Bulk') + ' active' : '📋 ' + promoName}
+        </span>
+      </div>
+    `;
+  }
+
+  window.togglePromo = function(type) {
+    if (promoState.active && promoState.type === type) {
+      // Turn off
+      promoState.active = false;
+      promoState.type = null;
+      promoState.items = {};
+      promoState.discountTotal = 0;
+      promoState.savingsTotal = 0;
+      showToast('Promo disabled', 'info');
+    } else {
+      // Turn on
+      promoState.active = true;
+      promoState.type = type;
+      promoState.items = {};
+      promoState.discountTotal = 0;
+      promoState.savingsTotal = 0;
+      
+      // Load active promo conditions
+      var activePromo = promoManager.promos.find(function(p) { return p.id === promoManager.activePromoId; });
+      if (activePromo) {
+        promoState.conditions.name = activePromo.name || '';
+        promoState.conditions.startDate = activePromo.startDate || null;
+        promoState.conditions.endDate = activePromo.endDate || null;
+        promoState.conditions.terms = activePromo.terms || '';
+        promoState.conditions.promoCode = activePromo.promoCode || '';
+        promoState.conditions.qrLink = activePromo.qrLink || 'https://omocreations.com';
+        showToast(type === 'single' ? 'Promo mode - click on any item to set discount' : 'Bulk mode - set quantity thresholds for volume discount', 'success');
+      } else {
+        showToast('No active promo found. Please set one in Manage Promos.', 'warning');
+        promoState.active = false;
+        return;
+      }
+    }
+    
+    refreshCurrentModal();
+    window._markDraftDirty();
+  };
+
+  window.clearPromo = function() {
+    promoState.active = false;
+    promoState.type = null;
+    promoState.items = {};
+    promoState.discountTotal = 0;
+    promoState.savingsTotal = 0;
+    showToast('Promo cleared', 'info');
+    refreshCurrentModal();
+    window._markDraftDirty();
+  };
+
+  function getPromoItemHtml(item, index) {
+    if (!promoState.active) return '';
+    
+    var activePromo = promoManager.promos.find(function(p) { return p.id === promoManager.activePromoId; });
+    var promoName = activePromo ? activePromo.name : 'Promo';
+    
+    if (promoState.type === 'single') {
+      var currentPromo = promoState.items[index] || { promoPrice: item.unitPrice || 0 };
+      var savings = (item.unitPrice || 0) - (currentPromo.promoPrice || item.unitPrice || 0);
+      return `
+        <div class="promo-edit-row" style="border-left:3px solid #ff6b6b;">
+          <span style="font-weight:600;font-size:0.8rem;">${escapeHtml(item.name || 'Item')}</span>
+          <span style="font-size:0.7rem;color:var(--gray);">Normal: ${formatCurrency(item.unitPrice || 0)}</span>
+          <label style="font-size:0.7rem;">Promo Price:</label>
+          <input type="number" class="form-control" style="width:100px;padding:4px 8px;" 
+                 value="${currentPromo.promoPrice || item.unitPrice || 0}" 
+                 onchange="window.updatePromoItem(${index}, this.value)">
+          <span style="font-size:0.7rem;color:${savings > 0 ? 'var(--success)' : 'var(--gray)'};">
+            ${savings > 0 ? 'Save ' + formatCurrency(savings) : ''}
+          </span>
+          ${promoState.conditions.promoCode ? `<span class="badge badge-info" style="font-size:0.6rem;">${escapeHtml(promoState.conditions.promoCode)}</span>` : ''}
+        </div>
+      `;
+    }
+    
+    if (promoState.type === 'bulk') {
+      var bulkData = promoState.items[index] || { threshold: 10, bulkPrice: 0 };
+      var savings = (item.unitPrice || 0) - (bulkData.bulkPrice || 0);
+      return `
+        <div class="promo-edit-row" style="border-left:3px solid #f5576c;">
+          <span style="font-weight:600;font-size:0.8rem;">${escapeHtml(item.name || 'Item')}</span>
+          <span style="font-size:0.7rem;color:var(--gray);">Normal: ${formatCurrency(item.unitPrice || 0)}</span>
+          <label style="font-size:0.7rem;">Min Qty:</label>
+          <input type="number" class="form-control" style="width:60px;padding:4px 8px;" 
+                 value="${bulkData.threshold || 10}" 
+                 onchange="window.updateBulkThreshold(${index}, this.value)">
+          <label style="font-size:0.7rem;">Bulk Price:</label>
+          <input type="number" class="form-control" style="width:100px;padding:4px 8px;" 
+                 value="${bulkData.bulkPrice || ''}" 
+                 placeholder="Enter price" 
+                 onchange="window.updateBulkPrice(${index}, this.value)">
+          ${bulkData.bulkPrice ? `<span style="font-size:0.7rem;color:${savings > 0 ? 'var(--success)' : 'var(--gray)'};">${savings > 0 ? 'Save ' + formatCurrency(savings) + '/unit' : ''}</span>` : ''}
+          ${bulkData.threshold ? `<span style="font-size:0.6rem;color:var(--gray);">(${bulkData.threshold}+ units)</span>` : ''}
+        </div>
+      `;
+    }
+    
+    return '';
+  }
+
+  window.updatePromoItem = function(index, price) {
+    var priceNum = parseFloat(price);
+    if (isNaN(priceNum) || priceNum < 0) return;
+    
+    var items = getCurrentItems();
+    if (!items || !items[index]) return;
+    
+    var originalPrice = items[index].unitPrice || 0;
+    promoState.items[index] = {
+      promoPrice: priceNum,
+      originalPrice: originalPrice,
+      discount: originalPrice - priceNum
+    };
+    
+    promoState.discountTotal = Object.values(promoState.items).reduce(function(sum, i) { return sum + (i.discount || 0); }, 0);
+    promoState.savingsTotal = promoState.discountTotal;
+    
+    updatePromoSummary();
+    window._markDraftDirty();
+    window._updateSaleSummary();
+  };
+
+  window.updateBulkThreshold = function(index, threshold) {
+    var threshNum = parseInt(threshold);
+    if (isNaN(threshNum) || threshNum < 1) return;
+    
+    if (!promoState.items[index]) {
+      promoState.items[index] = {};
+    }
+    promoState.items[index].threshold = threshNum;
+    window._markDraftDirty();
+    updatePromoSummary();
+  };
+
+  window.updateBulkPrice = function(index, price) {
+    var priceNum = parseFloat(price);
+    if (isNaN(priceNum) || priceNum < 0) {
+      if (promoState.items[index]) {
+        delete promoState.items[index].bulkPrice;
+      }
+      return;
+    }
+    
+    if (!promoState.items[index]) {
+      promoState.items[index] = {};
+    }
+    promoState.items[index].bulkPrice = priceNum;
+    
+    var items = getCurrentItems();
+    if (items && items[index]) {
+      var originalPrice = items[index].unitPrice || 0;
+      var discount = originalPrice - priceNum;
+      promoState.items[index].discount = discount > 0 ? discount : 0;
+    }
+    
+    promoState.discountTotal = Object.values(promoState.items).reduce(function(sum, i) { return sum + (i.discount || 0); }, 0);
+    promoState.savingsTotal = promoState.discountTotal;
+    
+    updatePromoSummary();
+    window._markDraftDirty();
+    window._updateSaleSummary();
+  };
+
+  function getCurrentItems() {
+    var items = [];
+    var container = document.querySelector('#saleItems, #companyItems');
+    if (!container) return [];
+    
+    container.querySelectorAll('.item-row').forEach(function(row) {
+      var checkbox = row.querySelector('.non-inv-check');
+      var qtyEl = row.querySelector('.item-qty');
+      var qty = parseFloat(qtyEl ? qtyEl.value : 1) || 1;
+      
+      if (checkbox && checkbox.checked) {
+        var nameEl = row.querySelector('.item-custom-name');
+        var priceEl = row.querySelector('.item-custom-price');
+        items.push({
+          name: nameEl ? nameEl.value : 'Item',
+          quantity: qty,
+          unitPrice: parseFloat(priceEl ? priceEl.value : 0) || 0,
+          isNonInventory: true
+        });
+      } else {
+        var select = row.querySelector('.item-select');
+        var sizeEl = row.querySelector('.item-size');
+        if (select && select.value) {
+          var opt = select.options[select.selectedIndex];
+          var size = sizeEl ? sizeEl.value : '1';
+          var price = parseFloat(opt ? opt.getAttribute('data-price') : 0) || 0;
+          if (size === '0.5' && parseFloat(opt ? opt.getAttribute('data-halfprice') : 0) > 0) price = parseFloat(opt.getAttribute('data-halfprice'));
+          else if (size === '0.25' && parseFloat(opt ? opt.getAttribute('data-quarterprice') : 0) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
+          items.push({
+            id: select.value,
+            name: opt ? opt.dataset.name : 'Item',
+            quantity: qty,
+            unitPrice: price,
+            size: size,
+            isNonInventory: false
+          });
+        }
+      }
+    });
+    
+    return items;
+  }
+
+  function updatePromoSummary() {
+    var summaryEl = document.getElementById('promoSummary');
+    if (!summaryEl) return;
+    
+    if (!promoState.active || Object.keys(promoState.items).length === 0) {
+      summaryEl.innerHTML = '';
+      return;
+    }
+    
+    var activePromo = promoManager.promos.find(function(p) { return p.id === promoManager.activePromoId; });
+    var promoName = activePromo ? activePromo.name : 'Promo';
+    
+    var html = `
+      <div class="promo-banner">
+        <div class="promo-title">
+          <i class="fas fa-tag"></i> 
+          ${promoState.type === 'single' ? '🔥 ' + escapeHtml(promoName) : '📦 Bulk Discount'}
+          <span class="promo-savings">🎉 Save ${formatCurrency(promoState.savingsTotal)}</span>
+        </div>
+        <div style="font-size:0.75rem;color:var(--gray);margin-top:4px;">
+          ${promoState.type === 'single' ? 
+            Object.keys(promoState.items).length + ' item(s) discounted' : 
+            'Bulk discount on ' + Object.keys(promoState.items).length + ' item(s)'}
+          ${promoState.conditions.promoCode ? ' | Code: <strong>' + escapeHtml(promoState.conditions.promoCode) + '</strong>' : ''}
+        </div>
+    `;
+    
+    if (promoState.conditions.terms || promoState.conditions.startDate || promoState.conditions.endDate) {
+      html += `
+        <div class="promo-conditions" style="margin-top:8px;">
+          ${promoState.conditions.startDate ? '<span>📅 ' + escapeHtml(promoState.conditions.startDate) + (promoState.conditions.endDate ? ' → ' + escapeHtml(promoState.conditions.endDate) : '') + '</span><br>' : ''}
+          ${promoState.conditions.terms ? '<span>📝 ' + escapeHtml(promoState.conditions.terms) + '</span>' : ''}
+        </div>
+      `;
+    }
+    
+    html += `</div>`;
+    summaryEl.innerHTML = html;
+  }
+
+  // ============================================
+  // PROMO MANAGER
+  // ============================================
+
+  window.openPromoManager = function() {
+    var prevModalType = currentModalType;
+    currentModalType = 'promo_manager';
+    
+    var activePromo = promoManager.promos.find(function(p) { return p.id === promoManager.activePromoId; });
+    
+    var html = `
+      <div style="margin-bottom:16px;">
+        <button class="btn btn-primary btn-sm" onclick="window.createNewPromo()" style="width:100%;">
+          <i class="fas fa-plus"></i> Create New Promo
+        </button>
+        ${activePromo ? '<div style="margin-top:8px;font-size:0.8rem;color:var(--gray);text-align:center;">✅ Active: <strong>' + escapeHtml(activePromo.name) + '</strong></div>' : ''}
+      </div>
+      <div id="promoList">
+    `;
+    
+    if (promoManager.promos.length === 0) {
+      html += '<div class="empty-state"><i class="fas fa-tags"></i><p>No promos created yet</p></div>';
+    } else {
+      promoManager.promos.forEach(function(promo) {
+        var isActive = promo.id === promoManager.activePromoId;
+        html += `
+          <div style="background:${isActive ? 'var(--primary-soft)' : 'white'};padding:14px;border-radius:12px;margin-bottom:10px;border:2px solid ${isActive ? 'var(--primary)' : 'rgba(0,0,0,0.06)'};">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+              <div>
+                <strong style="font-size:1rem;">${escapeHtml(promo.name || 'Unnamed Promo')}</strong>
+                ${isActive ? '<span class="badge badge-success">Active</span>' : ''}
+                <div style="font-size:0.7rem;color:var(--gray);">
+                  ${promo.startDate ? '📅 ' + escapeHtml(promo.startDate) + (promo.endDate ? ' → ' + escapeHtml(promo.endDate) : '') : 'No date set'}
+                  ${promo.promoCode ? ' | 🏷️ ' + escapeHtml(promo.promoCode) : ''}
+                </div>
+              </div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <button class="btn btn-sm ${isActive ? 'btn-success' : 'btn-outline'}" onclick="window.activatePromo('${promo.id}')">
+                  ${isActive ? '✅ Active' : 'Activate'}
+                </button>
+                <button class="btn btn-sm btn-outline" onclick="window.editPromo('${promo.id}')">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="window.deletePromo('${promo.id}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            ${promo.terms ? '<div style="font-size:0.75rem;color:var(--gray);margin-top:4px;">📝 ' + escapeHtml(promo.terms) + '</div>' : ''}
+            ${promo.qrLink ? '<div style="font-size:0.7rem;color:var(--info);margin-top:2px;">🔗 ' + escapeHtml(promo.qrLink) + '</div>' : ''}
+          </div>
+        `;
+      });
+    }
+    
+    html += '</div>';
+    
+    showModal('Promo Manager', html);
+    currentModalType = prevModalType;
+  };
+
+  window.createNewPromo = function() {
+    var prevModalType = currentModalType;
+    currentModalType = 'promo_edit';
+    
+    showModal('Create New Promo',
+      `
+      <div class="form-group">
+        <label>Promo Name *</label>
+        <input type="text" class="form-control" id="promoName" placeholder="e.g., Flash Sale 2024" value="">
+      </div>
+      <div class="form-group">
+        <label>Promo Code</label>
+        <input type="text" class="form-control" id="promoCode" placeholder="e.g., FLASH2024" value="">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" class="form-control" id="promoStartDate">
+        </div>
+        <div class="form-group">
+          <label>End Date</label>
+          <input type="date" class="form-control" id="promoEndDate">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Terms & Conditions</label>
+        <textarea class="form-control" id="promoTerms" rows="2" placeholder="e.g., Valid for in-store purchases only. Cannot be combined with other offers."></textarea>
+      </div>
+      <div class="form-group">
+        <label>QR Link (Website URL)</label>
+        <input type="url" class="form-control" id="promoQrLink" placeholder="https://omocreations.com/promo" value="https://omocreations.com">
+      </div>
+      <button class="btn btn-primary" onclick="window.savePromo()" style="width:100%;">
+        <i class="fas fa-save"></i> Save Promo
+      </button>
+      `
+    );
+    
+    currentModalType = prevModalType;
+  };
+
+  window.savePromo = function() {
+    var name = safeTrimVal('promoName', '');
+    if (!name) { showToast('Please enter a promo name', 'error'); return; }
+    
+    var promo = {
+      id: 'promo_' + Date.now(),
+      name: name,
+      promoCode: safeTrimVal('promoCode', ''),
+      startDate: safeGetVal('promoStartDate', ''),
+      endDate: safeGetVal('promoEndDate', ''),
+      terms: safeTrimVal('promoTerms', ''),
+      qrLink: safeTrimVal('promoQrLink', 'https://omocreations.com'),
+      createdAt: new Date().toISOString()
+    };
+    
+    promoManager.promos.push(promo);
+    localStorage.setItem('promoManager', JSON.stringify(promoManager.promos));
+    
+    promoManager.activePromoId = promo.id;
+    localStorage.setItem('activePromoId', promoManager.activePromoId);
+    
+    showToast('Promo created and activated!', 'success');
+    hideModal();
+    setTimeout(function() { window.openPromoManager(); }, 300);
+    window._markDraftDirty();
+  };
+
+  window.activatePromo = function(promoId) {
+    promoManager.activePromoId = promoId;
+    localStorage.setItem('activePromoId', promoManager.activePromoId);
+    showToast('Promo activated!', 'success');
+    window.openPromoManager();
+    if (promoState.active) refreshCurrentModal();
+    window._markDraftDirty();
+  };
+
+  window.editPromo = function(promoId) {
+    var promo = promoManager.promos.find(function(p) { return p.id === promoId; });
+    if (!promo) { showToast('Promo not found', 'error'); return; }
+    
+    var prevModalType = currentModalType;
+    currentModalType = 'promo_edit';
+    
+    showModal('Edit Promo',
+      `
+      <div class="form-group">
+        <label>Promo Name *</label>
+        <input type="text" class="form-control" id="promoName" value="${escapeHtml(promo.name)}">
+      </div>
+      <div class="form-group">
+        <label>Promo Code</label>
+        <input type="text" class="form-control" id="promoCode" value="${escapeHtml(promo.promoCode || '')}">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" class="form-control" id="promoStartDate" value="${escapeHtml(promo.startDate || '')}">
+        </div>
+        <div class="form-group">
+          <label>End Date</label>
+          <input type="date" class="form-control" id="promoEndDate" value="${escapeHtml(promo.endDate || '')}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Terms & Conditions</label>
+        <textarea class="form-control" id="promoTerms" rows="2">${escapeHtml(promo.terms || '')}</textarea>
+      </div>
+      <div class="form-group">
+        <label>QR Link (Website URL)</label>
+        <input type="url" class="form-control" id="promoQrLink" value="${escapeHtml(promo.qrLink || 'https://omocreations.com')}">
+      </div>
+      <button class="btn btn-primary" onclick="window.updatePromo('${promoId}')" style="width:100%;">
+        <i class="fas fa-save"></i> Update Promo
+      </button>
+      `
+    );
+    
+    currentModalType = prevModalType;
+  };
+
+  window.updatePromo = function(promoId) {
+    var name = safeTrimVal('promoName', '');
+    if (!name) { showToast('Please enter a promo name', 'error'); return; }
+    
+    var promo = promoManager.promos.find(function(p) { return p.id === promoId; });
+    if (!promo) { showToast('Promo not found', 'error'); return; }
+    
+    promo.name = name;
+    promo.promoCode = safeTrimVal('promoCode', '');
+    promo.startDate = safeGetVal('promoStartDate', '');
+    promo.endDate = safeGetVal('promoEndDate', '');
+    promo.terms = safeTrimVal('promoTerms', '');
+    promo.qrLink = safeTrimVal('promoQrLink', 'https://omocreations.com');
+    
+    localStorage.setItem('promoManager', JSON.stringify(promoManager.promos));
+    
+    showToast('Promo updated!', 'success');
+    hideModal();
+    setTimeout(function() { window.openPromoManager(); }, 300);
+    window._markDraftDirty();
+  };
+
+  window.deletePromo = function(promoId) {
+    if (!confirm('Delete this promo?')) return;
+    
+    promoManager.promos = promoManager.promos.filter(function(p) { return p.id !== promoId; });
+    if (promoManager.activePromoId === promoId) {
+      promoManager.activePromoId = null;
+      localStorage.setItem('activePromoId', '');
+    }
+    localStorage.setItem('promoManager', JSON.stringify(promoManager.promos));
+    
+    showToast('Promo deleted', 'info');
+    window.openPromoManager();
+    if (promoState.active) refreshCurrentModal();
+  };
+
+  function refreshCurrentModal() {
+    if (currentModalType === 'sale' || currentModalType === 'company' || currentModalType === 'wholesale') {
+      var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
+      if (!draft) return;
+      
+      if (draft.type === 'wholesale') {
+        openWholesaleSaleModalWithDraft(draft);
+      } else if (draft.type === 'company') {
+        openCompanySaleModalWithDraft(draft);
+      } else {
+        openNewSaleModalWithDraft(draft);
+      }
+    }
+  }
+
+  // ============================================
+  // MODIFIED DRAFT SYSTEM WITH PROMO SUPPORT
+  // ============================================
+
   function saveDraftsToStorage() {
     localStorage.setItem('draftTabs', JSON.stringify(draftTabs));
     renderDraftTabs();
@@ -1423,8 +2139,45 @@
       updatedAt: new Date().toISOString(),
       label: 'New Sale',
       isDirty: false,
-      itemCount: 0
+      itemCount: 0,
+      promoData: null
     };
+  }
+
+  // DRAFT TABS RENDER
+  function renderDraftTabs() {
+    var bar = safeGetEl('draftTabsBar');
+    if (!bar) return;
+    
+    if (draftTabs.length > 10) {
+      draftTabs.splice(0, draftTabs.length - 10);
+    }
+    
+    if (draftTabs.length === 0) {
+      bar.innerHTML = '<span style="padding:8px 14px;font-size:0.75rem;color:var(--gray);">No active drafts. Click <strong>New Sale</strong>, <strong>Sell to Company</strong>, or <strong>Wholesale</strong> to start.</span>';
+      bar.style.display = 'flex';
+      return;
+    }
+    
+    bar.style.display = 'flex';
+    
+    var tabsHtml = '';
+    draftTabs.forEach(function(draft) {
+      var isActive = draft.id === activeDraftId;
+      var indicatorClass = draft.isDirty ? '' : 'saved';
+      var typeIcon = draft.type === 'wholesale' ? '📦' : draft.type === 'company' ? '🏢' : '💰';
+      var promoIcon = draft.promoData ? '🔥' : '';
+      var shortLabel = draft.label.length > 20 ? draft.label.substring(0, 18) + '..' : draft.label;
+      var itemBadge = draft.itemCount > 0 ? ' (' + draft.itemCount + ')' : '';
+      
+      tabsHtml += '<div class="draft-tab' + (isActive ? ' active' : '') + '" onclick="window._switchDraftTab(\'' + draft.id + '\')" title="' + escapeHtml(draft.label) + ' | ' + escapeHtml(draft.customerName || 'No customer') + ' | ' + draft.itemCount + ' items | ' + formatCurrency(draft.totalAmount || 0) + '">' +
+        '<span class="draft-indicator ' + indicatorClass + '"></span>' +
+        '<span>' + typeIcon + ' ' + promoIcon + ' ' + escapeHtml(shortLabel) + itemBadge + '</span>' +
+        '<span class="draft-close" onclick="window._closeDraftTab(\'' + draft.id + '\', event)" title="Close draft">✕</span>' +
+        '</div>';
+    });
+    
+    bar.innerHTML = tabsHtml;
   }
 
   window._saveDraftState = function() {
@@ -1434,6 +2187,20 @@
 
     if (!document.getElementById('modalOverlay').classList.contains('active')) return;
     if (currentModalType !== 'sale' && currentModalType !== 'company' && currentModalType !== 'wholesale') return;
+
+    // Save promo data
+    if (promoState.active && Object.keys(promoState.items).length > 0) {
+      draft.promoData = {
+        type: promoState.type,
+        items: JSON.parse(JSON.stringify(promoState.items)),
+        conditions: JSON.parse(JSON.stringify(promoState.conditions)),
+        discountTotal: promoState.discountTotal,
+        savingsTotal: promoState.savingsTotal,
+        appliedToAll: promoState.appliedToAll
+      };
+    } else {
+      draft.promoData = null;
+    }
 
     if (draft.type === 'wholesale') {
       draft.wholesalePackSize = parseInt(safeGetVal('wsPackSize', '50')) || 50;
@@ -1619,56 +2386,7 @@
     draft.updatedAt = new Date().toISOString();
     draft.isDirty = false;
     saveDraftsToStorage();
-    console.log('💾 Draft saved: ' + draft.type + ' | Items: ' + draft.itemCount + ' | ' + draft.label);
-  };
-
-  let autoSaveInterval = null;
-  function startAutoSave() {
-    if (autoSaveInterval) clearInterval(autoSaveInterval);
-    autoSaveInterval = setInterval(function() {
-      if (activeDraftId && document.getElementById('modalOverlay').classList.contains('active')) {
-        if (currentModalType === 'sale' || currentModalType === 'company' || currentModalType === 'wholesale') {
-          window._saveDraftState();
-          var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
-          if (draft) {
-            draft.isDirty = false;
-            saveDraftsToStorage();
-          }
-        }
-      }
-    }, 30000);
-  }
-
-  window._markDraftDirty = function() {
-    if (!activeDraftId) return;
-    var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
-    if (draft && !draft.isDirty) {
-      draft.isDirty = true;
-      saveDraftsToStorage();
-    }
-  };
-
-  window._addDraftTab = function(type) {
-    type = type || 'regular';
-    
-    if (activeDraftId) {
-      window._saveDraftState();
-    }
-    
-    var draft = createDraft(type);
-    if (type === 'company') draft.label = 'Company Sale';
-    else if (type === 'wholesale') draft.label = 'Wholesale';
-    else draft.label = 'Sale #' + (draftTabs.length + 1);
-    
-    draftTabs.push(draft);
-    activeDraftId = draft.id;
-    saveDraftsToStorage();
-    
-    if (type === 'wholesale') openWholesaleSaleModal();
-    else if (type === 'company') openCompanySaleModal();
-    else openNewSaleModal();
-    
-    startAutoSave();
+    console.log('💾 Draft saved: ' + draft.type + ' | Items: ' + draft.itemCount + ' | ' + draft.label + ' | Promo: ' + (draft.promoData ? 'Yes' : 'No'));
   };
 
   window._switchDraftTab = function(draftId) {
@@ -1679,6 +2397,23 @@
     activeDraftId = draftId;
     var draft = draftTabs.find(function(d) { return d.id === draftId; });
     if (!draft) return;
+    
+    // Restore promo state from draft
+    if (draft.promoData) {
+      promoState.active = true;
+      promoState.type = draft.promoData.type;
+      promoState.items = JSON.parse(JSON.stringify(draft.promoData.items));
+      promoState.conditions = JSON.parse(JSON.stringify(draft.promoData.conditions));
+      promoState.discountTotal = draft.promoData.discountTotal || 0;
+      promoState.savingsTotal = draft.promoData.savingsTotal || 0;
+      promoState.appliedToAll = draft.promoData.appliedToAll || false;
+    } else {
+      promoState.active = false;
+      promoState.type = null;
+      promoState.items = {};
+      promoState.discountTotal = 0;
+      promoState.savingsTotal = 0;
+    }
     
     customerType = draft.customerType || 'existing';
     selectedPayment = draft.selectedPayment || 'cash';
@@ -1695,7 +2430,6 @@
     }
     
     saveDraftsToStorage();
-    startAutoSave();
   };
 
   window._closeDraftTab = function(draftId, event) {
@@ -1713,7 +2447,11 @@
         window._switchDraftTab(activeDraftId);
       } else {
         hideModal();
-        if (autoSaveInterval) { clearInterval(autoSaveInterval); autoSaveInterval = null; }
+        promoState.active = false;
+        promoState.type = null;
+        promoState.items = {};
+        promoState.discountTotal = 0;
+        promoState.savingsTotal = 0;
       }
     }
     saveDraftsToStorage();
@@ -1723,51 +2461,30 @@
     if (!activeDraftId) return;
     draftTabs = draftTabs.filter(function(d) { return d.id !== activeDraftId; });
     activeDraftId = draftTabs.length > 0 ? draftTabs[0].id : null;
-    if (autoSaveInterval) { clearInterval(autoSaveInterval); autoSaveInterval = null; }
+    promoState.active = false;
+    promoState.type = null;
+    promoState.items = {};
+    promoState.discountTotal = 0;
+    promoState.savingsTotal = 0;
     saveDraftsToStorage();
   };
-
-  function renderDraftTabs() {
-    var bar = safeGetEl('draftTabsBar');
-    if (!bar) return;
-    
-    if (draftTabs.length > 10) {
-      draftTabs.splice(0, draftTabs.length - 10);
-    }
-    
-    if (draftTabs.length === 0) {
-      bar.innerHTML = '<span style="padding:8px 14px;font-size:0.75rem;color:var(--gray);">No active drafts. Click <strong>New Sale</strong>, <strong>Sell to Company</strong>, or <strong>Wholesale</strong> to start.</span>';
-      bar.style.display = 'flex';
-      return;
-    }
-    
-    bar.style.display = 'flex';
-    
-    var tabsHtml = '';
-    draftTabs.forEach(function(draft) {
-      var isActive = draft.id === activeDraftId;
-      var indicatorClass = draft.isDirty ? '' : 'saved';
-      var typeIcon = draft.type === 'wholesale' ? '📦' : draft.type === 'company' ? '🏢' : '💰';
-      var shortLabel = draft.label.length > 20 ? draft.label.substring(0, 18) + '..' : draft.label;
-      var itemBadge = draft.itemCount > 0 ? ' (' + draft.itemCount + ')' : '';
-      
-      tabsHtml += '<div class="draft-tab' + (isActive ? ' active' : '') + '" onclick="window._switchDraftTab(\'' + draft.id + '\')" title="' + escapeHtml(draft.label) + ' | ' + escapeHtml(draft.customerName || 'No customer') + ' | ' + draft.itemCount + ' items | ' + formatCurrency(draft.totalAmount || 0) + '">' +
-        '<span class="draft-indicator ' + indicatorClass + '"></span>' +
-        '<span>' + typeIcon + ' ' + escapeHtml(shortLabel) + itemBadge + '</span>' +
-        '<span class="draft-close" onclick="window._closeDraftTab(\'' + draft.id + '\', event)" title="Close draft">✕</span>' +
-        '</div>';
-    });
-    
-    bar.innerHTML = tabsHtml;
-  }
 
   window._saveDraftFromModal = function() {
     window._saveDraftState();
     showToast('Draft saved! ✅', 'success');
   };
 
+  window._markDraftDirty = function() {
+    if (!activeDraftId) return;
+    var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
+    if (draft && !draft.isDirty) {
+      draft.isDirty = true;
+      saveDraftsToStorage();
+    }
+  };
+
   // ============================================
-  // PAYMENT CLICK HANDLER (Event Delegation Fix)
+  // PAYMENT CLICK HANDLER
   // ============================================
   document.addEventListener('click', function(e) {
     var target = e.target;
@@ -1791,10 +2508,8 @@
         
         if (containerId === 'companyPaymentContainer') {
           companySelectedPayment = method;
-          console.log('🐛 DEBUG: Company payment selected:', companySelectedPayment);
         } else {
           selectedPayment = method;
-          console.log('🐛 DEBUG: Regular payment selected:', selectedPayment);
         }
         
         if (typeof window._markDraftDirty === 'function') window._markDraftDirty();
@@ -1819,15 +2534,15 @@
       target.style.boxShadow = '0 4px 12px rgba(255,77,166,0.3)';
       
       wholesalePayment = target.dataset.m;
-      console.log('🐛 DEBUG: Wholesale payment selected:', wholesalePayment);
       if (typeof window._markDraftDirty === 'function') window._markDraftDirty();
       updateDebugPanel();
     }
   });
 
   // ============================================
-  // NEW SALE MODAL
+  // MODIFIED NEW SALE MODAL WITH PROMO
   // ============================================
+  
   async function openNewSaleModalWithDraft(draft) {
     await loadCustomersAndStock();
     if (allStockItems.length === 0) { showToast('No items available', 'error'); return; }
@@ -1835,6 +2550,16 @@
     currentModalType = 'sale';
     customerType = draft.customerType || 'existing';
     selectedPayment = draft.selectedPayment || 'cash';
+    
+    // Restore promo from draft if exists
+    if (draft.promoData) {
+      promoState.active = true;
+      promoState.type = draft.promoData.type;
+      promoState.items = JSON.parse(JSON.stringify(draft.promoData.items));
+      promoState.conditions = JSON.parse(JSON.stringify(draft.promoData.conditions));
+      promoState.discountTotal = draft.promoData.discountTotal || 0;
+      promoState.savingsTotal = draft.promoData.savingsTotal || 0;
+    }
     
     var custOptions = allCustomers.map(function(c) { 
       return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '" data-address="' + escapeHtml(c.address||c.location||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + ' (' + (c.purchaseCount||0) + ' purchases)</option>'; 
@@ -1853,7 +2578,8 @@
             '<input type="number" class="form-control item-qty" value="' + (item.quantity || 1) + '" min="1" style="width:80px;" oninput="window._markDraftDirty()">' +
             '<input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" value="' + (item.unitPrice || 0) + '" style="width:100px;" oninput="window._markDraftDirty()">' +
             '<span class="stock-warning"></span>' +
-            '<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
+            '<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>' +
+            getPromoItemHtml(item, idx);
         } else {
           var itemOptions = allStockItems.map(function(si) {
             var selected = si.id === item.id ? ' selected' : '';
@@ -1870,7 +2596,8 @@
             '<input type="number" class="form-control item-qty" value="' + (item.quantity || 1) + '" min="1" style="width:80px;" oninput="window._markDraftDirty()">' +
             '<input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">' +
             '<span class="stock-warning"></span>' +
-            '<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
+            '<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>' +
+            getPromoItemHtml(item, idx);
         }
       }).join('');
     } else {
@@ -1878,11 +2605,13 @@
     }
 
     showModal('New Sale',
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
         '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
         '<span style="margin-left:auto;font-size:0.7rem;color:var(--gray);">' + (draft.itemCount || 0) + ' items saved</span>' +
       '</div>' +
+      renderPromoControls() +
+      '<div id="promoSummary"></div>' +
       '<div class="customer-type-toggle">' +
         '<button class="customer-type-btn' + (customerType === 'existing' ? ' active' : '') + '" data-type="existing" onclick="window._switchCustomerType(\'existing\');window._markDraftDirty();"><i class="fas fa-users"></i> Existing</button>' +
         '<button class="customer-type-btn' + (customerType === 'new' ? ' active' : '') + '" data-type="new" onclick="window._switchCustomerType(\'new\');window._markDraftDirty();"><i class="fas fa-user-plus"></i> New</button>' +
@@ -1929,6 +2658,7 @@
       $('.item-custom-price').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       
       window._updateSaleSummary();
+      updatePromoSummary();
       console.log('🐛 DEBUG: Regular sale draft restored - items:', draft.items.length, '| customer:', draft.customerName);
     }, 200);
   }
@@ -1944,8 +2674,14 @@
     draft.label = 'Sale #' + draftTabs.length;
     saveDraftsToStorage();
     renderDraftTabs();
-    startAutoSave();
     currentModalType = 'sale';
+    
+    // Reset promo state for new draft
+    promoState.active = false;
+    promoState.type = null;
+    promoState.items = {};
+    promoState.discountTotal = 0;
+    promoState.savingsTotal = 0;
     
     await loadCustomersAndStock();
     if (allStockItems.length === 0) { showToast('No items available', 'error'); return; }
@@ -1959,11 +2695,13 @@
     var firstSizeOpts = firstItem ? getSizeOptions(firstItem).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
 
     showModal('New Sale',
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
         '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
         '<span style="margin-left:auto;font-size:0.7rem;color:var(--gray);">Draft: ' + escapeHtml(draft.label) + '</span>' +
       '</div>' +
+      renderPromoControls() +
+      '<div id="promoSummary"></div>' +
       '<div class="customer-type-toggle"><button class="customer-type-btn active" data-type="existing" onclick="window._switchCustomerType(\'existing\');window._markDraftDirty();"><i class="fas fa-users"></i> Existing</button><button class="customer-type-btn" data-type="new" onclick="window._switchCustomerType(\'new\');window._markDraftDirty();"><i class="fas fa-user-plus"></i> New</button></div>' +
       '<div id="existingCustomerSection"><div class="form-group"><label>Search Customer</label><select class="form-control" id="existingCustomerSelect" style="width:100%;"><option value="">-- Search --</option>' + custOptions + '</select></div></div>' +
       '<div id="newCustomerSection" style="display:none;"><div class="form-group"><label>Full Name *</label><input type="text" class="form-control" id="newCustomerName" oninput="window._markDraftDirty()"></div><div class="form-group"><label>Phone *</label><input type="tel" class="form-control" id="newCustomerPhone" oninput="window._markDraftDirty()"></div><div class="form-group"><label>Address *</label><textarea class="form-control" id="newCustomerAddress" rows="2" oninput="window._markDraftDirty()"></textarea></div><div class="form-group"><label>Email</label><input type="email" class="form-control" id="newCustomerEmail" oninput="window._markDraftDirty()"></div></div>' +
@@ -1981,6 +2719,7 @@
       $('.item-qty').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-size').on('change', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       window._updateSaleSummary();
+      updatePromoSummary();
     }, 150);
   };
 
@@ -2106,7 +2845,21 @@
           else if (size === '0.25' && parseFloat(opt && opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
           else if (size === 'pack' && parseFloat(opt && opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
           else if (size === 'bundle' && parseFloat(opt && opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
-          if (price > 0 && qty > 0) { total += price * qty; count++; }
+          if (price > 0 && qty > 0) { 
+            // Apply promo if active
+            var itemIndex = Array.from(document.querySelectorAll('#saleItems .item-row')).indexOf(row);
+            var promoData = promoState.items[itemIndex];
+            var finalPrice = price;
+            if (promoState.active && promoData) {
+              if (promoState.type === 'single' && promoData.promoPrice) {
+                finalPrice = promoData.promoPrice;
+              } else if (promoState.type === 'bulk' && promoData.bulkPrice && qty >= (promoData.threshold || 10)) {
+                finalPrice = promoData.bulkPrice;
+              }
+            }
+            total += finalPrice * qty; 
+            count++; 
+          }
           if (!window._validateRowStock(row)) allValid = false;
         }
       }
@@ -2114,10 +2867,6 @@
     var itemCountEl = safeGetEl('itemCount'); if (itemCountEl) itemCountEl.textContent = count;
     var totalEl = safeGetEl('saleTotal'); if (totalEl) totalEl.textContent = formatCurrency(total);
     return allValid;
-  };
-
-  window._selectPayment = function(method) {
-    selectedPayment = method;
   };
 
   window._processSale = function() {
@@ -2163,8 +2912,21 @@
           else if (size === '0.25' && parseFloat(opt && opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
           else if (size === 'pack' && parseFloat(opt && opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
           else if (size === 'bundle' && parseFloat(opt && opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
-          items.push({ id: select.value, name: opt.dataset.name, quantity: qty, size: size, sizeLabel: sizeLabel, unitPrice: price });
-          total += price * qty;
+          
+          // Apply promo
+          var itemIndex = Array.from(document.querySelectorAll('#saleItems .item-row')).indexOf(row);
+          var promoData = promoState.items[itemIndex];
+          var finalPrice = price;
+          if (promoState.active && promoData) {
+            if (promoState.type === 'single' && promoData.promoPrice) {
+              finalPrice = promoData.promoPrice;
+            } else if (promoState.type === 'bulk' && promoData.bulkPrice && qty >= (promoData.threshold || 10)) {
+              finalPrice = promoData.bulkPrice;
+            }
+          }
+          
+          items.push({ id: select.value, name: opt.dataset.name, quantity: qty, size: size, sizeLabel: sizeLabel, unitPrice: finalPrice, originalPrice: price, promoApplied: finalPrice !== price });
+          total += finalPrice * qty;
         }
       }
     });
@@ -2183,25 +2945,37 @@
   };
 
   // ============================================
-  // COMPANY SALE MODAL
+  // MODIFIED COMPANY SALE MODAL WITH PROMO
   // ============================================
+  
   async function openCompanySaleModalWithDraft(draft) {
     await loadCustomersAndStock();
     currentModalType = 'company';
     companySelectedPayment = draft.companyPayment || 'cash';
+    
+    // Restore promo from draft
+    if (draft.promoData) {
+      promoState.active = true;
+      promoState.type = draft.promoData.type;
+      promoState.items = JSON.parse(JSON.stringify(draft.promoData.items));
+      promoState.conditions = JSON.parse(JSON.stringify(draft.promoData.conditions));
+      promoState.discountTotal = draft.promoData.discountTotal || 0;
+      promoState.savingsTotal = draft.promoData.savingsTotal || 0;
+    }
     
     var stockOptions = getStockOptionsHtml();
     var firstSizeOpts = allStockItems.length ? getSizeOptions(allStockItems[0]).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
 
     var itemsHtml = '';
     if (draft.items && draft.items.length > 0) {
-      itemsHtml = draft.items.map(function(item) {
+      itemsHtml = draft.items.map(function(item, idx) {
         if (item.isNonInventory) {
           return '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" checked onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div>' +
             '<input type="text" class="form-control item-custom-name" placeholder="Item name" value="' + escapeHtml(item.name || '') + '" style="flex:2;" oninput="window._markDraftDirty()">' +
             '<input type="number" class="form-control item-qty" value="' + (item.quantity || 1) + '" min="1" style="width:80px;" oninput="window._markDraftDirty()">' +
             '<input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" value="' + (item.unitPrice || 0) + '" style="width:100px;" oninput="window._markDraftDirty()">' +
-            '<span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
+            '<span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>' +
+            getPromoItemHtml(item, idx);
         } else {
           var itemOptions = allStockItems.map(function(si) {
             var selected = si.id === item.id ? ' selected' : '';
@@ -2214,7 +2988,8 @@
             '<select class="form-control item-size">' + sizeOpts + '</select>' +
             '<input type="number" class="form-control item-qty" value="' + (item.quantity || 1) + '" min="1" style="width:80px;" oninput="window._markDraftDirty()">' +
             '<input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">' +
-            '<span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
+            '<span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>' +
+            getPromoItemHtml(item, idx);
         }
       }).join('');
     } else {
@@ -2222,10 +2997,12 @@
     }
 
     showModal('Sell to Company',
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
         '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
       '</div>' +
+      renderPromoControls() +
+      '<div id="promoSummary"></div>' +
       '<p style="font-weight:600;margin-bottom:10px;">🏢 Customer: <span style="color:var(--primary);">Company</span></p>' +
       '<div class="form-group"><label>Collected By *</label><input type="text" class="form-control" id="companyCollectedBy" value="' + escapeHtml(draft.collectedBy || '') + '" placeholder="Full name of person collecting" oninput="window._markDraftDirty()"></div>' +
       '<div class="form-group"><label>Usage / Description *</label><textarea class="form-control" id="companyUsage" rows="2" placeholder="e.g., Staff uniforms, Office supplies" oninput="window._markDraftDirty()">' + escapeHtml(draft.usage || '') + '</textarea></div>' +
@@ -2289,12 +3066,11 @@
           }
           
           if (qtyInput) qtyInput.value = item.quantity || 1;
-          
-          console.log('🐛 DEBUG: Company draft item restored:', item.name, '| qty:', item.quantity, '| non-inv:', item.isNonInventory);
         });
       }
       
       window._updateCompanySummary();
+      updatePromoSummary();
       console.log('🐛 DEBUG: Company draft restored - items:', draft.items.length, '| collectedBy:', draft.collectedBy);
     }, 200);
   }
@@ -2310,8 +3086,13 @@
     draft.label = 'Company Sale';
     saveDraftsToStorage();
     renderDraftTabs();
-    startAutoSave();
     currentModalType = 'company';
+    
+    promoState.active = false;
+    promoState.type = null;
+    promoState.items = {};
+    promoState.discountTotal = 0;
+    promoState.savingsTotal = 0;
     
     await loadCustomersAndStock();
     companySelectedPayment = 'cash';
@@ -2320,10 +3101,12 @@
     var firstSizeOpts = allStockItems.length ? getSizeOptions(allStockItems[0]).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
 
     showModal('Sell to Company',
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
         '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
       '</div>' +
+      renderPromoControls() +
+      '<div id="promoSummary"></div>' +
       '<p style="font-weight:600;margin-bottom:10px;">🏢 Customer: <span style="color:var(--primary);">Company</span></p>' +
       '<div class="form-group"><label>Collected By *</label><input type="text" class="form-control" id="companyCollectedBy" placeholder="Full name of person collecting" oninput="window._markDraftDirty()"></div>' +
       '<div class="form-group"><label>Usage / Description *</label><textarea class="form-control" id="companyUsage" rows="2" placeholder="e.g., Staff uniforms, Office supplies" oninput="window._markDraftDirty()"></textarea></div>' +
@@ -2346,6 +3129,7 @@
       $('.item-size').on('change', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       $('.item-custom-price').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       window._updateCompanySummary();
+      updatePromoSummary();
     }, 200);
   };
 
@@ -2380,10 +3164,6 @@
     window._updateCompanySummary();
   };
 
-  window._selectCompanyPayment = function(method) {
-    companySelectedPayment = method;
-  };
-
   window._updateCompanySummary = function() {
     var total = 0; var count = 0; var allValid = true;
     document.querySelectorAll('#companyItems .item-row').forEach(function(row) {
@@ -2405,7 +3185,19 @@
           else if (size === '0.25' && parseFloat(opt && opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
           else if (size === 'pack' && parseFloat(opt && opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
           else if (size === 'bundle' && parseFloat(opt && opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
-          if (price > 0 && qty > 0) { total += price * qty; count++; }
+          
+          var itemIndex = Array.from(document.querySelectorAll('#companyItems .item-row')).indexOf(row);
+          var promoData = promoState.items[itemIndex];
+          var finalPrice = price;
+          if (promoState.active && promoData) {
+            if (promoState.type === 'single' && promoData.promoPrice) {
+              finalPrice = promoData.promoPrice;
+            } else if (promoState.type === 'bulk' && promoData.bulkPrice && qty >= (promoData.threshold || 10)) {
+              finalPrice = promoData.bulkPrice;
+            }
+          }
+          
+          if (finalPrice > 0 && qty > 0) { total += finalPrice * qty; count++; }
           if (!window._validateRowStock(row)) allValid = false;
         }
       }
@@ -2446,8 +3238,20 @@
           else if (size === '0.25' && parseFloat(opt && opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
           else if (size === 'pack' && parseFloat(opt && opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
           else if (size === 'bundle' && parseFloat(opt && opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
-          items.push({ id: select.value, name: opt.dataset.name, quantity: qty, size: size, sizeLabel: sizeLabel, unitPrice: price });
-          total += price * qty;
+          
+          var itemIndex = Array.from(document.querySelectorAll('#companyItems .item-row')).indexOf(row);
+          var promoData = promoState.items[itemIndex];
+          var finalPrice = price;
+          if (promoState.active && promoData) {
+            if (promoState.type === 'single' && promoData.promoPrice) {
+              finalPrice = promoData.promoPrice;
+            } else if (promoState.type === 'bulk' && promoData.bulkPrice && qty >= (promoData.threshold || 10)) {
+              finalPrice = promoData.bulkPrice;
+            }
+          }
+          
+          items.push({ id: select.value, name: opt.dataset.name, quantity: qty, size: size, sizeLabel: sizeLabel, unitPrice: finalPrice, originalPrice: price, promoApplied: finalPrice !== price });
+          total += finalPrice * qty;
         }
       }
     });
@@ -2467,25 +3271,22 @@
   };
 
   // ============================================
-  // WHOLESALE SALE MODAL - FIXED: ALL INVENTORY ITEMS SHOW IN BORROW
+  // WHOLESALE SALE MODAL WITH PROMO
   // ============================================
+  
   async function openWholesaleSaleModalWithDraft(draft) {
     await loadCustomersAndStock();
     currentModalType = 'wholesale';
     
-    // Store items with stock
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
-    
-    // FIX: ALL stock items with quantity > 0 are borrowable, not just those NOT in store
     var borrowableItems = allStockItems.filter(function(si) {
-      return (si.unitQty || 0) > 0;  // Show ALL inventory items with stock
+      return (si.unitQty || 0) > 0;
     });
     var hasBorrowable = borrowableItems.length > 0;
 
     var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>'; }).join('');
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
     
-    // FIX: Show ALL inventory items as borrowable with clear indication
     var borrowOptions = borrowableItems.map(function(i) {
       var inStore = allStoreItems.some(function(store) { 
         return store.id === i.id || store.name === i.name; 
@@ -2500,11 +3301,22 @@
 
     wholesaleCustomerType = draft.wholesaleCustomerType || 'existing';
     wholesalePayment = draft.wholesalePayment || 'cash';
+    
+    // Restore promo
+    if (draft.promoData) {
+      promoState.active = true;
+      promoState.type = draft.promoData.type;
+      promoState.items = JSON.parse(JSON.stringify(draft.promoData.items));
+      promoState.conditions = JSON.parse(JSON.stringify(draft.promoData.conditions));
+      promoState.discountTotal = draft.promoData.discountTotal || 0;
+      promoState.savingsTotal = draft.promoData.savingsTotal || 0;
+    }
 
     var itemsHtml = '';
     if (draft.items && draft.items.length > 0) {
-      itemsHtml = draft.items.map(function(item) {
+      itemsHtml = draft.items.map(function(item, idx) {
         var isBorrowed = item.borrowed || false;
+        var promoHtml = getPromoItemHtml(item, idx);
         return '<div class="ws-item-row" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">' +
           '<select class="form-control ws-select" style="flex:2;min-width:180px;"><option value="">-- Search item --</option>' + 
           storeOptions + 
@@ -2514,7 +3326,7 @@
           '<input type="number" class="form-control ws-price" value="' + (item.unitPrice || 0) + '" placeholder="Price/pc ₦" step="0.01" style="flex:1;min-width:100px;">' +
           '<span class="ws-borrow-indicator" style="display:' + (isBorrowed ? 'inline-flex' : 'none') + ';"><i class="fas fa-boxes"></i> Will borrow from inventory</span>' +
           '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.ws-item-row\').remove();window._updateWSTotal();"><i class="fas fa-times"></i></button>' +
-        '</div>';
+        '</div>' + promoHtml;
       }).join('');
     } else {
       itemsHtml = '<div class="ws-item-row" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">' +
@@ -2530,11 +3342,13 @@
     }
 
     showModal('New Wholesale Sale',
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
         (hasBorrowable ? '<span class="borrow-badge"><i class="fas fa-boxes"></i> ' + borrowableItems.length + ' inventory items available to borrow</span>' : '') +
         '<span style="margin-left:auto;font-size:0.7rem;color:var(--gray);">Draft: ' + escapeHtml(draft.label) + '</span>' +
       '</div>' +
+      renderPromoControls() +
+      '<div id="promoSummary"></div>' +
       '<div class="customer-type-toggle"><button class="customer-type-btn' + (wholesaleCustomerType === 'existing' ? ' active' : '') + '" data-type="existing" onclick="window._switchWSType(\'existing\')"><i class="fas fa-users"></i> Existing</button><button class="customer-type-btn' + (wholesaleCustomerType === 'new' ? ' active' : '') + '" data-type="new" onclick="window._switchWSType(\'new\')"><i class="fas fa-user-plus"></i> New</button></div>' +
       '<div id="wsExistingSection" style="display:' + (wholesaleCustomerType === 'existing' ? 'block' : 'none') + ';"><div class="form-group"><label>Search Customer</label><select class="form-control" id="wsExistingCustomer" style="width:100%;"><option value="">-- Search --</option>' + custOptions + '</select></div></div>' +
       '<div id="wsNewSection" style="display:' + (wholesaleCustomerType === 'new' ? 'block' : 'none') + ';"><div class="form-row"><div class="form-group"><label>Full Name *</label><input class="form-control" id="wsNewName" value="' + escapeHtml(draft.customerName || '') + '"></div><div class="form-group"><label>Phone *</label><input class="form-control" id="wsNewPhone" value="' + escapeHtml(draft.customerPhone || '') + '"></div></div><div class="form-group"><label>Address</label><input class="form-control" id="wsNewAddress" value="' + escapeHtml(draft.customerAddress || '') + '"></div></div>' +
@@ -2620,6 +3434,7 @@
       
       window._bindWSEvents();
       window._updateWSTotal();
+      updatePromoSummary();
       console.log('🐛 DEBUG: Wholesale draft restored - items:', draft.items.length, '| name:', draft.label);
       console.log('🐛 DEBUG: Borrowable items count:', borrowableItems.length);
     }, 200);
@@ -2636,24 +3451,25 @@
     draft.label = 'Wholesale';
     saveDraftsToStorage();
     renderDraftTabs();
-    startAutoSave();
     currentModalType = 'wholesale';
+    
+    promoState.active = false;
+    promoState.type = null;
+    promoState.items = {};
+    promoState.discountTotal = 0;
+    promoState.savingsTotal = 0;
     
     await loadCustomersAndStock();
     
-    // Store items with stock
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
-    
-    // FIX: ALL stock items with quantity > 0 are borrowable
     var borrowableItems = allStockItems.filter(function(si) {
-      return (si.unitQty || 0) > 0;  // Show ALL inventory items with stock
+      return (si.unitQty || 0) > 0;
     });
     var hasBorrowable = borrowableItems.length > 0;
 
     var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>'; }).join('');
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
     
-    // FIX: Show ALL inventory items as borrowable with clear indication
     var borrowOptions = borrowableItems.map(function(i) {
       var inStore = allStoreItems.some(function(store) { 
         return store.id === i.id || store.name === i.name; 
@@ -2670,11 +3486,13 @@
     wholesalePayment = 'cash';
 
     showModal('New Wholesale Sale',
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
         (hasBorrowable ? '<span class="borrow-badge"><i class="fas fa-boxes"></i> ' + borrowableItems.length + ' inventory items available to borrow</span>' : '') +
         '<span style="margin-left:auto;font-size:0.7rem;color:var(--gray);">Draft: ' + escapeHtml(draft.label) + '</span>' +
       '</div>' +
+      renderPromoControls() +
+      '<div id="promoSummary"></div>' +
       '<div class="customer-type-toggle"><button class="customer-type-btn active" data-type="existing" onclick="window._switchWSType(\'existing\')"><i class="fas fa-users"></i> Existing</button><button class="customer-type-btn" data-type="new" onclick="window._switchWSType(\'new\')"><i class="fas fa-user-plus"></i> New</button></div>' +
       '<div id="wsExistingSection"><div class="form-group"><label>Search Customer</label><select class="form-control" id="wsExistingCustomer" style="width:100%;"><option value="">-- Search --</option>' + custOptions + '</select></div></div>' +
       '<div id="wsNewSection" style="display:none;"><div class="form-row"><div class="form-group"><label>Full Name *</label><input class="form-control" id="wsNewName"></div><div class="form-group"><label>Phone *</label><input class="form-control" id="wsNewPhone"></div></div><div class="form-group"><label>Address</label><input class="form-control" id="wsNewAddress"></div></div>' +
@@ -2728,6 +3546,7 @@
       });
       
       window._bindWSEvents();
+      updatePromoSummary();
       console.log('🐛 DEBUG: Wholesale modal opened with ' + borrowableItems.length + ' borrowable items');
     }, 150);
   };
@@ -2743,15 +3562,12 @@
 
   window._addWSItem = function() {
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
-    
-    // FIX: ALL stock items with quantity > 0 are borrowable
     var borrowableItems = allStockItems.filter(function(si) {
       return (si.unitQty || 0) > 0;
     });
     
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
     
-    // FIX: Show ALL inventory items as borrowable
     var borrowOptions = borrowableItems.map(function(i) {
       var inStore = allStoreItems.some(function(store) { 
         return store.id === i.id || store.name === i.name; 
@@ -2966,7 +3782,7 @@
   };
 
   // ============================================
-  // PROCESS SALE COMMON
+  // PROCESS SALE COMMON WITH PROMO
   // ============================================
   function processSaleCommon(items, total, customerInfo, paymentMethod, isCompanySale, extraData, saleType) {
     if (isProcessingSale) {
@@ -2994,8 +3810,6 @@
         var needed = item.pieces || item.quantity || 1;
         
         if (!storeItem) {
-          console.log('⚠️ Item not in store: ' + item.id + ' - checking inventory...');
-          
           var invItem = allStockItems.find(function(si) { return si.id === item.id; });
           if (!invItem) {
             invItem = allStockItems.find(function(si) { 
@@ -3004,8 +3818,6 @@
           }
           
           if (invItem && safeNumber(invItem.unitQty, 0) >= needed) {
-            console.log('📦 Fully borrowing from inventory: ' + invItem.name + ' (' + needed + ' units)');
-            
             borrowedItems.push({
               itemId: invItem.id,
               itemName: invItem.name,
@@ -3073,8 +3885,6 @@
           }
           
           if (stockItem && safeNumber(stockItem.unitQty, 0) >= fromInventory) {
-            console.log('📦 Borrowing from inventory: ' + stockItem.name + ' (' + fromInventory + ' units) to supplement store (' + fromStore + ' units)');
-            
             borrowedItems.push({
               itemId: stockItem.id,
               itemName: stockItem.name,
@@ -3181,6 +3991,26 @@
       }
     }
 
+    var promoData = null;
+    if (promoState.active && Object.keys(promoState.items).length > 0) {
+      var activePromo = promoManager.promos.find(function(p) { return p.id === promoManager.activePromoId; });
+      promoData = {
+        type: promoState.type,
+        items: JSON.parse(JSON.stringify(promoState.items)),
+        conditions: {
+          startDate: activePromo ? activePromo.startDate : null,
+          endDate: activePromo ? activePromo.endDate : null,
+          terms: activePromo ? activePromo.terms : '',
+          promoCode: activePromo ? activePromo.promoCode : '',
+          qrLink: activePromo ? activePromo.qrLink : 'https://omocreations.com',
+          name: activePromo ? activePromo.name : 'Promo'
+        },
+        discountTotal: promoState.discountTotal,
+        savingsTotal: promoState.savingsTotal,
+        appliedToAll: promoState.appliedToAll || false
+      };
+    }
+
     var saleData = {
       receiptNumber: receiptNumber, customerId: customerId,
       customerName: customerInfo.customerName || 'Walk-in',
@@ -3196,7 +4026,9 @@
           borrowed: it.borrowed || false, 
           borrowedQty: it.borrowedQty || 0, 
           storeQty: it.storeQty || 0,
-          fullyBorrowed: it.fullyBorrowed || false
+          fullyBorrowed: it.fullyBorrowed || false,
+          originalPrice: it.originalPrice || it.unitPrice,
+          promoApplied: it.promoApplied || false
         };
       }),
       totalAmount: total, paymentMethod: paymentMethod,
@@ -3208,7 +4040,8 @@
       _newCustomer: customerInfo._isNew,
       _customerData: customerInfo._customerData || null,
       _borrowedItems: borrowedItems.length > 0 ? borrowedItems : null,
-      _customerType: customerInfo._isNew ? 'new' : (customerInfo.customerId ? 'existing' : 'walk-in')
+      _customerType: customerInfo._isNew ? 'new' : (customerInfo.customerId ? 'existing' : 'walk-in'),
+      promoData: promoData
     };
     if (extraData) Object.assign(saleData, extraData);
 
@@ -3242,7 +4075,8 @@
       saleType: saleType,
       itemCount: items.length,
       isCompanySale: isCompanySale || false,
-      borrowedItems: borrowedItems.length
+      borrowedItems: borrowedItems.length,
+      hasPromo: !!promoData
     });
     
     return saleDataRef;
@@ -3323,24 +4157,24 @@
   }
 
   // ============================================
-  // RECEIPTS - FIXED: COMBINE DUPLICATE ITEMS
+  // COMBINE ITEMS FOR RECEIPT
   // ============================================
   
-  // Helper function to combine items with same name + size + price
   function combineItems(items) {
     if (!items || items.length === 0) return [];
     
     var combined = {};
     items.forEach(function(item) {
-      // Create a unique key based on name + size + unitPrice
       var key = (item.name || 'Item') + '|' + (item.size || '1') + '|' + (item.sizeLabel || 'Unit') + '|' + (item.unitPrice || 0);
       
       if (combined[key]) {
-        // Add quantity and total to existing entry
         combined[key].quantity += (item.quantity || item.pieces || 1);
         combined[key].total = combined[key].quantity * combined[key].unitPrice;
+        if (item.originalPrice) combined[key].originalPrice = item.originalPrice;
+        if (item.promoApplied) combined[key].promoApplied = true;
+        if (item.borrowed) combined[key].borrowed = true;
+        if (item.fullyBorrowed) combined[key].fullyBorrowed = true;
       } else {
-        // Create new entry
         combined[key] = {
           name: item.name || 'Item',
           size: item.size || '1',
@@ -3353,7 +4187,9 @@
           borrowedQty: item.borrowedQty || 0,
           storeQty: item.storeQty || 0,
           fullyBorrowed: item.fullyBorrowed || false,
-          condition: item.condition || null
+          condition: item.condition || null,
+          originalPrice: item.originalPrice || item.unitPrice,
+          promoApplied: item.promoApplied || false
         };
       }
     });
@@ -3365,7 +4201,6 @@
     if (!items || items.length === 0) return [];
     
     var combined = combineItems(items);
-    
     combined.sort(function(a, b) {
       return a.name.localeCompare(b.name);
     });
@@ -3373,6 +4208,10 @@
     return combined;
   }
 
+  // ============================================
+  // SHOW RECEIPT MODAL WITH PROMO
+  // ============================================
+  
   window.showReceiptModal = function(sale) {
     if (!sale) return;
     
@@ -3391,12 +4230,14 @@
     var isCompany = sale.isCompanySale;
     var isReturn = sale.isReturn || sale.returnAction;
     var hasBorrowed = (sale._borrowedItems && sale._borrowedItems.length > 0) || (sale.items && sale.items.some(function(it) { return it.borrowed || it.fullyBorrowed; }));
+    var hasPromo = sale.promoData && sale.promoData.type;
     
     var title = 'Sales Receipt';
     if (isExchange) title = 'Exchange Receipt';
     else if (isWholesale) title = 'Wholesale Receipt';
     else if (isCompany) title = 'Company Receipt';
     else if (isReturn) title = 'Return Receipt';
+    if (hasPromo) title = '🔥 ' + title + ' (Promo)';
     
     var itemsHtml = '';
     
@@ -3453,7 +4294,6 @@
       var actionLabels = { 'refund': '💵 Full Refund', 'exchange': '🔄 Exchanged', 'store_credit': '🏦 Store Credit', 'replace': '🔄 Replaced' };
       itemsHtml += '<div style="text-align:center;margin-top:8px;padding:6px;background:var(--primary-soft);border-radius:8px;font-size:0.8rem;font-weight:600;">Action: ' + (actionLabels[sale.returnAction] || escapeHtml(sale.returnAction || 'Return')) + '</div>';
     } else {
-      // ===== FIX: USE COMBINED ITEMS ON RECEIPT =====
       if (sale.items && sale.items.length > 0) {
         var displayItems = getDisplayItems(sale.items);
         displayItems.forEach(function(i) {
@@ -3461,8 +4301,15 @@
           var price = i.unitPrice || 0;
           var total = qty * price;
           var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
-          // Clean receipt - no borrow badges for customer
-          itemsHtml += '<div class="receipt-item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
+          
+          var priceDisplay = '';
+          if (i.promoApplied && i.originalPrice && i.originalPrice !== price) {
+            priceDisplay = '<span style="text-decoration:line-through;color:var(--gray);font-size:0.7rem;">' + formatCurrency(i.originalPrice) + '</span> → <span style="color:#ff6b6b;">' + formatCurrency(price) + '</span>';
+          } else {
+            priceDisplay = formatCurrency(price);
+          }
+          
+          itemsHtml += '<div class="receipt-item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + priceDisplay + '</span></div>';
         });
       }
     }
@@ -3487,7 +4334,92 @@
       }
     }
     
-    var borrowInfo = '';
+    var promoHtml = '';
+    if (sale.promoData && sale.promoData.type) {
+      var promo = sale.promoData;
+      var savings = promo.savingsTotal || 0;
+      var isBulk = promo.type === 'bulk';
+      var color = isBulk ? '#f5576c' : '#ff6b6b';
+      
+      promoHtml = `
+        <div class="promo-banner" style="margin:8px 0;border-color:${color};">
+          <div class="promo-title" style="color:${color};">
+            ${isBulk ? '📦 Bulk Discount' : '🔥 Promo Discount'}
+            <span class="promo-savings">🎉 Save ${formatCurrency(savings)}</span>
+          </div>
+      `;
+      
+      if (promo.items && Object.keys(promo.items).length > 0) {
+        Object.entries(promo.items).forEach(function([index, data]) {
+          var itemIdx = parseInt(index);
+          var item = sale.items ? sale.items[itemIdx] : null;
+          if (!item) return;
+          var qty = item.quantity || 1;
+          var originalPrice = item.originalPrice || item.unitPrice || 0;
+          var finalPrice = item.unitPrice || 0;
+          var itemSavings = (originalPrice - finalPrice) * qty;
+          
+          if (isBulk) {
+            var threshold = data.threshold || 10;
+            var bulkPrice = data.bulkPrice || 0;
+            promoHtml += `
+              <div style="font-size:0.8rem;padding:4px 0;border-bottom:1px dashed rgba(0,0,0,0.05);display:flex;justify-content:space-between;">
+                <span>${qty}x ${escapeHtml(item.name)}</span>
+                <span>
+                  <span style="text-decoration:line-through;color:var(--gray);">${formatCurrency(originalPrice)}</span>
+                  ${bulkPrice ? `→ <span style="color:#f5576c;font-weight:700;">${formatCurrency(bulkPrice)}</span>` : ''}
+                  <span style="color:var(--success);font-size:0.7rem;">(-${formatCurrency(itemSavings)})</span>
+                </span>
+              </div>
+              <div style="font-size:0.7rem;color:var(--gray);padding-left:8px;">
+                📦 Bulk: ${threshold}+ units @ ${formatCurrency(bulkPrice)}/unit
+              </div>
+            `;
+          } else {
+            promoHtml += `
+              <div style="font-size:0.8rem;padding:4px 0;border-bottom:1px dashed rgba(0,0,0,0.05);display:flex;justify-content:space-between;">
+                <span>${qty}x ${escapeHtml(item.name)}</span>
+                <span>
+                  <span style="text-decoration:line-through;color:var(--gray);">${formatCurrency(originalPrice)}</span>
+                  → <span style="color:#ff6b6b;font-weight:700;">${formatCurrency(finalPrice)}</span>
+                  <span style="color:var(--success);font-size:0.7rem;">(-${formatCurrency(itemSavings)})</span>
+                </span>
+              </div>
+            `;
+          }
+        });
+      }
+      
+      if (promo.conditions) {
+        var cond = promo.conditions;
+        promoHtml += `
+          <div class="promo-conditions" style="margin-top:8px;font-size:0.7rem;">
+            <strong>📋 ${escapeHtml(cond.name || 'Promo')}</strong>
+            ${cond.startDate ? '<br>📅 ' + escapeHtml(cond.startDate) + (cond.endDate ? ' → ' + escapeHtml(cond.endDate) : '') : ''}
+            ${cond.terms ? '<br>📝 ' + escapeHtml(cond.terms) : ''}
+            ${cond.promoCode ? '<br>🏷️ Code: <strong>' + escapeHtml(cond.promoCode) + '</strong>' : ''}
+          </div>
+        `;
+        
+        if (cond.qrLink) {
+          promoHtml += `
+            <div class="qr-container">
+              <div class="qr-placeholder">
+                📱 Scan for details<br>
+                <span style="font-size:0.6rem;color:var(--gray);">${escapeHtml(cond.qrLink)}</span>
+              </div>
+            </div>
+          `;
+        }
+      }
+      
+      promoHtml += `
+        <div class="discount-row" style="margin-top:8px;padding-top:8px;border-top:1px dashed ${color};">
+          <span>💰 Total Savings</span>
+          <span class="savings-total">${formatCurrency(savings)} 🎉</span>
+        </div>
+      </div>`;
+    }
     
     var customerTypeBadge = '';
     if (sale._customerType === 'new') {
@@ -3532,7 +4464,6 @@
           dateDisplay +
           originalReceiptInfo +
           wholesaleInfo +
-          borrowInfo +
         '</div>' +
         '' +
         '<p class="cust-info">' +
@@ -3541,6 +4472,7 @@
           '<br><strong>Served by:</strong> ' + escapeHtml(sale.attendantName || 'Staff') +
         '</p>' +
         extraInfo +
+        (hasPromo ? promoHtml : '') +
         '<div class="receipt-items">' + itemsHtml + '</div>' +
         (isExchange ? '' : (isReturn ? '' : '<div class="receipt-total"><span>Total:</span><span>' + formatCurrency(displayTotal) + '</span></div>')) +
         '<p class="thanks">Thank you for your patronage!</p>' +
@@ -3555,8 +4487,9 @@
   };
 
   // ============================================
-  // COMPANY RECORD VIEW - Shows stock sources
+  // VIEW COMPANY RECORD
   // ============================================
+  
   window.viewCompanyRecord = function(id) {
     var s = findSaleByIdentifier(id);
     if (!s) { showToast('Sale not found', 'error'); return; }
@@ -3805,8 +4738,9 @@
   };
 
   // ============================================
-  // PRINT RECEIPT - FIXED: COMBINE ITEMS
+  // PRINT RECEIPT WITH PROMO
   // ============================================
+  
   window.printReceipt = function(id) {
     var s = findSaleByIdentifier(id);
     if (!s) { showToast('Sale not found for printing', 'error'); return; }
@@ -3822,6 +4756,7 @@
     var isReturn = s.isReturn || s.returnAction;
     var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
     var isCompany = s.isCompanySale;
+    var hasPromo = s.promoData && s.promoData.type;
     
     var itemsHtml = '';
     
@@ -3870,15 +4805,23 @@
       var actionLabels = { 'refund': 'Full Refund', 'exchange': 'Exchanged', 'store_credit': 'Store Credit', 'replace': 'Replaced' };
       itemsHtml += '<div style="text-align:center;margin-top:4px;font-weight:bold;">Action: ' + (actionLabels[s.returnAction] || escapeHtml(s.returnAction || 'Return')) + '</div>';
     } else {
-      // ===== FIX: USE COMBINED ITEMS =====
       if (s.items) {
         var combinedItems = combineItems(s.items);
         combinedItems.sort(function(a, b) { return a.name.localeCompare(b.name); });
         combinedItems.forEach(function(i) {
           var qty = i.quantity || 1;
-          var total = qty * (i.unitPrice || 0);
+          var price = i.unitPrice || 0;
+          var total = qty * price;
           var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
-          itemsHtml += '<div class="item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
+          
+          var priceDisplay = '';
+          if (i.promoApplied && i.originalPrice && i.originalPrice !== price) {
+            priceDisplay = '<span style="text-decoration:line-through;color:#999;font-size:7pt;">' + formatCurrency(i.originalPrice) + '</span> → ' + formatCurrency(price);
+          } else {
+            priceDisplay = formatCurrency(price);
+          }
+          
+          itemsHtml += '<div class="item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + priceDisplay + '</span></div>';
         });
       }
     }
@@ -3898,8 +4841,6 @@
       wholesaleInfo = '<p class="rec">Pack Size: ' + (s.wholesalePackSize || 50) + ' pcs | Sold: ' + (s.totalPieces || 0) + ' pcs</p>';
     }
     
-    var borrowInfo = '';
-    
     var originalReceiptInfo = '';
     if (s.originalReceiptNumber) {
       originalReceiptInfo = '<p class="rec" style="font-size:8pt;">Original: #' + escapeHtml(s.originalReceiptNumber) + '</p>';
@@ -3913,12 +4854,35 @@
       dateDisplay = '<p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>';
     }
     
+    var promoPrintHtml = '';
+    if (hasPromo && s.promoData) {
+      var promo = s.promoData;
+      var savings = promo.savingsTotal || 0;
+      var isBulk = promo.type === 'bulk';
+      var color = isBulk ? '#f5576c' : '#ff6b6b';
+      
+      promoPrintHtml = '<div style="border:1px dashed ' + color + ';padding:6px 8px;margin:6px 0;border-radius:4px;">' +
+        '<div style="font-weight:bold;color:' + color + ';">' + (isBulk ? '📦 Bulk Discount' : '🔥 Promo Discount') + ' - Save ' + formatCurrency(savings) + '</div>';
+      
+      if (promo.conditions) {
+        var cond = promo.conditions;
+        if (cond.name) promoPrintHtml += '<div style="font-size:7pt;">' + escapeHtml(cond.name) + '</div>';
+        if (cond.startDate) promoPrintHtml += '<div style="font-size:6pt;color:#999;">' + escapeHtml(cond.startDate) + (cond.endDate ? ' → ' + escapeHtml(cond.endDate) : '') + '</div>';
+        if (cond.terms) promoPrintHtml += '<div style="font-size:6pt;color:#666;">' + escapeHtml(cond.terms) + '</div>';
+        if (cond.promoCode) promoPrintHtml += '<div style="font-size:7pt;font-weight:bold;">Code: ' + escapeHtml(cond.promoCode) + '</div>';
+        if (cond.qrLink) promoPrintHtml += '<div style="font-size:5pt;color:#999;word-break:break-all;">🔗 ' + escapeHtml(cond.qrLink) + '</div>';
+      }
+      
+      promoPrintHtml += '</div>';
+    }
+    
     var receiptHTML = '<html><head><title>Receipt #' + (s.receiptNumber||'') + '</title>' +
       '<style>@page{margin:0;size:80mm auto}*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Segoe UI",Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3;color:#000}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:7pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1;padding-right:8px}.item span:last-child{text-align:right;min-width:55px;white-space:nowrap}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style>' +
       '</head><body>' +
-      '<div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#' + escapeHtml(s.receiptNumber||'N/A') + '</p>' + dateDisplay + originalReceiptInfo + wholesaleInfo + borrowInfo + '</div>' +
+      '<div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#' + escapeHtml(s.receiptNumber||'N/A') + '</p>' + dateDisplay + originalReceiptInfo + wholesaleInfo + '</div>' +
       '<p class="cust">Customer: ' + escapeHtml(s.customerName||'Walk-in') + (s.customerPhone ? '<br>Phone: ' + escapeHtml(s.customerPhone) : '') + '<br>Served by: ' + escapeHtml(s.attendantName||'Staff') + '</p>' +
       companyInfo +
+      (hasPromo ? promoPrintHtml : '') +
       '<div class="items">' + itemsHtml + '</div>' +
       (isExchange ? '' : (isReturn ? '' : '<div class="total">Total: ' + formatCurrency(displayTotal) + '</div>')) +
       '<p class="thanks">Thank you for your patronage!</p>' +
@@ -3960,7 +4924,8 @@
         paymentMethod: s.paymentMethod || 'unknown',
         saleType: isExchange ? 'exchange' : (isReturn ? 'return' : (s._type || 'regular')),
         printedBy: userData ? userData.fullName : 'Staff',
-        printedAt: new Date().toISOString()
+        printedAt: new Date().toISOString(),
+        hasPromo: hasPromo
       });
     } catch (e) {
       showToast('Print failed. Please try again.', 'error');
@@ -3973,6 +4938,7 @@
   // ============================================
   // RETURN PAGE NAVIGATION
   // ============================================
+  
   window.openReturnPage = function(saleId) {
     var sale = findSaleByIdentifier(saleId);
     if (!sale) { showToast('Sale not found', 'error'); return; }
@@ -3994,8 +4960,9 @@
   // ============================================
   // EXPORT & REFRESH
   // ============================================
+  
   window.exportSalesData = function() {
-    var headers = ['Receipt #', 'Date', 'Customer', 'Phone', 'Items', 'Total', 'Payment', 'Type', 'Customer Type', 'Status', 'Attendant'];
+    var headers = ['Receipt #', 'Date', 'Customer', 'Phone', 'Items', 'Total', 'Payment', 'Type', 'Customer Type', 'Status', 'Attendant', 'Has Promo', 'Promo Type', 'Savings'];
     var rows = allSales.map(function(s) { 
       var createdAtStr = '';
       if (s.createdAt) {
@@ -4003,6 +4970,9 @@
         else if (typeof s.createdAt === 'string') createdAtStr = new Date(s.createdAt).toLocaleString();
         else createdAtStr = new Date().toLocaleString();
       }
+      var hasPromo = s.promoData && s.promoData.type ? 'Yes' : 'No';
+      var promoType = s.promoData ? s.promoData.type : '';
+      var savings = s.promoData ? s.promoData.savingsTotal || 0 : 0;
       return [
         s.receiptNumber||'', 
         createdAtStr, 
@@ -4013,7 +4983,10 @@
         s.paymentMethod||'', 
         s._customerType||'walk-in',
         s.status||'completed',
-        s.attendantName||''
+        s.attendantName||'',
+        hasPromo,
+        promoType,
+        savings
       ]; 
     });
     var csv = [headers.join(','), ...rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g,'""') + '"'; }).join(','); })].join('\n');
@@ -4042,6 +5015,10 @@
     });
   }
 
+  // ============================================
+  // AUTH STATE HANDLER
+  // ============================================
+
   onAuthStateChanged(auth, async function(u) {
     if (!u) { window.location.href = 'auth.html'; return; }
     currentUser = u;
@@ -4059,6 +5036,14 @@
       await loadAdminPins(); 
       buildSidebar(); 
       loadSales();
+      
+      // Restore promo manager from localStorage
+      if (promoManager.promos.length === 0) {
+        promoManager.promos = JSON.parse(localStorage.getItem('promoManager') || '[]');
+      }
+      if (!promoManager.activePromoId) {
+        promoManager.activePromoId = localStorage.getItem('activePromoId') || null;
+      }
       
       if (statsRevealed) { updateStatsDisplay(); updateAttendantStats(); }
       if (isOnline && offlineSales.length > 0) { syncOfflineSales(); }
