@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#8b5cf6" />
+  <meta name="theme-color" content="#ff4da6" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Promo Management · OmoCreations</title>
@@ -17,8 +17,8 @@
   <style>
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
-      --primary:#8b5cf6; --primary-dark:#6d28d9; --primary-light:#c4b5fd;
-      --primary-soft:#ede9fe; --dark:#1a1a2e; --gray:#6b7280;
+      --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
+      --primary-soft:#fff0f6; --dark:#1a1a2e; --gray:#6b7280;
       --gray-light:#f3f4f6; --success:#10b981; --warning:#f59e0b;
       --danger:#ef4444; --info:#3b82f6; --promo:#8b5cf6; --promo-light:#ede9fe;
       --sidebar-width:280px; --header-height:70px;
@@ -26,10 +26,11 @@
     html { font-size:16px; -webkit-text-size-adjust:100%; }
     body {
       font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-      background:linear-gradient(135deg,#f9fafb 0%,#ede9fe 100%);
+      background:linear-gradient(135deg,#f9fafb 0%,#fff0f6 100%);
       display:flex; min-height:100vh; overflow-x:hidden;
       -webkit-font-smoothing:antialiased;
     }
+    @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
     @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
     @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
     @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.5} }
@@ -42,40 +43,40 @@
     }
     .offline-banner.show { display: block; }
 
-    .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); color:white; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000; border-right:1px solid rgba(139,92,246,0.2); }
+    .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); color:white; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000; border-right:1px solid rgba(255,77,166,0.2); }
     .sidebar::-webkit-scrollbar { width:4px; } .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); } .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
-    .sidebar-header { padding:24px 18px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(139,92,246,0.2); position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); }
+    .sidebar-header { padding:24px 18px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,77,166,0.2); position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); }
     .sidebar-header .close-sidebar { display:none; background:rgba(255,255,255,0.1); border:none; color:white; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1.2rem; margin-left:auto; align-items:center; justify-content:center; }
-    .logo-icon { width:42px; height:42px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:700; flex-shrink:0; }
+    .logo-icon { width:42px; height:42px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:700; flex-shrink:0; animation:flameRing 2s ease-in-out infinite; }
     .logo-text { font-size:1.25rem; font-weight:800; font-family:'Playfair Display',serif; white-space:nowrap; } .logo-text span { color:var(--primary); }
     .sidebar-nav { padding:20px 12px; display:flex; flex-direction:column; } .nav-section { margin-bottom:20px; }
     .nav-section-title { font-size:0.65rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.4); padding:8px 14px 6px; font-weight:600; white-space:nowrap; }
     .nav-item { display:flex; align-items:center; gap:14px; padding:12px 14px; border-radius:12px; color:rgba(255,255,255,0.7); cursor:pointer; border:none; background:none; width:100%; font-size:0.9rem; font-weight:500; text-align:left; margin-bottom:3px; transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; text-decoration:none; }
-    .nav-item i { width:22px; font-size:1.1rem; text-align:center; flex-shrink:0; } .nav-item:hover { background:rgba(139,92,246,0.15); color:white; transform:translateX(5px); }
-    .nav-item.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; box-shadow:0 5px 15px rgba(139,92,246,0.3); } .nav-item.logout { color:rgba(239,68,68,0.7); margin-top:auto; } .nav-item.logout:hover { background:rgba(239,68,68,0.15); color:#ef4444; }
-    .sidebar-footer { padding:20px; border-top:1px solid rgba(139,92,246,0.2); position:sticky; bottom:0; background:linear-gradient(0deg,#0f0f1a 0%,transparent 100%); }
+    .nav-item i { width:22px; font-size:1.1rem; text-align:center; flex-shrink:0; } .nav-item:hover { background:rgba(255,77,166,0.15); color:white; transform:translateX(5px); }
+    .nav-item.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; box-shadow:0 5px 15px rgba(255,77,166,0.3); } .nav-item.logout { color:rgba(239,68,68,0.7); margin-top:auto; } .nav-item.logout:hover { background:rgba(239,68,68,0.15); color:#ef4444; }
+    .sidebar-footer { padding:20px; border-top:1px solid rgba(255,77,166,0.2); position:sticky; bottom:0; background:linear-gradient(0deg,#0f0f1a 0%,transparent 100%); }
     .user-profile { display:flex; align-items:center; gap:12px; } .user-avatar { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); display:flex; align-items:center; justify-content:center; font-weight:700; color:white; flex-shrink:0; font-size:1.1rem; }
     .user-details { white-space:nowrap; } .user-details h4 { font-size:0.85rem; font-weight:600; } .user-details p { font-size:0.7rem; opacity:0.6; }
     .sidebar-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:999; display:none; } .sidebar-overlay.active { display:block; }
 
     .main-content { flex:1; margin-left:var(--sidebar-width); transition:margin-left 0.3s ease; min-height:100vh; width:calc(100% - var(--sidebar-width)); }
-    .top-bar { height:var(--header-height); background:rgba(255,255,255,0.98); backdrop-filter:blur(12px); padding:0 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(139,92,246,0.15); position:sticky; top:0; z-index:50; }
+    .top-bar { height:var(--header-height); background:rgba(255,255,255,0.98); backdrop-filter:blur(12px); padding:0 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,77,166,0.15); position:sticky; top:0; z-index:50; }
     .top-bar-left { display:flex; align-items:center; gap:14px; } .menu-toggle { background:none; border:none; font-size:1.3rem; color:var(--gray); cursor:pointer; padding:10px; border-radius:10px; transition:all 0.2s; display:none; align-items:center; justify-content:center; } .menu-toggle:hover { background:var(--primary-soft); color:var(--primary); }
     .page-title { font-size:1.5rem; font-weight:700; color:var(--dark); font-family:'Playfair Display',serif; } .page-title span { color:var(--primary); }
     .current-date { color:var(--gray); font-size:0.85rem; white-space:nowrap; }
     .content-wrapper { padding:28px; max-width:1600px; }
 
     .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
-    .stat-card { background:white; padding:18px 16px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(139,92,246,0.1); transition:all 0.3s; position:relative; overflow:hidden; animation:fadeInUp 0.5s ease forwards; opacity:0; }
+    .stat-card { background:white; padding:18px 16px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(255,77,166,0.1); transition:all 0.3s; position:relative; overflow:hidden; animation:fadeInUp 0.5s ease forwards; opacity:0; }
     .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}.stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}
-    .stat-card:hover { transform:translateY(-5px); box-shadow:0 12px 24px rgba(139,92,246,0.15); }
+    .stat-card:hover { transform:translateY(-5px); box-shadow:0 12px 24px rgba(255,77,166,0.15); }
     .stat-header { display:flex; justify-content:space-between; margin-bottom:12px; }
     .stat-header span { font-size:0.65rem; color:var(--gray); text-transform:uppercase; font-weight:600; letter-spacing:1px; }
     .stat-icon { width:36px; height:36px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; color:var(--primary); }
     .stat-value { font-size:1.8rem; font-weight:800; color:var(--dark); font-family:'Playfair Display',serif; line-height:1; }
     .stat-sub { font-size:0.65rem; color:var(--gray); margin-top:4px; }
 
-    .panel { background:white; border-radius:24px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(139,92,246,0.08); margin-bottom:24px; }
+    .panel { background:white; border-radius:24px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(255,77,166,0.08); margin-bottom:24px; }
     .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
     .panel-header h3 { font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:10px; color:var(--dark); }
     .panel-header h3 i { color:var(--primary); }
@@ -84,7 +85,7 @@
     .btn:hover { transform:translateY(-2px); }
     .btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
     .btn-primary { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; border:none; }
-    .btn-outline { border:1.5px solid rgba(139,92,246,0.3); color:var(--primary); background:transparent; }
+    .btn-outline { border:1.5px solid rgba(255,77,166,0.3); color:var(--primary); background:transparent; }
     .btn-sm { padding:6px 12px; font-size:0.7rem; }
     .btn-success { background:var(--success); color:white; border:none; }
     .btn-danger { background:var(--danger); color:white; border:none; }
@@ -102,13 +103,13 @@
     .badge-bulk { background:rgba(139,92,246,0.2); color:#6d28d9; }
 
     .promo-card { background:var(--primary-soft); border:2px solid var(--primary); border-radius:16px; padding:20px; margin-bottom:16px; transition:all 0.3s; }
-    .promo-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(139,92,246,0.15); }
+    .promo-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(255,77,166,0.15); }
     .promo-card .promo-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
     .promo-card .promo-name { font-size:1.1rem; font-weight:700; color:var(--dark); }
     .promo-card .promo-name i { color:var(--primary); }
     .promo-card .promo-dates { font-size:0.8rem; color:var(--gray); }
     .promo-card .promo-items { margin-top:10px; }
-    .promo-card .promo-item { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(139,92,246,0.1); font-size:0.85rem; }
+    .promo-card .promo-item { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,77,166,0.1); font-size:0.85rem; }
     .promo-card .promo-total { margin-top:10px; padding-top:10px; border-top:2px dashed var(--primary); display:flex; justify-content:space-between; font-weight:700; }
     .promo-card .promo-status { display:inline-block; padding:4px 12px; border-radius:20px; font-size:0.7rem; font-weight:600; }
     .promo-card .promo-status.active { background:rgba(16,185,129,0.15); color:var(--success); }
@@ -118,7 +119,7 @@
     .form-group { margin-bottom:18px; }
     .form-group label { display:block; font-size:0.8rem; font-weight:600; color:var(--dark); margin-bottom:6px; }
     .form-control { width:100%; padding:12px 16px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; font-size:0.9rem; outline:none; background:white; font-family:'Poppins',sans-serif; transition:border 0.2s; }
-    .form-control:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(139,92,246,0.1); }
+    .form-control:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(255,77,166,0.1); }
     select.form-control { appearance:auto; }
 
     .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:2000; padding:16px; }
@@ -135,7 +136,7 @@
     .toast { background:white; color:var(--dark); padding:14px 20px; border-radius:50px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px; font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease; border-left:4px solid var(--primary); transition:all 0.3s ease; }
     .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); } .toast.warning { border-left-color:var(--warning); } .toast.info { border-left-color:var(--info); } .toast i { font-size:1.1rem; }
 
-    .promo-item-row { display:flex; gap:8px; margin-bottom:8px; align-items:center; flex-wrap:wrap; padding:8px; background:white; border-radius:10px; border:1px solid rgba(139,92,246,0.2); }
+    .promo-item-row { display:flex; gap:8px; margin-bottom:8px; align-items:center; flex-wrap:wrap; padding:8px; background:white; border-radius:10px; border:1px solid rgba(255,77,166,0.2); }
     .promo-item-row .promo-select { flex:2; min-width:150px; }
     .promo-item-row .promo-qty { flex:0.5; min-width:60px; }
     .promo-item-row .promo-size { flex:0.5; min-width:80px; }
@@ -146,10 +147,6 @@
     .sale-summary { background:var(--gray-light); border-radius:14px; padding:16px; margin-top:15px; }
     .summary-row { display:flex; justify-content:space-between; padding:5px 0; }
     .summary-row.total { font-weight:700; font-size:1.1rem; border-top:1px dashed rgba(0,0,0,0.1); margin-top:8px; padding-top:12px; }
-
-    .pin-input-container { display:flex; gap:10px; justify-content:center; margin:20px 0; }
-    .pin-input { width:55px; height:65px; text-align:center; font-size:1.8rem; font-weight:700; border:2px solid rgba(139,92,246,0.2); border-radius:14px; outline:none; font-family:'Poppins',sans-serif; }
-    .pin-input:focus { border-color:var(--primary); }
 
     .customer-type-toggle { display:flex; gap:10px; margin-bottom:15px; }
     .customer-type-btn { flex:1; padding:12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; background:white; cursor:pointer; font-weight:600; font-size:0.85rem; font-family:'Poppins',sans-serif; transition:all 0.2s; }
@@ -212,8 +209,8 @@
   <header class="top-bar">
     <div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">🔥 <span>Promo</span> Management</h1></div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-      <button class="btn btn-promo btn-sm" onclick="openNewPromoModal()"><i class="fas fa-plus"></i> New Promo</button>
-      <button class="btn btn-primary btn-sm" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i> Sales</button>
+      <button class="btn btn-primary btn-sm" onclick="openNewPromoModal()"><i class="fas fa-plus"></i> New Promo</button>
+      <button class="btn btn-outline btn-sm" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i> Sales</button>
       <span class="current-date" id="currentDate"></span>
     </div>
   </header>
@@ -242,7 +239,7 @@
         <h3><i class="fas fa-fire"></i> Promotions</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-outline btn-sm" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
-          <button class="btn btn-promo btn-sm" onclick="openNewPromoModal()"><i class="fas fa-plus"></i> New Promo</button>
+          <button class="btn btn-primary btn-sm" onclick="openNewPromoModal()"><i class="fas fa-plus"></i> New Promo</button>
         </div>
       </div>
       <div id="promosContainer">
@@ -310,15 +307,6 @@
     if (d.toDate) d = d.toDate();
     if (d.seconds) d = new Date(d.seconds * 1000);
     if (d instanceof Date) return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    return 'N/A';
-  }
-
-  function formatDateTime(d) {
-    if (!d) return 'N/A';
-    if (typeof d === 'string') return new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    if (d.toDate) d = d.toDate();
-    if (d.seconds) d = new Date(d.seconds * 1000);
-    if (d instanceof Date) return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     return 'N/A';
   }
 
@@ -688,7 +676,7 @@
         '<div class="summary-row total"><span>Discount:</span><span id="promoDiscount" style="color:var(--success);">₦0</span></div>' +
       '</div>' +
       '<div style="display:flex;gap:10px;margin-top:20px;">' +
-        '<button class="btn btn-promo" onclick="window._savePromo(\'' + (promo.id || '') + '\', ' + (isEditing ? 'true' : 'false') + ')" style="flex:1;"><i class="fas fa-save"></i> ' + (isEditing ? 'Update' : 'Save') + ' Promo</button>' +
+        '<button class="btn btn-primary" onclick="window._savePromo(\'' + (promo.id || '') + '\', ' + (isEditing ? 'true' : 'false') + ')" style="flex:1;"><i class="fas fa-save"></i> ' + (isEditing ? 'Update' : 'Save') + ' Promo</button>' +
         '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Cancel</button>' +
       '</div>'
     );
