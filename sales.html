@@ -20,7 +20,7 @@
       --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
       --primary-soft:#fff0f6; --dark:#1a1a2e; --gray:#6b7280;
       --gray-light:#f3f4f6; --success:#10b981; --warning:#f59e0b;
-      --danger:#ef4444; --info:#3b82f6; --promo:#8b5cf6; --promo-light:#ede9fe;
+      --danger:#ef4444; --info:#3b82f6;
       --sidebar-width:280px; --header-height:70px;
     }
     html { font-size:16px; -webkit-text-size-adjust:100%; }
@@ -154,8 +154,6 @@
     .data-table tbody tr.returned-row { background:rgba(239,68,68,0.03); }
     .data-table tbody tr.pending-sync { background:rgba(245,158,11,0.05); }
     .data-table tbody tr.returned-partial { background:rgba(245,158,11,0.05); }
-    .data-table tbody tr.promo-row { background:rgba(139,92,246,0.05); }
-    .data-table tbody tr.bulk-row { background:rgba(139,92,246,0.08); }
 
     .badge { padding:5px 12px; border-radius:40px; font-size:0.7rem; font-weight:600; display:inline-block; white-space:nowrap; }
     .badge-success { background:rgba(16,185,129,0.1); color:var(--success); }
@@ -164,8 +162,6 @@
     .badge-info { background:rgba(59,130,246,0.1); color:var(--info); }
     .badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; }
     .badge-borrow { background:rgba(245,158,11,0.15); color:#b45309; }
-    .badge-promo { background:rgba(139,92,246,0.15); color:#7c3aed; }
-    .badge-bulk { background:rgba(139,92,246,0.2); color:#6d28d9; }
 
     .btn { padding:8px 16px; border-radius:40px; font-weight:600; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; background:white; border:1px solid rgba(0,0,0,0.08); transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; }
     .btn:hover { transform:translateY(-2px); }
@@ -176,13 +172,10 @@
     .btn-success { background:var(--success); color:white; border:none; }
     .btn-danger { background:var(--danger); color:white; border:none; }
     .btn-warning { background:var(--warning); color:white; border:none; }
-    .btn-promo { background:linear-gradient(135deg,#8b5cf6,#6d28d9); color:white; border:none; }
-    .btn-bulk { background:linear-gradient(135deg,#7c3aed,#5b21b6); color:white; border:none; }
-    .btn-promo-outline { border:1.5px solid #8b5cf6; color:#8b5cf6; background:transparent; }
 
     .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:2000; padding:16px; }
     .modal-overlay.active { display:flex; }
-    .modal { background:white; border-radius:28px; padding:28px; max-width:850px; width:100%; max-height:85vh; overflow-y:auto; animation:fadeInUp 0.3s ease; }
+    .modal { background:white; border-radius:28px; padding:28px; max-width:750px; width:100%; max-height:85vh; overflow-y:auto; animation:fadeInUp 0.3s ease; }
     .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
     .modal-header h3 { font-size:1.2rem; font-weight:700; }
     .modal-close { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--gray); padding:5px; transition:all 0.2s; } .modal-close:hover { color:var(--danger); transform:rotate(90deg); }
@@ -196,14 +189,8 @@
     .customer-type-btn.active { border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
 
     .payment-methods { display:flex; gap:10px; margin-top:5px; flex-wrap:wrap; }
-    .payment-method { flex:1; min-width:70px; text-align:center; padding:10px 8px; border:1.5px solid rgba(0,0,0,0.08); border-radius:12px; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; font-size:0.75rem; }
-    .payment-method.selected { border-color:var(--primary); background:var(--primary-soft); font-weight:600; color:var(--primary); }
-
-    .split-payment-section { background:var(--gray-light); border-radius:14px; padding:16px; margin-top:10px; display:none; }
-    .split-payment-section.active { display:block; }
-    .split-row { display:flex; gap:12px; margin-bottom:10px; align-items:center; flex-wrap:wrap; }
-    .split-row label { font-size:0.75rem; font-weight:600; min-width:70px; }
-    .split-row input { flex:1; min-width:100px; }
+    .payment-method { flex:1; min-width:80px; text-align:center; padding:12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:12px; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; font-size:0.8rem; }
+    .payment-method.selected { border-color:var(--primary); background:var(--primary-soft); font-weight:600; }
 
     #companyPaymentContainer .payment-method.selected {
       background: var(--primary-soft) !important;
@@ -242,7 +229,6 @@
     .item-row .item-select { flex:3; min-width:180px; }
     .item-row .item-size { flex:1; min-width:100px; }
     .item-row .item-qty { flex:0.5; min-width:60px; }
-    .item-row .item-promo-price { flex:0.8; min-width:100px; }
     .stock-warning { color:var(--danger); font-size:0.7rem; margin-left:5px; white-space:nowrap; display:block; min-height:18px; }
 
     .non-inv-toggle { display:flex; align-items:center; gap:4px; font-size:0.7rem; white-space:nowrap; margin-right:6px; }
@@ -265,16 +251,11 @@
     .receipt-header h2 { font-weight:bold; margin:0; }
     .receipt-header .addr { font-weight:bold; margin:2px 0; }
     .receipt-header .rec { margin:2px 0; font-weight:normal; }
-    .receipt-items { margin:10px 0; }
-    .receipt-item { display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:3px; font-weight:normal; }
-    .receipt-item .item-name { flex:1; padding-right:8px; }
-    .receipt-item .item-price { text-align:right; min-width:60px; white-space:nowrap; }
+    .receipt-items { margin:15px 0; }
+    .receipt-item { display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:5px; font-weight:normal; }
     .receipt-total { border-top:1px dashed #ccc; padding-top:10px; font-weight:bold; font-size:1.1rem; display:flex; justify-content:space-between; }
     .cust-info { font-weight:normal; margin:4px 0; line-height:1.3; }
     .thanks { text-align:center; font-style:italic; margin-top:15px; font-weight:normal; }
-    .receipt-qr { text-align:center; margin:10px 0; }
-    .receipt-qr svg { max-width:120px; height:auto; }
-    .receipt-website { text-align:center; font-size:0.75rem; color:var(--gray); margin-top:4px; }
 
     .return-options { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px; margin:15px 0; }
     .return-option { padding:14px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:12px; }
@@ -330,34 +311,6 @@
       font-weight: 600; animation: pulse 2s infinite;
     }
 
-    .promo-edit-icon { color: var(--promo); cursor:pointer; font-size:0.9rem; margin-left:6px; }
-    .promo-edit-icon:hover { transform:scale(1.2); }
-
-    /* Promo specific styles */
-    .promo-badge { background: var(--promo-light); color: var(--promo); padding: 2px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
-    .promo-section { background: var(--promo-light); border: 2px solid var(--promo); border-radius: 14px; padding: 16px; margin: 10px 0; }
-    .promo-section .promo-label { color: var(--promo); font-weight: 700; font-size: 0.85rem; }
-    .bulk-section { background: rgba(124,58,237,0.08); border: 2px solid #7c3aed; border-radius: 14px; padding: 16px; margin: 10px 0; }
-    .bulk-section .bulk-label { color: #7c3aed; font-weight: 700; font-size: 0.85rem; }
-
-    .promo-item-row { display:flex; gap:8px; margin-bottom:8px; align-items:center; flex-wrap:wrap; padding:8px; background:white; border-radius:10px; border:1px solid rgba(139,92,246,0.2); }
-    .promo-item-row .promo-select { flex:2; min-width:150px; }
-    .promo-item-row .promo-qty { flex:0.5; min-width:60px; }
-    .promo-item-row .promo-org-price { flex:0.5; min-width:80px; font-size:0.8rem; color:var(--gray); text-decoration:line-through; }
-    .promo-item-row .promo-new-price { flex:0.5; min-width:80px; }
-    .promo-item-row .promo-total { flex:0.5; min-width:80px; font-weight:700; color:var(--promo); }
-
-    .bulk-item-row { display:flex; gap:8px; margin-bottom:8px; align-items:center; flex-wrap:wrap; padding:8px; background:white; border-radius:10px; border:1px solid rgba(124,58,237,0.2); }
-    .bulk-item-row .bulk-select { flex:2; min-width:150px; }
-    .bulk-item-row .bulk-qty { flex:0.5; min-width:60px; }
-    .bulk-item-row .bulk-org-price { flex:0.5; min-width:80px; font-size:0.8rem; color:var(--gray); text-decoration:line-through; }
-    .bulk-item-row .bulk-new-price { flex:0.5; min-width:80px; }
-    .bulk-item-row .bulk-total { flex:0.5; min-width:80px; font-weight:700; color:#7c3aed; }
-
-    .promo-management-section { background: var(--gray-light); border-radius:14px; padding:16px; margin-top:12px; }
-    .promo-management-section .promo-date-row { display:flex; gap:12px; flex-wrap:wrap; }
-    .promo-management-section .promo-date-row input { flex:1; min-width:120px; }
-
     @media (max-width:1400px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:768px) {
       .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; } .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); }
@@ -367,9 +320,6 @@
       .stat-card { padding:14px 12px; } .stat-value { font-size:1.4rem; } .panel { padding:16px 12px; border-radius:18px; }
       .data-table { min-width:900px; } .data-table th, .data-table td { padding:10px 6px; font-size:0.75rem; } .modal { padding:20px; border-radius:20px; }
       .draft-tabs-bar { padding: 0 8px; }
-      .payment-methods { gap:6px; }
-      .payment-method { min-width:50px; font-size:0.65rem; padding:8px 4px; }
-      .split-row { flex-direction:column; align-items:stretch; }
     }
     @media (max-width:480px) { .stats-grid { grid-template-columns:1fr; } }
   </style>
@@ -396,10 +346,8 @@
 <main class="main-content">
   <header class="top-bar">
     <div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">Sales & Transactions</h1></div>
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-      <button class="btn btn-promo btn-sm" onclick="window.openPromoModal()"><i class="fas fa-tags"></i> Promo</button>
-      <button class="btn btn-bulk btn-sm" onclick="window.openBulkModal()"><i class="fas fa-layer-group"></i> Bulk</button>
-      <button class="btn btn-outline btn-sm" onclick="toggleDebugPanel()" title="Debug Info"><i class="fas fa-bug"></i></button>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="btn btn-outline btn-sm" onclick="toggleDebugPanel()" title="Debug Info"><i class="fas fa-bug"></i> Debug</button>
       <span id="syncStatus" style="font-size:0.75rem;color:var(--gray);"></span>
       <button class="btn btn-outline btn-sm" onclick="navigateTo('history.html')"><i class="fas fa-history"></i> History</button>
       <span class="current-date" id="currentDate"></span>
@@ -455,7 +403,6 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -526,20 +473,6 @@
   let wholesalePayment = 'cash';
   let companySelectedPayment = 'cash';
 
-  // Promo state
-  let promoState = {
-    isPromo: false,
-    isBulk: false,
-    promoName: '',
-    promoStartDate: '',
-    promoEndDate: '',
-    promoCondition: '',
-    promoItems: [],
-    bulkItems: [],
-    bulkMinQty: 0,
-    bulkTotalDiscount: 0
-  };
-
   function safeNumber(val, fallback) {
     fallback = (typeof fallback === 'undefined') ? 0 : fallback;
     if (typeof val === 'number') return val;
@@ -594,7 +527,6 @@
     html += '<div class="debug-item"><strong>💳 Reg Payment:</strong> ' + selectedPayment + '</div>';
     html += '<div class="debug-item"><strong>🏢 Co Payment:</strong> ' + companySelectedPayment + '</div>';
     html += '<div class="debug-item"><strong>📦 WS Payment:</strong> ' + wholesalePayment + '</div>';
-    html += '<div class="debug-item"><strong>🔥 Promo:</strong> ' + (promoState.isPromo ? '✅' : '❌') + ' | Bulk: ' + (promoState.isBulk ? '✅' : '❌') + '</div>';
     
     if (activeDraftId) {
       var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
@@ -605,7 +537,6 @@
         html += 'Customer: ' + escapeHtml(draft.customerName || 'none') + '<br>';
         html += 'Dirty: ' + (draft.isDirty ? '⚠️ Yes' : '✅ No') + '<br>';
         html += 'Payment: ' + (draft.type === 'wholesale' ? draft.wholesalePayment : draft.type === 'company' ? draft.companyPayment : draft.selectedPayment);
-        html += ' | Promo: ' + (draft.promoState ? '✅' : '❌');
         html += '</div>';
       }
     }
@@ -632,7 +563,6 @@
       console.log('Draft ' + (i+1) + ':', d.id, '| Type:', d.type, '| Items:', d.itemCount, '| Label:', d.label);
       console.log('  Items:', JSON.stringify(d.items));
       console.log('  Payment:', d.type === 'wholesale' ? d.wholesalePayment : d.type === 'company' ? d.companyPayment : d.selectedPayment);
-      console.log('  Promo:', d.promoState || 'none');
     });
     
     console.log('Modal open:', document.getElementById('modalOverlay').classList.contains('active'));
@@ -640,7 +570,6 @@
     console.log('Wholesale payment var:', wholesalePayment);
     console.log('Company payment var:', companySelectedPayment);
     console.log('Regular payment var:', selectedPayment);
-    console.log('Promo state:', promoState);
     
     var wsPayBtns = document.querySelectorAll('.ws-pay');
     console.log('WS pay buttons found:', wsPayBtns.length);
@@ -816,7 +745,7 @@
         var cleanData = Object.assign({}, saleData);
         delete cleanData._type; delete cleanData._newCustomer; delete cleanData._customerData;
         delete cleanData._stockUpdates; delete cleanData._movements; delete cleanData._localId; delete cleanData._synced;
-        delete cleanData._customerType; delete cleanData._borrowedItems; delete cleanData._promoState;
+        delete cleanData._customerType; delete cleanData._borrowedItems;
         cleanData.customerId = customerId;
         cleanData.createdAt = serverTimestamp();
         batch.set(saleRef, cleanData);
@@ -960,7 +889,7 @@
 
   function hideModal() { 
     if (activeDraftId && document.getElementById('modalOverlay').classList.contains('active')) {
-      if (currentModalType === 'sale' || currentModalType === 'company' || currentModalType === 'wholesale' || currentModalType === 'promo' || currentModalType === 'bulk') {
+      if (currentModalType === 'sale' || currentModalType === 'company' || currentModalType === 'wholesale') {
         window._saveDraftState();
         console.log('💾 Draft auto-saved on ' + currentModalType + ' modal close');
       }
@@ -1297,25 +1226,19 @@
       var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
       var isExchange = s.isExchange || s.exchangeType;
       var hasBorrowed = (s._borrowedItems && s._borrowedItems.length > 0) || (s.items && s.items.some(function(it) { return it.borrowed || it.fullyBorrowed; }));
-      var isPromo = s.isPromo || false;
-      var isBulk = s.isBulk || false;
-      var rowClass = isReturned ? 'returned-row' : (isOffline ? 'pending-sync' : (isPartiallyReturned ? 'returned-partial' : (hasBorrowed ? 'borrow-row' : (isExchange ? 'exchange-row' : (isPromo ? 'promo-row' : (isBulk ? 'bulk-row' : ''))))));
+      var rowClass = isReturned ? 'returned-row' : (isOffline ? 'pending-sync' : (isPartiallyReturned ? 'returned-partial' : (hasBorrowed ? 'borrow-row' : (isExchange ? 'exchange-row' : ''))));
       var statusBadge = isReturned ? '<span class="badge badge-danger">Returned</span>' : 
                         (isPartiallyReturned ? '<span class="badge badge-warning">Partial Return</span>' :
                         (isOffline ? '<span class="badge badge-warning">Pending Sync</span>' : '<span class="badge badge-success">Completed</span>'));
       var typeBadge = isWholesale ? '<span class="badge badge-purple">Wholesale</span>' : 
                       (isExchange ? '<span class="badge" style="background:rgba(255,77,166,0.1);color:#ff4da6;">Exchange</span>' :
-                      (s.isCompanySale ? '<span class="badge badge-info">Company</span>' : 
-                      (isPromo ? '<span class="badge badge-promo">🔥 Promo</span>' :
-                      (isBulk ? '<span class="badge badge-bulk">📦 Bulk</span>' :
-                      '<span class="badge badge-info">Regular</span>'))));
+                      (s.isCompanySale ? '<span class="badge badge-info">Company</span>' : '<span class="badge badge-info">Regular</span>'));
       var newCustomerBadge = s._newCustomer ? ' <span class="badge badge-warning">New</span>' : (s.customerId ? ' <span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;">Existing</span>' : '');
       var borrowBadge = hasBorrowed ? ' <span class="badge badge-borrow">📦 Borrowed</span>' : '';
-      var promoBadge = isPromo ? ' <span class="badge badge-promo">🔥</span>' : '';
       
       var saleIdentifier = (s.id || s._localId || '').replace(/'/g, "\\'");
       
-      tbody.innerHTML += '<tr class="' + rowClass + '"><td>' + formatTime(s.createdAt) + '</td><td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;">' + escapeHtml(s.customerName || 'Walk-in') + newCustomerBadge + borrowBadge + promoBadge + '</td><td>' + escapeHtml(s.customerPhone || '-') + '</td><td>' + (s.items ? s.items.length : 0) + ' items</td><td><strong>' + (isReturned ? '-' : '') + formatCurrency(safeNumber(s.totalAmount, 0)) + '</strong></td><td><span class="badge badge-success">' + escapeHtml(s.paymentMethod || 'cash') + '</span></td><td>' + typeBadge + '</td><td>' + statusBadge + '</td><td><div style="display:flex;gap:4px;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" onclick="viewReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-print"></i></button>' + (hasBorrowed ? '<button class="btn btn-sm btn-outline" onclick="viewCompanyRecord(\'' + saleIdentifier + '\')" title="Company Record (Stock Sources)" style="color:var(--warning);border-color:var(--warning);"><i class="fas fa-building"></i></button>' : '') + (!isReturned && !isWholesale && !isExchange ? '<button class="btn btn-sm btn-warning" onclick="openReturnPage(\'' + saleIdentifier + '\')"><i class="fas fa-undo"></i></button>' : '') + '</div></td></tr>';
+      tbody.innerHTML += '<tr class="' + rowClass + '"><td>' + formatTime(s.createdAt) + '</td><td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;">' + escapeHtml(s.customerName || 'Walk-in') + newCustomerBadge + borrowBadge + '</td><td>' + escapeHtml(s.customerPhone || '-') + '</td><td>' + (s.items ? s.items.length : 0) + ' items</td><td><strong>' + (isReturned ? '-' : '') + formatCurrency(safeNumber(s.totalAmount, 0)) + '</strong></td><td><span class="badge badge-success">' + escapeHtml(s.paymentMethod || 'cash') + '</span></td><td>' + typeBadge + '</td><td>' + statusBadge + '</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-print"></i></button>' + (hasBorrowed ? '<button class="btn btn-sm btn-outline" onclick="viewCompanyRecord(\'' + saleIdentifier + '\')" title="Company Record (Stock Sources)" style="color:var(--warning);border-color:var(--warning);"><i class="fas fa-building"></i></button>' : '') + (!isReturned && !isWholesale && !isExchange ? '<button class="btn btn-sm btn-warning" onclick="openReturnPage(\'' + saleIdentifier + '\')"><i class="fas fa-undo"></i></button>' : '') + '</div></td></tr>';
     });
     updateStats();
   }
@@ -1495,8 +1418,6 @@
       collectedBy: '',
       usage: '',
       companyPayment: 'cash',
-      promoState: null,
-      bulkState: null,
       extraData: {},
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -1512,7 +1433,7 @@
     if (!draft) return;
 
     if (!document.getElementById('modalOverlay').classList.contains('active')) return;
-    if (currentModalType !== 'sale' && currentModalType !== 'company' && currentModalType !== 'wholesale' && currentModalType !== 'promo' && currentModalType !== 'bulk') return;
+    if (currentModalType !== 'sale' && currentModalType !== 'company' && currentModalType !== 'wholesale') return;
 
     if (draft.type === 'wholesale') {
       draft.wholesalePackSize = parseInt(safeGetVal('wsPackSize', '50')) || 50;
@@ -1679,22 +1600,13 @@
           if (select && select.value) {
             var opt = select.options[select.selectedIndex];
             if (!opt || !opt.value) return;
-            var price = parseFloat(opt ? opt.getAttribute('data-price') : 0) || 0;
-            var size = sizeEl ? sizeEl.value : '1';
-            if (size === '0.5' && parseFloat(opt ? opt.getAttribute('data-halfprice') : 0) > 0) price = parseFloat(opt.getAttribute('data-halfprice'));
-            else if (size === '0.25' && parseFloat(opt ? opt.getAttribute('data-quarterprice') : 0) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
-            else if (size === 'pack' && parseFloat(opt ? opt.getAttribute('data-packprice') : 0) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
-            else if (size === 'bundle' && parseFloat(opt ? opt.getAttribute('data-bundleprice') : 0) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
             draft.items.push({
               id: select.value,
               name: opt.dataset.name || '',
               quantity: qty,
-              size: size,
-              sizeLabel: getSizeLabel(size),
-              unitPrice: price,
-              originalPrice: price,
-              promoPrice: null,
-              isPromo: false
+              size: sizeEl ? sizeEl.value : '1',
+              sizeLabel: getSizeLabel(sizeEl ? sizeEl.value : '1'),
+              unitPrice: parseFloat(opt ? opt.getAttribute('data-price') : 0) || 0
             });
             regularItemsSaved++;
           }
@@ -1702,17 +1614,6 @@
       });
       draft.itemCount = regularItemsSaved;
       draft.label = draft.customerName ? 'Sale: ' + draft.customerName.split(' ')[0] : 'Sale #' + (draftTabs.indexOf(draft) + 1);
-      
-      if (promoState.isPromo) {
-        draft.promoState = JSON.parse(JSON.stringify(promoState));
-        draft.label = '🔥 ' + draft.label;
-      } else if (promoState.isBulk) {
-        draft.bulkState = JSON.parse(JSON.stringify(promoState));
-        draft.label = '📦 ' + draft.label;
-      } else {
-        draft.promoState = null;
-        draft.bulkState = null;
-      }
     }
     
     draft.updatedAt = new Date().toISOString();
@@ -1726,7 +1627,7 @@
     if (autoSaveInterval) clearInterval(autoSaveInterval);
     autoSaveInterval = setInterval(function() {
       if (activeDraftId && document.getElementById('modalOverlay').classList.contains('active')) {
-        if (currentModalType === 'sale' || currentModalType === 'company' || currentModalType === 'wholesale' || currentModalType === 'promo' || currentModalType === 'bulk') {
+        if (currentModalType === 'sale' || currentModalType === 'company' || currentModalType === 'wholesale') {
           window._saveDraftState();
           var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
           if (draft) {
@@ -1781,17 +1682,6 @@
     
     customerType = draft.customerType || 'existing';
     selectedPayment = draft.selectedPayment || 'cash';
-    
-    if (draft.promoState) {
-      promoState = JSON.parse(JSON.stringify(draft.promoState));
-    } else if (draft.bulkState) {
-      promoState = JSON.parse(JSON.stringify(draft.bulkState));
-    } else {
-      promoState.isPromo = false;
-      promoState.isBulk = false;
-      promoState.promoItems = [];
-      promoState.bulkItems = [];
-    }
     
     if (draft.type === 'wholesale') {
       wholesaleCustomerType = draft.wholesaleCustomerType || 'existing';
@@ -1858,8 +1748,6 @@
       var isActive = draft.id === activeDraftId;
       var indicatorClass = draft.isDirty ? '' : 'saved';
       var typeIcon = draft.type === 'wholesale' ? '📦' : draft.type === 'company' ? '🏢' : '💰';
-      if (draft.promoState && draft.promoState.isPromo) typeIcon = '🔥';
-      else if (draft.bulkState && draft.bulkState.isBulk) typeIcon = '📦';
       var shortLabel = draft.label.length > 20 ? draft.label.substring(0, 18) + '..' : draft.label;
       var itemBadge = draft.itemCount > 0 ? ' (' + draft.itemCount + ')' : '';
       
@@ -1904,17 +1792,9 @@
         if (containerId === 'companyPaymentContainer') {
           companySelectedPayment = method;
           console.log('🐛 DEBUG: Company payment selected:', companySelectedPayment);
-          var splitSection = safeGetEl('companySplitPayment');
-          if (splitSection) {
-            splitSection.classList.toggle('active', method === 'cash_transfer' || method === 'cash_pos');
-          }
-        } else if (containerId === 'paymentMethodsContainer') {
+        } else {
           selectedPayment = method;
           console.log('🐛 DEBUG: Regular payment selected:', selectedPayment);
-          var splitSection = safeGetEl('splitPaymentSection');
-          if (splitSection) {
-            splitSection.classList.toggle('active', method === 'cash_transfer' || method === 'cash_pos');
-          }
         }
         
         if (typeof window._markDraftDirty === 'function') window._markDraftDirty();
@@ -1944,807 +1824,6 @@
       updateDebugPanel();
     }
   });
-
-  // ============================================
-  // PROMO MODAL
-  // ============================================
-  window.openPromoModal = function() {
-    if (activeDraftId) {
-      window._saveDraftState();
-    }
-    
-    var draft = createDraft('regular');
-    draft.label = '🔥 Promo Sale';
-    draft.promoState = { isPromo: true, isBulk: false, promoName: '', promoStartDate: '', promoEndDate: '', promoCondition: '', promoItems: [], bulkItems: [], bulkMinQty: 0, bulkTotalDiscount: 0 };
-    draftTabs.push(draft);
-    activeDraftId = draft.id;
-    saveDraftsToStorage();
-    renderDraftTabs();
-    startAutoSave();
-    currentModalType = 'promo';
-    
-    promoState.isPromo = true;
-    promoState.isBulk = false;
-    promoState.promoItems = [];
-    promoState.promoName = '';
-    promoState.promoStartDate = '';
-    promoState.promoEndDate = '';
-    promoState.promoCondition = '';
-    
-    showPromoModalContent();
-  };
-
-  window.openBulkModal = function() {
-    if (activeDraftId) {
-      window._saveDraftState();
-    }
-    
-    var draft = createDraft('regular');
-    draft.label = '📦 Bulk Sale';
-    draft.bulkState = { isPromo: false, isBulk: true, promoName: 'Bulk Discount', promoStartDate: '', promoEndDate: '', promoCondition: '', promoItems: [], bulkItems: [], bulkMinQty: 0, bulkTotalDiscount: 0 };
-    draftTabs.push(draft);
-    activeDraftId = draft.id;
-    saveDraftsToStorage();
-    renderDraftTabs();
-    startAutoSave();
-    currentModalType = 'bulk';
-    
-    promoState.isPromo = false;
-    promoState.isBulk = true;
-    promoState.bulkItems = [];
-    promoState.bulkMinQty = 0;
-    promoState.bulkTotalDiscount = 0;
-    promoState.promoName = 'Bulk Discount';
-    promoState.promoStartDate = '';
-    promoState.promoEndDate = '';
-    promoState.promoCondition = '';
-    
-    showBulkModalContent();
-  };
-
-  function showPromoModalContent() {
-    loadCustomersAndStock().then(function() {
-      var stockOptions = getStockOptionsHtml();
-      var firstSizeOpts = allStockItems.length ? getSizeOptions(allStockItems[0]).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
-
-      var promoItemsHtml = '';
-      if (promoState.promoItems && promoState.promoItems.length > 0) {
-        promoItemsHtml = promoState.promoItems.map(function(item, idx) {
-          return '<div class="promo-item-row">' +
-            '<select class="form-control promo-select" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
-            '<input type="text" class="form-control promo-item-name" placeholder="Item name" value="' + escapeHtml(item.name || '') + '" style="flex:1.5;min-width:100px;">' +
-            '<select class="form-control promo-size">' + firstSizeOpts + '</select>' +
-            '<input type="number" class="form-control promo-qty" value="' + (item.quantity || 1) + '" min="1" style="flex:0.5;min-width:60px;">' +
-            '<span class="promo-org-price" style="flex:0.5;min-width:80px;">' + formatCurrency(item.originalPrice || 0) + '</span>' +
-            '<input type="number" class="form-control promo-new-price" placeholder="Promo ₦" value="' + (item.promoPrice || '') + '" step="0.01" style="flex:0.5;min-width:80px;">' +
-            '<span class="promo-total" style="flex:0.5;min-width:80px;">' + formatCurrency((item.promoPrice || 0) * (item.quantity || 1)) + '</span>' +
-            '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.promo-item-row\').remove();window._updatePromoSummary();"><i class="fas fa-times"></i></button>' +
-          '</div>';
-        }).join('');
-      } else {
-        promoItemsHtml = '<div class="promo-item-row">' +
-          '<select class="form-control promo-select" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
-          '<input type="text" class="form-control promo-item-name" placeholder="Item name" style="flex:1.5;min-width:100px;">' +
-          '<select class="form-control promo-size">' + firstSizeOpts + '</select>' +
-          '<input type="number" class="form-control promo-qty" value="1" min="1" style="flex:0.5;min-width:60px;">' +
-          '<span class="promo-org-price" style="flex:0.5;min-width:80px;">₦0</span>' +
-          '<input type="number" class="form-control promo-new-price" placeholder="Promo ₦" step="0.01" style="flex:0.5;min-width:80px;">' +
-          '<span class="promo-total" style="flex:0.5;min-width:80px;">₦0</span>' +
-          '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.promo-item-row\').remove();window._updatePromoSummary();"><i class="fas fa-times"></i></button>' +
-        '</div>';
-      }
-
-      var today = new Date().toISOString().split('T')[0];
-      var nextMonth = new Date();
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
-      var nextMonthStr = nextMonth.toISOString().split('T')[0];
-
-      showModal('🔥 Promo Sale',
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
-          '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
-          '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
-          '<span style="margin-left:auto;font-size:0.7rem;color:var(--gray);">🔥 Promo Mode Active</span>' +
-        '</div>' +
-        '<div class="promo-section">' +
-          '<div class="promo-label"><i class="fas fa-tags"></i> Promo Settings</div>' +
-          '<div class="form-group"><label>Promo Name *</label><input type="text" class="form-control" id="promoName" placeholder="e.g., Summer Sale, Weekend Special" value="' + escapeHtml(promoState.promoName || '') + '"></div>' +
-          '<div class="promo-date-row" style="display:flex;gap:12px;flex-wrap:wrap;">' +
-            '<div class="form-group" style="flex:1;min-width:120px;"><label>Start Date</label><input type="date" class="form-control" id="promoStartDate" value="' + (promoState.promoStartDate || today) + '"></div>' +
-            '<div class="form-group" style="flex:1;min-width:120px;"><label>End Date</label><input type="date" class="form-control" id="promoEndDate" value="' + (promoState.promoEndDate || nextMonthStr) + '"></div>' +
-          '</div>' +
-          '<div class="form-group"><label>Promo Condition / Terms</label><textarea class="form-control" id="promoCondition" rows="2" placeholder="e.g., Buy 2 get 10% off, Limited time offer">' + escapeHtml(promoState.promoCondition || '') + '</textarea></div>' +
-        '</div>' +
-        '<div style="margin-top:15px;">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-            '<strong><i class="fas fa-shopping-bag"></i> Items with Promo Prices</strong>' +
-            '<span style="font-size:0.7rem;color:var(--gray);">Set promo price for each item</span>' +
-          '</div>' +
-          '<div id="promoItems">' + promoItemsHtml + '</div>' +
-          '<button class="btn btn-outline btn-sm" onclick="window._addPromoItem();"><i class="fas fa-plus"></i> Add Item</button>' +
-        '</div>' +
-        '<div class="sale-summary" style="margin-top:15px;">' +
-          '<div class="summary-row"><span>Items:</span><span id="promoItemCount">0</span></div>' +
-          '<div class="summary-row"><span>Original Total:</span><span id="promoOriginalTotal">₦0</span></div>' +
-          '<div class="summary-row"><span>Promo Total:</span><span id="promoTotal" style="color:var(--promo);font-weight:700;">₦0</span></div>' +
-          '<div class="summary-row total"><span>Discount:</span><span id="promoDiscount" style="color:var(--success);">₦0</span></div>' +
-        '</div>' +
-        '<div style="margin-top:15px;">' +
-          '<div class="customer-type-toggle">' +
-            '<button class="customer-type-btn active" data-type="existing" onclick="window._switchCustomerType(\'existing\');"><i class="fas fa-users"></i> Existing</button>' +
-            '<button class="customer-type-btn" data-type="new" onclick="window._switchCustomerType(\'new\');"><i class="fas fa-user-plus"></i> New</button>' +
-          '</div>' +
-          '<div id="existingCustomerSection">' +
-            '<div class="form-group"><label>Search Customer</label><select class="form-control" id="existingCustomerSelect" style="width:100%;"><option value="">-- Search --</option>' + allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '" data-address="' + escapeHtml(c.address||c.location||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>'; }).join('') + '</select></div>' +
-          '</div>' +
-          '<div id="newCustomerSection" style="display:none;">' +
-            '<div class="form-group"><label>Full Name *</label><input type="text" class="form-control" id="newCustomerName"></div>' +
-            '<div class="form-group"><label>Phone *</label><input type="tel" class="form-control" id="newCustomerPhone"></div>' +
-            '<div class="form-group"><label>Address *</label><textarea class="form-control" id="newCustomerAddress" rows="2"></textarea></div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="form-group" style="margin-top:15px;"><label>Payment</label>' +
-          '<div class="payment-methods" id="paymentMethodsContainer">' +
-            '<div class="payment-method selected" data-method="cash">💵 Cash</div>' +
-            '<div class="payment-method" data-method="transfer">🏦 Transfer</div>' +
-            '<div class="payment-method" data-method="pos">💳 POS</div>' +
-            '<div class="payment-method" data-method="cash_transfer">💵+🏦 Cash &amp; Transfer</div>' +
-            '<div class="payment-method" data-method="cash_pos">💵+💳 Cash &amp; POS</div>' +
-          '</div>' +
-          '<div class="split-payment-section" id="splitPaymentSection">' +
-            '<div class="split-row"><label>Cash Amount:</label><input type="number" class="form-control" id="splitCashAmount" placeholder="₦" step="0.01" min="0"></div>' +
-            '<div class="split-row"><label id="splitSecondLabel">Transfer Amount:</label><input type="number" class="form-control" id="splitSecondAmount" placeholder="₦" step="0.01" min="0"></div>' +
-            '<div style="font-size:0.8rem;color:var(--gray);">Total paid: <span id="splitTotalDisplay">₦0</span></div>' +
-          '</div>' +
-        '</div>' +
-        '<button class="btn btn-promo" onclick="window._processPromoSale()" style="width:100%;margin-top:15px;"><i class="fas fa-tags"></i> Process Promo Sale</button>'
-      );
-
-      setTimeout(function() {
-        $('#existingCustomerSelect').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
-        
-        $('.promo-select').each(function() {
-          $(this).select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { 
-            window._updatePromoItemPrice(this); 
-            window._updatePromoSummary(); 
-          });
-        });
-        
-        $('.promo-qty, .promo-new-price, .promo-item-name').on('input', function() { 
-          window._updatePromoSummary(); 
-        });
-        $('.promo-size').on('change', function() { 
-          window._updatePromoSummary(); 
-        });
-        
-        // Restore promo items if any
-        if (promoState.promoItems && promoState.promoItems.length > 0) {
-          var rows = document.querySelectorAll('.promo-item-row');
-          promoState.promoItems.forEach(function(item, idx) {
-            var row = rows[idx];
-            if (!row) return;
-            var select = row.querySelector('.promo-select');
-            var nameInput = row.querySelector('.promo-item-name');
-            var qtyInput = row.querySelector('.promo-qty');
-            var newPriceInput = row.querySelector('.promo-new-price');
-            var sizeSelect = row.querySelector('.promo-size');
-            
-            if (select && item.id) $(select).val(item.id).trigger('change');
-            if (nameInput) nameInput.value = item.name || '';
-            if (qtyInput) qtyInput.value = item.quantity || 1;
-            if (newPriceInput) newPriceInput.value = item.promoPrice || '';
-            if (sizeSelect && item.size) sizeSelect.value = item.size;
-          });
-        }
-        
-        window._updatePromoSummary();
-        console.log('🔥 Promo modal opened with ' + (promoState.promoItems ? promoState.promoItems.length : 0) + ' items');
-      }, 200);
-    });
-  }
-
-  function showBulkModalContent() {
-    loadCustomersAndStock().then(function() {
-      var stockOptions = getStockOptionsHtml();
-
-      var bulkItemsHtml = '';
-      if (promoState.bulkItems && promoState.bulkItems.length > 0) {
-        bulkItemsHtml = promoState.bulkItems.map(function(item, idx) {
-          return '<div class="bulk-item-row">' +
-            '<select class="form-control bulk-select" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
-            '<input type="text" class="form-control bulk-item-name" placeholder="Item name" value="' + escapeHtml(item.name || '') + '" style="flex:1.5;min-width:100px;">' +
-            '<input type="number" class="form-control bulk-qty" value="' + (item.quantity || 1) + '" min="1" style="flex:0.5;min-width:60px;">' +
-            '<span class="bulk-org-price" style="flex:0.5;min-width:80px;">' + formatCurrency(item.originalPrice || 0) + '</span>' +
-            '<input type="number" class="form-control bulk-new-price" placeholder="Bulk ₦" value="' + (item.promoPrice || '') + '" step="0.01" style="flex:0.5;min-width:80px;">' +
-            '<span class="bulk-total" style="flex:0.5;min-width:80px;">' + formatCurrency((item.promoPrice || 0) * (item.quantity || 1)) + '</span>' +
-            '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.bulk-item-row\').remove();window._updateBulkSummary();"><i class="fas fa-times"></i></button>' +
-          '</div>';
-        }).join('');
-      } else {
-        bulkItemsHtml = '<div class="bulk-item-row">' +
-          '<select class="form-control bulk-select" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
-          '<input type="text" class="form-control bulk-item-name" placeholder="Item name" style="flex:1.5;min-width:100px;">' +
-          '<input type="number" class="form-control bulk-qty" value="1" min="1" style="flex:0.5;min-width:60px;">' +
-          '<span class="bulk-org-price" style="flex:0.5;min-width:80px;">₦0</span>' +
-          '<input type="number" class="form-control bulk-new-price" placeholder="Bulk ₦" step="0.01" style="flex:0.5;min-width:80px;">' +
-          '<span class="bulk-total" style="flex:0.5;min-width:80px;">₦0</span>' +
-          '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.bulk-item-row\').remove();window._updateBulkSummary();"><i class="fas fa-times"></i></button>' +
-        '</div>';
-      }
-
-      var today = new Date().toISOString().split('T')[0];
-      var nextMonth = new Date();
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
-      var nextMonthStr = nextMonth.toISOString().split('T')[0];
-
-      showModal('📦 Bulk Sale',
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
-          '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
-          '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
-          '<span style="margin-left:auto;font-size:0.7rem;color:var(--gray);">📦 Bulk Mode Active</span>' +
-        '</div>' +
-        '<div class="bulk-section">' +
-          '<div class="bulk-label"><i class="fas fa-layer-group"></i> Bulk Discount Settings</div>' +
-          '<div class="form-group"><label>Promo Name *</label><input type="text" class="form-control" id="bulkName" placeholder="e.g., Bulk Special, Volume Discount" value="' + escapeHtml(promoState.promoName || 'Bulk Discount') + '"></div>' +
-          '<div class="promo-date-row" style="display:flex;gap:12px;flex-wrap:wrap;">' +
-            '<div class="form-group" style="flex:1;min-width:120px;"><label>Start Date</label><input type="date" class="form-control" id="bulkStartDate" value="' + (promoState.promoStartDate || today) + '"></div>' +
-            '<div class="form-group" style="flex:1;min-width:120px;"><label>End Date</label><input type="date" class="form-control" id="bulkEndDate" value="' + (promoState.promoEndDate || nextMonthStr) + '"></div>' +
-          '</div>' +
-          '<div class="form-group"><label>Bulk Condition / Terms</label><textarea class="form-control" id="bulkCondition" rows="2" placeholder="e.g., Buy 40 pieces get 20% off, Mix and match">' + escapeHtml(promoState.promoCondition || '') + '</textarea></div>' +
-          '<div class="form-group"><label>Minimum Quantity for Bulk Discount</label><input type="number" class="form-control" id="bulkMinQty" value="' + (promoState.bulkMinQty || 40) + '" min="1" placeholder="e.g., 40"></div>' +
-        '</div>' +
-        '<div style="margin-top:15px;">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-            '<strong><i class="fas fa-shopping-bag"></i> Items for Bulk Pricing</strong>' +
-            '<span style="font-size:0.7rem;color:var(--gray);">Set bulk price for each item</span>' +
-          '</div>' +
-          '<div id="bulkItems">' + bulkItemsHtml + '</div>' +
-          '<button class="btn btn-outline btn-sm" onclick="window._addBulkItem();"><i class="fas fa-plus"></i> Add Item</button>' +
-        '</div>' +
-        '<div class="sale-summary" style="margin-top:15px;">' +
-          '<div class="summary-row"><span>Items:</span><span id="bulkItemCount">0</span></div>' +
-          '<div class="summary-row"><span>Total Pieces:</span><span id="bulkTotalPieces">0</span></div>' +
-          '<div class="summary-row"><span>Original Total:</span><span id="bulkOriginalTotal">₦0</span></div>' +
-          '<div class="summary-row"><span>Bulk Total:</span><span id="bulkTotal" style="color:#7c3aed;font-weight:700;">₦0</span></div>' +
-          '<div class="summary-row total"><span>Savings:</span><span id="bulkSavings" style="color:var(--success);">₦0</span></div>' +
-          '<div style="margin-top:8px;padding:8px;background:rgba(124,58,237,0.08);border-radius:8px;text-align:center;font-size:0.8rem;">' +
-            '📦 Bulk requires minimum <strong id="bulkMinDisplay">' + (promoState.bulkMinQty || 40) + '</strong> pieces total' +
-            ' <span id="bulkStatusMsg" style="color:var(--warning);"></span>' +
-          '</div>' +
-        '</div>' +
-        '<div style="margin-top:15px;">' +
-          '<div class="customer-type-toggle">' +
-            '<button class="customer-type-btn active" data-type="existing" onclick="window._switchCustomerType(\'existing\');"><i class="fas fa-users"></i> Existing</button>' +
-            '<button class="customer-type-btn" data-type="new" onclick="window._switchCustomerType(\'new\');"><i class="fas fa-user-plus"></i> New</button>' +
-          '</div>' +
-          '<div id="existingCustomerSection">' +
-            '<div class="form-group"><label>Search Customer</label><select class="form-control" id="existingCustomerSelect" style="width:100%;"><option value="">-- Search --</option>' + allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '" data-address="' + escapeHtml(c.address||c.location||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>'; }).join('') + '</select></div>' +
-          '</div>' +
-          '<div id="newCustomerSection" style="display:none;">' +
-            '<div class="form-group"><label>Full Name *</label><input type="text" class="form-control" id="newCustomerName"></div>' +
-            '<div class="form-group"><label>Phone *</label><input type="tel" class="form-control" id="newCustomerPhone"></div>' +
-            '<div class="form-group"><label>Address *</label><textarea class="form-control" id="newCustomerAddress" rows="2"></textarea></div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="form-group" style="margin-top:15px;"><label>Payment</label>' +
-          '<div class="payment-methods" id="paymentMethodsContainer">' +
-            '<div class="payment-method selected" data-method="cash">💵 Cash</div>' +
-            '<div class="payment-method" data-method="transfer">🏦 Transfer</div>' +
-            '<div class="payment-method" data-method="pos">💳 POS</div>' +
-            '<div class="payment-method" data-method="cash_transfer">💵+🏦 Cash &amp; Transfer</div>' +
-            '<div class="payment-method" data-method="cash_pos">💵+💳 Cash &amp; POS</div>' +
-          '</div>' +
-          '<div class="split-payment-section" id="splitPaymentSection">' +
-            '<div class="split-row"><label>Cash Amount:</label><input type="number" class="form-control" id="splitCashAmount" placeholder="₦" step="0.01" min="0"></div>' +
-            '<div class="split-row"><label id="splitSecondLabel">Transfer Amount:</label><input type="number" class="form-control" id="splitSecondAmount" placeholder="₦" step="0.01" min="0"></div>' +
-            '<div style="font-size:0.8rem;color:var(--gray);">Total paid: <span id="splitTotalDisplay">₦0</span></div>' +
-          '</div>' +
-        '</div>' +
-        '<button class="btn btn-bulk" onclick="window._processBulkSale()" style="width:100%;margin-top:15px;"><i class="fas fa-layer-group"></i> Process Bulk Sale</button>'
-      );
-
-      setTimeout(function() {
-        $('#existingCustomerSelect').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
-        
-        $('.bulk-select').each(function() {
-          $(this).select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { 
-            window._updateBulkItemPrice(this); 
-            window._updateBulkSummary(); 
-          });
-        });
-        
-        $('.bulk-qty, .bulk-new-price, .bulk-item-name').on('input', function() { 
-          window._updateBulkSummary(); 
-        });
-        
-        // Restore bulk items if any
-        if (promoState.bulkItems && promoState.bulkItems.length > 0) {
-          var rows = document.querySelectorAll('.bulk-item-row');
-          promoState.bulkItems.forEach(function(item, idx) {
-            var row = rows[idx];
-            if (!row) return;
-            var select = row.querySelector('.bulk-select');
-            var nameInput = row.querySelector('.bulk-item-name');
-            var qtyInput = row.querySelector('.bulk-qty');
-            var newPriceInput = row.querySelector('.bulk-new-price');
-            
-            if (select && item.id) $(select).val(item.id).trigger('change');
-            if (nameInput) nameInput.value = item.name || '';
-            if (qtyInput) qtyInput.value = item.quantity || 1;
-            if (newPriceInput) newPriceInput.value = item.promoPrice || '';
-          });
-        }
-        
-        document.getElementById('bulkMinQty').addEventListener('input', function() {
-          var minQty = parseInt(this.value) || 0;
-          document.getElementById('bulkMinDisplay').textContent = minQty;
-          window._updateBulkSummary();
-        });
-        
-        window._updateBulkSummary();
-        console.log('📦 Bulk modal opened with ' + (promoState.bulkItems ? promoState.bulkItems.length : 0) + ' items');
-      }, 200);
-    });
-  }
-
-  window._addPromoItem = function() {
-    var stockOptions = getStockOptionsHtml();
-    var firstSizeOpts = allStockItems.length ? getSizeOptions(allStockItems[0]).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
-    
-    var div = document.createElement('div');
-    div.className = 'promo-item-row';
-    div.innerHTML = '<select class="form-control promo-select" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
-      '<input type="text" class="form-control promo-item-name" placeholder="Item name" style="flex:1.5;min-width:100px;">' +
-      '<select class="form-control promo-size">' + firstSizeOpts + '</select>' +
-      '<input type="number" class="form-control promo-qty" value="1" min="1" style="flex:0.5;min-width:60px;">' +
-      '<span class="promo-org-price" style="flex:0.5;min-width:80px;">₦0</span>' +
-      '<input type="number" class="form-control promo-new-price" placeholder="Promo ₦" step="0.01" style="flex:0.5;min-width:80px;">' +
-      '<span class="promo-total" style="flex:0.5;min-width:80px;">₦0</span>' +
-      '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.promo-item-row\').remove();window._updatePromoSummary();"><i class="fas fa-times"></i></button>';
-    
-    var promoItemsDiv = safeGetEl('promoItems');
-    if (promoItemsDiv) promoItemsDiv.appendChild(div);
-    
-    $(div).find('.promo-select').select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { 
-      window._updatePromoItemPrice(this); 
-      window._updatePromoSummary(); 
-    });
-    
-    div.querySelectorAll('.promo-qty, .promo-new-price, .promo-item-name').forEach(function(el) { 
-      el.addEventListener('input', window._updatePromoSummary); 
-    });
-    div.querySelectorAll('.promo-size').forEach(function(el) { 
-      el.addEventListener('change', window._updatePromoSummary); 
-    });
-    
-    window._updatePromoSummary();
-  };
-
-  window._addBulkItem = function() {
-    var stockOptions = getStockOptionsHtml();
-    
-    var div = document.createElement('div');
-    div.className = 'bulk-item-row';
-    div.innerHTML = '<select class="form-control bulk-select" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
-      '<input type="text" class="form-control bulk-item-name" placeholder="Item name" style="flex:1.5;min-width:100px;">' +
-      '<input type="number" class="form-control bulk-qty" value="1" min="1" style="flex:0.5;min-width:60px;">' +
-      '<span class="bulk-org-price" style="flex:0.5;min-width:80px;">₦0</span>' +
-      '<input type="number" class="form-control bulk-new-price" placeholder="Bulk ₦" step="0.01" style="flex:0.5;min-width:80px;">' +
-      '<span class="bulk-total" style="flex:0.5;min-width:80px;">₦0</span>' +
-      '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.bulk-item-row\').remove();window._updateBulkSummary();"><i class="fas fa-times"></i></button>';
-    
-    var bulkItemsDiv = safeGetEl('bulkItems');
-    if (bulkItemsDiv) bulkItemsDiv.appendChild(div);
-    
-    $(div).find('.bulk-select').select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { 
-      window._updateBulkItemPrice(this); 
-      window._updateBulkSummary(); 
-    });
-    
-    div.querySelectorAll('.bulk-qty, .bulk-new-price, .bulk-item-name').forEach(function(el) { 
-      el.addEventListener('input', window._updateBulkSummary); 
-    });
-    
-    window._updateBulkSummary();
-  };
-
-  window._updatePromoItemPrice = function(selectEl) {
-    var row = selectEl.closest('.promo-item-row');
-    if (!row) return;
-    var opt = selectEl.options[selectEl.selectedIndex];
-    if (!opt || !opt.value) {
-      row.querySelector('.promo-org-price').textContent = '₦0';
-      return;
-    }
-    var price = parseFloat(opt.getAttribute('data-price')) || 0;
-    var sizeSelect = row.querySelector('.promo-size');
-    var size = sizeSelect ? sizeSelect.value : '1';
-    if (size === '0.5' && parseFloat(opt.getAttribute('data-halfprice')) > 0) price = parseFloat(opt.getAttribute('data-halfprice'));
-    else if (size === '0.25' && parseFloat(opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
-    else if (size === 'pack' && parseFloat(opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
-    else if (size === 'bundle' && parseFloat(opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
-    
-    var nameInput = row.querySelector('.promo-item-name');
-    if (nameInput && !nameInput.value) {
-      nameInput.value = opt.getAttribute('data-name') || '';
-    }
-    
-    var orgPriceSpan = row.querySelector('.promo-org-price');
-    if (orgPriceSpan) orgPriceSpan.textContent = formatCurrency(price);
-    
-    var newPriceInput = row.querySelector('.promo-new-price');
-    if (newPriceInput && !newPriceInput.value) {
-      newPriceInput.value = price;
-    }
-    
-    window._updatePromoSummary();
-  };
-
-  window._updateBulkItemPrice = function(selectEl) {
-    var row = selectEl.closest('.bulk-item-row');
-    if (!row) return;
-    var opt = selectEl.options[selectEl.selectedIndex];
-    if (!opt || !opt.value) {
-      row.querySelector('.bulk-org-price').textContent = '₦0';
-      return;
-    }
-    var price = parseFloat(opt.getAttribute('data-price')) || 0;
-    
-    var nameInput = row.querySelector('.bulk-item-name');
-    if (nameInput && !nameInput.value) {
-      nameInput.value = opt.getAttribute('data-name') || '';
-    }
-    
-    var orgPriceSpan = row.querySelector('.bulk-org-price');
-    if (orgPriceSpan) orgPriceSpan.textContent = formatCurrency(price);
-    
-    var newPriceInput = row.querySelector('.bulk-new-price');
-    if (newPriceInput && !newPriceInput.value) {
-      newPriceInput.value = price;
-    }
-    
-    window._updateBulkSummary();
-  };
-
-  window._updatePromoSummary = function() {
-    var totalItems = 0;
-    var originalTotal = 0;
-    var promoTotal = 0;
-    
-    document.querySelectorAll('.promo-item-row').forEach(function(row) {
-      var qtyEl = row.querySelector('.promo-qty');
-      var newPriceEl = row.querySelector('.promo-new-price');
-      var orgPriceEl = row.querySelector('.promo-org-price');
-      
-      var qty = parseFloat(qtyEl && qtyEl.value) || 1;
-      var newPrice = parseFloat(newPriceEl && newPriceEl.value) || 0;
-      var orgPrice = parseFloat(orgPriceEl && orgPriceEl.textContent.replace(/[₦,]/g, '')) || 0;
-      
-      if (qty > 0) {
-        totalItems++;
-        originalTotal += orgPrice * qty;
-        promoTotal += newPrice * qty;
-      }
-      
-      var totalSpan = row.querySelector('.promo-total');
-      if (totalSpan) totalSpan.textContent = formatCurrency(newPrice * qty);
-    });
-    
-    var itemCountEl = safeGetEl('promoItemCount');
-    if (itemCountEl) itemCountEl.textContent = totalItems;
-    
-    var originalTotalEl = safeGetEl('promoOriginalTotal');
-    if (originalTotalEl) originalTotalEl.textContent = formatCurrency(originalTotal);
-    
-    var promoTotalEl = safeGetEl('promoTotal');
-    if (promoTotalEl) promoTotalEl.textContent = formatCurrency(promoTotal);
-    
-    var discountEl = safeGetEl('promoDiscount');
-    if (discountEl) discountEl.textContent = formatCurrency(originalTotal - promoTotal);
-    
-    // Store promo items state
-    promoState.promoItems = [];
-    document.querySelectorAll('.promo-item-row').forEach(function(row) {
-      var select = row.querySelector('.promo-select');
-      var nameInput = row.querySelector('.promo-item-name');
-      var sizeSelect = row.querySelector('.promo-size');
-      var qtyEl = row.querySelector('.promo-qty');
-      var newPriceEl = row.querySelector('.promo-new-price');
-      var orgPriceEl = row.querySelector('.promo-org-price');
-      
-      var qty = parseFloat(qtyEl && qtyEl.value) || 1;
-      var newPrice = parseFloat(newPriceEl && newPriceEl.value) || 0;
-      var orgPrice = parseFloat(orgPriceEl && orgPriceEl.textContent.replace(/[₦,]/g, '')) || 0;
-      
-      if (qty > 0 && newPrice > 0) {
-        promoState.promoItems.push({
-          id: select && select.value || '',
-          name: nameInput && nameInput.value || '',
-          size: sizeSelect && sizeSelect.value || '1',
-          quantity: qty,
-          originalPrice: orgPrice,
-          promoPrice: newPrice
-        });
-      }
-    });
-    
-    promoState.promoName = safeTrimVal('promoName', '');
-    promoState.promoStartDate = safeTrimVal('promoStartDate', '');
-    promoState.promoEndDate = safeTrimVal('promoEndDate', '');
-    promoState.promoCondition = safeTrimVal('promoCondition', '');
-  };
-
-  window._updateBulkSummary = function() {
-    var totalItems = 0;
-    var totalPieces = 0;
-    var originalTotal = 0;
-    var bulkTotal = 0;
-    var minQty = parseInt(safeGetVal('bulkMinQty', '40')) || 40;
-    
-    document.querySelectorAll('.bulk-item-row').forEach(function(row) {
-      var qtyEl = row.querySelector('.bulk-qty');
-      var newPriceEl = row.querySelector('.bulk-new-price');
-      var orgPriceEl = row.querySelector('.bulk-org-price');
-      
-      var qty = parseFloat(qtyEl && qtyEl.value) || 1;
-      var newPrice = parseFloat(newPriceEl && newPriceEl.value) || 0;
-      var orgPrice = parseFloat(orgPriceEl && orgPriceEl.textContent.replace(/[₦,]/g, '')) || 0;
-      
-      if (qty > 0) {
-        totalItems++;
-        totalPieces += qty;
-        originalTotal += orgPrice * qty;
-        bulkTotal += newPrice * qty;
-      }
-      
-      var totalSpan = row.querySelector('.bulk-total');
-      if (totalSpan) totalSpan.textContent = formatCurrency(newPrice * qty);
-    });
-    
-    var itemCountEl = safeGetEl('bulkItemCount');
-    if (itemCountEl) itemCountEl.textContent = totalItems;
-    
-    var piecesEl = safeGetEl('bulkTotalPieces');
-    if (piecesEl) piecesEl.textContent = totalPieces;
-    
-    var originalTotalEl = safeGetEl('bulkOriginalTotal');
-    if (originalTotalEl) originalTotalEl.textContent = formatCurrency(originalTotal);
-    
-    var bulkTotalEl = safeGetEl('bulkTotal');
-    if (bulkTotalEl) bulkTotalEl.textContent = formatCurrency(bulkTotal);
-    
-    var savingsEl = safeGetEl('bulkSavings');
-    if (savingsEl) savingsEl.textContent = formatCurrency(originalTotal - bulkTotal);
-    
-    var minDisplayEl = safeGetEl('bulkMinDisplay');
-    if (minDisplayEl) minDisplayEl.textContent = minQty;
-    
-    var statusMsgEl = safeGetEl('bulkStatusMsg');
-    if (statusMsgEl) {
-      if (totalPieces < minQty) {
-        statusMsgEl.textContent = ' ⚠️ Need ' + (minQty - totalPieces) + ' more pieces';
-        statusMsgEl.style.color = 'var(--danger)';
-      } else if (totalPieces >= minQty) {
-        statusMsgEl.textContent = ' ✅ Bulk discount applied!';
-        statusMsgEl.style.color = 'var(--success)';
-      }
-    }
-    
-    // Store bulk items state
-    promoState.bulkItems = [];
-    document.querySelectorAll('.bulk-item-row').forEach(function(row) {
-      var select = row.querySelector('.bulk-select');
-      var nameInput = row.querySelector('.bulk-item-name');
-      var qtyEl = row.querySelector('.bulk-qty');
-      var newPriceEl = row.querySelector('.bulk-new-price');
-      var orgPriceEl = row.querySelector('.bulk-org-price');
-      
-      var qty = parseFloat(qtyEl && qtyEl.value) || 1;
-      var newPrice = parseFloat(newPriceEl && newPriceEl.value) || 0;
-      var orgPrice = parseFloat(orgPriceEl && orgPriceEl.textContent.replace(/[₦,]/g, '')) || 0;
-      
-      if (qty > 0 && newPrice > 0) {
-        promoState.bulkItems.push({
-          id: select && select.value || '',
-          name: nameInput && nameInput.value || '',
-          quantity: qty,
-          originalPrice: orgPrice,
-          promoPrice: newPrice
-        });
-      }
-    });
-    
-    promoState.bulkMinQty = minQty;
-    promoState.promoName = safeTrimVal('bulkName', 'Bulk Discount');
-    promoState.promoStartDate = safeTrimVal('bulkStartDate', '');
-    promoState.promoEndDate = safeTrimVal('bulkEndDate', '');
-    promoState.promoCondition = safeTrimVal('bulkCondition', '');
-  };
-
-  window._processPromoSale = function() {
-    window._updatePromoSummary();
-    
-    if (promoState.promoItems.length === 0) {
-      showToast('Add at least one item with promo price', 'error');
-      return;
-    }
-    
-    var totalAmount = 0;
-    var items = [];
-    promoState.promoItems.forEach(function(item) {
-      var qty = item.quantity || 1;
-      var price = item.promoPrice || 0;
-      if (price <= 0) {
-        showToast('Please set a valid promo price for ' + (item.name || 'item'), 'error');
-        return;
-      }
-      items.push({
-        id: item.id || '',
-        name: item.name || 'Item',
-        quantity: qty,
-        size: item.size || '1',
-        sizeLabel: getSizeLabel(item.size || '1'),
-        unitPrice: price,
-        originalPrice: item.originalPrice || price,
-        isPromo: true,
-        promoPrice: price,
-        isNonInventory: !item.id
-      });
-      totalAmount += price * qty;
-    });
-    
-    if (items.length === 0) return;
-    
-    var customerId = '', customerName = '', customerPhone = '', customerAddress = '', isNewCustomer = false, customerData = null;
-    if (customerType === 'existing') {
-      var select = safeGetEl('existingCustomerSelect');
-      if (!select || !select.value) { showToast('Select a customer', 'error'); return; }
-      customerId = select.value;
-      var opt = select.options[select.selectedIndex];
-      customerName = opt.dataset.name || ''; customerPhone = opt.dataset.phone || ''; customerAddress = opt.dataset.address || '';
-    } else {
-      customerName = safeTrimVal('newCustomerName', '');
-      customerPhone = safeTrimVal('newCustomerPhone', '');
-      customerAddress = safeTrimVal('newCustomerAddress', '');
-      if (!customerName || !customerPhone || !customerAddress) { showToast('Fill all required customer fields', 'error'); return; }
-      isNewCustomer = true;
-      customerData = { fullName: customerName, phone: customerPhone, address: customerAddress, status: 'pending_approval', createdBy: currentUser.uid, createdByName: userData.fullName };
-    }
-    
-    showPinModal('Process Promo Sale', 'sell promo items worth ' + formatCurrency(totalAmount), function() {
-      var paymentMethod = selectedPayment;
-      var paymentDetails = {};
-      
-      if (paymentMethod === 'cash_transfer' || paymentMethod === 'cash_pos') {
-        var cashAmount = parseFloat(safeGetVal('splitCashAmount', '0')) || 0;
-        var secondAmount = parseFloat(safeGetVal('splitSecondAmount', '0')) || 0;
-        var secondLabel = paymentMethod === 'cash_transfer' ? 'transfer' : 'POS';
-        
-        if (cashAmount + secondAmount !== totalAmount) {
-          showToast('Total paid (₦' + formatCurrency(cashAmount + secondAmount) + ') does not match sale total (₦' + formatCurrency(totalAmount) + ')', 'error');
-          return;
-        }
-        paymentDetails = { cash: cashAmount, [secondLabel]: secondAmount };
-        paymentMethod = paymentMethod === 'cash_transfer' ? 'Cash + Transfer' : 'Cash + POS';
-      }
-      
-      var customerInfo = { customerId: customerId, customerName: customerName, customerPhone: customerPhone, customerAddress: customerAddress, _isNew: isNewCustomer, _customerData: customerData };
-      var result = processSaleCommon(items, totalAmount, customerInfo, paymentMethod, false, { 
-        isPromo: true, 
-        promoName: promoState.promoName, 
-        promoStartDate: promoState.promoStartDate, 
-        promoEndDate: promoState.promoEndDate, 
-        promoCondition: promoState.promoCondition,
-        paymentDetails: paymentDetails,
-        originalTotal: items.reduce(function(sum, i) { return sum + (i.originalPrice || i.unitPrice) * i.quantity; }, 0)
-      }, 'regular');
-      
-      if (result) { 
-        showToast('Promo sale completed! #' + result.receiptNumber, 'success'); 
-        showReceiptModal(result); 
-        hideModal();
-        window._clearActiveDraft();
-        setTimeout(function() { updateStats(); }, 500);
-      }
-    }, 'attendant');
-  };
-
-  window._processBulkSale = function() {
-    window._updateBulkSummary();
-    
-    if (promoState.bulkItems.length === 0) {
-      showToast('Add at least one item with bulk price', 'error');
-      return;
-    }
-    
-    var totalAmount = 0;
-    var totalPieces = 0;
-    var items = [];
-    promoState.bulkItems.forEach(function(item) {
-      var qty = item.quantity || 1;
-      var price = item.promoPrice || 0;
-      if (price <= 0) {
-        showToast('Please set a valid bulk price for ' + (item.name || 'item'), 'error');
-        return;
-      }
-      totalPieces += qty;
-      items.push({
-        id: item.id || '',
-        name: item.name || 'Item',
-        quantity: qty,
-        size: '1',
-        sizeLabel: 'Unit',
-        unitPrice: price,
-        originalPrice: item.originalPrice || price,
-        isBulk: true,
-        bulkPrice: price,
-        isNonInventory: !item.id
-      });
-      totalAmount += price * qty;
-    });
-    
-    if (items.length === 0) return;
-    
-    var minQty = promoState.bulkMinQty || 40;
-    if (totalPieces < minQty) {
-      showToast('Bulk requires minimum ' + minQty + ' pieces. Currently ' + totalPieces, 'error');
-      return;
-    }
-    
-    var customerId = '', customerName = '', customerPhone = '', customerAddress = '', isNewCustomer = false, customerData = null;
-    if (customerType === 'existing') {
-      var select = safeGetEl('existingCustomerSelect');
-      if (!select || !select.value) { showToast('Select a customer', 'error'); return; }
-      customerId = select.value;
-      var opt = select.options[select.selectedIndex];
-      customerName = opt.dataset.name || ''; customerPhone = opt.dataset.phone || ''; customerAddress = opt.dataset.address || '';
-    } else {
-      customerName = safeTrimVal('newCustomerName', '');
-      customerPhone = safeTrimVal('newCustomerPhone', '');
-      customerAddress = safeTrimVal('newCustomerAddress', '');
-      if (!customerName || !customerPhone || !customerAddress) { showToast('Fill all required customer fields', 'error'); return; }
-      isNewCustomer = true;
-      customerData = { fullName: customerName, phone: customerPhone, address: customerAddress, status: 'pending_approval', createdBy: currentUser.uid, createdByName: userData.fullName };
-    }
-    
-    showPinModal('Process Bulk Sale', 'sell bulk items worth ' + formatCurrency(totalAmount), function() {
-      var paymentMethod = selectedPayment;
-      var paymentDetails = {};
-      
-      if (paymentMethod === 'cash_transfer' || paymentMethod === 'cash_pos') {
-        var cashAmount = parseFloat(safeGetVal('splitCashAmount', '0')) || 0;
-        var secondAmount = parseFloat(safeGetVal('splitSecondAmount', '0')) || 0;
-        var secondLabel = paymentMethod === 'cash_transfer' ? 'transfer' : 'POS';
-        
-        if (cashAmount + secondAmount !== totalAmount) {
-          showToast('Total paid (₦' + formatCurrency(cashAmount + secondAmount) + ') does not match sale total (₦' + formatCurrency(totalAmount) + ')', 'error');
-          return;
-        }
-        paymentDetails = { cash: cashAmount, [secondLabel]: secondAmount };
-        paymentMethod = paymentMethod === 'cash_transfer' ? 'Cash + Transfer' : 'Cash + POS';
-      }
-      
-      var customerInfo = { customerId: customerId, customerName: customerName, customerPhone: customerPhone, customerAddress: customerAddress, _isNew: isNewCustomer, _customerData: customerData };
-      var result = processSaleCommon(items, totalAmount, customerInfo, paymentMethod, false, { 
-        isBulk: true, 
-        bulkName: promoState.promoName, 
-        bulkStartDate: promoState.promoStartDate, 
-        bulkEndDate: promoState.promoEndDate, 
-        bulkCondition: promoState.promoCondition,
-        bulkMinQty: minQty,
-        bulkTotalPieces: totalPieces,
-        paymentDetails: paymentDetails,
-        originalTotal: items.reduce(function(sum, i) { return sum + (i.originalPrice || i.unitPrice) * i.quantity; }, 0)
-      }, 'regular');
-      
-      if (result) { 
-        showToast('Bulk sale completed! #' + result.receiptNumber, 'success'); 
-        showReceiptModal(result); 
-        hideModal();
-        window._clearActiveDraft();
-        setTimeout(function() { updateStats(); }, 500);
-      }
-    }, 'attendant');
-  };
 
   // ============================================
   // NEW SALE MODAL
@@ -2784,14 +1863,6 @@
           
           var sizeOpts = getSizeOptions(allStockItems[0]).map(function(o) { return '<option value="' + o.value + '"' + (item.size === o.value ? ' selected' : '') + '>' + o.label + '</option>'; }).join('');
           
-          var promoHtml = '';
-          if (item.isPromo || item.promoPrice) {
-            promoHtml = ' <span class="badge badge-promo">🔥 Promo</span>';
-          }
-          if (item.isBulk || item.bulkPrice) {
-            promoHtml = ' <span class="badge badge-bulk">📦 Bulk</span>';
-          }
-          
           return '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div>' +
             '<select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + itemOptions + '</select>' +
             '<input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;">' +
@@ -2799,19 +1870,11 @@
             '<input type="number" class="form-control item-qty" value="' + (item.quantity || 1) + '" min="1" style="width:80px;" oninput="window._markDraftDirty()">' +
             '<input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;">' +
             '<span class="stock-warning"></span>' +
-            (promoHtml ? '<span>' + promoHtml + '</span>' : '') +
             '<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
         }
       }).join('');
     } else {
       itemsHtml = '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
-    }
-
-    var promoBanner = '';
-    if (draft.promoState && draft.promoState.isPromo) {
-      promoBanner = '<div class="promo-section"><span class="promo-label">🔥 Promo: ' + escapeHtml(draft.promoState.promoName || 'Active') + '</span></div>';
-    } else if (draft.bulkState && draft.bulkState.isBulk) {
-      promoBanner = '<div class="bulk-section"><span class="bulk-label">📦 Bulk: ' + escapeHtml(draft.bulkState.promoName || 'Active') + '</span></div>';
     }
 
     showModal('New Sale',
@@ -2820,7 +1883,6 @@
         '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
         '<span style="margin-left:auto;font-size:0.7rem;color:var(--gray);">' + (draft.itemCount || 0) + ' items saved</span>' +
       '</div>' +
-      promoBanner +
       '<div class="customer-type-toggle">' +
         '<button class="customer-type-btn' + (customerType === 'existing' ? ' active' : '') + '" data-type="existing" onclick="window._switchCustomerType(\'existing\');window._markDraftDirty();"><i class="fas fa-users"></i> Existing</button>' +
         '<button class="customer-type-btn' + (customerType === 'new' ? ' active' : '') + '" data-type="new" onclick="window._switchCustomerType(\'new\');window._markDraftDirty();"><i class="fas fa-user-plus"></i> New</button>' +
@@ -2841,13 +1903,6 @@
           '<div class="payment-method' + (selectedPayment === 'cash' ? ' selected' : '') + '" data-method="cash">💵 Cash</div>' +
           '<div class="payment-method' + (selectedPayment === 'transfer' ? ' selected' : '') + '" data-method="transfer">🏦 Transfer</div>' +
           '<div class="payment-method' + (selectedPayment === 'pos' ? ' selected' : '') + '" data-method="pos">💳 POS</div>' +
-          '<div class="payment-method' + (selectedPayment === 'cash_transfer' ? ' selected' : '') + '" data-method="cash_transfer">💵+🏦 Cash &amp; Transfer</div>' +
-          '<div class="payment-method' + (selectedPayment === 'cash_pos' ? ' selected' : '') + '" data-method="cash_pos">💵+💳 Cash &amp; POS</div>' +
-        '</div>' +
-        '<div class="split-payment-section' + (selectedPayment === 'cash_transfer' || selectedPayment === 'cash_pos' ? ' active' : '') + '" id="splitPaymentSection">' +
-          '<div class="split-row"><label>Cash Amount:</label><input type="number" class="form-control" id="splitCashAmount" placeholder="₦" step="0.01" min="0" oninput="window._markDraftDirty()"></div>' +
-          '<div class="split-row"><label id="splitSecondLabel">' + (selectedPayment === 'cash_transfer' ? 'Transfer' : 'POS') + ' Amount:</label><input type="number" class="form-control" id="splitSecondAmount" placeholder="₦" step="0.01" min="0" oninput="window._markDraftDirty()"></div>' +
-          '<div style="font-size:0.8rem;color:var(--gray);">Total paid: <span id="splitTotalDisplay">₦0</span></div>' +
         '</div>' +
       '</div>' +
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div>' +
@@ -2872,14 +1927,6 @@
       $('.item-qty').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-size').on('change', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-custom-price').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
-      
-      // Split payment listeners
-      $('#splitCashAmount, #splitSecondAmount').on('input', function() {
-        var cash = parseFloat($('#splitCashAmount').val()) || 0;
-        var second = parseFloat($('#splitSecondAmount').val()) || 0;
-        $('#splitTotalDisplay').text(formatCurrency(cash + second));
-        window._markDraftDirty();
-      });
       
       window._updateSaleSummary();
       console.log('🐛 DEBUG: Regular sale draft restored - items:', draft.items.length, '| customer:', draft.customerName);
@@ -2922,7 +1969,7 @@
       '<div id="newCustomerSection" style="display:none;"><div class="form-group"><label>Full Name *</label><input type="text" class="form-control" id="newCustomerName" oninput="window._markDraftDirty()"></div><div class="form-group"><label>Phone *</label><input type="tel" class="form-control" id="newCustomerPhone" oninput="window._markDraftDirty()"></div><div class="form-group"><label>Address *</label><textarea class="form-control" id="newCustomerAddress" rows="2" oninput="window._markDraftDirty()"></textarea></div><div class="form-group"><label>Email</label><input type="email" class="form-control" id="newCustomerEmail" oninput="window._markDraftDirty()"></div></div>' +
       '<div id="saleItems"><div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div></div>' +
       '<button type="button" class="btn btn-outline btn-sm" onclick="window._addSaleItem();window._markDraftDirty();"><i class="fas fa-plus"></i> Add Item</button>' +
-      '<div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods" id="paymentMethodsContainer"><div class="payment-method selected" data-method="cash">💵 Cash</div><div class="payment-method" data-method="transfer">🏦 Transfer</div><div class="payment-method" data-method="pos">💳 POS</div><div class="payment-method" data-method="cash_transfer">💵+🏦 Cash &amp; Transfer</div><div class="payment-method" data-method="cash_pos">💵+💳 Cash &amp; POS</div></div><div class="split-payment-section" id="splitPaymentSection"><div class="split-row"><label>Cash Amount:</label><input type="number" class="form-control" id="splitCashAmount" placeholder="₦" step="0.01" min="0" oninput="window._markDraftDirty()"></div><div class="split-row"><label id="splitSecondLabel">Transfer Amount:</label><input type="number" class="form-control" id="splitSecondAmount" placeholder="₦" step="0.01" min="0" oninput="window._markDraftDirty()"></div><div style="font-size:0.8rem;color:var(--gray);">Total paid: <span id="splitTotalDisplay">₦0</span></div></div></div>' +
+      '<div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods" id="paymentMethodsContainer"><div class="payment-method selected" data-method="cash">💵 Cash</div><div class="payment-method" data-method="transfer">🏦 Transfer</div><div class="payment-method" data-method="pos">💳 POS</div></div></div>' +
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div>' +
       '<button class="btn btn-primary" id="processSaleBtn" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>'
     );
@@ -2933,14 +1980,6 @@
       firstSelect.select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { window._updateSizeDropdown(this); window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-qty').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-size').on('change', function() { window._updateSaleSummary(); window._markDraftDirty(); });
-      
-      $('#splitCashAmount, #splitSecondAmount').on('input', function() {
-        var cash = parseFloat($('#splitCashAmount').val()) || 0;
-        var second = parseFloat($('#splitSecondAmount').val()) || 0;
-        $('#splitTotalDisplay').text(formatCurrency(cash + second));
-        window._markDraftDirty();
-      });
-      
       window._updateSaleSummary();
     }, 150);
   };
@@ -3130,24 +2169,9 @@
       }
     });
     if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
-    
-    var paymentMethod = selectedPayment;
-    var paymentDetails = {};
-    if (paymentMethod === 'cash_transfer' || paymentMethod === 'cash_pos') {
-      var cashAmount = parseFloat(safeGetVal('splitCashAmount', '0')) || 0;
-      var secondAmount = parseFloat(safeGetVal('splitSecondAmount', '0')) || 0;
-      var secondLabel = paymentMethod === 'cash_transfer' ? 'transfer' : 'POS';
-      if (cashAmount + secondAmount !== total) {
-        showToast('Total paid (₦' + formatCurrency(cashAmount + secondAmount) + ') does not match sale total (₦' + formatCurrency(total) + ')', 'error');
-        return;
-      }
-      paymentDetails = { cash: cashAmount, [secondLabel]: secondAmount };
-      paymentMethod = paymentMethod === 'cash_transfer' ? 'Cash + Transfer' : 'Cash + POS';
-    }
-    
     showPinModal('Process Sale', 'sell items worth ' + formatCurrency(total), function() {
       var customerInfo = { customerId: customerId, customerName: customerName, customerPhone: customerPhone, customerAddress: customerAddress, _isNew: isNewCustomer, _customerData: customerData };
-      var result = processSaleCommon(items, total, customerInfo, paymentMethod, false, { paymentDetails: paymentDetails }, 'regular');
+      var result = processSaleCommon(items, total, customerInfo, selectedPayment, false, {}, 'regular');
       if (result) { 
         showToast('Sale completed! #' + result.receiptNumber, 'success'); 
         showReceiptModal(result); 
@@ -3212,13 +2236,6 @@
           '<div class="payment-method' + (companySelectedPayment === 'cash' ? ' selected' : '') + '" data-method="cash">💵 Cash</div>' +
           '<div class="payment-method' + (companySelectedPayment === 'transfer' ? ' selected' : '') + '" data-method="transfer">🏦 Transfer</div>' +
           '<div class="payment-method' + (companySelectedPayment === 'pos' ? ' selected' : '') + '" data-method="pos">💳 POS</div>' +
-          '<div class="payment-method' + (companySelectedPayment === 'cash_transfer' ? ' selected' : '') + '" data-method="cash_transfer">💵+🏦 Cash &amp; Transfer</div>' +
-          '<div class="payment-method' + (companySelectedPayment === 'cash_pos' ? ' selected' : '') + '" data-method="cash_pos">💵+💳 Cash &amp; POS</div>' +
-        '</div>' +
-        '<div class="split-payment-section' + (companySelectedPayment === 'cash_transfer' || companySelectedPayment === 'cash_pos' ? ' active' : '') + '" id="companySplitPayment">' +
-          '<div class="split-row"><label>Cash Amount:</label><input type="number" class="form-control" id="companySplitCash" placeholder="₦" step="0.01" min="0" oninput="window._markDraftDirty()"></div>' +
-          '<div class="split-row"><label id="companySplitSecondLabel">' + (companySelectedPayment === 'cash_transfer' ? 'Transfer' : 'POS') + ' Amount:</label><input type="number" class="form-control" id="companySplitSecond" placeholder="₦" step="0.01" min="0" oninput="window._markDraftDirty()"></div>' +
-          '<div style="font-size:0.8rem;color:var(--gray);">Total paid: <span id="companySplitTotal">₦0</span></div>' +
         '</div>' +
       '</div>' +
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="companyItemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="companyTotal">₦0</span></div></div>' +
@@ -3236,13 +2253,6 @@
       $('.item-qty').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       $('.item-size').on('change', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       $('.item-custom-price').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
-      
-      $('#companySplitCash, #companySplitSecond').on('input', function() {
-        var cash = parseFloat($('#companySplitCash').val()) || 0;
-        var second = parseFloat($('#companySplitSecond').val()) || 0;
-        $('#companySplitTotal').text(formatCurrency(cash + second));
-        window._markDraftDirty();
-      });
       
       if (draft.items && draft.items.length > 0) {
         draft.items.forEach(function(item, idx) {
@@ -3319,7 +2329,7 @@
       '<div class="form-group"><label>Usage / Description *</label><textarea class="form-control" id="companyUsage" rows="2" placeholder="e.g., Staff uniforms, Office supplies" oninput="window._markDraftDirty()"></textarea></div>' +
       '<div id="companyItems"><div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div></div>' +
       '<button type="button" class="btn btn-outline btn-sm" onclick="window._addCompanyItem();window._markDraftDirty();"><i class="fas fa-plus"></i> Add Item</button>' +
-      '<div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods" id="companyPaymentContainer"><div class="payment-method selected" data-method="cash">💵 Cash</div><div class="payment-method" data-method="transfer">🏦 Transfer</div><div class="payment-method" data-method="pos">💳 POS</div><div class="payment-method" data-method="cash_transfer">💵+🏦 Cash &amp; Transfer</div><div class="payment-method" data-method="cash_pos">💵+💳 Cash &amp; POS</div></div><div class="split-payment-section" id="companySplitPayment"><div class="split-row"><label>Cash Amount:</label><input type="number" class="form-control" id="companySplitCash" placeholder="₦" step="0.01" min="0" oninput="window._markDraftDirty()"></div><div class="split-row"><label id="companySplitSecondLabel">Transfer Amount:</label><input type="number" class="form-control" id="companySplitSecond" placeholder="₦" step="0.01" min="0" oninput="window._markDraftDirty()"></div><div style="font-size:0.8rem;color:var(--gray);">Total paid: <span id="companySplitTotal">₦0</span></div></div></div>' +
+      '<div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods" id="companyPaymentContainer"><div class="payment-method selected" data-method="cash">💵 Cash</div><div class="payment-method" data-method="transfer">🏦 Transfer</div><div class="payment-method" data-method="pos">💳 POS</div></div></div>' +
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="companyItemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="companyTotal">₦0</span></div></div>' +
       '<button class="btn btn-primary" onclick="window._processCompanySale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Company Sale</button>'
     );
@@ -3335,14 +2345,6 @@
       $('.item-qty').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       $('.item-size').on('change', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       $('.item-custom-price').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
-      
-      $('#companySplitCash, #companySplitSecond').on('input', function() {
-        var cash = parseFloat($('#companySplitCash').val()) || 0;
-        var second = parseFloat($('#companySplitSecond').val()) || 0;
-        $('#companySplitTotal').text(formatCurrency(cash + second));
-        window._markDraftDirty();
-      });
-      
       window._updateCompanySummary();
     }, 200);
   };
@@ -3451,23 +2453,9 @@
     });
     if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
 
-    var paymentMethod = companySelectedPayment;
-    var paymentDetails = {};
-    if (paymentMethod === 'cash_transfer' || paymentMethod === 'cash_pos') {
-      var cashAmount = parseFloat(safeGetVal('companySplitCash', '0')) || 0;
-      var secondAmount = parseFloat(safeGetVal('companySplitSecond', '0')) || 0;
-      var secondLabel = paymentMethod === 'cash_transfer' ? 'transfer' : 'POS';
-      if (cashAmount + secondAmount !== total) {
-        showToast('Total paid (₦' + formatCurrency(cashAmount + secondAmount) + ') does not match sale total (₦' + formatCurrency(total) + ')', 'error');
-        return;
-      }
-      paymentDetails = { cash: cashAmount, [secondLabel]: secondAmount };
-      paymentMethod = paymentMethod === 'cash_transfer' ? 'Cash + Transfer' : 'Cash + POS';
-    }
-
     showPinModal('Process Company Sale', 'process company sale of ' + formatCurrency(total), function() {
       var customerInfo = { customerId: '', customerName: 'Company', customerPhone: '', customerAddress: '' };
-      var result = processSaleCommon(items, total, customerInfo, paymentMethod, true, { collectedBy: collectedBy, usage: usage, paymentDetails: paymentDetails }, 'regular');
+      var result = processSaleCommon(items, total, customerInfo, companySelectedPayment, true, { collectedBy: collectedBy, usage: usage }, 'regular');
       if (result) { 
         showToast('Company sale completed! #' + result.receiptNumber, 'success'); 
         showReceiptModal(result); 
@@ -3485,14 +2473,19 @@
     await loadCustomersAndStock();
     currentModalType = 'wholesale';
     
+    // Store items with stock
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
+    
+    // FIX: ALL stock items with quantity > 0 are borrowable, not just those NOT in store
     var borrowableItems = allStockItems.filter(function(si) {
-      return (si.unitQty || 0) > 0;
+      return (si.unitQty || 0) > 0;  // Show ALL inventory items with stock
     });
     var hasBorrowable = borrowableItems.length > 0;
 
     var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>'; }).join('');
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
+    
+    // FIX: Show ALL inventory items as borrowable with clear indication
     var borrowOptions = borrowableItems.map(function(i) {
       var inStore = allStoreItems.some(function(store) { 
         return store.id === i.id || store.name === i.name; 
@@ -3550,7 +2543,7 @@
       '<button class="btn btn-outline btn-sm" onclick="window._addWSItem()"><i class="fas fa-plus"></i> Add Item</button>' +
       '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;"><div style="display:flex;justify-content:space-between;"><span>Total Pieces:</span><span id="wsTotalPieces" style="font-weight:700;">0</span></div><div style="display:flex;justify-content:space-between;"><span>Required:</span><span id="wsRequiredPieces" style="font-weight:700;color:var(--primary);">50</span></div><p id="wsStatusMsg" style="font-size:0.75rem;color:var(--danger);text-align:center;margin-top:4px;"></p></div>' +
       '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;"><span style="font-weight:700;">Total Amount: </span><span id="wsTotalAmount" style="font-size:1.2rem;font-weight:800;">₦0</span></div>' +
-      '<div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;flex-wrap:wrap;" id="wsPaymentContainer"><button class="btn btn-outline ws-pay' + (wholesalePayment === 'cash' ? ' selected' : '') + '" data-m="cash" style="' + (wholesalePayment === 'cash' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">💵 Cash</button><button class="btn btn-outline ws-pay' + (wholesalePayment === 'transfer' ? ' selected' : '') + '" data-m="transfer" style="' + (wholesalePayment === 'transfer' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">🏦 Transfer</button><button class="btn btn-outline ws-pay' + (wholesalePayment === 'pos' ? ' selected' : '') + '" data-m="pos" style="' + (wholesalePayment === 'pos' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">💳 POS</button></div></div>' +
+      '<div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;" id="wsPaymentContainer"><button class="btn btn-outline ws-pay' + (wholesalePayment === 'cash' ? ' selected' : '') + '" data-m="cash" style="' + (wholesalePayment === 'cash' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">💵 Cash</button><button class="btn btn-outline ws-pay' + (wholesalePayment === 'transfer' ? ' selected' : '') + '" data-m="transfer" style="' + (wholesalePayment === 'transfer' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">🏦 Transfer</button><button class="btn btn-outline ws-pay' + (wholesalePayment === 'pos' ? ' selected' : '') + '" data-m="pos" style="' + (wholesalePayment === 'pos' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">💳 POS</button></div></div>' +
       '<button class="btn btn-primary" onclick="window._processWS()" style="width:100%;margin-top:12px;"><i class="fas fa-check-circle"></i> Complete Wholesale Sale</button>'
     );
 
@@ -3648,14 +2641,19 @@
     
     await loadCustomersAndStock();
     
+    // Store items with stock
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
+    
+    // FIX: ALL stock items with quantity > 0 are borrowable
     var borrowableItems = allStockItems.filter(function(si) {
-      return (si.unitQty || 0) > 0;
+      return (si.unitQty || 0) > 0;  // Show ALL inventory items with stock
     });
     var hasBorrowable = borrowableItems.length > 0;
 
     var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>'; }).join('');
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
+    
+    // FIX: Show ALL inventory items as borrowable with clear indication
     var borrowOptions = borrowableItems.map(function(i) {
       var inStore = allStoreItems.some(function(store) { 
         return store.id === i.id || store.name === i.name; 
@@ -3696,7 +2694,7 @@
       '<button class="btn btn-outline btn-sm" onclick="window._addWSItem()"><i class="fas fa-plus"></i> Add Item</button>' +
       '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;"><div style="display:flex;justify-content:space-between;"><span>Total Pieces:</span><span id="wsTotalPieces" style="font-weight:700;">0</span></div><div style="display:flex;justify-content:space-between;"><span>Required:</span><span id="wsRequiredPieces" style="font-weight:700;color:var(--primary);">50</span></div><p id="wsStatusMsg" style="font-size:0.75rem;color:var(--danger);text-align:center;margin-top:4px;"></p></div>' +
       '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;"><span style="font-weight:700;">Total Amount: </span><span id="wsTotalAmount" style="font-size:1.2rem;font-weight:800;">₦0</span></div>' +
-      '<div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;flex-wrap:wrap;" id="wsPaymentContainer"><button class="btn btn-outline ws-pay selected" data-m="cash" style="background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);">💵 Cash</button><button class="btn btn-outline ws-pay" data-m="transfer">🏦 Transfer</button><button class="btn btn-outline ws-pay" data-m="pos">💳 POS</button></div></div>' +
+      '<div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;" id="wsPaymentContainer"><button class="btn btn-outline ws-pay selected" data-m="cash" style="background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);">💵 Cash</button><button class="btn btn-outline ws-pay" data-m="transfer">🏦 Transfer</button><button class="btn btn-outline ws-pay" data-m="pos">💳 POS</button></div></div>' +
       '<button class="btn btn-primary" onclick="window._processWS()" style="width:100%;margin-top:12px;"><i class="fas fa-check-circle"></i> Complete Wholesale Sale</button>'
     );
 
@@ -3745,11 +2743,15 @@
 
   window._addWSItem = function() {
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
+    
+    // FIX: ALL stock items with quantity > 0 are borrowable
     var borrowableItems = allStockItems.filter(function(si) {
       return (si.unitQty || 0) > 0;
     });
     
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
+    
+    // FIX: Show ALL inventory items as borrowable
     var borrowOptions = borrowableItems.map(function(i) {
       var inStore = allStoreItems.some(function(store) { 
         return store.id === i.id || store.name === i.name; 
@@ -4190,10 +3192,6 @@
         return { 
           id: it.id, name: it.name, quantity: it.quantity || it.pieces, pieces: it.pieces, 
           size: sz, sizeLabel: it.sizeLabel || getSizeLabel(sz), unitPrice: it.unitPrice, 
-          originalPrice: it.originalPrice || null,
-          promoPrice: it.promoPrice || null,
-          isPromo: it.isPromo || false,
-          isBulk: it.isBulk || false,
           isNonInventory: it.isNonInventory || false, 
           borrowed: it.borrowed || false, 
           borrowedQty: it.borrowedQty || 0, 
@@ -4244,10 +3242,7 @@
       saleType: saleType,
       itemCount: items.length,
       isCompanySale: isCompanySale || false,
-      borrowedItems: borrowedItems.length,
-      isPromo: extraData && extraData.isPromo || false,
-      isBulk: extraData && extraData.isBulk || false,
-      promoName: extraData && extraData.promoName || null
+      borrowedItems: borrowedItems.length
     });
     
     return saleDataRef;
@@ -4328,26 +3323,29 @@
   }
 
   // ============================================
-  // RECEIPTS - FIXED: COMBINE DUPLICATE ITEMS WITH QR CODE
+  // RECEIPTS - FIXED: COMBINE DUPLICATE ITEMS
   // ============================================
   
+  // Helper function to combine items with same name + size + price
   function combineItems(items) {
     if (!items || items.length === 0) return [];
     
     var combined = {};
     items.forEach(function(item) {
-      var key = (item.name || 'Item') + '|' + (item.size || '1') + '|' + (item.sizeLabel || 'Unit') + '|' + (item.unitPrice || 0) + '|' + (item.originalPrice || item.unitPrice || 0) + '|' + (item.isPromo ? 'promo' : '') + '|' + (item.isBulk ? 'bulk' : '');
+      // Create a unique key based on name + size + unitPrice
+      var key = (item.name || 'Item') + '|' + (item.size || '1') + '|' + (item.sizeLabel || 'Unit') + '|' + (item.unitPrice || 0);
       
       if (combined[key]) {
+        // Add quantity and total to existing entry
         combined[key].quantity += (item.quantity || item.pieces || 1);
         combined[key].total = combined[key].quantity * combined[key].unitPrice;
       } else {
+        // Create new entry
         combined[key] = {
           name: item.name || 'Item',
           size: item.size || '1',
           sizeLabel: item.sizeLabel || 'Unit',
           unitPrice: item.unitPrice || 0,
-          originalPrice: item.originalPrice || item.unitPrice || 0,
           quantity: item.quantity || item.pieces || 1,
           total: (item.quantity || item.pieces || 1) * (item.unitPrice || 0),
           isNonInventory: item.isNonInventory || false,
@@ -4355,9 +3353,6 @@
           borrowedQty: item.borrowedQty || 0,
           storeQty: item.storeQty || 0,
           fullyBorrowed: item.fullyBorrowed || false,
-          isPromo: item.isPromo || false,
-          isBulk: item.isBulk || false,
-          promoPrice: item.promoPrice || null,
           condition: item.condition || null
         };
       }
@@ -4368,24 +3363,14 @@
 
   function getDisplayItems(items) {
     if (!items || items.length === 0) return [];
+    
     var combined = combineItems(items);
+    
     combined.sort(function(a, b) {
       return a.name.localeCompare(b.name);
     });
+    
     return combined;
-  }
-
-  function generateQRData(sale) {
-    var data = {
-      receipt: sale.receiptNumber || '',
-      store: 'OmoCreations',
-      total: safeNumber(sale.totalAmount, 0),
-      date: formatDate(sale.createdAt),
-      customer: sale.customerName || 'Walk-in',
-      website: 'https://omocreations.com.ng',
-      check: sale.id || sale._localId || ''
-    };
-    return JSON.stringify(data);
   }
 
   window.showReceiptModal = function(sale) {
@@ -4406,16 +3391,12 @@
     var isCompany = sale.isCompanySale;
     var isReturn = sale.isReturn || sale.returnAction;
     var hasBorrowed = (sale._borrowedItems && sale._borrowedItems.length > 0) || (sale.items && sale.items.some(function(it) { return it.borrowed || it.fullyBorrowed; }));
-    var isPromo = sale.isPromo || false;
-    var isBulk = sale.isBulk || false;
     
     var title = 'Sales Receipt';
     if (isExchange) title = 'Exchange Receipt';
     else if (isWholesale) title = 'Wholesale Receipt';
     else if (isCompany) title = 'Company Receipt';
     else if (isReturn) title = 'Return Receipt';
-    else if (isPromo) title = '🔥 Promo Receipt';
-    else if (isBulk) title = '📦 Bulk Receipt';
     
     var itemsHtml = '';
     
@@ -4426,7 +3407,7 @@
         var returnedCombined = combineItems(sale.returnedItems);
         returnedCombined.forEach(function(i) {
           var total = i.quantity * i.unitPrice;
-          itemsHtml += '<div class="receipt-item"><span class="item-name">↩ ' + i.quantity + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span class="item-price" style="color:#10b981;">+' + formatCurrency(total) + '</span></div>';
+          itemsHtml += '<div class="receipt-item"><span>↩ ' + i.quantity + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#10b981;">+' + formatCurrency(total) + '</span></div>';
         });
       }
       itemsHtml += '<div class="receipt-total" style="color:#10b981;border-top:1px dashed #10b981;"><span>Return Value:</span><span>' + formatCurrency(sale.totalRefund || sale.returnedValue || 0) + '</span></div>';
@@ -4438,7 +3419,7 @@
         var exchangeCombined = combineItems(sale.exchangeItems);
         exchangeCombined.forEach(function(i) {
           var total = i.quantity * i.unitPrice;
-          itemsHtml += '<div class="receipt-item"><span class="item-name">↪ ' + i.quantity + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span class="item-price">' + formatCurrency(total) + '</span></div>';
+          itemsHtml += '<div class="receipt-item"><span>↪ ' + i.quantity + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
         });
       }
       itemsHtml += '<div class="receipt-total" style="color:#ff4da6;border-top:1px dashed #ff4da6;"><span>Exchange Total:</span><span>' + formatCurrency(sale.exchangeTotal || 0) + '</span></div>';
@@ -4447,11 +3428,11 @@
       if (sale.difference && sale.difference > 0) {
         if (sale.differenceType === 'customer_pays') {
           itemsHtml += '<div style="margin-top:8px;padding:8px;background:rgba(99,102,241,0.08);border-radius:8px;">';
-          itemsHtml += '<div class="receipt-item"><span class="item-name"><strong>💰 Additional Payment (' + escapeHtml(sale.exchangePayment || sale.paymentMethod || 'Cash') + ')</strong></span><span class="item-price" style="color:#6366f1;"><strong>' + formatCurrency(sale.difference) + '</strong></span></div>';
+          itemsHtml += '<div class="receipt-item"><span><strong>💰 Additional Payment (' + escapeHtml(sale.exchangePayment || sale.paymentMethod || 'Cash') + ')</strong></span><span style="color:#6366f1;"><strong>' + formatCurrency(sale.difference) + '</strong></span></div>';
           itemsHtml += '</div>';
         } else if (sale.differenceType === 'refund_customer') {
           itemsHtml += '<div style="margin-top:8px;padding:8px;background:rgba(239,68,68,0.08);border-radius:8px;">';
-          itemsHtml += '<div class="receipt-item"><span class="item-name"><strong>💵 Refund to Customer (' + escapeHtml(sale.exchangePayment || sale.paymentMethod || 'Cash') + ')</strong></span><span class="item-price" style="color:#ef4444;"><strong>-' + formatCurrency(sale.difference) + '</strong></span></div>';
+          itemsHtml += '<div class="receipt-item"><span><strong>💵 Refund to Customer (' + escapeHtml(sale.exchangePayment || sale.paymentMethod || 'Cash') + ')</strong></span><span style="color:#ef4444;"><strong>-' + formatCurrency(sale.difference) + '</strong></span></div>';
           itemsHtml += '</div>';
         }
       }
@@ -4463,7 +3444,7 @@
         returnedCombined.forEach(function(i) {
           var total = i.quantity * i.unitPrice;
           var conditionBadge = i.condition ? ' <small style="color:var(--gray);">(' + i.condition + ')</small>' : '';
-          itemsHtml += '<div class="receipt-item"><span class="item-name">↩ ' + i.quantity + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + conditionBadge + '</span><span class="item-price" style="color:#ef4444;">-' + formatCurrency(total) + '</span></div>';
+          itemsHtml += '<div class="receipt-item"><span>↩ ' + i.quantity + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + conditionBadge + '</span><span style="color:#ef4444;">-' + formatCurrency(total) + '</span></div>';
         });
       }
       itemsHtml += '<div class="receipt-total" style="color:#ef4444;border-top:1px dashed #ef4444;"><span>Total Refund:</span><span>-' + formatCurrency(sale.totalRefund || 0) + '</span></div>';
@@ -4472,6 +3453,7 @@
       var actionLabels = { 'refund': '💵 Full Refund', 'exchange': '🔄 Exchanged', 'store_credit': '🏦 Store Credit', 'replace': '🔄 Replaced' };
       itemsHtml += '<div style="text-align:center;margin-top:8px;padding:6px;background:var(--primary-soft);border-radius:8px;font-size:0.8rem;font-weight:600;">Action: ' + (actionLabels[sale.returnAction] || escapeHtml(sale.returnAction || 'Return')) + '</div>';
     } else {
+      // ===== FIX: USE COMBINED ITEMS ON RECEIPT =====
       if (sale.items && sale.items.length > 0) {
         var displayItems = getDisplayItems(sale.items);
         displayItems.forEach(function(i) {
@@ -4479,27 +3461,14 @@
           var price = i.unitPrice || 0;
           var total = qty * price;
           var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
-          
-          var priceDisplay = '';
-          var extraBadge = '';
-          
-          if (i.isPromo && i.originalPrice && i.originalPrice !== price) {
-            priceDisplay = '<span style="text-decoration:line-through;color:var(--gray);font-size:0.7rem;">' + formatCurrency(i.originalPrice) + '</span> → ' + formatCurrency(price);
-            extraBadge = ' <span class="badge badge-promo">🔥 Promo</span>';
-          } else if (i.isBulk && i.originalPrice && i.originalPrice !== price) {
-            priceDisplay = '<span style="text-decoration:line-through;color:var(--gray);font-size:0.7rem;">' + formatCurrency(i.originalPrice) + '</span> → ' + formatCurrency(price);
-            extraBadge = ' <span class="badge badge-bulk">📦 Bulk</span>';
-          } else {
-            priceDisplay = formatCurrency(price);
-          }
-          
-          itemsHtml += '<div class="receipt-item"><span class="item-name">' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + extraBadge + '</span><span class="item-price">' + priceDisplay + '</span></div>';
+          // Clean receipt - no borrow badges for customer
+          itemsHtml += '<div class="receipt-item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
         });
       }
     }
     
     if (!itemsHtml) {
-      itemsHtml = '<div class="receipt-item"><span class="item-name">No items</span><span class="item-price">₦0</span></div>';
+      itemsHtml = '<div class="receipt-item"><span>No items</span><span>₦0</span></div>';
     }
     
     var extraInfo = '';
@@ -4518,56 +3487,7 @@
       }
     }
     
-    var promoInfo = '';
-    if (isPromo && sale.promoName) {
-      promoInfo += '<div style="background:var(--promo-light);padding:8px;border-radius:8px;margin:8px 0;text-align:center;">';
-      promoInfo += '<span style="font-weight:700;color:var(--promo);">🔥 ' + escapeHtml(sale.promoName) + '</span>';
-      if (sale.promoStartDate && sale.promoEndDate) {
-        promoInfo += '<br><span style="font-size:0.7rem;color:var(--gray);">Valid: ' + formatDate(sale.promoStartDate) + ' - ' + formatDate(sale.promoEndDate) + '</span>';
-      }
-      if (sale.promoCondition) {
-        promoInfo += '<br><span style="font-size:0.7rem;color:var(--gray);">' + escapeHtml(sale.promoCondition) + '</span>';
-      }
-      if (sale.originalTotal) {
-        promoInfo += '<br><span style="font-size:0.7rem;color:var(--gray);">Original: ' + formatCurrency(sale.originalTotal) + ' → Promo: ' + formatCurrency(sale.totalAmount) + '</span>';
-      }
-      promoInfo += '</div>';
-    }
-    
-    if (isBulk && sale.bulkName) {
-      promoInfo += '<div style="background:rgba(124,58,237,0.08);padding:8px;border-radius:8px;margin:8px 0;text-align:center;">';
-      promoInfo += '<span style="font-weight:700;color:#7c3aed;">📦 ' + escapeHtml(sale.bulkName) + '</span>';
-      if (sale.bulkStartDate && sale.bulkEndDate) {
-        promoInfo += '<br><span style="font-size:0.7rem;color:var(--gray);">Valid: ' + formatDate(sale.bulkStartDate) + ' - ' + formatDate(sale.bulkEndDate) + '</span>';
-      }
-      if (sale.bulkCondition) {
-        promoInfo += '<br><span style="font-size:0.7rem;color:var(--gray);">' + escapeHtml(sale.bulkCondition) + '</span>';
-      }
-      if (sale.bulkMinQty) {
-        promoInfo += '<br><span style="font-size:0.7rem;color:var(--gray);">Min: ' + sale.bulkMinQty + ' pieces | Pieces: ' + (sale.bulkTotalPieces || 0) + '</span>';
-      }
-      if (sale.originalTotal) {
-        promoInfo += '<br><span style="font-size:0.7rem;color:var(--gray);">Original: ' + formatCurrency(sale.originalTotal) + ' → Bulk: ' + formatCurrency(sale.totalAmount) + '</span>';
-      }
-      promoInfo += '</div>';
-    }
-    
-    // Payment details for split payments
-    var paymentDetailsHtml = '';
-    if (sale.paymentDetails) {
-      paymentDetailsHtml = '<div style="margin-top:8px;padding:8px;background:var(--gray-light);border-radius:8px;">';
-      paymentDetailsHtml += '<p style="font-weight:600;font-size:0.8rem;">Payment Breakdown:</p>';
-      if (sale.paymentDetails.cash) {
-        paymentDetailsHtml += '<div class="receipt-item"><span class="item-name">💵 Cash</span><span class="item-price">' + formatCurrency(sale.paymentDetails.cash) + '</span></div>';
-      }
-      if (sale.paymentDetails.transfer) {
-        paymentDetailsHtml += '<div class="receipt-item"><span class="item-name">🏦 Transfer</span><span class="item-price">' + formatCurrency(sale.paymentDetails.transfer) + '</span></div>';
-      }
-      if (sale.paymentDetails.POS) {
-        paymentDetailsHtml += '<div class="receipt-item"><span class="item-name">💳 POS</span><span class="item-price">' + formatCurrency(sale.paymentDetails.POS) + '</span></div>';
-      }
-      paymentDetailsHtml += '</div>';
-    }
+    var borrowInfo = '';
     
     var customerTypeBadge = '';
     if (sale._customerType === 'new') {
@@ -4600,9 +3520,6 @@
       dateDisplay = '<p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>';
     }
     
-    var qrData = generateQRData(sale);
-    var qrId = 'qr_' + Date.now();
-    
     showModal(title,
       '<div class="receipt-container">' +
         '<div class="receipt-header">' +
@@ -4615,75 +3532,30 @@
           dateDisplay +
           originalReceiptInfo +
           wholesaleInfo +
+          borrowInfo +
         '</div>' +
+        '' +
         '<p class="cust-info">' +
           '<strong>Customer:</strong> ' + escapeHtml(sale.customerName || 'Walk-in') + customerTypeBadge +
           (sale.customerPhone ? '<br><strong>Phone:</strong> ' + escapeHtml(sale.customerPhone) : '') +
           '<br><strong>Served by:</strong> ' + escapeHtml(sale.attendantName || 'Staff') +
         '</p>' +
         extraInfo +
-        promoInfo +
         '<div class="receipt-items">' + itemsHtml + '</div>' +
-        paymentDetailsHtml +
         (isExchange ? '' : (isReturn ? '' : '<div class="receipt-total"><span>Total:</span><span>' + formatCurrency(displayTotal) + '</span></div>')) +
-        '<div class="receipt-qr" id="' + qrId + '"></div>' +
-        '<div class="receipt-website">' +
-          'Scan to verify receipt<br>' +
-          '<strong>Visit: <a href="https://omocreations.com.ng" target="_blank" style="color:var(--primary);text-decoration:none;">omocreations.com.ng</a></strong>' +
-        '</div>' +
         '<p class="thanks">Thank you for your patronage!</p>' +
       '</div>' +
-      '<div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">' +
+      '<div style="display:flex;gap:10px;margin-top:20px;">' +
         '<button class="btn btn-primary" onclick="printReceiptModal(\'' + receiptIdentifier + '\')" style="flex:1;"><i class="fas fa-print"></i> Print</button>' +
         '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>' +
       '</div>'
     );
     
-    // Generate QR code after modal is shown
-    setTimeout(function() {
-      var qrContainer = safeGetEl(qrId);
-      if (qrContainer && typeof QRCode !== 'undefined') {
-        try {
-          new QRCode(qrContainer, {
-            text: qrData,
-            width: 120,
-            height: 120,
-            colorDark: '#1a1a2e',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H
-          });
-        } catch (e) {
-          console.warn('QR generation failed:', e);
-          qrContainer.innerHTML = '<span style="font-size:0.7rem;color:var(--gray);">QR unavailable</span>';
-        }
-      } else if (qrContainer) {
-        qrContainer.innerHTML = '<span style="font-size:0.7rem;color:var(--gray);">QR code library loading...</span>';
-        // Fallback: try loading QRCode from CDN
-        var script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js';
-        script.onload = function() {
-          try {
-            new QRCode(qrContainer, {
-              text: qrData,
-              width: 120,
-              height: 120,
-              colorDark: '#1a1a2e',
-              colorLight: '#ffffff',
-              correctLevel: QRCode.CorrectLevel.H
-            });
-          } catch (e) {
-            qrContainer.innerHTML = '<span style="font-size:0.7rem;color:var(--gray);">QR unavailable</span>';
-          }
-        };
-        document.head.appendChild(script);
-      }
-    }, 500);
-    
     currentModalType = prevModalType;
   };
 
   // ============================================
-  // COMPANY RECORD VIEW
+  // COMPANY RECORD VIEW - Shows stock sources
   // ============================================
   window.viewCompanyRecord = function(id) {
     var s = findSaleByIdentifier(id);
@@ -4813,7 +3685,7 @@
         '<div class="receipt-total"><span>Total:</span><span>' + formatCurrency(safeNumber(s.totalAmount, 0)) + '</span></div>' +
       '</div>' +
       borrowSummaryHtml +
-      '<div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">' +
+      '<div style="display:flex;gap:10px;margin-top:20px;">' +
         '<button class="btn btn-primary" onclick="printCompanyRecord(\'' + (s.id || s._localId || '') + '\')" style="flex:1;"><i class="fas fa-print"></i> Print Record</button>' +
         '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>' +
       '</div>'
@@ -4933,7 +3805,7 @@
   };
 
   // ============================================
-  // PRINT RECEIPT - WITH QR CODE
+  // PRINT RECEIPT - FIXED: COMBINE ITEMS
   // ============================================
   window.printReceipt = function(id) {
     var s = findSaleByIdentifier(id);
@@ -4950,8 +3822,6 @@
     var isReturn = s.isReturn || s.returnAction;
     var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
     var isCompany = s.isCompanySale;
-    var isPromo = s.isPromo || false;
-    var isBulk = s.isBulk || false;
     
     var itemsHtml = '';
     
@@ -4962,7 +3832,7 @@
         returnedCombined.forEach(function(i) {
           var qty = i.quantity || 1;
           var total = qty * (i.unitPrice || 0);
-          itemsHtml += '<div class="item"><span class="item-name">↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span class="item-price" style="color:#10b981;">+' + formatCurrency(total) + '</span></div>';
+          itemsHtml += '<div class="item"><span>↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#10b981;">+' + formatCurrency(total) + '</span></div>';
         });
       }
       itemsHtml += '<div class="total" style="color:#10b981;">Return Value: ' + formatCurrency(s.totalRefund || s.returnedValue || 0) + '</div>';
@@ -4973,16 +3843,16 @@
         exchangeCombined.forEach(function(i) {
           var qty = i.quantity || 1;
           var total = qty * (i.unitPrice || 0);
-          itemsHtml += '<div class="item"><span class="item-name">↪ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span class="item-price">' + formatCurrency(total) + '</span></div>';
+          itemsHtml += '<div class="item"><span>↪ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
         });
       }
       itemsHtml += '<div class="total" style="color:#ff4da6;">Exchange Total: ' + formatCurrency(s.exchangeTotal || 0) + '</div>';
       
       if (s.difference > 0) {
         if (s.differenceType === 'customer_pays') {
-          itemsHtml += '<div class="item" style="font-weight:bold;"><span class="item-name">Additional Payment (' + escapeHtml(s.exchangePayment || s.paymentMethod || 'Cash') + ')</span><span class="item-price">' + formatCurrency(s.difference) + '</span></div>';
+          itemsHtml += '<div class="item" style="font-weight:bold;"><span>Additional Payment (' + escapeHtml(s.exchangePayment || s.paymentMethod || 'Cash') + ')</span><span>' + formatCurrency(s.difference) + '</span></div>';
         } else if (s.differenceType === 'refund_customer') {
-          itemsHtml += '<div class="item" style="font-weight:bold;color:#ef4444;"><span class="item-name">Refund to Customer</span><span class="item-price">-' + formatCurrency(s.difference) + '</span></div>';
+          itemsHtml += '<div class="item" style="font-weight:bold;color:#ef4444;"><span>Refund to Customer</span><span>-' + formatCurrency(s.difference) + '</span></div>';
         }
       }
     } else if (isReturn) {
@@ -4992,7 +3862,7 @@
         returnedCombined.forEach(function(i) {
           var qty = i.quantity || 1;
           var total = qty * (i.unitPrice || 0);
-          itemsHtml += '<div class="item"><span class="item-name">↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span class="item-price" style="color:#ef4444;">-' + formatCurrency(total) + '</span></div>';
+          itemsHtml += '<div class="item"><span>↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#ef4444;">-' + formatCurrency(total) + '</span></div>';
         });
       }
       itemsHtml += '<div class="total" style="color:#ef4444;">Total Refund: -' + formatCurrency(s.totalRefund || 0) + '</div>';
@@ -5000,48 +3870,17 @@
       var actionLabels = { 'refund': 'Full Refund', 'exchange': 'Exchanged', 'store_credit': 'Store Credit', 'replace': 'Replaced' };
       itemsHtml += '<div style="text-align:center;margin-top:4px;font-weight:bold;">Action: ' + (actionLabels[s.returnAction] || escapeHtml(s.returnAction || 'Return')) + '</div>';
     } else {
+      // ===== FIX: USE COMBINED ITEMS =====
       if (s.items) {
         var combinedItems = combineItems(s.items);
         combinedItems.sort(function(a, b) { return a.name.localeCompare(b.name); });
         combinedItems.forEach(function(i) {
           var qty = i.quantity || 1;
-          var price = i.unitPrice || 0;
-          var total = qty * price;
+          var total = qty * (i.unitPrice || 0);
           var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
-          
-          var priceDisplay = '';
-          var extraBadge = '';
-          
-          if (i.isPromo && i.originalPrice && i.originalPrice !== price) {
-            priceDisplay = '<span style="text-decoration:line-through;color:var(--gray);font-size:7pt;">' + formatCurrency(i.originalPrice) + '</span> → ' + formatCurrency(price);
-            extraBadge = ' 🔥';
-          } else if (i.isBulk && i.originalPrice && i.originalPrice !== price) {
-            priceDisplay = '<span style="text-decoration:line-through;color:var(--gray);font-size:7pt;">' + formatCurrency(i.originalPrice) + '</span> → ' + formatCurrency(price);
-            extraBadge = ' 📦';
-          } else {
-            priceDisplay = formatCurrency(price);
-          }
-          
-          itemsHtml += '<div class="item"><span class="item-name">' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + extraBadge + '</span><span class="item-price">' + priceDisplay + '</span></div>';
+          itemsHtml += '<div class="item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
         });
       }
-    }
-    
-    // Payment details for split payments
-    var paymentDetailsHtml = '';
-    if (s.paymentDetails) {
-      paymentDetailsHtml = '<div style="margin-top:4px;border-top:1px dashed #ccc;padding-top:4px;">';
-      paymentDetailsHtml += '<div style="font-weight:bold;font-size:8pt;">Payment Breakdown:</div>';
-      if (s.paymentDetails.cash) {
-        paymentDetailsHtml += '<div class="item"><span class="item-name">💵 Cash</span><span class="item-price">' + formatCurrency(s.paymentDetails.cash) + '</span></div>';
-      }
-      if (s.paymentDetails.transfer) {
-        paymentDetailsHtml += '<div class="item"><span class="item-name">🏦 Transfer</span><span class="item-price">' + formatCurrency(s.paymentDetails.transfer) + '</span></div>';
-      }
-      if (s.paymentDetails.POS) {
-        paymentDetailsHtml += '<div class="item"><span class="item-name">💳 POS</span><span class="item-price">' + formatCurrency(s.paymentDetails.POS) + '</span></div>';
-      }
-      paymentDetailsHtml += '</div>';
     }
     
     var displayTotal = 0;
@@ -5059,23 +3898,7 @@
       wholesaleInfo = '<p class="rec">Pack Size: ' + (s.wholesalePackSize || 50) + ' pcs | Sold: ' + (s.totalPieces || 0) + ' pcs</p>';
     }
     
-    var promoInfo = '';
-    if (isPromo && s.promoName) {
-      promoInfo = '<div style="text-align:center;font-size:7pt;color:#7c3aed;padding:4px;background:#ede9fe;border-radius:4px;margin:4px 0;">' +
-        '🔥 ' + escapeHtml(s.promoName) +
-        (s.promoStartDate && s.promoEndDate ? ' | ' + formatDate(s.promoStartDate) + ' - ' + formatDate(s.promoEndDate) : '') +
-        (s.promoCondition ? ' | ' + escapeHtml(s.promoCondition) : '') +
-        '</div>';
-    }
-    
-    if (isBulk && s.bulkName) {
-      promoInfo = '<div style="text-align:center;font-size:7pt;color:#7c3aed;padding:4px;background:rgba(124,58,237,0.08);border-radius:4px;margin:4px 0;">' +
-        '📦 ' + escapeHtml(s.bulkName) +
-        (s.bulkStartDate && s.bulkEndDate ? ' | ' + formatDate(s.bulkStartDate) + ' - ' + formatDate(s.bulkEndDate) : '') +
-        (s.bulkCondition ? ' | ' + escapeHtml(s.bulkCondition) : '') +
-        (s.bulkMinQty ? ' | Min: ' + s.bulkMinQty + ' pcs' : '') +
-        '</div>';
-    }
+    var borrowInfo = '';
     
     var originalReceiptInfo = '';
     if (s.originalReceiptNumber) {
@@ -5090,32 +3913,15 @@
       dateDisplay = '<p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>';
     }
     
-    var qrData = generateQRData(s);
-    
-    // We'll use a placeholder for QR in print - actual QR will be generated by the print window with canvas
-    var qrHtml = '<div style="text-align:center;margin:6px 0;" id="qrPrintPlaceholder">';
-    qrHtml += '<div style="display:inline-block;padding:4px;background:#fff;border:1px solid #ddd;border-radius:4px;">';
-    qrHtml += '<canvas id="qrPrintCanvas" width="100" height="100"></canvas>';
-    qrHtml += '</div>';
-    qrHtml += '<div style="font-size:6pt;color:#666;">Scan to verify receipt</div>';
-    qrHtml += '</div>';
-    
     var receiptHTML = '<html><head><title>Receipt #' + (s.receiptNumber||'') + '</title>' +
-      '<style>@page{margin:0;size:80mm auto}*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Segoe UI",Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:9pt;line-height:1.3;color:#000}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:7pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item .item-name{flex:1;padding-right:8px}.item .item-price{text-align:right;min-width:55px;white-space:nowrap}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}.website{text-align:center;font-size:6pt;color:#666;margin-top:2px}.website a{color:#666;text-decoration:none}</style>' +
+      '<style>@page{margin:0;size:80mm auto}*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Segoe UI",Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3;color:#000}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:7pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1;padding-right:8px}.item span:last-child{text-align:right;min-width:55px;white-space:nowrap}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style>' +
       '</head><body>' +
-      '<div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#' + escapeHtml(s.receiptNumber||'N/A') + '</p>' + dateDisplay + originalReceiptInfo + wholesaleInfo + '</div>' +
+      '<div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#' + escapeHtml(s.receiptNumber||'N/A') + '</p>' + dateDisplay + originalReceiptInfo + wholesaleInfo + borrowInfo + '</div>' +
       '<p class="cust">Customer: ' + escapeHtml(s.customerName||'Walk-in') + (s.customerPhone ? '<br>Phone: ' + escapeHtml(s.customerPhone) : '') + '<br>Served by: ' + escapeHtml(s.attendantName||'Staff') + '</p>' +
       companyInfo +
-      promoInfo +
       '<div class="items">' + itemsHtml + '</div>' +
-      paymentDetailsHtml +
       (isExchange ? '' : (isReturn ? '' : '<div class="total">Total: ' + formatCurrency(displayTotal) + '</div>')) +
-      qrHtml +
-      '<div class="website">Scan to verify receipt<br>Visit: <a href="https://omocreations.com.ng">omocreations.com.ng</a></div>' +
       '<p class="thanks">Thank you for your patronage!</p>' +
-      '<script>' +
-      'try { var QRCode = window.parent.QRCode; if (QRCode) { new QRCode(document.getElementById("qrPrintCanvas"), { text: "' + qrData.replace(/"/g, '\\"') + '", width: 100, height: 100, colorDark: "#1a1a2e", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H }); } } catch(e) { console.warn("QR print error:", e); }' +
-      '<\/script>' +
       '</body></html>';
     
     try {
@@ -5153,8 +3959,6 @@
         totalAmount: displayTotal,
         paymentMethod: s.paymentMethod || 'unknown',
         saleType: isExchange ? 'exchange' : (isReturn ? 'return' : (s._type || 'regular')),
-        isPromo: isPromo,
-        isBulk: isBulk,
         printedBy: userData ? userData.fullName : 'Staff',
         printedAt: new Date().toISOString()
       });
@@ -5191,7 +3995,7 @@
   // EXPORT & REFRESH
   // ============================================
   window.exportSalesData = function() {
-    var headers = ['Receipt #', 'Date', 'Customer', 'Phone', 'Items', 'Total', 'Payment', 'Type', 'Customer Type', 'Status', 'Attendant', 'Promo', 'Bulk'];
+    var headers = ['Receipt #', 'Date', 'Customer', 'Phone', 'Items', 'Total', 'Payment', 'Type', 'Customer Type', 'Status', 'Attendant'];
     var rows = allSales.map(function(s) { 
       var createdAtStr = '';
       if (s.createdAt) {
@@ -5209,9 +4013,7 @@
         s.paymentMethod||'', 
         s._customerType||'walk-in',
         s.status||'completed',
-        s.attendantName||'',
-        s.isPromo ? 'Yes' : 'No',
-        s.isBulk ? 'Yes' : 'No'
+        s.attendantName||''
       ]; 
     });
     var csv = [headers.join(','), ...rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g,'""') + '"'; }).join(','); })].join('\n');
