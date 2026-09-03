@@ -137,7 +137,7 @@
     .pl-row.grand-total { font-weight:800; font-size:1.2rem; border-bottom:none; color:var(--dark); }
     .pl-section-title { font-weight:700; color:var(--primary); font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; padding-top:16px; }
 
-    .revenue-breakdown { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-top:15px; }
+    .revenue-breakdown { display:grid; grid-template-columns:repeat(6,1fr); gap:16px; margin-top:15px; }
     .breakdown-item { text-align:center; padding:15px; background:var(--gray-light); border-radius:14px; transition:all 0.3s; }
     .breakdown-item:hover { transform:translateY(-3px); background:var(--primary-soft); }
     .breakdown-item i { font-size:1.5rem; color:var(--primary); margin-bottom:8px; }
@@ -149,11 +149,14 @@
     .data-table th { text-align:left; padding:14px 10px; font-size:0.7rem; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(--primary-soft); white-space:nowrap; background:white; }
     .data-table td { padding:14px 10px; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
     .data-table tbody tr { transition:background 0.2s; } .data-table tbody tr:hover { background:var(--primary-soft); }
+    .data-table tbody tr.clickable-month { cursor:pointer; }
+    .data-table tbody tr.clickable-month:hover { background:var(--primary-soft); box-shadow:inset 0 0 0 2px var(--primary); }
 
     .badge { padding:5px 12px; border-radius:40px; font-size:0.7rem; font-weight:600; display:inline-block; white-space:nowrap; }
     .badge-success { background:rgba(16,185,129,0.1); color:var(--success); } .badge-danger { background:rgba(239,68,68,0.1); color:var(--danger); }
     .badge-warning { background:rgba(245,158,11,0.1); color:var(--warning); } .badge-info { background:rgba(59,130,246,0.1); color:var(--info); }
     .badge-purple { background:rgba(139,92,246,0.1); color:var(--purple); }
+    .badge-promo { background:rgba(139,92,246,0.15); color:#7c3aed; }
 
     .text-positive { color:var(--success); font-weight:700; } .text-negative { color:var(--danger); font-weight:700; }
 
@@ -175,7 +178,7 @@
 
     .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:2000; padding:16px; }
     .modal-overlay.active { display:flex; }
-    .modal { background:white; border-radius:28px; padding:28px; max-width:600px; width:100%; max-height:85vh; overflow-y:auto; animation:fadeInUp 0.3s ease; }
+    .modal { background:white; border-radius:28px; padding:28px; max-width:750px; width:100%; max-height:85vh; overflow-y:auto; animation:fadeInUp 0.3s ease; }
     .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
     .modal-header h3 { font-size:1.2rem; font-weight:700; }
     .modal-close { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--gray); padding:5px; transition:all 0.2s; }
@@ -185,6 +188,20 @@
     .form-control { width:100%; padding:12px 16px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; font-size:0.9rem; outline:none; background:white; font-family:'Poppins',sans-serif; transition:border 0.2s; }
     .form-control:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(255,77,166,0.1); }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+    .month-detail-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:20px; }
+    .month-detail-card { background:var(--gray-light); padding:16px; border-radius:16px; text-align:center; }
+    .month-detail-card .value { font-size:1.6rem; font-weight:800; color:var(--dark); }
+    .month-detail-card .label { font-size:0.7rem; color:var(--gray); margin-top:4px; }
+
+    /* Payment method breakdown cards */
+    .payment-breakdown { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-top:15px; }
+    .payment-item { text-align:center; padding:15px; background:var(--gray-light); border-radius:14px; transition:all 0.3s; }
+    .payment-item:hover { transform:translateY(-3px); background:var(--primary-soft); }
+    .payment-item i { font-size:1.5rem; color:var(--primary); margin-bottom:8px; }
+    .payment-item h4 { font-size:0.8rem; color:var(--gray); margin-bottom:5px; }
+    .payment-item p { font-size:1.2rem; font-weight:700; color:var(--dark); }
+    .payment-item .count { font-size:0.7rem; color:var(--gray); }
 
     .export-dropdown { position:relative; display:inline-block; }
     .export-menu { position:absolute; top:100%; right:0; background:white; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); min-width:200px; display:none; z-index:50; overflow:hidden; }
@@ -197,7 +214,10 @@
     .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); }
     .toast i { font-size:1.1rem; }
 
-    @media (max-width:1400px) { .stats-grid,.ratios-grid { grid-template-columns:repeat(3,1fr); } .revenue-breakdown { grid-template-columns:repeat(3,1fr); } }
+    .empty-state { text-align:center; padding:30px 20px; color:var(--gray); }
+    .empty-state i { font-size:2rem; color:var(--primary-light); margin-bottom:8px; display:block; }
+
+    @media (max-width:1400px) { .stats-grid,.ratios-grid { grid-template-columns:repeat(3,1fr); } .revenue-breakdown { grid-template-columns:repeat(3,1fr); } .payment-breakdown { grid-template-columns:repeat(3,1fr); } .month-detail-grid { grid-template-columns:1fr 1fr; } }
     @media (max-width:1100px) { .stats-grid,.ratios-grid { grid-template-columns:repeat(2,1fr); } .charts-row { grid-template-columns:1fr; } }
     @media (max-width:768px) {
       .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; }
@@ -210,10 +230,11 @@
       .panel,.pl-statement { padding:16px 12px; border-radius:18px; }
       .data-table { min-width:700px; } .data-table th,.data-table td { padding:10px 6px; font-size:0.75rem; }
       .modal { padding:20px; border-radius:20px; } .form-row { grid-template-columns:1fr; }
-      .revenue-breakdown { grid-template-columns:1fr 1fr; } .date-filter-bar { gap:4px; padding:10px; }
+      .revenue-breakdown { grid-template-columns:1fr 1fr; } .payment-breakdown { grid-template-columns:1fr 1fr; } .date-filter-bar { gap:4px; padding:10px; }
       .date-filter-btn { padding:6px 10px; font-size:0.7rem; }
+      .month-detail-grid { grid-template-columns:1fr 1fr; }
     }
-    @media (max-width:480px) { .stats-grid,.ratios-grid { grid-template-columns:1fr; } .content-wrapper { padding:12px 8px; } .revenue-breakdown { grid-template-columns:1fr; } }
+    @media (max-width:480px) { .stats-grid,.ratios-grid { grid-template-columns:1fr; } .content-wrapper { padding:12px 8px; } .revenue-breakdown,.payment-breakdown { grid-template-columns:1fr; } .month-detail-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -323,6 +344,18 @@
       </div>
     </div>
 
+    <!-- Payment Method Breakdown (NEW) -->
+    <div class="panel">
+      <div class="panel-header"><h3><i class="fas fa-credit-card"></i> Payment Method Breakdown</h3></div>
+      <div class="payment-breakdown" id="paymentBreakdown">
+        <div class="payment-item" style="background:rgba(16,185,129,0.05);"><i class="fas fa-money-bill-wave" style="color:var(--success);"></i><h4>💵 Cash</h4><p id="payCashAmt" style="color:var(--success);">₦0</p><div class="count" id="payCashCount">0 transactions</div></div>
+        <div class="payment-item" style="background:rgba(59,130,246,0.05);"><i class="fas fa-university" style="color:var(--info);"></i><h4>🏦 Transfer</h4><p id="payTransferAmt" style="color:var(--info);">₦0</p><div class="count" id="payTransferCount">0 transactions</div></div>
+        <div class="payment-item" style="background:rgba(139,92,246,0.05);"><i class="fas fa-credit-card" style="color:var(--purple);"></i><h4>💳 POS</h4><p id="payPosAmt" style="color:var(--purple);">₦0</p><div class="count" id="payPosCount">0 transactions</div></div>
+        <div class="payment-item" style="background:rgba(245,158,11,0.05);"><i class="fas fa-arrow-right-arrow-left" style="color:var(--warning);"></i><h4>💵+🏦 Cash &amp; Transfer</h4><p id="payCashTransferAmt" style="color:var(--warning);">₦0</p><div class="count" id="payCashTransferCount">0 transactions</div></div>
+        <div class="payment-item" style="background:rgba(239,68,68,0.05);"><i class="fas fa-arrow-right-arrow-left" style="color:var(--danger);"></i><h4>💵+💳 Cash &amp; POS</h4><p id="payCashPosAmt" style="color:var(--danger);">₦0</p><div class="count" id="payCashPosCount">0 transactions</div></div>
+      </div>
+    </div>
+
     <!-- P&L Statement -->
     <div class="pl-statement">
       <div class="panel-header"><h3><i class="fas fa-file-invoice"></i> Profit & Loss Statement</h3></div>
@@ -331,6 +364,7 @@
       <div class="pl-row indent"><span>Wholesale Sales</span><span id="plWholesaleSales">₦0</span></div>
       <div class="pl-row indent"><span>Company Sales</span><span id="plCompanySales">₦0</span></div>
       <div class="pl-row indent"><span>Exchange Sales (New)</span><span id="plExchangeSales">₦0</span></div>
+      <div class="pl-row indent"><span><span class="badge badge-promo">🔥</span> Promo Sales</span><span id="plPromoSales" style="color:#7c3aed;">₦0</span></div>
       <div class="pl-row total"><span>Gross Revenue</span><span id="plGrossRevenue">₦0</span></div>
       <div class="pl-section-title">DEDUCTIONS</div>
       <div class="pl-row indent"><span>Refunds</span><span id="plRefunds" style="color:var(--danger);">₦0</span></div>
@@ -363,6 +397,7 @@
       <div class="breakdown-item"><i class="fas fa-store-alt"></i><h4>Wholesale</h4><p id="wholesaleRev">₦0</p></div>
       <div class="breakdown-item"><i class="fas fa-building"></i><h4>Company Sales</h4><p id="companyRev">₦0</p></div>
       <div class="breakdown-item"><i class="fas fa-exchange-alt"></i><h4>Exchange Sales</h4><p id="exchangeRev">₦0</p></div>
+      <div class="breakdown-item" style="background:rgba(139,92,246,0.08);"><i class="fas fa-tags" style="color:#7c3aed;"></i><h4>Promo Sales</h4><p id="promoRev" style="color:#7c3aed;">₦0</p></div>
     </div></div>
 
     <!-- Returns & Exchanges Summary -->
@@ -397,8 +432,22 @@
 
     <div id="miscPanel" class="page-view"><div class="panel"><div class="panel-header"><h3><i class="fas fa-receipt"></i> Miscellaneous Expenses</h3><button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()"><i class="fas fa-plus"></i> Add Expense</button></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Expense Name</th><th>Category</th><th>Amount</th><th>Issued By</th><th>Bought By</th><th>Status</th><th>Actions</th></tr></thead><tbody id="miscTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div></div>
 
-    <!-- Monthly Comparison -->
-    <div class="panel"><div class="panel-header"><h3><i class="fas fa-calendar-alt"></i> Monthly Comparison</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Month</th><th>Gross Revenue</th><th>Refunds</th><th>Net Revenue</th><th>Wholesale</th><th>Company</th><th>Inv. Purch.</th><th>Store Purch.</th><th>Salaries</th><th>Misc</th><th>Total Exp.</th><th>Profit</th><th>vs Prev</th></tr></thead><tbody id="monthlyTable"><tr><td colspan="13"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody></table></div></div>
+    <!-- Monthly Comparison - Clickable Rows -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3><i class="fas fa-calendar-alt"></i> Monthly Comparison <span style="font-size:0.7rem;color:var(--gray);font-weight:400;">(Click any month for detailed analysis)</span></h3>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr><th>Month</th><th>Gross Revenue</th><th>Refunds</th><th>Net Revenue</th><th>Wholesale</th><th>Company</th><th>Promo</th><th>Inv. Purch.</th><th>Store Purch.</th><th>Salaries</th><th>Misc</th><th>Total Exp.</th><th>Profit</th><th>vs Prev</th><th style="width:60px;">Details</th></tr>
+          </thead>
+          <tbody id="monthlyTable">
+            <tr><td colspan="14"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
   </div>
 </main>
@@ -417,13 +466,14 @@
   let currentUser = null, userData = null, unsubscribes = [];
   let globalPointValue = 500, currentTab = 'salary';
   let barChart = null, pieChart = null;
-  let allUsers = [], allSales = [], allPurchases = [], allStorePurchases = [], allWholesaleSales = [], allMiscExpenses = [], allReturns = [], allStockItems = [], allStoreCredits = [];
+  let allUsers = [], allSales = [], allPurchases = [], allStorePurchases = [], allWholesaleSales = [], allPromoSales = [], allMiscExpenses = [], allReturns = [], allStockItems = [], allStoreCredits = [];
   let includeAdminSalary = false;
   let selectedRange = 'mtd', customStartDate = null, customEndDate = null;
-  let filteredSales = [], filteredWholesale = [], filteredPurchases = [], filteredStorePurchases = [], filteredMisc = [], filteredReturns = [], filteredStoreCredits = [];
+  let filteredSales = [], filteredWholesale = [], filteredPromoSales = [], filteredPurchases = [], filteredStorePurchases = [], filteredMisc = [], filteredReturns = [], filteredStoreCredits = [];
 
   function formatCurrency(n) { return '₦' + (n || 0).toLocaleString(); }
   function formatDate(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
+  function formatDateFull(d) { if (!d) return '-'; const date = d.toDate ? d.toDate() : new Date(d); return date.toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' }); }
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
   function safeNumber(val, fallback) { fallback = fallback || 0; if (typeof val === 'number') return val; const parsed = parseFloat(val); return isNaN(parsed) ? fallback : parsed; }
@@ -490,6 +540,7 @@
     const { start, end } = getDateRange();
     filteredSales = allSales.filter(s => { const d = s.createdAt?.toDate(); return d && d >= start && d <= end && s.status !== 'returned'; });
     filteredWholesale = allWholesaleSales.filter(s => { const d = s.createdAt?.toDate(); return d && d >= start && d <= end; });
+    filteredPromoSales = allPromoSales.filter(s => { const d = s.createdAt?.toDate(); return d && d >= start && d <= end && s.status !== 'returned'; });
     filteredPurchases = allPurchases.filter(p => { const d = p.purchasedAt?.toDate(); return d && d >= start && d <= end; });
     filteredStorePurchases = allStorePurchases.filter(p => { const d = p.date?.toDate(); return d && d >= start && d <= end; });
     filteredMisc = allMiscExpenses.filter(e => { const d = e.approvedAt?.toDate() || e.createdAt?.toDate(); return d && d >= start && d <= end; });
@@ -526,6 +577,7 @@
     unsubscribes.push(onSnapshot(collection(db, 'purchase_requests'), (snap) => { allPurchases = snap.docs.map(d=>({id:d.id,...d.data()})); applyDateFilter(); renderAll(); }));
     unsubscribes.push(onSnapshot(collection(db, 'store_purchases'), (snap) => { allStorePurchases = snap.docs.map(d=>({id:d.id,...d.data()})); applyDateFilter(); renderAll(); }));
     unsubscribes.push(onSnapshot(collection(db, 'wholesale_sales'), (snap) => { allWholesaleSales = snap.docs.map(d=>({id:d.id,...d.data()})); applyDateFilter(); renderAll(); }));
+    unsubscribes.push(onSnapshot(collection(db, 'promo_sales'), (snap) => { allPromoSales = snap.docs.map(d=>({id:d.id,...d.data()})); applyDateFilter(); renderAll(); }));
     unsubscribes.push(onSnapshot(query(collection(db, 'misc_expenses'), orderBy('createdAt','desc')), (snap) => { allMiscExpenses = snap.docs.map(d=>({id:d.id,...d.data()})); applyDateFilter(); renderAll(); }));
     unsubscribes.push(onSnapshot(collection(db, 'returns'), (snap) => { allReturns = snap.docs.map(d=>({id:d.id,...d.data()})); applyDateFilter(); renderAll(); }));
     unsubscribes.push(onSnapshot(collection(db, 'stock_items'), (snap) => { allStockItems = snap.docs.map(d=>({id:d.id,...d.data()})); renderAll(); }));
@@ -533,19 +585,18 @@
   }
 
   function renderAll() {
-    loadPointValue().then(() => { updateToggleUI(); renderStats(); renderRatios(); renderCashFlow(); renderPLStatement(); renderCharts(); renderRevenueBreakdown(); renderReturnsSummary(); renderTopItems(); renderPointPayrollTable(); renderSalaryTable(); renderPurchasesTable(); renderMiscTable(); renderMonthlyComparison(); });
+    loadPointValue().then(() => { updateToggleUI(); renderStats(); renderRatios(); renderCashFlow(); renderPLStatement(); renderCharts(); renderRevenueBreakdown(); renderPaymentBreakdown(); renderReturnsSummary(); renderTopItems(); renderPointPayrollTable(); renderSalaryTable(); renderPurchasesTable(); renderMiscTable(); renderMonthlyComparison(); });
   }
 
   // ============================================
-  // ENHANCED: Now accounts for returns, exchanges, store credits
+  // DATA AGGREGATION (includes promo)
   // ============================================
   function getFilteredData() {
     const totalPayroll = getTotalPayroll();
     const totalBaseSalaries = getTotalBaseSalaries();
     const totalPointBonus = getTotalPointBonus();
     
-    // Gross Revenue (before deductions)
-    let grossRevenue = 0, wholesale = 0, companySales = 0, retailRevenue = 0, exchangeSales = 0;
+    let grossRevenue = 0, wholesale = 0, companySales = 0, retailRevenue = 0, exchangeSales = 0, promoSales = 0;
     
     filteredSales.forEach(s => {
       const amt = safeNumber(s.totalAmount, 0);
@@ -565,36 +616,33 @@
       grossRevenue += amt;
     });
     
-    // Returns & Exchanges deductions
+    filteredPromoSales.forEach(s => {
+      const amt = safeNumber(s.totalAmount, 0);
+      promoSales += amt;
+      grossRevenue += amt;
+    });
+    
     let totalRefunds = 0, exchangeRefundsToCustomer = 0, exchangeDiffPaidByCustomer = 0;
     
     filteredReturns.forEach(r => {
       if (r.returnAction === 'refund') {
         totalRefunds += safeNumber(r.totalRefund, 0);
       } else if (r.returnAction === 'exchange') {
-        // Exchange difference that was refunded to customer
         if (r.differenceType === 'refund_customer') {
           exchangeRefundsToCustomer += safeNumber(r.difference, 0);
         }
-        // Exchange difference paid by customer (additional revenue)
         if (r.differenceType === 'customer_pays') {
           exchangeDiffPaidByCustomer += safeNumber(r.difference, 0);
         }
-        // The returned value reduces revenue
         totalRefunds += safeNumber(r.totalRefund || r.returnedValue, 0);
       } else if (r.returnAction === 'store_credit') {
-        // Store credits are a liability, not immediate cash out
         totalRefunds += safeNumber(r.totalRefund, 0);
       }
     });
     
-    // Add exchange difference paid by customer to gross revenue
     grossRevenue += exchangeDiffPaidByCustomer;
-    
-    // Net Revenue
     const netRevenue = grossRevenue - totalRefunds - exchangeRefundsToCustomer;
     
-    // Purchases
     let purchases = 0;
     filteredPurchases.forEach(p => {
       if (p.status === 'purchased') {
@@ -605,24 +653,19 @@
     let storePurchases = 0;
     filteredStorePurchases.forEach(p => { storePurchases += safeNumber(p.totalCost, 0); });
     
-    // Misc expenses
     let misc = 0;
     filteredMisc.forEach(e => { if (e.status === 'approved') misc += safeNumber(e.amount, 0); });
     
-    // Active store credits (liability)
     let activeStoreCredits = 0;
     filteredStoreCredits.forEach(c => { activeStoreCredits += safeNumber(c.amount, 0); });
     
-    // Total Expenses
     const totalCOGS = purchases + storePurchases;
     const totalOpEx = totalPayroll + misc;
     const totalExpenses = totalCOGS + totalOpEx;
-    
-    // Net Profit (based on net revenue after all deductions)
     const netProfit = netRevenue - totalExpenses;
     
     return {
-      grossRevenue, netRevenue, wholesale, companySales, retailRevenue, exchangeSales,
+      grossRevenue, netRevenue, wholesale, companySales, retailRevenue, exchangeSales, promoSales,
       totalRefunds, exchangeRefundsToCustomer, exchangeDiffPaidByCustomer,
       purchases, storePurchases, misc, totalCOGS, totalOpEx, totalExpenses,
       totalPayroll, totalBaseSalaries, totalPointBonus,
@@ -630,13 +673,313 @@
     };
   }
 
+  // ============================================
+  // PAYMENT BREAKDOWN (NEW)
+  // ============================================
+  function getPaymentBreakdown() {
+    // Aggregate all sales: filteredSales, filteredWholesale, filteredPromoSales
+    const allSalesCombined = [...filteredSales, ...filteredWholesale, ...filteredPromoSales];
+    const breakdown = {
+      cash: { amount: 0, count: 0 },
+      transfer: { amount: 0, count: 0 },
+      pos: { amount: 0, count: 0 },
+      cash_transfer: { amount: 0, count: 0 },
+      cash_pos: { amount: 0, count: 0 }
+    };
+
+    allSalesCombined.forEach(s => {
+      let method = s.paymentMethod || 'cash';
+      const amt = safeNumber(s.totalAmount, 0);
+      // Normalize method strings
+      if (method === 'cash') breakdown.cash.amount += amt, breakdown.cash.count++;
+      else if (method === 'transfer') breakdown.transfer.amount += amt, breakdown.transfer.count++;
+      else if (method === 'pos' || method === 'POS') breakdown.pos.amount += amt, breakdown.pos.count++;
+      else if (method === 'cash_transfer' || method === 'Cash + Transfer' || method === 'Cash & Transfer') {
+        breakdown.cash_transfer.amount += amt, breakdown.cash_transfer.count++;
+      } else if (method === 'cash_pos' || method === 'Cash + POS' || method === 'Cash & POS') {
+        breakdown.cash_pos.amount += amt, breakdown.cash_pos.count++;
+      } else {
+        // fallback: try to detect
+        if (method.includes('Transfer') || method.includes('transfer')) {
+          breakdown.cash_transfer.amount += amt, breakdown.cash_transfer.count++;
+        } else if (method.includes('POS') || method.includes('pos')) {
+          breakdown.cash_pos.amount += amt, breakdown.cash_pos.count++;
+        } else {
+          // default to cash
+          breakdown.cash.amount += amt, breakdown.cash.count++;
+        }
+      }
+    });
+
+    return breakdown;
+  }
+
+  function renderPaymentBreakdown() {
+    const bd = getPaymentBreakdown();
+    document.getElementById('payCashAmt').textContent = formatCurrency(bd.cash.amount);
+    document.getElementById('payCashCount').textContent = bd.cash.count + ' transactions';
+    document.getElementById('payTransferAmt').textContent = formatCurrency(bd.transfer.amount);
+    document.getElementById('payTransferCount').textContent = bd.transfer.count + ' transactions';
+    document.getElementById('payPosAmt').textContent = formatCurrency(bd.pos.amount);
+    document.getElementById('payPosCount').textContent = bd.pos.count + ' transactions';
+    document.getElementById('payCashTransferAmt').textContent = formatCurrency(bd.cash_transfer.amount);
+    document.getElementById('payCashTransferCount').textContent = bd.cash_transfer.count + ' transactions';
+    document.getElementById('payCashPosAmt').textContent = formatCurrency(bd.cash_pos.amount);
+    document.getElementById('payCashPosCount').textContent = bd.cash_pos.count + ' transactions';
+  }
+
+  // ============================================
+  // MONTH DETAIL VIEW (UPDATED with payment breakdown)
+  // ============================================
+  window.showMonthDetail = function(year, month) {
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const monthName = months[parseInt(month)] || month;
+    const label = `${monthName} ${year}`;
+    
+    const start = new Date(parseInt(year), parseInt(month), 1);
+    const end = new Date(parseInt(year), parseInt(month) + 1, 0);
+    end.setHours(23, 59, 59, 999);
+    
+    const monthSales = allSales.filter(s => {
+      const d = s.createdAt?.toDate();
+      return d && d >= start && d <= end && s.status !== 'returned';
+    });
+    const monthWholesale = allWholesaleSales.filter(s => {
+      const d = s.createdAt?.toDate();
+      return d && d >= start && d <= end;
+    });
+    const monthPromo = allPromoSales.filter(s => {
+      const d = s.createdAt?.toDate();
+      return d && d >= start && d <= end && s.status !== 'returned';
+    });
+    const monthReturns = allReturns.filter(r => {
+      const d = r.createdAt?.toDate();
+      return d && d >= start && d <= end;
+    });
+    const monthPurchases = allPurchases.filter(p => {
+      if (p.status !== 'purchased') return false;
+      const d = p.purchasedAt?.toDate();
+      return d && d >= start && d <= end;
+    });
+    const monthStorePurchases = allStorePurchases.filter(p => {
+      const d = p.date?.toDate();
+      return d && d >= start && d <= end;
+    });
+    const monthMisc = allMiscExpenses.filter(e => {
+      if (e.status !== 'approved') return false;
+      const d = e.approvedAt?.toDate() || e.createdAt?.toDate();
+      return d && d >= start && d <= end;
+    });
+    const monthCredits = allStoreCredits.filter(c => {
+      const d = c.createdAt?.toDate();
+      return d && d >= start && d <= end;
+    });
+    
+    let retailTotal = 0, wholesaleTotal = 0, companyTotal = 0, exchangeTotal = 0, promoTotal = 0, grossTotal = 0;
+    monthSales.forEach(s => {
+      const amt = safeNumber(s.totalAmount, 0);
+      if (s.isExchange || s.exchangeType) exchangeTotal += amt;
+      else if (s.isCompanySale) companyTotal += amt;
+      else retailTotal += amt;
+      grossTotal += amt;
+    });
+    monthWholesale.forEach(s => { wholesaleTotal += safeNumber(s.totalAmount, 0); grossTotal += safeNumber(s.totalAmount, 0); });
+    monthPromo.forEach(s => { promoTotal += safeNumber(s.totalAmount, 0); grossTotal += safeNumber(s.totalAmount, 0); });
+    
+    let refundTotal = 0;
+    monthReturns.forEach(r => { refundTotal += safeNumber(r.totalRefund, 0); });
+    
+    const netRevenue = grossTotal - refundTotal;
+    
+    let purchasesTotal = 0;
+    monthPurchases.forEach(p => { purchasesTotal += p.receivedItems?.reduce((s,i) => s + ((i.received||i.suggested)*(i.price||i.unitPrice)), 0) || 0; });
+    let storePurchasesTotal = 0;
+    monthStorePurchases.forEach(p => { storePurchasesTotal += safeNumber(p.totalCost, 0); });
+    let miscTotal = 0;
+    monthMisc.forEach(e => { miscTotal += safeNumber(e.amount, 0); });
+    const payrollTotal = getTotalPayroll();
+    
+    const totalCOGS = purchasesTotal + storePurchasesTotal;
+    const totalOpEx = payrollTotal + miscTotal;
+    const totalExpenses = totalCOGS + totalOpEx;
+    const profit = netRevenue - totalExpenses;
+    
+    // Payment method breakdown for the month
+    const allMonthSales = [...monthSales, ...monthWholesale, ...monthPromo];
+    const payBreak = { cash:0, transfer:0, pos:0, cash_transfer:0, cash_pos:0 };
+    allMonthSales.forEach(s => {
+      const amt = safeNumber(s.totalAmount, 0);
+      const method = s.paymentMethod || 'cash';
+      if (method === 'cash') payBreak.cash += amt;
+      else if (method === 'transfer') payBreak.transfer += amt;
+      else if (method === 'pos' || method === 'POS') payBreak.pos += amt;
+      else if (method === 'cash_transfer' || method === 'Cash + Transfer' || method === 'Cash & Transfer') payBreak.cash_transfer += amt;
+      else if (method === 'cash_pos' || method === 'Cash + POS' || method === 'Cash & POS') payBreak.cash_pos += amt;
+      else if (method.includes('Transfer')) payBreak.cash_transfer += amt;
+      else if (method.includes('POS')) payBreak.cash_pos += amt;
+      else payBreak.cash += amt;
+    });
+    
+    // Top items
+    const itemMap = {};
+    allMonthSales.forEach(s => {
+      if (!s.items) return;
+      s.items.forEach(i => {
+        const key = i.id || i.name;
+        if (!itemMap[key]) itemMap[key] = { name: i.name || 'Item', qty: 0, revenue: 0 };
+        const qty = i.quantity || i.pieces || 1;
+        const price = i.unitPrice || 0;
+        itemMap[key].qty += qty;
+        itemMap[key].revenue += qty * price;
+      });
+    });
+    const topItems = Object.values(itemMap).sort((a,b) => b.revenue - a.revenue).slice(0,8);
+    
+    let html = `
+      <div style="background:var(--primary-soft);padding:16px;border-radius:16px;margin-bottom:20px;text-align:center;">
+        <h2 style="color:var(--primary);font-family:'Playfair Display',serif;">📊 ${label} Summary</h2>
+        <p style="color:var(--gray);font-size:0.85rem;">${formatDateFull(start)} — ${formatDateFull(end)}</p>
+      </div>
+      
+      <div class="month-detail-grid">
+        <div class="month-detail-card"><div class="value" style="color:var(--success);">${formatCurrency(grossTotal)}</div><div class="label">Gross Revenue</div></div>
+        <div class="month-detail-card"><div class="value" style="color:var(--danger);">${formatCurrency(refundTotal)}</div><div class="label">Refunds</div></div>
+        <div class="month-detail-card"><div class="value" style="color:var(--primary);">${formatCurrency(netRevenue)}</div><div class="label">Net Revenue</div></div>
+        <div class="month-detail-card"><div class="value" style="color:#f59e0b;">${formatCurrency(totalExpenses)}</div><div class="label">Total Expenses</div></div>
+        <div class="month-detail-card"><div class="value" style="color:${profit >= 0 ? 'var(--success)' : 'var(--danger)'};">${formatCurrency(profit)}</div><div class="label">Net Profit</div></div>
+        <div class="month-detail-card"><div class="value">${allMonthSales.length}</div><div class="label">Total Transactions</div></div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div style="background:var(--gray-light);padding:14px;border-radius:12px;">
+          <h4 style="font-size:0.8rem;color:var(--gray);margin-bottom:8px;">Revenue Breakdown</h4>
+          <div style="font-size:0.85rem;"><span style="color:var(--gray);">Retail:</span> <strong>${formatCurrency(retailTotal)}</strong></div>
+          <div style="font-size:0.85rem;"><span style="color:var(--gray);">Wholesale:</span> <strong>${formatCurrency(wholesaleTotal)}</strong></div>
+          <div style="font-size:0.85rem;"><span style="color:var(--gray);">Company:</span> <strong>${formatCurrency(companyTotal)}</strong></div>
+          <div style="font-size:0.85rem;"><span style="color:var(--gray);">Exchange:</span> <strong>${formatCurrency(exchangeTotal)}</strong></div>
+          <div style="font-size:0.85rem;color:#7c3aed;"><span style="color:var(--gray);">Promo:</span> <strong>${formatCurrency(promoTotal)}</strong></div>
+        </div>
+        <div style="background:var(--gray-light);padding:14px;border-radius:12px;">
+          <h4 style="font-size:0.8rem;color:var(--gray);margin-bottom:8px;">Payment Methods</h4>
+          <div style="font-size:0.85rem;"><span style="color:var(--gray);">💵 Cash:</span> <strong>${formatCurrency(payBreak.cash)}</strong></div>
+          <div style="font-size:0.85rem;"><span style="color:var(--gray);">🏦 Transfer:</span> <strong>${formatCurrency(payBreak.transfer)}</strong></div>
+          <div style="font-size:0.85rem;"><span style="color:var(--gray);">💳 POS:</span> <strong>${formatCurrency(payBreak.pos)}</strong></div>
+          <div style="font-size:0.85rem;"><span style="color:var(--gray);">💵+🏦 Cash &amp; Transfer:</span> <strong>${formatCurrency(payBreak.cash_transfer)}</strong></div>
+          <div style="font-size:0.85rem;"><span style="color:var(--gray);">💵+💳 Cash &amp; POS:</span> <strong>${formatCurrency(payBreak.cash_pos)}</strong></div>
+        </div>
+      </div>
+      
+      <div style="background:var(--gray-light);padding:14px;border-radius:12px;margin-bottom:16px;">
+        <h4 style="font-size:0.8rem;color:var(--gray);margin-bottom:8px;">Expenses</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <div><span style="color:var(--gray);">Inv. Purchases:</span><br><strong>${formatCurrency(purchasesTotal)}</strong></div>
+          <div><span style="color:var(--gray);">Store Purchases:</span><br><strong>${formatCurrency(storePurchasesTotal)}</strong></div>
+          <div><span style="color:var(--gray);">Payroll:</span><br><strong>${formatCurrency(payrollTotal)}</strong></div>
+          <div><span style="color:var(--gray);">Misc:</span><br><strong>${formatCurrency(miscTotal)}</strong></div>
+          <div><span style="color:var(--gray);">Total COGS:</span><br><strong>${formatCurrency(totalCOGS)}</strong></div>
+          <div><span style="color:var(--gray);">Total OpEx:</span><br><strong>${formatCurrency(totalOpEx)}</strong></div>
+        </div>
+      </div>
+    `;
+    
+    if (topItems.length > 0) {
+      html += `<div style="background:var(--gray-light);padding:14px;border-radius:12px;margin-bottom:16px;">
+        <h4 style="font-size:0.8rem;color:var(--gray);margin-bottom:8px;">🏆 Top Selling Items</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">`;
+      topItems.forEach((item, i) => {
+        html += `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(0,0,0,0.04);font-size:0.85rem;">
+          <span>#${i+1} ${item.name}</span>
+          <span><strong>${formatCurrency(item.revenue)}</strong> (${item.qty} units)</span>
+        </div>`;
+      });
+      html += `</div></div>`;
+    }
+    
+    const recentSales = allMonthSales.slice(0,15);
+    if (recentSales.length > 0) {
+      html += `<div style="background:var(--gray-light);padding:14px;border-radius:12px;max-height:200px;overflow-y:auto;">
+        <h4 style="font-size:0.8rem;color:var(--gray);margin-bottom:8px;">📋 Recent Transactions</h4>
+        <div style="font-size:0.8rem;display:grid;grid-template-columns:2fr 2fr 1fr 1fr 1fr;gap:4px;font-weight:600;color:var(--gray);border-bottom:1px solid rgba(0,0,0,0.08);padding-bottom:4px;">
+          <span>Date</span><span>Receipt</span><span>Customer</span><span>Type</span><span>Amount</span>
+        </div>`;
+      recentSales.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+      recentSales.forEach(s => {
+        const type = s.isPromo ? '🔥 Promo' : s.isCompanySale ? '🏢 Company' : s.isExchange ? '🔄 Exchange' : s._type === 'wholesale' ? '📦 Wholesale' : '🛒 Retail';
+        html += `<div style="display:grid;grid-template-columns:2fr 2fr 1fr 1fr 1fr;gap:4px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,0.04);font-size:0.8rem;">
+          <span>${formatDate(s.createdAt)}</span>
+          <span>#${s.receiptNumber||'-'}</span>
+          <span>${s.customerName||'Walk-in'}</span>
+          <span>${type}</span>
+          <span style="font-weight:600;">${formatCurrency(s.totalAmount)}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+    
+    html += `<div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-primary" onclick="exportMonthDetail('${year}','${month}')" style="flex:1;"><i class="fas fa-download"></i> Export Month</button>
+      <button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>
+    </div>`;
+    
+    showModal(`📊 ${label} Analysis`, html);
+  };
+
+  window.exportMonthDetail = function(year, month) {
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const monthName = months[parseInt(month)] || month;
+    const label = `${monthName} ${year}`;
+    
+    const start = new Date(parseInt(year), parseInt(month), 1);
+    const end = new Date(parseInt(year), parseInt(month) + 1, 0);
+    end.setHours(23, 59, 59, 999);
+    
+    const monthSales = allSales.filter(s => {
+      const d = s.createdAt?.toDate();
+      return d && d >= start && d <= end && s.status !== 'returned';
+    });
+    const monthWholesale = allWholesaleSales.filter(s => {
+      const d = s.createdAt?.toDate();
+      return d && d >= start && d <= end;
+    });
+    const monthPromo = allPromoSales.filter(s => {
+      const d = s.createdAt?.toDate();
+      return d && d >= start && d <= end && s.status !== 'returned';
+    });
+    
+    const rows = [['Date','Receipt','Customer','Type','Items','Total','Payment Method']];
+    const allTxns = [...monthSales, ...monthWholesale, ...monthPromo];
+    allTxns.forEach(s => {
+      const type = s.isPromo ? 'Promo' : s.isCompanySale ? 'Company' : s.isExchange ? 'Exchange' : s._type === 'wholesale' ? 'Wholesale' : 'Retail';
+      rows.push([
+        formatDateFull(s.createdAt),
+        s.receiptNumber || '-',
+        s.customerName || 'Walk-in',
+        type,
+        (s.items?.length || 0) + ' items',
+        safeNumber(s.totalAmount, 0),
+        s.paymentMethod || 'cash'
+      ]);
+    });
+    
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const b = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = `month_${label}_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    showToast(`Exported ${label}`, 'success');
+  };
+
+  // ============================================
+  // RENDER FUNCTIONS
+  // ============================================
   function renderStats() {
     const d = getFilteredData();
-
     const { prevStart, prevEnd } = getDateRange();
     let prevGrossRev = 0, prevExpenses = 0;
     allSales.forEach(s => { if(s.status!=='returned'){const dt=s.createdAt?.toDate();if(dt&&dt>=prevStart&&dt<=prevEnd)prevGrossRev+=safeNumber(s.totalAmount,0);} });
     allWholesaleSales.forEach(s => { const dt=s.createdAt?.toDate();if(dt&&dt>=prevStart&&dt<=prevEnd)prevGrossRev+=safeNumber(s.totalAmount,0); });
+    allPromoSales.forEach(s => { const dt=s.createdAt?.toDate();if(dt&&dt>=prevStart&&dt<=prevEnd)prevGrossRev+=safeNumber(s.totalAmount,0); });
     const prevPurchases = allPurchases.filter(p=>p.status==='purchased').reduce((s,p)=>{const dt=p.purchasedAt?.toDate();if(dt&&dt>=prevStart&&dt<=prevEnd)return s+(p.receivedItems?.reduce((si,i)=>si+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0);return s;},0);
     const prevStore = allStorePurchases.filter(p=>{const dt=p.date?.toDate();return dt&&dt>=prevStart&&dt<=prevEnd;}).reduce((s,p)=>s+safeNumber(p.totalCost,0),0);
     const prevMisc = allMiscExpenses.filter(e=>e.status==='approved').filter(e=>{const dt=e.approvedAt?.toDate()||e.createdAt?.toDate();return dt&&dt>=prevStart&&dt<=prevEnd;}).reduce((s,e)=>s+safeNumber(e.amount,0),0);
@@ -666,7 +1009,7 @@
     } else {
       warningDiv.className = 'financial-warning healthy';
       const margin = d.netRevenue > 0 ? ((d.netProfit / d.netRevenue) * 100).toFixed(1) : 0;
-      warningMsg.textContent = `✅ Finances are healthy! Net profit margin: ${margin}%. Gross: ${formatCurrency(d.grossRevenue)} | Refunds: ${formatCurrency(d.totalRefunds)}`;
+      warningMsg.textContent = `✅ Finances are healthy! Net profit margin: ${margin}%. Gross: ${formatCurrency(d.grossRevenue)} | Refunds: ${formatCurrency(d.totalRefunds)} | Promo: ${formatCurrency(d.promoSales)}`;
     }
   }
 
@@ -704,6 +1047,7 @@
     document.getElementById('plWholesaleSales').textContent = formatCurrency(d.wholesale);
     document.getElementById('plCompanySales').textContent = formatCurrency(d.companySales);
     document.getElementById('plExchangeSales').textContent = formatCurrency(d.exchangeSales);
+    document.getElementById('plPromoSales').textContent = formatCurrency(d.promoSales);
     document.getElementById('plGrossRevenue').textContent = formatCurrency(d.grossRevenue);
     document.getElementById('plRefunds').textContent = formatCurrency(d.totalRefunds);
     document.getElementById('plExchangeRefunds').textContent = formatCurrency(d.exchangeRefundsToCustomer);
@@ -745,6 +1089,7 @@
     document.getElementById('wholesaleRev').textContent=formatCurrency(filteredWholesale.reduce((s,w)=>s+safeNumber(w.totalAmount,0),0));
     document.getElementById('companyRev').textContent=formatCurrency(filteredSales.filter(s=>s.isCompanySale).reduce((s,v)=>s+safeNumber(v.totalAmount,0),0));
     document.getElementById('exchangeRev').textContent=formatCurrency(filteredSales.filter(s=>s.isExchange||s.exchangeType).reduce((s,v)=>s+safeNumber(v.totalAmount,0),0));
+    document.getElementById('promoRev').textContent=formatCurrency(filteredPromoSales.reduce((s,p)=>s+safeNumber(p.totalAmount,0),0));
   }
 
   function renderReturnsSummary() {
@@ -758,6 +1103,7 @@
     const itemMap = {};
     filteredSales.forEach(s => { if(!s.items)return; s.items.forEach(i => { const key=i.id||i.name; if(!itemMap[key]) itemMap[key]={name:i.name,qty:0,revenue:0}; itemMap[key].qty+=i.quantity||0; itemMap[key].revenue+=(i.quantity||0)*(i.unitPrice||0); }); });
     filteredWholesale.forEach(s => { if(!s.items)return; s.items.forEach(i => { const key=i.id||i.name; if(!itemMap[key]) itemMap[key]={name:i.name,qty:0,revenue:0}; itemMap[key].qty+=i.pieces||i.quantity||0; itemMap[key].revenue+=(i.pieces||i.quantity||0)*(i.unitPrice||0); }); });
+    filteredPromoSales.forEach(s => { if(!s.items)return; s.items.forEach(i => { const key=i.id||i.name; if(!itemMap[key]) itemMap[key]={name:i.name,qty:0,revenue:0}; itemMap[key].qty+=i.quantity||0; itemMap[key].revenue+=(i.quantity||0)*(i.unitPrice||0); }); });
     const sorted = Object.values(itemMap).sort((a,b)=>b.revenue-a.revenue).slice(0,10);
     const totalRev = sorted.reduce((s,i)=>s+i.revenue,0);
     const tbody = document.getElementById('topItemsTable');
@@ -801,21 +1147,48 @@
     const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const monthlyData={};
     
-    allSales.forEach(s=>{const d=s.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={grossRevenue:0,refunds:0,netRevenue:0,wholesale:0,companySales:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].grossRevenue+=safeNumber(s.totalAmount,0);if(s.isCompanySale)monthlyData[k].companySales+=safeNumber(s.totalAmount,0);});
-    allWholesaleSales.forEach(s=>{const d=s.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={grossRevenue:0,refunds:0,netRevenue:0,wholesale:0,companySales:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].wholesale+=safeNumber(s.totalAmount,0);monthlyData[k].grossRevenue+=safeNumber(s.totalAmount,0);});
-    allReturns.forEach(r=>{const d=r.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={grossRevenue:0,refunds:0,netRevenue:0,wholesale:0,companySales:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].refunds+=safeNumber(r.totalRefund,0);if(r.differenceType==='refund_customer')monthlyData[k].refunds+=safeNumber(r.difference,0);});
-    allPurchases.forEach(p=>{if(p.status!=='purchased')return;const d=p.purchasedAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={grossRevenue:0,refunds:0,netRevenue:0,wholesale:0,companySales:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].purchases+=p.receivedItems?.reduce((s,i)=>s+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0;});
-    allStorePurchases.forEach(p=>{const d=p.date?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={grossRevenue:0,refunds:0,netRevenue:0,wholesale:0,companySales:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].storePurchases+=safeNumber(p.totalCost,0);});
-    allMiscExpenses.forEach(e=>{if(e.status!=='approved')return;const d=e.approvedAt?.toDate()||e.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={grossRevenue:0,refunds:0,netRevenue:0,wholesale:0,companySales:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].misc+=safeNumber(e.amount,0);});
+    allSales.forEach(s=>{const d=s.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={grossRevenue:0,refunds:0,netRevenue:0,wholesale:0,companySales:0,promo:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].grossRevenue+=safeNumber(s.totalAmount,0);if(s.isCompanySale)monthlyData[k].companySales+=safeNumber(s.totalAmount,0);});
+    allWholesaleSales.forEach(s=>{const d=s.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={grossRevenue:0,refunds:0,netRevenue:0,wholesale:0,companySales:0,promo:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].wholesale+=safeNumber(s.totalAmount,0);monthlyData[k].grossRevenue+=safeNumber(s.totalAmount,0);});
+    allPromoSales.forEach(s=>{const d=s.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={grossRevenue:0,refunds:0,netRevenue:0,wholesale:0,companySales:0,promo:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].promo+=safeNumber(s.totalAmount,0);monthlyData[k].grossRevenue+=safeNumber(s.totalAmount,0);});
+    allReturns.forEach(r=>{const d=r.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={grossRevenue:0,refunds:0,netRevenue:0,wholesale:0,companySales:0,promo:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].refunds+=safeNumber(r.totalRefund,0);if(r.differenceType==='refund_customer')monthlyData[k].refunds+=safeNumber(r.difference,0);});
+    allPurchases.forEach(p=>{if(p.status!=='purchased')return;const d=p.purchasedAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={grossRevenue:0,refunds:0,netRevenue:0,wholesale:0,companySales:0,promo:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].purchases+=p.receivedItems?.reduce((s,i)=>s+((i.received||i.suggested)*(i.price||i.unitPrice)),0)||0;});
+    allStorePurchases.forEach(p=>{const d=p.date?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={grossRevenue:0,refunds:0,netRevenue:0,wholesale:0,companySales:0,promo:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].storePurchases+=safeNumber(p.totalCost,0);});
+    allMiscExpenses.forEach(e=>{if(e.status!=='approved')return;const d=e.approvedAt?.toDate()||e.createdAt?.toDate();if(!d)return;const k=`${d.getFullYear()}-${d.getMonth()}`;if(!monthlyData[k])monthlyData[k]={grossRevenue:0,refunds:0,netRevenue:0,wholesale:0,companySales:0,promo:0,purchases:0,storePurchases:0,salaries:0,misc:0};monthlyData[k].misc+=safeNumber(e.amount,0);});
     const tp=getTotalPayroll(); Object.keys(monthlyData).forEach(k=>{monthlyData[k].salaries=tp;monthlyData[k].netRevenue=monthlyData[k].grossRevenue-monthlyData[k].refunds;});
     const sorted=Object.entries(monthlyData).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,12);
     const tbody=document.getElementById('monthlyTable'); if(!tbody)return;
-    if(!sorted.length){tbody.innerHTML='<tr><td colspan="13"><div class="empty-state"><i class="fas fa-calendar-alt"></i><p>No data yet</p></div></td></tr>';return;}
+    if(!sorted.length){tbody.innerHTML='<tr><td colspan="14"><div class="empty-state"><i class="fas fa-calendar-alt"></i><p>No data yet</p></div></td></tr>';return;}
     let prevProfit=0;
-    tbody.innerHTML=sorted.map(([key,data],i)=>{const[y,m]=key.split('-');const te=data.purchases+data.storePurchases+data.salaries+data.misc;const pr=data.netRevenue-te;const ch=i>0?((pr-prevProfit)/(Math.abs(prevProfit)||1)*100).toFixed(1):'-';const cls=ch>0?'badge-success':ch<0?'badge-danger':'badge-warning';prevProfit=pr;return`<tr><td><strong>${months[parseInt(m)]} ${y}</strong></td><td>${formatCurrency(data.grossRevenue)}</td><td>${formatCurrency(data.refunds)}</td><td>${formatCurrency(data.netRevenue)}</td><td>${formatCurrency(data.wholesale||0)}</td><td>${formatCurrency(data.companySales||0)}</td><td>${formatCurrency(data.purchases)}</td><td>${formatCurrency(data.storePurchases||0)}</td><td>${formatCurrency(data.salaries)}</td><td>${formatCurrency(data.misc)}</td><td>${formatCurrency(te)}</td><td><strong>${formatCurrency(pr)}</strong></td><td><span class="badge ${cls}">${ch>0?'+':''}${ch}%</span></td></tr>`;}).join('');
+    tbody.innerHTML=sorted.map(([key,data],i)=>{
+      const [y,m] = key.split('-');
+      const te = data.purchases + data.storePurchases + data.salaries + data.misc;
+      const pr = data.netRevenue - te;
+      const ch = i>0 ? ((pr - prevProfit)/(Math.abs(prevProfit)||1)*100).toFixed(1) : '-';
+      const cls = ch>0 ? 'badge-success' : ch<0 ? 'badge-danger' : 'badge-warning';
+      prevProfit = pr;
+      const icon = pr >= 0 ? '📈' : '📉';
+      return `<tr class="clickable-month" onclick="showMonthDetail('${y}','${m}')" style="cursor:pointer;">
+        <td><strong>${months[parseInt(m)]} ${y}</strong> ${icon}</td>
+        <td>${formatCurrency(data.grossRevenue)}</td>
+        <td>${formatCurrency(data.refunds)}</td>
+        <td>${formatCurrency(data.netRevenue)}</td>
+        <td>${formatCurrency(data.wholesale||0)}</td>
+        <td>${formatCurrency(data.companySales||0)}</td>
+        <td style="color:#7c3aed;font-weight:600;">${formatCurrency(data.promo||0)}</td>
+        <td>${formatCurrency(data.purchases)}</td>
+        <td>${formatCurrency(data.storePurchases||0)}</td>
+        <td>${formatCurrency(data.salaries)}</td>
+        <td>${formatCurrency(data.misc)}</td>
+        <td>${formatCurrency(te)}</td>
+        <td><strong style="color:${pr>=0?'var(--success)':'var(--danger)'};">${formatCurrency(pr)}</strong></td>
+        <td><span class="badge ${cls}">${ch>0?'+':''}${ch}%</span></td>
+      </tr>`;
+    }).join('');
   }
 
-  // ========== EXPORT FUNCTIONS ==========
+  // ============================================
+  // EXPORT FUNCTIONS
+  // ============================================
   window.exportFullReport = function(format) {
     const d=getFilteredData();
     const rows=[['Metric','Amount'],['Gross Revenue',d.grossRevenue],['Refunds',d.totalRefunds],['Exchange Refunds',d.exchangeRefundsToCustomer],['Net Revenue',d.netRevenue],['Inventory Purchases',d.purchases],['Store Purchases',d.storePurchases],['Total COGS',d.totalCOGS],['Base Salaries',d.totalBaseSalaries],['Point Bonuses',d.totalPointBonus],['Misc Expenses',d.misc],['Total Expenses',d.totalExpenses],['Net Profit',d.netProfit]];
@@ -827,7 +1200,7 @@
 
   window.exportPLStatement = function() {
     const d=getFilteredData();
-    const rows=[['Section','Amount'],['Gross Revenue',d.grossRevenue],['Retail Sales',d.retailRevenue],['Wholesale Sales',d.wholesale],['Company Sales',d.companySales],['Exchange Sales',d.exchangeSales],['Total Refunds',d.totalRefunds],['Exchange Refunds to Customer',d.exchangeRefundsToCustomer],['Store Credits Active',d.activeStoreCredits],['Net Revenue',d.netRevenue],['Inventory Purchases',d.purchases],['Store Purchases',d.storePurchases],['Total COGS',d.totalCOGS],['Gross Profit',d.netRevenue-d.totalCOGS],['Base Salaries',d.totalBaseSalaries],['Point Bonuses/Penalties',d.totalPointBonus],['Misc Expenses',d.misc],['Total OpEx',d.totalOpEx],['Net Profit',d.netProfit]];
+    const rows=[['Section','Amount'],['Gross Revenue',d.grossRevenue],['Retail Sales',d.retailRevenue],['Wholesale Sales',d.wholesale],['Company Sales',d.companySales],['Exchange Sales',d.exchangeSales],['Promo Sales',d.promoSales],['Total Refunds',d.totalRefunds],['Exchange Refunds to Customer',d.exchangeRefundsToCustomer],['Store Credits Active',d.activeStoreCredits],['Net Revenue',d.netRevenue],['Inventory Purchases',d.purchases],['Store Purchases',d.storePurchases],['Total COGS',d.totalCOGS],['Gross Profit',d.netRevenue-d.totalCOGS],['Base Salaries',d.totalBaseSalaries],['Point Bonuses/Penalties',d.totalPointBonus],['Misc Expenses',d.misc],['Total OpEx',d.totalOpEx],['Net Profit',d.netProfit]];
     const csv=rows.map(r=>r.join(',')).join('\n');
     const b=new Blob([csv],{type:'text/csv'});
     const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`pl_statement_${new Date().toISOString().split('T')[0]}.csv`;a.click();
