@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#8b5cf6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Promo Management · OmoCreations</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --primary:#8b5cf6; --primary-dark:#6d28d9; --primary-light:#c4b5fd;
+      --primary-soft:#ede9fe; --dark:#1a1a2e; --gray:#6b7280;
+      --gray-light:#f3f4f6; --success:#10b981; --warning:#f59e0b;
+      --danger:#ef4444; --info:#3b82f6; --promo:#8b5cf6; --promo-light:#ede9fe;
+      --sidebar-width:280px; --header-height:70px;
+    }
+    html { font-size:16px; -webkit-text-size-adjust:100%; }
+    body {
+      font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      background:linear-gradient(135deg,#f9fafb 0%,#ede9fe 100%);
+      display:flex; min-height:100vh; overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;
+    }
+    @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
+    @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.5} }
+    @keyframes spin { 0%{transform:rotate(0deg)}100%{transform:rotate(360deg)} }
+
+    .offline-banner {
+      background: var(--warning); color: white; text-align: center;
+      padding: 8px; font-size: 0.8rem; font-weight: 600;
+      display: none; position: sticky; top: 0; z-index: 100;
+    }
+    .offline-banner.show { display: block; }
+
+    .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); color:white; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; overflow-x:hidden; transition:transform 0.3s ease; z-index:1000; border-right:1px solid rgba(139,92,246,0.2); }
+    .sidebar::-webkit-scrollbar { width:4px; } .sidebar::-webkit-scrollbar-track { background:rgba(255,255,255,0.05); } .sidebar::-webkit-scrollbar-thumb { background:var(--primary); border-radius:10px; }
+    .sidebar-header { padding:24px 18px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(139,92,246,0.2); position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%); }
+    .sidebar-header .close-sidebar { display:none; background:rgba(255,255,255,0.1); border:none; color:white; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1.2rem; margin-left:auto; align-items:center; justify-content:center; }
+    .logo-icon { width:42px; height:42px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:700; flex-shrink:0; }
+    .logo-text { font-size:1.25rem; font-weight:800; font-family:'Playfair Display',serif; white-space:nowrap; } .logo-text span { color:var(--primary); }
+    .sidebar-nav { padding:20px 12px; display:flex; flex-direction:column; } .nav-section { margin-bottom:20px; }
+    .nav-section-title { font-size:0.65rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.4); padding:8px 14px 6px; font-weight:600; white-space:nowrap; }
+    .nav-item { display:flex; align-items:center; gap:14px; padding:12px 14px; border-radius:12px; color:rgba(255,255,255,0.7); cursor:pointer; border:none; background:none; width:100%; font-size:0.9rem; font-weight:500; text-align:left; margin-bottom:3px; transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; text-decoration:none; }
+    .nav-item i { width:22px; font-size:1.1rem; text-align:center; flex-shrink:0; } .nav-item:hover { background:rgba(139,92,246,0.15); color:white; transform:translateX(5px); }
+    .nav-item.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; box-shadow:0 5px 15px rgba(139,92,246,0.3); } .nav-item.logout { color:rgba(239,68,68,0.7); margin-top:auto; } .nav-item.logout:hover { background:rgba(239,68,68,0.15); color:#ef4444; }
+    .sidebar-footer { padding:20px; border-top:1px solid rgba(139,92,246,0.2); position:sticky; bottom:0; background:linear-gradient(0deg,#0f0f1a 0%,transparent 100%); }
+    .user-profile { display:flex; align-items:center; gap:12px; } .user-avatar { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); display:flex; align-items:center; justify-content:center; font-weight:700; color:white; flex-shrink:0; font-size:1.1rem; }
+    .user-details { white-space:nowrap; } .user-details h4 { font-size:0.85rem; font-weight:600; } .user-details p { font-size:0.7rem; opacity:0.6; }
+    .sidebar-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:999; display:none; } .sidebar-overlay.active { display:block; }
+
+    .main-content { flex:1; margin-left:var(--sidebar-width); transition:margin-left 0.3s ease; min-height:100vh; width:calc(100% - var(--sidebar-width)); }
+    .top-bar { height:var(--header-height); background:rgba(255,255,255,0.98); backdrop-filter:blur(12px); padding:0 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(139,92,246,0.15); position:sticky; top:0; z-index:50; }
+    .top-bar-left { display:flex; align-items:center; gap:14px; } .menu-toggle { background:none; border:none; font-size:1.3rem; color:var(--gray); cursor:pointer; padding:10px; border-radius:10px; transition:all 0.2s; display:none; align-items:center; justify-content:center; } .menu-toggle:hover { background:var(--primary-soft); color:var(--primary); }
+    .page-title { font-size:1.5rem; font-weight:700; color:var(--dark); font-family:'Playfair Display',serif; } .page-title span { color:var(--primary); }
+    .current-date { color:var(--gray); font-size:0.85rem; white-space:nowrap; }
+    .content-wrapper { padding:28px; max-width:1600px; }
+
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .stat-card { background:white; padding:18px 16px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.03); border:1px solid rgba(139,92,246,0.1); transition:all 0.3s; position:relative; overflow:hidden; animation:fadeInUp 0.5s ease forwards; opacity:0; }
+    .stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.10s}.stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.20s}
+    .stat-card:hover { transform:translateY(-5px); box-shadow:0 12px 24px rgba(139,92,246,0.15); }
+    .stat-header { display:flex; justify-content:space-between; margin-bottom:12px; }
+    .stat-header span { font-size:0.65rem; color:var(--gray); text-transform:uppercase; font-weight:600; letter-spacing:1px; }
+    .stat-icon { width:36px; height:36px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; color:var(--primary); }
+    .stat-value { font-size:1.8rem; font-weight:800; color:var(--dark); font-family:'Playfair Display',serif; line-height:1; }
+    .stat-sub { font-size:0.65rem; color:var(--gray); margin-top:4px; }
+
+    .panel { background:white; border-radius:24px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.02); border:1px solid rgba(139,92,246,0.08); margin-bottom:24px; }
+    .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
+    .panel-header h3 { font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:10px; color:var(--dark); }
+    .panel-header h3 i { color:var(--primary); }
+
+    .btn { padding:8px 16px; border-radius:40px; font-weight:600; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; background:white; border:1px solid rgba(0,0,0,0.08); transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; }
+    .btn:hover { transform:translateY(-2px); }
+    .btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+    .btn-primary { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; border:none; }
+    .btn-outline { border:1.5px solid rgba(139,92,246,0.3); color:var(--primary); background:transparent; }
+    .btn-sm { padding:6px 12px; font-size:0.7rem; }
+    .btn-success { background:var(--success); color:white; border:none; }
+    .btn-danger { background:var(--danger); color:white; border:none; }
+    .btn-warning { background:var(--warning); color:white; border:none; }
+    .btn-promo { background:linear-gradient(135deg,#8b5cf6,#6d28d9); color:white; border:none; }
+    .btn-bulk { background:linear-gradient(135deg,#7c3aed,#5b21b6); color:white; border:none; }
+
+    .badge { padding:5px 12px; border-radius:40px; font-size:0.7rem; font-weight:600; display:inline-block; white-space:nowrap; }
+    .badge-success { background:rgba(16,185,129,0.1); color:var(--success); }
+    .badge-warning { background:rgba(245,158,11,0.1); color:var(--warning); }
+    .badge-danger { background:rgba(239,68,68,0.1); color:var(--danger); }
+    .badge-info { background:rgba(59,130,246,0.1); color:var(--info); }
+    .badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; }
+    .badge-promo { background:rgba(139,92,246,0.15); color:#7c3aed; }
+    .badge-bulk { background:rgba(139,92,246,0.2); color:#6d28d9; }
+
+    .promo-card { background:var(--primary-soft); border:2px solid var(--primary); border-radius:16px; padding:20px; margin-bottom:16px; transition:all 0.3s; }
+    .promo-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(139,92,246,0.15); }
+    .promo-card .promo-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+    .promo-card .promo-name { font-size:1.1rem; font-weight:700; color:var(--dark); }
+    .promo-card .promo-name i { color:var(--primary); }
+    .promo-card .promo-dates { font-size:0.8rem; color:var(--gray); }
+    .promo-card .promo-items { margin-top:10px; }
+    .promo-card .promo-item { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(139,92,246,0.1); font-size:0.85rem; }
+    .promo-card .promo-total { margin-top:10px; padding-top:10px; border-top:2px dashed var(--primary); display:flex; justify-content:space-between; font-weight:700; }
+    .promo-card .promo-status { display:inline-block; padding:4px 12px; border-radius:20px; font-size:0.7rem; font-weight:600; }
+    .promo-card .promo-status.active { background:rgba(16,185,129,0.15); color:var(--success); }
+    .promo-card .promo-status.inactive { background:rgba(239,68,68,0.15); color:var(--danger); }
+    .promo-card .promo-status.ending { background:rgba(245,158,11,0.15); color:var(--warning); }
+
+    .form-group { margin-bottom:18px; }
+    .form-group label { display:block; font-size:0.8rem; font-weight:600; color:var(--dark); margin-bottom:6px; }
+    .form-control { width:100%; padding:12px 16px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; font-size:0.9rem; outline:none; background:white; font-family:'Poppins',sans-serif; transition:border 0.2s; }
+    .form-control:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(139,92,246,0.1); }
+    select.form-control { appearance:auto; }
+
+    .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:2000; padding:16px; }
+    .modal-overlay.active { display:flex; }
+    .modal { background:white; border-radius:28px; padding:28px; max-width:850px; width:100%; max-height:85vh; overflow-y:auto; animation:fadeInUp 0.3s ease; }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .modal-header h3 { font-size:1.2rem; font-weight:700; }
+    .modal-close { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--gray); padding:5px; transition:all 0.2s; } .modal-close:hover { color:var(--danger); transform:rotate(90deg); }
+
+    .empty-state { text-align:center; padding:40px 20px; color:var(--gray); }
+    .empty-state i { font-size:2.5rem; color:var(--primary-light); margin-bottom:10px; display:block; }
+
+    .toast-container { position:fixed; bottom:24px; right:24px; z-index:3000; display:flex; flex-direction:column; gap:10px; }
+    .toast { background:white; color:var(--dark); padding:14px 20px; border-radius:50px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px; font-weight:500; font-size:0.85rem; animation:slideIn 0.3s ease; border-left:4px solid var(--primary); transition:all 0.3s ease; }
+    .toast.success { border-left-color:var(--success); } .toast.error { border-left-color:var(--danger); } .toast.warning { border-left-color:var(--warning); } .toast.info { border-left-color:var(--info); } .toast i { font-size:1.1rem; }
+
+    .promo-item-row { display:flex; gap:8px; margin-bottom:8px; align-items:center; flex-wrap:wrap; padding:8px; background:white; border-radius:10px; border:1px solid rgba(139,92,246,0.2); }
+    .promo-item-row .promo-select { flex:2; min-width:150px; }
+    .promo-item-row .promo-qty { flex:0.5; min-width:60px; }
+    .promo-item-row .promo-size { flex:0.5; min-width:80px; }
+    .promo-item-row .promo-org-price { flex:0.5; min-width:80px; font-size:0.8rem; color:var(--gray); text-decoration:line-through; }
+    .promo-item-row .promo-new-price { flex:0.5; min-width:80px; }
+    .promo-item-row .promo-total { flex:0.5; min-width:80px; font-weight:700; color:var(--promo); }
+
+    .sale-summary { background:var(--gray-light); border-radius:14px; padding:16px; margin-top:15px; }
+    .summary-row { display:flex; justify-content:space-between; padding:5px 0; }
+    .summary-row.total { font-weight:700; font-size:1.1rem; border-top:1px dashed rgba(0,0,0,0.1); margin-top:8px; padding-top:12px; }
+
+    .pin-input-container { display:flex; gap:10px; justify-content:center; margin:20px 0; }
+    .pin-input { width:55px; height:65px; text-align:center; font-size:1.8rem; font-weight:700; border:2px solid rgba(139,92,246,0.2); border-radius:14px; outline:none; font-family:'Poppins',sans-serif; }
+    .pin-input:focus { border-color:var(--primary); }
+
+    .customer-type-toggle { display:flex; gap:10px; margin-bottom:15px; }
+    .customer-type-btn { flex:1; padding:12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; background:white; cursor:pointer; font-weight:600; font-size:0.85rem; font-family:'Poppins',sans-serif; transition:all 0.2s; }
+    .customer-type-btn.active { border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
+
+    .payment-methods { display:flex; gap:10px; margin-top:5px; flex-wrap:wrap; }
+    .payment-method { flex:1; min-width:70px; text-align:center; padding:10px 8px; border:1.5px solid rgba(0,0,0,0.08); border-radius:12px; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; font-size:0.75rem; }
+    .payment-method.selected { border-color:var(--primary); background:var(--primary-soft); font-weight:600; color:var(--primary); }
+
+    .split-payment-section { background:var(--gray-light); border-radius:14px; padding:16px; margin-top:10px; display:none; }
+    .split-payment-section.active { display:block; }
+    .split-row { display:flex; gap:12px; margin-bottom:10px; align-items:center; flex-wrap:wrap; }
+    .split-row label { font-size:0.75rem; font-weight:600; min-width:70px; }
+    .split-row input { flex:1; min-width:100px; }
+
+    .filter-bar { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+    .search-wrapper { flex:1; min-width:200px; position:relative; }
+    .search-wrapper i { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--gray); }
+    .search-input { width:100%; padding:12px 16px 12px 42px; border:1.5px solid rgba(0,0,0,0.08); border-radius:40px; font-size:0.85rem; outline:none; font-family:'Poppins',sans-serif; }
+    .search-input:focus { border-color:var(--primary); }
+
+    .table-wrapper { overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:16px; }
+    .data-table { width:100%; border-collapse:collapse; min-width:900px; }
+    .data-table th { text-align:left; padding:14px 10px; font-size:0.7rem; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(--primary-soft); white-space:nowrap; background:white; }
+    .data-table td { padding:14px 10px; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
+    .data-table tbody tr { transition:background 0.2s; }
+    .data-table tbody tr:hover { background:var(--primary-soft); }
+    .data-table tbody tr.active-promo { background:rgba(16,185,129,0.05); border-left:3px solid var(--success); }
+    .data-table tbody tr.inactive-promo { background:rgba(239,68,68,0.03); border-left:3px solid var(--danger); }
+    .data-table tbody tr.ending-promo { background:rgba(245,158,11,0.05); border-left:3px solid var(--warning); }
+
+    @media (max-width:1400px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:768px) {
+      .sidebar { transform:translateX(-100%); width:280px !important; min-width:280px !important; } .sidebar.mobile-open { transform:translateX(0); box-shadow:10px 0 40px rgba(0,0,0,0.3); }
+      .sidebar-header .close-sidebar { display:flex !important; } .menu-toggle { display:flex !important; }
+      .main-content { margin-left:0 !important; width:100% !important; } .content-wrapper { padding:16px 12px; } .top-bar { padding:0 16px; }
+      .page-title { font-size:1.1rem; } .current-date { display:none; } .stats-grid { grid-template-columns:1fr 1fr; gap:10px; }
+      .stat-card { padding:14px 12px; } .stat-value { font-size:1.4rem; } .panel { padding:16px 12px; border-radius:18px; }
+      .data-table { min-width:700px; } .data-table th, .data-table td { padding:10px 6px; font-size:0.75rem; } .modal { padding:20px; border-radius:20px; }
+      .promo-item-row { flex-direction:column; align-items:stretch; }
+      .promo-item-row .promo-select { flex:1; min-width:auto; }
+    }
+    @media (max-width:480px) { .stats-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+<div class="offline-banner" id="offlineBanner">
+  <i class="fas fa-wifi"></i> You are offline — changes saved locally, will sync when reconnected
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header"><div class="logo-icon">🔥</div><div class="logo-text"><span>Omo</span>creations</div><button class="close-sidebar" onclick="closeSidebar()"><i class="fas fa-times"></i></button></div>
+  <nav class="sidebar-nav" id="sidebarNav"></nav>
+  <div class="sidebar-footer"><div class="user-profile"><div class="user-avatar" id="userAvatar">A</div><div class="user-details"><h4 id="userName">Staff</h4><p id="userRole">Loading...</p></div></div></div>
+</aside>
+
+<main class="main-content">
+  <header class="top-bar">
+    <div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">🔥 <span>Promo</span> Management</h1></div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <button class="btn btn-promo btn-sm" onclick="openNewPromoModal()"><i class="fas fa-plus"></i> New Promo</button>
+      <button class="btn btn-primary btn-sm" onclick="navigateTo('sales.html')"><i class="fas fa-cash-register"></i> Sales</button>
+      <span class="current-date" id="currentDate"></span>
+    </div>
+  </header>
+
+  <div class="content-wrapper">
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-header"><span>Active Promos</span><div class="stat-icon"><i class="fas fa-fire"></i></div></div><div class="stat-value" id="activePromos">0</div><div class="stat-sub">Currently running</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Ending Soon</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-value" id="endingPromos">0</div><div class="stat-sub">Within 3 days</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Total Promos</span><div class="stat-icon"><i class="fas fa-tags"></i></div></div><div class="stat-value" id="totalPromos">0</div><div class="stat-sub">All time</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Items on Promo</span><div class="stat-icon"><i class="fas fa-box"></i></div></div><div class="stat-value" id="promoItems">0</div><div class="stat-sub">Total items</div></div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="promoSearchInput" placeholder="Search promos by name or condition..."></div>
+      <select class="form-control" id="promoStatusFilter" style="width:auto;min-width:150px;padding:12px 16px;">
+        <option value="all">All Promos</option>
+        <option value="active">Active</option>
+        <option value="ending">Ending Soon</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3><i class="fas fa-fire"></i> Promotions</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+          <button class="btn btn-promo btn-sm" onclick="openNewPromoModal()"><i class="fas fa-plus"></i> New Promo</button>
+        </div>
+      </div>
+      <div id="promosContainer">
+        <div class="empty-state"><i class="fas fa-fire fa-spin"></i><p>Loading promos...</p></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal"><div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="hideModal()">&times;</button></div><div id="modalContent"></div></div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, serverTimestamp, getDoc, writeBatch, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA_JPUfHVotadGfntwk8qQXFp64pvDfTRI",
+    authDomain: "fashion-46e5d.firebaseapp.com",
+    projectId: "fashion-46e5d",
+    storageBucket: "fashion-46e5d.firebasestorage.app",
+    messagingSenderId: "408062284317",
+    appId: "1:408062284317:web:eb905bce68926c10a0ecf4"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  try {
+    enableIndexedDbPersistence(db).catch(function(err) {
+      console.warn('Persistence:', err.message);
+    });
+  } catch (e) {}
+
+  let currentUser = null, userData = null;
+  let allPromos = [], allStockItems = [], allStoreItems = [];
+  let isOnline = navigator.onLine;
+  let unsubscribes = [];
+
+  function safeNumber(val, fallback) {
+    fallback = (typeof fallback === 'undefined') ? 0 : fallback;
+    if (typeof val === 'number') return val;
+    if (typeof val === 'string') { var parsed = parseFloat(val); return isNaN(parsed) ? fallback : parsed; }
+    return fallback;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
+  function formatCurrency(n) { return '₦' + (safeNumber(n, 0)).toLocaleString(); }
+
+  function formatDate(d) {
+    if (!d) return 'N/A';
+    if (typeof d === 'string') return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    if (d.toDate) d = d.toDate();
+    if (d.seconds) d = new Date(d.seconds * 1000);
+    if (d instanceof Date) return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    return 'N/A';
+  }
+
+  function formatDateTime(d) {
+    if (!d) return 'N/A';
+    if (typeof d === 'string') return new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    if (d.toDate) d = d.toDate();
+    if (d.seconds) d = new Date(d.seconds * 1000);
+    if (d instanceof Date) return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return 'N/A';
+  }
+
+  function getPromoStatus(promo) {
+    if (!promo) return 'inactive';
+    if (promo.status === 'inactive') return 'inactive';
+    
+    var now = new Date();
+    var startDate = promo.startDate ? new Date(promo.startDate) : null;
+    var endDate = promo.endDate ? new Date(promo.endDate) : null;
+    
+    if (startDate && now < startDate) return 'inactive';
+    if (endDate && now > endDate) return 'inactive';
+    
+    if (endDate) {
+      var daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+      if (daysLeft <= 3 && daysLeft >= 0) return 'ending';
+    }
+    
+    return 'active';
+  }
+
+  function showToast(msg, type) {
+    type = type || 'success';
+    var c = safeGetEl('toastContainer'); if (!c) return;
+    var t = document.createElement('div'); t.className = 'toast ' + type;
+    var icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+    t.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + msg;
+    c.appendChild(t);
+    setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = 'all 0.3s ease'; setTimeout(function() { t.remove(); }, 300); }, 4000);
+  }
+
+  function safeGetEl(id) { return document.getElementById(id); }
+
+  function hideModal() { 
+    var overlay = safeGetEl('modalOverlay'); 
+    if (overlay) overlay.classList.remove('active');
+  }
+  window.hideModal = hideModal;
+
+  function showModal(title, content) {
+    var titleEl = safeGetEl('modalTitle'); 
+    var contentEl = safeGetEl('modalContent');
+    var overlay = safeGetEl('modalOverlay');
+    if (titleEl) titleEl.textContent = title;
+    if (contentEl) contentEl.innerHTML = content;
+    if (overlay) overlay.classList.add('active');
+  }
+
+  function navigateTo(url) { window.location.href = url; }
+  window.navigateTo = navigateTo;
+
+  function isAdmin() { return userData && (userData.role === 'admin' || userData.role === 'super_admin'); }
+
+  window.toggleSidebar = function() {
+    var s = safeGetEl('sidebar'), o = safeGetEl('sidebarOverlay');
+    if (!s || !o) return;
+    if (s.classList.contains('mobile-open')) { s.classList.remove('mobile-open'); o.classList.remove('active'); document.body.style.overflow = ''; }
+    else { s.classList.add('mobile-open'); o.classList.add('active'); document.body.style.overflow = 'hidden'; }
+  };
+  
+  window.closeSidebar = function() {
+    var s = safeGetEl('sidebar'); var o = safeGetEl('sidebarOverlay');
+    if (s) s.classList.remove('mobile-open');
+    if (o) o.classList.remove('active');
+    document.body.style.overflow = '';
+  };
+
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { hideModal(); closeSidebar(); } });
+
+  function buildSidebar() {
+    var nav = safeGetEl('sidebarNav'); if (!nav) return;
+    var dashboardLink = isAdmin() ? 'admin-dashboard.html' : 'attendant-dashboard.html';
+    nav.innerHTML = '<div class="nav-section"><div class="nav-section-title">OVERVIEW</div>' +
+      '<button class="nav-item" onclick="navigateTo(\'' + dashboardLink + '\')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>' +
+      (isAdmin() ? '<button class="nav-item" onclick="navigateTo(\'approvals.html\')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>' : '') +
+      '</div>' +
+      '<div class="nav-section"><div class="nav-section-title">OPERATIONS</div>' +
+      '<button class="nav-item" onclick="navigateTo(\'inventory.html\')"><i class="fas fa-box"></i><span>Inventory</span></button>' +
+      '<button class="nav-item" onclick="navigateTo(\'store.html\')"><i class="fas fa-store"></i><span>Store</span></button>' +
+      '<button class="nav-item" onclick="navigateTo(\'purchases.html\')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>' +
+      '<button class="nav-item" onclick="navigateTo(\'customers.html\')"><i class="fas fa-users"></i><span>Customers</span></button>' +
+      '<button class="nav-item" onclick="navigateTo(\'sales.html\')"><i class="fas fa-cash-register"></i><span>Sales</span></button>' +
+      '<button class="nav-item active"><i class="fas fa-tags"></i><span>Promo</span></button>' +
+      '</div>' +
+      (isAdmin() ? '<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>' +
+      '<button class="nav-item" onclick="navigateTo(\'staff-management.html\')"><i class="fas fa-users-cog"></i><span>Staff</span></button>' +
+      '<button class="nav-item" onclick="navigateTo(\'finance.html\')"><i class="fas fa-chart-line"></i><span>Finance</span></button>' +
+      '<button class="nav-item" onclick="navigateTo(\'audit.html\')"><i class="fas fa-history"></i><span>Audit</span></button>' +
+      '</div>' : '') +
+      '<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>';
+    
+    var logoutBtn = safeGetEl('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', async function() { 
+        await signOut(auth); 
+        window.location.href = 'auth.html'; 
+      });
+    }
+  }
+
+  // ============================================
+  // LOAD DATA
+  // ============================================
+  async function loadStockData() {
+    try {
+      var stockSnap = await getDocs(collection(db, 'stock_items'));
+      allStockItems = stockSnap.docs.map(function(d) {
+        var data = d.data();
+        return {
+          id: d.id, name: data.name || '', category: data.category || '', itemType: data.itemType || 'general',
+          unitQty: safeNumber(data.unitQty, 0),
+          unitPrice: safeNumber(data.unitPrice, 0),
+          halfQty: safeNumber(data.halfQty, 0), halfPrice: safeNumber(data.halfPrice, 0),
+          quarterQty: safeNumber(data.quarterQty, 0), quarterPrice: safeNumber(data.quarterPrice, 0),
+          packSize: parseInt(data.packSize || 12), packQty: safeNumber(data.packQty, 0), packPrice: safeNumber(data.packPrice, 0),
+          bundleSize: parseInt(data.bundleSize || 50), bundleQty: safeNumber(data.bundleQty, 0), bundlePrice: safeNumber(data.bundlePrice, 0)
+        };
+      });
+
+      var storeSnap = await getDocs(collection(db, 'store_items'));
+      allStoreItems = storeSnap.docs.map(function(d) {
+        var data = d.data();
+        return { id: d.id, name: data.name || '', category: data.category || '', unitQty: safeNumber(data.unitQty, 0), unitCost: safeNumber(data.unitCost, 0) };
+      });
+    } catch (e) {
+      console.error('Error loading stock:', e);
+    }
+  }
+
+  function loadPromos() {
+    unsubscribes.forEach(function(u) { u(); });
+    unsubscribes = [];
+
+    var promosQuery = query(collection(db, 'promos'), orderBy('createdAt', 'desc'));
+    unsubscribes.push(onSnapshot(promosQuery, function(snap) {
+      allPromos = snap.docs.map(function(d) {
+        var data = d.data();
+        return { id: d.id, ...data };
+      });
+      renderPromos();
+      updateStats();
+    }, function(err) {
+      console.error('Promo snapshot error:', err);
+      renderPromos();
+    }));
+  }
+
+  function updateStats() {
+    var now = new Date();
+    var active = 0, ending = 0, totalItems = 0;
+    
+    allPromos.forEach(function(p) {
+      var status = getPromoStatus(p);
+      if (status === 'active') active++;
+      if (status === 'ending') ending++;
+      if (p.items) totalItems += p.items.length;
+    });
+    
+    var activeEl = safeGetEl('activePromos');
+    if (activeEl) activeEl.textContent = active;
+    
+    var endingEl = safeGetEl('endingPromos');
+    if (endingEl) endingEl.textContent = ending;
+    
+    var totalEl = safeGetEl('totalPromos');
+    if (totalEl) totalEl.textContent = allPromos.length;
+    
+    var itemsEl = safeGetEl('promoItems');
+    if (itemsEl) itemsEl.textContent = totalItems;
+  }
+
+  function renderPromos() {
+    var container = safeGetEl('promosContainer');
+    if (!container) return;
+
+    var searchInput = safeGetEl('promoSearchInput');
+    var search = (searchInput && searchInput.value || '').toLowerCase();
+    
+    var statusFilter = safeGetEl('promoStatusFilter');
+    var filter = statusFilter ? statusFilter.value : 'all';
+
+    var filtered = allPromos.filter(function(p) {
+      var nameMatch = (p.name || '').toLowerCase().indexOf(search) !== -1;
+      var condMatch = (p.condition || '').toLowerCase().indexOf(search) !== -1;
+      var match = nameMatch || condMatch;
+      
+      if (filter !== 'all') {
+        var status = getPromoStatus(p);
+        if (filter === 'active' && status !== 'active') return false;
+        if (filter === 'ending' && status !== 'ending') return false;
+        if (filter === 'inactive' && status !== 'inactive') return false;
+      }
+      
+      return match;
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="empty-state"><i class="fas fa-tags"></i><p>No promos found</p><p style="font-size:0.8rem;color:var(--gray);">Click "New Promo" to create one</p></div>';
+      return;
+    }
+
+    var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:16px;">';
+    
+    filtered.forEach(function(promo) {
+      var status = getPromoStatus(promo);
+      var statusText = status === 'active' ? 'Active' : status === 'ending' ? 'Ending Soon' : 'Inactive';
+      var statusClass = status === 'active' ? 'active' : status === 'ending' ? 'ending' : 'inactive';
+      
+      var itemCount = promo.items ? promo.items.length : 0;
+      var totalValue = 0;
+      var originalValue = 0;
+      
+      if (promo.items) {
+        promo.items.forEach(function(item) {
+          var qty = item.quantity || 1;
+          totalValue += (item.promoPrice || 0) * qty;
+          originalValue += (item.originalPrice || item.unitPrice || 0) * qty;
+        });
+      }
+      
+      var startDate = promo.startDate ? formatDate(promo.startDate) : 'N/A';
+      var endDate = promo.endDate ? formatDate(promo.endDate) : 'N/A';
+      
+      var itemsHtml = '';
+      if (promo.items && promo.items.length > 0) {
+        var displayItems = promo.items.slice(0, 3);
+        itemsHtml = displayItems.map(function(item) {
+          var name = item.name || 'Item';
+          var qty = item.quantity || 1;
+          var price = item.promoPrice || 0;
+          var origPrice = item.originalPrice || item.unitPrice || 0;
+          return '<div class="promo-item"><span>' + qty + 'x ' + escapeHtml(name) + '</span><span>' + formatCurrency(price) + ' <span style="text-decoration:line-through;color:var(--gray);font-size:0.7rem;">' + formatCurrency(origPrice) + '</span></span></div>';
+        }).join('');
+        if (promo.items.length > 3) {
+          itemsHtml += '<div class="promo-item" style="color:var(--gray);font-size:0.8rem;">+ ' + (promo.items.length - 3) + ' more items</div>';
+        }
+      } else {
+        itemsHtml = '<div class="promo-item" style="color:var(--gray);">No items</div>';
+      }
+
+      html += '<div class="promo-card">' +
+        '<div class="promo-header">' +
+          '<div class="promo-name"><i class="fas fa-tags"></i> ' + escapeHtml(promo.name || 'Untitled Promo') + '</div>' +
+          '<span class="promo-status ' + statusClass + '">' + statusText + '</span>' +
+        '</div>' +
+        '<div class="promo-dates">📅 ' + startDate + ' → ' + endDate + '</div>' +
+        '<div style="font-size:0.8rem;color:var(--gray);margin:4px 0;">' + (promo.condition || 'No conditions') + '</div>' +
+        '<div class="promo-items">' + itemsHtml + '</div>' +
+        '<div class="promo-total">' +
+          '<span>' + itemCount + ' items</span>' +
+          '<span>Original: ' + formatCurrency(originalValue) + ' → Promo: ' + formatCurrency(totalValue) + '</span>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">' +
+          '<button class="btn btn-sm btn-outline" onclick="editPromo(\'' + promo.id + '\')"><i class="fas fa-edit"></i> Edit</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="deletePromo(\'' + promo.id + '\')"><i class="fas fa-trash"></i> Delete</button>' +
+          '<button class="btn btn-sm btn-success" onclick="duplicatePromo(\'' + promo.id + '\')"><i class="fas fa-copy"></i> Duplicate</button>' +
+          (status === 'active' ? '<button class="btn btn-sm btn-warning" onclick="togglePromoStatus(\'' + promo.id + '\',\'inactive\')"><i class="fas fa-pause"></i> Deactivate</button>' : 
+           '<button class="btn btn-sm btn-success" onclick="togglePromoStatus(\'' + promo.id + '\',\'active\')"><i class="fas fa-play"></i> Activate</button>') +
+        '</div>' +
+      '</div>';
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  // ============================================
+  // CREATE / EDIT PROMO
+  // ============================================
+  window.openNewPromoModal = function() {
+    loadStockData().then(function() {
+      showPromoModal(null);
+    });
+  };
+
+  window.editPromo = function(id) {
+    var promo = allPromos.find(function(p) { return p.id === id; });
+    if (!promo) { showToast('Promo not found', 'error'); return; }
+    loadStockData().then(function() {
+      showPromoModal(promo);
+    });
+  };
+
+  window.duplicatePromo = function(id) {
+    var promo = allPromos.find(function(p) { return p.id === id; });
+    if (!promo) { showToast('Promo not found', 'error'); return; }
+    var clone = JSON.parse(JSON.stringify(promo));
+    clone.name = clone.name + ' (Copy)';
+    clone.status = 'inactive';
+    delete clone.id;
+    delete clone.createdAt;
+    delete clone.updatedAt;
+    showPromoModal(clone, true);
+  };
+
+  function showPromoModal(existingPromo, isDuplicate) {
+    var stockOptions = getStockOptionsHtml();
+    var today = new Date().toISOString().split('T')[0];
+    var nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    var nextMonthStr = nextMonth.toISOString().split('T')[0];
+
+    var promo = existingPromo || { 
+      name: '', 
+      startDate: today, 
+      endDate: nextMonthStr, 
+      condition: '', 
+      items: [], 
+      status: 'inactive' 
+    };
+
+    var isEditing = !!existingPromo && !isDuplicate;
+
+    var promoItemsHtml = '';
+    if (promo.items && promo.items.length > 0) {
+      promoItemsHtml = promo.items.map(function(item, idx) {
+        return '<div class="promo-item-row">' +
+          '<select class="form-control promo-select" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
+          '<input type="text" class="form-control promo-item-name" placeholder="Item name" value="' + escapeHtml(item.name || '') + '" style="flex:1.5;min-width:100px;">' +
+          '<select class="form-control promo-size">' + getSizeOptionsHtml(item.size || '1') + '</select>' +
+          '<input type="number" class="form-control promo-qty" value="' + (item.quantity || 1) + '" min="1" style="flex:0.5;min-width:60px;">' +
+          '<span class="promo-org-price" style="flex:0.5;min-width:80px;">' + formatCurrency(item.originalPrice || 0) + '</span>' +
+          '<input type="number" class="form-control promo-new-price" placeholder="Promo ₦" value="' + (item.promoPrice || '') + '" step="0.01" style="flex:0.5;min-width:80px;">' +
+          '<span class="promo-total" style="flex:0.5;min-width:80px;">' + formatCurrency((item.promoPrice || 0) * (item.quantity || 1)) + '</span>' +
+          '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.promo-item-row\').remove();window._updatePromoSummary();"><i class="fas fa-times"></i></button>' +
+        '</div>';
+      }).join('');
+    } else {
+      promoItemsHtml = '<div class="promo-item-row">' +
+        '<select class="form-control promo-select" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
+        '<input type="text" class="form-control promo-item-name" placeholder="Item name" style="flex:1.5;min-width:100px;">' +
+        '<select class="form-control promo-size">' + getSizeOptionsHtml('1') + '</select>' +
+        '<input type="number" class="form-control promo-qty" value="1" min="1" style="flex:0.5;min-width:60px;">' +
+        '<span class="promo-org-price" style="flex:0.5;min-width:80px;">₦0</span>' +
+        '<input type="number" class="form-control promo-new-price" placeholder="Promo ₦" step="0.01" style="flex:0.5;min-width:80px;">' +
+        '<span class="promo-total" style="flex:0.5;min-width:80px;">₦0</span>' +
+        '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.promo-item-row\').remove();window._updatePromoSummary();"><i class="fas fa-times"></i></button>' +
+      '</div>';
+    }
+
+    var title = isEditing ? '✏️ Edit Promo' : '🔥 New Promo';
+
+    showModal(title,
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+        '<span style="font-size:0.7rem;color:var(--gray);">' + (isEditing ? 'Editing: ' + escapeHtml(promo.name) : 'Create a new promotion') + '</span>' +
+        '<span style="margin-left:auto;font-size:0.7rem;color:var(--gray);">' + (promo.status === 'active' ? '✅ Active' : '⏸️ Inactive') + '</span>' +
+      '</div>' +
+      '<div class="form-group"><label>Promo Name *</label><input type="text" class="form-control" id="promoName" placeholder="e.g., Summer Sale, Weekend Special" value="' + escapeHtml(promo.name || '') + '"></div>' +
+      '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
+        '<div class="form-group" style="flex:1;min-width:120px;"><label>Start Date</label><input type="date" class="form-control" id="promoStartDate" value="' + (promo.startDate || today) + '"></div>' +
+        '<div class="form-group" style="flex:1;min-width:120px;"><label>End Date</label><input type="date" class="form-control" id="promoEndDate" value="' + (promo.endDate || nextMonthStr) + '"></div>' +
+      '</div>' +
+      '<div class="form-group"><label>Condition / Terms</label><textarea class="form-control" id="promoCondition" rows="2" placeholder="e.g., Buy 2 get 10% off, Limited time offer">' + escapeHtml(promo.condition || '') + '</textarea></div>' +
+      '<div style="margin-top:15px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+          '<strong><i class="fas fa-shopping-bag"></i> Items with Promo Prices</strong>' +
+          '<span style="font-size:0.7rem;color:var(--gray);">Set promo price for each item</span>' +
+        '</div>' +
+        '<div id="promoItems">' + promoItemsHtml + '</div>' +
+        '<button class="btn btn-outline btn-sm" onclick="window._addPromoItem();"><i class="fas fa-plus"></i> Add Item</button>' +
+      '</div>' +
+      '<div class="sale-summary" style="margin-top:15px;">' +
+        '<div class="summary-row"><span>Items:</span><span id="promoItemCount">0</span></div>' +
+        '<div class="summary-row"><span>Original Total:</span><span id="promoOriginalTotal">₦0</span></div>' +
+        '<div class="summary-row"><span>Promo Total:</span><span id="promoTotal" style="color:var(--promo);font-weight:700;">₦0</span></div>' +
+        '<div class="summary-row total"><span>Discount:</span><span id="promoDiscount" style="color:var(--success);">₦0</span></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;margin-top:20px;">' +
+        '<button class="btn btn-promo" onclick="window._savePromo(\'' + (promo.id || '') + '\', ' + (isEditing ? 'true' : 'false') + ')" style="flex:1;"><i class="fas fa-save"></i> ' + (isEditing ? 'Update' : 'Save') + ' Promo</button>' +
+        '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Cancel</button>' +
+      '</div>'
+    );
+
+    setTimeout(function() {
+      $('.promo-select').each(function() {
+        $(this).select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { 
+          window._updatePromoItemPrice(this); 
+          window._updatePromoSummary(); 
+        });
+      });
+      
+      $('.promo-qty, .promo-new-price, .promo-item-name').on('input', function() { 
+        window._updatePromoSummary(); 
+      });
+      $('.promo-size').on('change', function() { 
+        window._updatePromoSummary(); 
+      });
+
+      // Restore items if editing
+      if (promo.items && promo.items.length > 0) {
+        var rows = document.querySelectorAll('.promo-item-row');
+        promo.items.forEach(function(item, idx) {
+          var row = rows[idx];
+          if (!row) return;
+          var select = row.querySelector('.promo-select');
+          var nameInput = row.querySelector('.promo-item-name');
+          var qtyInput = row.querySelector('.promo-qty');
+          var newPriceInput = row.querySelector('.promo-new-price');
+          var sizeSelect = row.querySelector('.promo-size');
+          
+          if (select && item.id) $(select).val(item.id).trigger('change');
+          if (nameInput) nameInput.value = item.name || '';
+          if (qtyInput) qtyInput.value = item.quantity || 1;
+          if (newPriceInput) newPriceInput.value = item.promoPrice || '';
+          if (sizeSelect && item.size) sizeSelect.value = item.size;
+        });
+      }
+      
+      window._updatePromoSummary();
+    }, 200);
+  }
+
+  function getStockOptionsHtml() {
+    return allStockItems.map(function(i) {
+      var label = i.itemType === 'fashion' ? '👗' : i.itemType === 'pack_bundle' ? '📦' : i.itemType === 'measured' ? '📏' : '🔧';
+      return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-price="' + (i.unitPrice||0) + '" data-halfprice="' + (i.halfPrice||0) + '" data-quarterprice="' + (i.quarterPrice||0) + '" data-packprice="' + (i.packPrice||0) + '" data-bundleprice="' + (i.bundlePrice||0) + '" data-packsize="' + (i.packSize||12) + '" data-bundlesize="' + (i.bundleSize||50) + '">' + label + ' ' + escapeHtml(i.name||'') + ' - ' + formatCurrency(i.unitPrice||0) + '</option>';
+    }).join('');
+  }
+
+  function getSizeOptionsHtml(selected) {
+    var sizes = [
+      { value: '1', label: 'Unit' },
+      { value: '0.5', label: '½ (Half)' },
+      { value: '0.25', label: '¼ (Quarter)' },
+      { value: 'pack', label: '📦 Pack' },
+      { value: 'bundle', label: '📦 Bundle' }
+    ];
+    return sizes.map(function(s) {
+      return '<option value="' + s.value + '"' + (s.value === selected ? ' selected' : '') + '>' + s.label + '</option>';
+    }).join('');
+  }
+
+  window._addPromoItem = function() {
+    var stockOptions = getStockOptionsHtml();
+    
+    var div = document.createElement('div');
+    div.className = 'promo-item-row';
+    div.innerHTML = '<select class="form-control promo-select" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
+      '<input type="text" class="form-control promo-item-name" placeholder="Item name" style="flex:1.5;min-width:100px;">' +
+      '<select class="form-control promo-size">' + getSizeOptionsHtml('1') + '</select>' +
+      '<input type="number" class="form-control promo-qty" value="1" min="1" style="flex:0.5;min-width:60px;">' +
+      '<span class="promo-org-price" style="flex:0.5;min-width:80px;">₦0</span>' +
+      '<input type="number" class="form-control promo-new-price" placeholder="Promo ₦" step="0.01" style="flex:0.5;min-width:80px;">' +
+      '<span class="promo-total" style="flex:0.5;min-width:80px;">₦0</span>' +
+      '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.promo-item-row\').remove();window._updatePromoSummary();"><i class="fas fa-times"></i></button>';
+    
+    var promoItemsDiv = safeGetEl('promoItems');
+    if (promoItemsDiv) promoItemsDiv.appendChild(div);
+    
+    $(div).find('.promo-select').select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { 
+      window._updatePromoItemPrice(this); 
+      window._updatePromoSummary(); 
+    });
+    
+    div.querySelectorAll('.promo-qty, .promo-new-price, .promo-item-name').forEach(function(el) { 
+      el.addEventListener('input', window._updatePromoSummary); 
+    });
+    div.querySelectorAll('.promo-size').forEach(function(el) { 
+      el.addEventListener('change', window._updatePromoSummary); 
+    });
+    
+    window._updatePromoSummary();
+  };
+
+  window._updatePromoItemPrice = function(selectEl) {
+    var row = selectEl.closest('.promo-item-row');
+    if (!row) return;
+    var opt = selectEl.options[selectEl.selectedIndex];
+    if (!opt || !opt.value) {
+      row.querySelector('.promo-org-price').textContent = '₦0';
+      return;
+    }
+    var price = parseFloat(opt.getAttribute('data-price')) || 0;
+    var sizeSelect = row.querySelector('.promo-size');
+    var size = sizeSelect ? sizeSelect.value : '1';
+    if (size === '0.5' && parseFloat(opt.getAttribute('data-halfprice')) > 0) price = parseFloat(opt.getAttribute('data-halfprice'));
+    else if (size === '0.25' && parseFloat(opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
+    else if (size === 'pack' && parseFloat(opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
+    else if (size === 'bundle' && parseFloat(opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
+    
+    var nameInput = row.querySelector('.promo-item-name');
+    if (nameInput && !nameInput.value) {
+      nameInput.value = opt.getAttribute('data-name') || '';
+    }
+    
+    var orgPriceSpan = row.querySelector('.promo-org-price');
+    if (orgPriceSpan) orgPriceSpan.textContent = formatCurrency(price);
+    
+    var newPriceInput = row.querySelector('.promo-new-price');
+    if (newPriceInput && !newPriceInput.value) {
+      newPriceInput.value = price;
+    }
+    
+    window._updatePromoSummary();
+  };
+
+  window._updatePromoSummary = function() {
+    var totalItems = 0;
+    var originalTotal = 0;
+    var promoTotal = 0;
+    
+    document.querySelectorAll('.promo-item-row').forEach(function(row) {
+      var qtyEl = row.querySelector('.promo-qty');
+      var newPriceEl = row.querySelector('.promo-new-price');
+      var orgPriceEl = row.querySelector('.promo-org-price');
+      
+      var qty = parseFloat(qtyEl && qtyEl.value) || 1;
+      var newPrice = parseFloat(newPriceEl && newPriceEl.value) || 0;
+      var orgPrice = parseFloat(orgPriceEl && orgPriceEl.textContent.replace(/[₦,]/g, '')) || 0;
+      
+      if (qty > 0) {
+        totalItems++;
+        originalTotal += orgPrice * qty;
+        promoTotal += newPrice * qty;
+      }
+      
+      var totalSpan = row.querySelector('.promo-total');
+      if (totalSpan) totalSpan.textContent = formatCurrency(newPrice * qty);
+    });
+    
+    var itemCountEl = safeGetEl('promoItemCount');
+    if (itemCountEl) itemCountEl.textContent = totalItems;
+    
+    var originalTotalEl = safeGetEl('promoOriginalTotal');
+    if (originalTotalEl) originalTotalEl.textContent = formatCurrency(originalTotal);
+    
+    var promoTotalEl = safeGetEl('promoTotal');
+    if (promoTotalEl) promoTotalEl.textContent = formatCurrency(promoTotal);
+    
+    var discountEl = safeGetEl('promoDiscount');
+    if (discountEl) discountEl.textContent = formatCurrency(originalTotal - promoTotal);
+  };
+
+  window._savePromo = function(id, isEditing) {
+    var name = safeTrimVal('promoName', '');
+    var startDate = safeTrimVal('promoStartDate', '');
+    var endDate = safeTrimVal('promoEndDate', '');
+    var condition = safeTrimVal('promoCondition', '');
+    
+    if (!name) { showToast('Please enter a promo name', 'error'); return; }
+    if (!startDate || !endDate) { showToast('Please set start and end dates', 'error'); return; }
+    
+    var items = [];
+    document.querySelectorAll('.promo-item-row').forEach(function(row) {
+      var select = row.querySelector('.promo-select');
+      var nameInput = row.querySelector('.promo-item-name');
+      var sizeSelect = row.querySelector('.promo-size');
+      var qtyEl = row.querySelector('.promo-qty');
+      var newPriceEl = row.querySelector('.promo-new-price');
+      var orgPriceEl = row.querySelector('.promo-org-price');
+      
+      var qty = parseFloat(qtyEl && qtyEl.value) || 1;
+      var newPrice = parseFloat(newPriceEl && newPriceEl.value) || 0;
+      var orgPrice = parseFloat(orgPriceEl && orgPriceEl.textContent.replace(/[₦,]/g, '')) || 0;
+      
+      if (qty > 0 && newPrice > 0) {
+        items.push({
+          id: select && select.value || '',
+          name: nameInput && nameInput.value || '',
+          size: sizeSelect && sizeSelect.value || '1',
+          quantity: qty,
+          originalPrice: orgPrice,
+          promoPrice: newPrice
+        });
+      }
+    });
+    
+    if (items.length === 0) { showToast('Add at least one item with a promo price', 'error'); return; }
+    
+    var promoData = {
+      name: name,
+      startDate: startDate,
+      endDate: endDate,
+      condition: condition,
+      items: items,
+      status: isEditing ? 'inactive' : 'inactive',
+      updatedAt: serverTimestamp()
+    };
+    
+    if (!isEditing) {
+      promoData.createdAt = serverTimestamp();
+    }
+    
+    if (isEditing && id) {
+      updateDoc(doc(db, 'promos', id), promoData).then(function() {
+        showToast('Promo updated successfully!', 'success');
+        hideModal();
+        loadPromos();
+      }).catch(function(e) {
+        showToast('Error updating promo: ' + e.message, 'error');
+      });
+    } else {
+      addDoc(collection(db, 'promos'), promoData).then(function() {
+        showToast('Promo created successfully!', 'success');
+        hideModal();
+        loadPromos();
+      }).catch(function(e) {
+        showToast('Error creating promo: ' + e.message, 'error');
+      });
+    }
+  };
+
+  // ============================================
+  // DELETE / TOGGLE PROMO
+  // ============================================
+  window.deletePromo = function(id) {
+    if (!confirm('Delete this promo permanently?')) return;
+    deleteDoc(doc(db, 'promos', id)).then(function() {
+      showToast('Promo deleted', 'success');
+      loadPromos();
+    }).catch(function(e) {
+      showToast('Error deleting: ' + e.message, 'error');
+    });
+  };
+
+  window.togglePromoStatus = function(id, status) {
+    updateDoc(doc(db, 'promos', id), { status: status, updatedAt: serverTimestamp() }).then(function() {
+      showToast('Promo ' + (status === 'active' ? 'activated' : 'deactivated'), 'success');
+      loadPromos();
+    }).catch(function(e) {
+      showToast('Error: ' + e.message, 'error');
+    });
+  };
+
+  function safeTrimVal(id, fallback) {
+    var val = safeGetVal(id, fallback);
+    return (typeof val === 'string') ? val.trim() : val;
+  }
+
+  function safeGetVal(id, fallback) {
+    var el = document.getElementById(id);
+    if (!el) return (typeof fallback !== 'undefined') ? fallback : '';
+    return (el.value !== undefined) ? el.value : (typeof fallback !== 'undefined') ? fallback : '';
+  }
+
+  window.refreshData = function() {
+    loadPromos();
+    showToast('Refreshed', 'success');
+  };
+
+  var searchInput = safeGetEl('promoSearchInput');
+  if (searchInput) {
+    var searchTimeout;
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(renderPromos, 300);
+    });
+  }
+
+  var statusFilter = safeGetEl('promoStatusFilter');
+  if (statusFilter) {
+    statusFilter.addEventListener('change', function() {
+      renderPromos();
+    });
+  }
+
+  // ============================================
+  // AUTH
+  // ============================================
+  onAuthStateChanged(auth, async function(u) {
+    if (!u) { window.location.href = 'auth.html'; return; }
+    currentUser = u;
+    try {
+      var snap = await getDoc(doc(db, 'users', u.uid));
+      if (!snap.exists() || snap.data().status !== 'active') { await signOut(auth); window.location.href = 'auth.html'; return; }
+      userData = snap.data();
+      
+      var userNameEl = safeGetEl('userName'); if (userNameEl) userNameEl.textContent = (userData.fullName || 'Staff').split(' ')[0];
+      var userRoleEl = safeGetEl('userRole'); if (userRoleEl) userRoleEl.textContent = (userData.role || '').replace('_', ' ');
+      var userAvatarEl = safeGetEl('userAvatar'); if (userAvatarEl) userAvatarEl.textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
+      var currentDateEl = safeGetEl('currentDate'); if (currentDateEl) currentDateEl.textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      
+      buildSidebar();
+      await loadStockData();
+      loadPromos();
+    } catch (e) { 
+      console.error('Init error:', e);
+      showToast('Error loading', 'error'); 
+    }
+  });
+
+  window.addEventListener('beforeunload', function() {
+    unsubscribes.forEach(function(u) { u(); });
+  });
+
+  // Online/Offline
+  window.addEventListener('online', function() {
+    isOnline = true;
+    var banner = safeGetEl('offlineBanner'); if (banner) banner.classList.remove('show');
+    loadPromos();
+    showToast('Back online!', 'success');
+  });
+
+  window.addEventListener('offline', function() {
+    isOnline = false;
+    var banner = safeGetEl('offlineBanner'); if (banner) banner.classList.add('show');
+    showToast('You are offline. Changes will sync when reconnected.', 'warning');
+  });
+
+  if (!navigator.onLine) {
+    isOnline = false;
+    var banner = safeGetEl('offlineBanner'); if (banner) banner.classList.add('show');
+  }
+</script>
+</body>
+</html>
