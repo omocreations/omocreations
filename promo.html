@@ -13,9 +13,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    /* ... (same styles as before, unchanged) ... */
+    * { margin:0; padding:0; box-sizing:border-box; }
     :root {
       --primary:#ff4da6; --primary-dark:#e6398c; --primary-light:#ffb3d9;
       --primary-soft:#fff0f6; --dark:#1a1a2e; --gray:#6b7280;
@@ -188,7 +190,7 @@
     .cust-info { font-weight:normal; margin:4px 0; line-height:1.3; }
     .thanks { text-align:center; font-style:italic; margin-top:15px; font-weight:normal; }
     .receipt-qr { text-align:center; margin:10px 0; }
-    .receipt-qr svg { max-width:120px; height:auto; }
+    .receipt-qr canvas { max-width:120px; height:auto; }
     .receipt-website { text-align:center; font-size:0.75rem; color:var(--gray); margin-top:4px; }
     .receipt-website a { color:var(--primary); text-decoration:none; font-weight:600; }
 
@@ -286,6 +288,23 @@
       </div>
     </div>
 
+    <!-- NEW: Promo Sales History Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3><i class="fas fa-receipt"></i> Promo Sales History</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="refreshPromoSales()"><i class="fas fa-sync-alt"></i> Refresh</button>
+          <button class="btn btn-outline btn-sm" onclick="exportPromoSales()"><i class="fas fa-download"></i> Export</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>Receipt #</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Promo</th><th>Type</th><th>Actions</th></tr></thead>
+          <tbody id="promoSalesTable"><tr><td colspan="9"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading promo sales...</p></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </main>
 
@@ -299,6 +318,7 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 <script type="module">
+  // ... (Firebase imports and config, same as before) ...
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, serverTimestamp, getDoc, writeBatch, enableIndexedDbPersistence, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -317,40 +337,33 @@
   const db = getFirestore(app);
 
   try {
-    enableIndexedDbPersistence(db).catch(function(err) {
-      console.warn('Persistence:', err.message);
-    });
+    enableIndexedDbPersistence(db).catch(function(err) { console.warn('Persistence:', err.message); });
   } catch (e) {}
 
+  // Global state
   let currentUser = null, userData = null;
   let allPromos = [], allStockItems = [], allStoreItems = [], allCustomers = [];
+  let allPromoSales = []; // store promo sales
+  let offlinePromoSales = JSON.parse(localStorage.getItem('offlinePromoSales') || '[]');
   let isOnline = navigator.onLine;
   let unsubscribes = [];
   let receiptCounter = parseInt(localStorage.getItem('receiptCounter') || '0');
   let isProcessing = false;
-
-  // Payment state
-  let selectedPayment = 'cash';
-  let selectedPromoPayment = 'cash';
-  let selectedBulkPayment = 'cash';
-  let customerType = 'existing';
   let promoCustomerType = 'existing';
   let bulkCustomerType = 'existing';
 
+  // Helper functions (same as before)
   function safeNumber(val, fallback) {
     fallback = (typeof fallback === 'undefined') ? 0 : fallback;
     if (typeof val === 'number') return val;
     if (typeof val === 'string') { var parsed = parseFloat(val); return isNaN(parsed) ? fallback : parsed; }
     return fallback;
   }
-
   function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
   }
-
   function formatCurrency(n) { return '₦' + (safeNumber(n, 0)).toLocaleString(); }
-
   function formatDate(d) {
     if (!d) return 'N/A';
     if (typeof d === 'string') return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -359,7 +372,6 @@
     if (d instanceof Date) return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     return 'N/A';
   }
-
   function formatDateTime(d) {
     if (!d) return 'N/A';
     if (typeof d === 'string') return new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -368,26 +380,20 @@
     if (d instanceof Date) return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     return 'N/A';
   }
-
   function getPromoStatus(promo) {
     if (!promo) return 'inactive';
     if (promo.status === 'inactive') return 'inactive';
-    
     var now = new Date();
     var startDate = promo.startDate ? new Date(promo.startDate) : null;
     var endDate = promo.endDate ? new Date(promo.endDate) : null;
-    
     if (startDate && now < startDate) return 'inactive';
     if (endDate && now > endDate) return 'inactive';
-    
     if (endDate) {
       var daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
       if (daysLeft <= 3 && daysLeft >= 0) return 'ending';
     }
-    
     return 'active';
   }
-
   function generateReceiptNumber(prefix) {
     prefix = prefix || 'PRM';
     receiptCounter++;
@@ -395,7 +401,6 @@
     var padded = receiptCounter.toString().padStart(6, '0');
     return prefix + '-' + padded;
   }
-
   function showToast(msg, type) {
     type = type || 'success';
     var c = safeGetEl('toastContainer'); if (!c) return;
@@ -405,45 +410,31 @@
     c.appendChild(t);
     setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = 'all 0.3s ease'; setTimeout(function() { t.remove(); }, 300); }, 4000);
   }
-
   function safeGetEl(id) { return document.getElementById(id); }
-
-  function hideModal() { 
-    var overlay = safeGetEl('modalOverlay'); 
-    if (overlay) overlay.classList.remove('active');
-  }
+  function hideModal() { var overlay = safeGetEl('modalOverlay'); if (overlay) overlay.classList.remove('active'); }
   window.hideModal = hideModal;
-
   function showModal(title, content) {
-    var titleEl = safeGetEl('modalTitle'); 
-    var contentEl = safeGetEl('modalContent');
-    var overlay = safeGetEl('modalOverlay');
+    var titleEl = safeGetEl('modalTitle'); var contentEl = safeGetEl('modalContent'); var overlay = safeGetEl('modalOverlay');
     if (titleEl) titleEl.textContent = title;
     if (contentEl) contentEl.innerHTML = content;
     if (overlay) overlay.classList.add('active');
   }
-
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
-
   function isAdmin() { return userData && (userData.role === 'admin' || userData.role === 'super_admin'); }
-
   window.toggleSidebar = function() {
     var s = safeGetEl('sidebar'), o = safeGetEl('sidebarOverlay');
     if (!s || !o) return;
     if (s.classList.contains('mobile-open')) { s.classList.remove('mobile-open'); o.classList.remove('active'); document.body.style.overflow = ''; }
     else { s.classList.add('mobile-open'); o.classList.add('active'); document.body.style.overflow = 'hidden'; }
   };
-  
   window.closeSidebar = function() {
     var s = safeGetEl('sidebar'); var o = safeGetEl('sidebarOverlay');
     if (s) s.classList.remove('mobile-open');
     if (o) o.classList.remove('active');
     document.body.style.overflow = '';
   };
-
   document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { hideModal(); closeSidebar(); } });
-
   function buildSidebar() {
     var nav = safeGetEl('sidebarNav'); if (!nav) return;
     var dashboardLink = isAdmin() ? 'admin-dashboard.html' : 'attendant-dashboard.html';
@@ -465,19 +456,13 @@
       '<button class="nav-item" onclick="navigateTo(\'audit.html\')"><i class="fas fa-history"></i><span>Audit</span></button>' +
       '</div>' : '') +
       '<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>';
-    
     var logoutBtn = safeGetEl('logoutBtn');
     if (logoutBtn) {
-      logoutBtn.addEventListener('click', async function() { 
-        await signOut(auth); 
-        window.location.href = 'auth.html'; 
-      });
+      logoutBtn.addEventListener('click', async function() { await signOut(auth); window.location.href = 'auth.html'; });
     }
   }
 
-  // ============================================
-  // LOAD DATA
-  // ============================================
+  // Load stock data
   async function loadStockData() {
     try {
       var stockSnap = await getDocs(collection(db, 'stock_items'));
@@ -493,106 +478,137 @@
           bundleSize: parseInt(data.bundleSize || 50), bundleQty: safeNumber(data.bundleQty, 0), bundlePrice: safeNumber(data.bundlePrice, 0)
         };
       });
-
       var storeSnap = await getDocs(collection(db, 'store_items'));
       allStoreItems = storeSnap.docs.map(function(d) {
         var data = d.data();
         return { id: d.id, name: data.name || '', category: data.category || '', unitQty: safeNumber(data.unitQty, 0), unitCost: safeNumber(data.unitCost, 0) };
       });
-
       var custSnap = await getDocs(query(collection(db, 'customers'), where('status', '==', 'approved')));
       allCustomers = custSnap.docs.map(function(d) {
         var data = d.data();
         return { id: d.id, fullName: data.fullName || '', phone: data.phone || '', address: data.address || '' };
       });
-    } catch (e) {
-      console.error('Error loading data:', e);
-    }
+    } catch (e) { console.error('Error loading data:', e); }
   }
 
+  // Load promos (definitions)
   function loadPromos() {
     unsubscribes.forEach(function(u) { u(); });
     unsubscribes = [];
-
     var promosQuery = query(collection(db, 'promos'), orderBy('createdAt', 'desc'));
     unsubscribes.push(onSnapshot(promosQuery, function(snap) {
-      allPromos = snap.docs.map(function(d) {
-        var data = d.data();
-        return { id: d.id, ...data };
-      });
+      allPromos = snap.docs.map(function(d) { var data = d.data(); return { id: d.id, ...data }; });
       renderPromos();
       updateStats();
+    }, function(err) { console.error('Promo snapshot error:', err); renderPromos(); }));
+  }
+
+  // Load promo sales
+  function loadPromoSales() {
+    var salesQuery = query(collection(db, 'promo_sales'), orderBy('createdAt', 'desc'));
+    unsubscribes.push(onSnapshot(salesQuery, function(snap) {
+      var serverSales = snap.docs.map(function(d) { return Object.assign({ id: d.id, _synced: true }, d.data()); });
+      var serverIds = new Set(serverSales.map(function(s) { return s.id; }));
+      var mergedOffline = offlinePromoSales.filter(function(s) { return !serverIds.has(s.id) && !s._synced; });
+      allPromoSales = serverSales.concat(mergedOffline);
+      renderPromoSales();
     }, function(err) {
-      console.error('Promo snapshot error:', err);
-      renderPromos();
+      console.error('Promo sales snapshot error:', err);
+      renderPromoSales();
     }));
   }
 
+  function renderPromoSales() {
+    var tbody = safeGetEl('promoSalesTable');
+    if (!tbody) return;
+    if (allPromoSales.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><i class="fas fa-receipt"></i><p>No promo sales yet</p></div></td></tr>';
+      return;
+    }
+    var html = '';
+    allPromoSales.slice(0, 50).forEach(function(s) {
+      var isOffline = s._localId && !s._synced;
+      html += '<tr class="' + (isOffline ? 'pending-sync' : '') + '">' +
+        '<td><span class="badge badge-info">' + escapeHtml(s.receiptNumber || 'N/A') + '</span>' + (isOffline ? ' <span class="badge badge-warning">Offline</span>' : '') + '</td>' +
+        '<td>' + formatDateTime(s.createdAt) + '</td>' +
+        '<td>' + escapeHtml(s.customerName || 'Walk-in') + '</td>' +
+        '<td>' + (s.items ? s.items.length : 0) + '</td>' +
+        '<td><strong>' + formatCurrency(s.totalAmount || 0) + '</strong></td>' +
+        '<td>' + escapeHtml(s.paymentMethod || 'Cash') + '</td>' +
+        '<td>' + escapeHtml(s.promoName || 'N/A') + '</td>' +
+        '<td><span class="badge ' + (s.isBulk ? 'badge-bulk' : 'badge-promo') + '">' + (s.isBulk ? '📦 Bulk' : '🔥 Promo') + '</span></td>' +
+        '<td><button class="btn btn-sm btn-outline" onclick="viewPromoReceipt(\'' + (s.id || s._localId || '') + '\')"><i class="fas fa-receipt"></i></button></td>' +
+        '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  // Helper to find a promo sale by id
+  function findPromoSaleById(identifier) {
+    return allPromoSales.find(function(s) { return s.id === identifier || s._localId === identifier || s.receiptNumber === identifier; });
+  }
+
+  // View receipt for promo sale
+  window.viewPromoReceipt = function(id) {
+    var sale = findPromoSaleById(id);
+    if (sale) showPromoReceiptModal(sale);
+    else showToast('Sale not found', 'error');
+  };
+
+  function showPromoReceiptModal(sale) {
+    // similar to showReceiptModal in the original
+    // Reuse the existing showReceiptModal function (defined later) or inline here.
+    // We'll define it later as showReceiptModal (same as before)
+    showReceiptModal(sale);
+  }
+
+  // Update stats
   function updateStats() {
     var now = new Date();
     var active = 0, ending = 0, totalItems = 0;
-    
     allPromos.forEach(function(p) {
       var status = getPromoStatus(p);
       if (status === 'active') active++;
       if (status === 'ending') ending++;
       if (p.items) totalItems += p.items.length;
     });
-    
-    var activeEl = safeGetEl('activePromos');
-    if (activeEl) activeEl.textContent = active;
-    
-    var endingEl = safeGetEl('endingPromos');
-    if (endingEl) endingEl.textContent = ending;
-    
-    var totalEl = safeGetEl('totalPromos');
-    if (totalEl) totalEl.textContent = allPromos.length;
-    
-    var itemsEl = safeGetEl('promoItems');
-    if (itemsEl) itemsEl.textContent = totalItems;
+    safeGetEl('activePromos').textContent = active;
+    safeGetEl('endingPromos').textContent = ending;
+    safeGetEl('totalPromos').textContent = allPromos.length;
+    safeGetEl('promoItems').textContent = totalItems;
   }
 
+  // Render promos (definitions)
   function renderPromos() {
     var container = safeGetEl('promosContainer');
     if (!container) return;
-
     var searchInput = safeGetEl('promoSearchInput');
     var search = (searchInput && searchInput.value || '').toLowerCase();
-    
     var statusFilter = safeGetEl('promoStatusFilter');
     var filter = statusFilter ? statusFilter.value : 'all';
-
     var filtered = allPromos.filter(function(p) {
       var nameMatch = (p.name || '').toLowerCase().indexOf(search) !== -1;
       var condMatch = (p.condition || '').toLowerCase().indexOf(search) !== -1;
       var match = nameMatch || condMatch;
-      
       if (filter !== 'all') {
         var status = getPromoStatus(p);
         if (filter === 'active' && status !== 'active') return false;
         if (filter === 'ending' && status !== 'ending') return false;
         if (filter === 'inactive' && status !== 'inactive') return false;
       }
-      
       return match;
     });
-
     if (filtered.length === 0) {
       container.innerHTML = '<div class="empty-state"><i class="fas fa-tags"></i><p>No promos found</p><p style="font-size:0.8rem;color:var(--gray);">Click "New Promo" to create one</p></div>';
       return;
     }
-
     var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:16px;">';
-    
     filtered.forEach(function(promo) {
       var status = getPromoStatus(promo);
       var statusText = status === 'active' ? 'Active' : status === 'ending' ? 'Ending Soon' : 'Inactive';
       var statusClass = status === 'active' ? 'active' : status === 'ending' ? 'ending' : 'inactive';
-      
       var itemCount = promo.items ? promo.items.length : 0;
-      var totalValue = 0;
-      var originalValue = 0;
-      
+      var totalValue = 0, originalValue = 0;
       if (promo.items) {
         promo.items.forEach(function(item) {
           var qty = item.quantity || 1;
@@ -600,10 +616,8 @@
           originalValue += (item.originalPrice || item.unitPrice || 0) * qty;
         });
       }
-      
       var startDate = promo.startDate ? formatDate(promo.startDate) : 'N/A';
       var endDate = promo.endDate ? formatDate(promo.endDate) : 'N/A';
-      
       var itemsHtml = '';
       if (promo.items && promo.items.length > 0) {
         var displayItems = promo.items.slice(0, 3);
@@ -620,9 +634,7 @@
       } else {
         itemsHtml = '<div class="promo-item" style="color:var(--gray);">No items</div>';
       }
-
       var isBulk = promo.type === 'bulk';
-
       html += '<div class="promo-card">' +
         '<div class="promo-header">' +
           '<div class="promo-name"><i class="fas fa-' + (isBulk ? 'layer-group' : 'tags') + '"></i> ' + escapeHtml(promo.name || 'Untitled Promo') + (isBulk ? ' <span class="badge badge-bulk">Bulk</span>' : ' <span class="badge badge-promo">Single</span>') + '</div>' +
@@ -640,32 +652,25 @@
           '<button class="btn btn-sm btn-outline" onclick="editPromo(\'' + promo.id + '\')"><i class="fas fa-edit"></i> Edit</button>' +
           '<button class="btn btn-sm btn-danger" onclick="deletePromo(\'' + promo.id + '\')"><i class="fas fa-trash"></i> Delete</button>' +
           '<button class="btn btn-sm btn-success" onclick="duplicatePromo(\'' + promo.id + '\')"><i class="fas fa-copy"></i> Duplicate</button>' +
-          (status === 'active' ? '<button class="btn btn-sm btn-warning" onclick="togglePromoStatus(\'' + promo.id + '\',\'inactive\')"><i class="fas fa-pause"></i> Deactivate</button>' : 
+          (status === 'active' ? '<button class="btn btn-sm btn-warning" onclick="togglePromoStatus(\'' + promo.id + '\',\'inactive\')"><i class="fas fa-pause"></i> Deactivate</button>' :
            '<button class="btn btn-sm btn-success" onclick="togglePromoStatus(\'' + promo.id + '\',\'active\')"><i class="fas fa-play"></i> Activate</button>') +
         '</div>' +
       '</div>';
     });
-
     html += '</div>';
     container.innerHTML = html;
   }
 
-  // ============================================
-  // PROMO SALE MODAL (Single Item Promo)
-  // ============================================
+  // ------ Promo Sale Modal (single) ------
   window.openPromoSaleModal = function() {
-    loadStockData().then(function() {
-      showPromoSaleModalContent();
-    });
+    loadStockData().then(function() { showPromoSaleModalContent(); });
   };
 
   function showPromoSaleModalContent() {
     var stockOptions = getStockOptionsHtml();
     var today = new Date().toISOString().split('T')[0];
-    var nextMonth = new Date();
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    var nextMonth = new Date(); nextMonth.setMonth(nextMonth.getMonth() + 1);
     var nextMonthStr = nextMonth.toISOString().split('T')[0];
-
     var custOptions = allCustomers.map(function(c) {
       return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>';
     }).join('');
@@ -736,39 +741,26 @@
 
     setTimeout(function() {
       $('#promoSaleCustomer').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
-      
       $('.promo-select').each(function() {
-        $(this).select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { 
-          window._updatePromoSaleItemPrice(this); 
-          window._updatePromoSaleSummary(); 
+        $(this).select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() {
+          window._updatePromoSaleItemPrice(this);
+          window._updatePromoSaleSummary();
         });
       });
-      
-      $('.promo-qty, .promo-new-price, .promo-item-name').on('input', function() { 
-        window._updatePromoSaleSummary(); 
-      });
-      $('.promo-size').on('change', function() { 
-        window._updatePromoSaleSummary(); 
-      });
-
+      $('.promo-qty, .promo-new-price, .promo-item-name').on('input', function() { window._updatePromoSaleSummary(); });
+      $('.promo-size').on('change', function() { window._updatePromoSaleSummary(); });
       $('#promoSaleSplitCash, #promoSaleSplitSecond').on('input', function() {
         var cash = parseFloat($('#promoSaleSplitCash').val()) || 0;
         var second = parseFloat($('#promoSaleSplitSecond').val()) || 0;
         $('#promoSaleSplitTotal').text(formatCurrency(cash + second));
       });
-
-      // Payment method click handler
       document.querySelectorAll('#promoSalePaymentContainer .payment-method').forEach(function(el) {
         el.addEventListener('click', function() {
-          document.querySelectorAll('#promoSalePaymentContainer .payment-method').forEach(function(btn) {
-            btn.classList.remove('selected');
-          });
+          document.querySelectorAll('#promoSalePaymentContainer .payment-method').forEach(function(btn) { btn.classList.remove('selected'); });
           this.classList.add('selected');
           var method = this.dataset.method;
           var splitSection = safeGetEl('promoSaleSplitPayment');
-          if (splitSection) {
-            splitSection.classList.toggle('active', method === 'cash_transfer' || method === 'cash_pos');
-          }
+          if (splitSection) splitSection.classList.toggle('active', method === 'cash_transfer' || method === 'cash_pos');
           if (method === 'cash_transfer') {
             var label = safeGetEl('promoSaleSplitSecondLabel');
             if (label) label.textContent = 'Transfer Amount:';
@@ -778,7 +770,6 @@
           }
         });
       });
-
       window._updatePromoSaleSummary();
     }, 200);
   }
@@ -796,7 +787,6 @@
 
   window._addPromoSaleItem = function() {
     var stockOptions = getStockOptionsHtml();
-    
     var div = document.createElement('div');
     div.className = 'promo-item-row';
     div.innerHTML = '<select class="form-control promo-select" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
@@ -807,22 +797,14 @@
       '<input type="number" class="form-control promo-new-price" placeholder="Promo ₦" step="0.01" style="flex:0.5;min-width:80px;">' +
       '<span class="promo-total" style="flex:0.5;min-width:80px;">₦0</span>' +
       '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.promo-item-row\').remove();window._updatePromoSaleSummary();"><i class="fas fa-times"></i></button>';
-    
     var promoItemsDiv = safeGetEl('promoSaleItems');
     if (promoItemsDiv) promoItemsDiv.appendChild(div);
-    
-    $(div).find('.promo-select').select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { 
-      window._updatePromoSaleItemPrice(this); 
-      window._updatePromoSaleSummary(); 
+    $(div).find('.promo-select').select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() {
+      window._updatePromoSaleItemPrice(this);
+      window._updatePromoSaleSummary();
     });
-    
-    div.querySelectorAll('.promo-qty, .promo-new-price, .promo-item-name').forEach(function(el) { 
-      el.addEventListener('input', window._updatePromoSaleSummary); 
-    });
-    div.querySelectorAll('.promo-size').forEach(function(el) { 
-      el.addEventListener('change', window._updatePromoSaleSummary); 
-    });
-    
+    div.querySelectorAll('.promo-qty, .promo-new-price, .promo-item-name').forEach(function(el) { el.addEventListener('input', window._updatePromoSaleSummary); });
+    div.querySelectorAll('.promo-size').forEach(function(el) { el.addEventListener('change', window._updatePromoSaleSummary); });
     window._updatePromoSaleSummary();
   };
 
@@ -830,10 +812,7 @@
     var row = selectEl.closest('.promo-item-row');
     if (!row) return;
     var opt = selectEl.options[selectEl.selectedIndex];
-    if (!opt || !opt.value) {
-      row.querySelector('.promo-org-price').textContent = '₦0';
-      return;
-    }
+    if (!opt || !opt.value) { row.querySelector('.promo-org-price').textContent = '₦0'; return; }
     var price = parseFloat(opt.getAttribute('data-price')) || 0;
     var sizeSelect = row.querySelector('.promo-size');
     var size = sizeSelect ? sizeSelect.value : '1';
@@ -841,76 +820,48 @@
     else if (size === '0.25' && parseFloat(opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
     else if (size === 'pack' && parseFloat(opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
     else if (size === 'bundle' && parseFloat(opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
-    
     var nameInput = row.querySelector('.promo-item-name');
-    if (nameInput && !nameInput.value) {
-      nameInput.value = opt.getAttribute('data-name') || '';
-    }
-    
+    if (nameInput && !nameInput.value) { nameInput.value = opt.getAttribute('data-name') || ''; }
     var orgPriceSpan = row.querySelector('.promo-org-price');
     if (orgPriceSpan) orgPriceSpan.textContent = formatCurrency(price);
-    
     var newPriceInput = row.querySelector('.promo-new-price');
-    if (newPriceInput && !newPriceInput.value) {
-      newPriceInput.value = price;
-    }
-    
+    if (newPriceInput && !newPriceInput.value) { newPriceInput.value = price; }
     window._updatePromoSaleSummary();
   };
 
   window._updatePromoSaleSummary = function() {
-    var totalItems = 0;
-    var originalTotal = 0;
-    var promoTotal = 0;
-    
+    var totalItems = 0, originalTotal = 0, promoTotal = 0;
     document.querySelectorAll('#promoSaleItems .promo-item-row').forEach(function(row) {
       var qtyEl = row.querySelector('.promo-qty');
       var newPriceEl = row.querySelector('.promo-new-price');
       var orgPriceEl = row.querySelector('.promo-org-price');
-      
       var qty = parseFloat(qtyEl && qtyEl.value) || 1;
       var newPrice = parseFloat(newPriceEl && newPriceEl.value) || 0;
       var orgPrice = parseFloat(orgPriceEl && orgPriceEl.textContent.replace(/[₦,]/g, '')) || 0;
-      
       if (qty > 0 && newPrice > 0) {
         totalItems++;
         originalTotal += orgPrice * qty;
         promoTotal += newPrice * qty;
       }
-      
       var totalSpan = row.querySelector('.promo-total');
       if (totalSpan) totalSpan.textContent = formatCurrency(newPrice * qty);
     });
-    
-    var itemCountEl = safeGetEl('promoSaleItemCount');
-    if (itemCountEl) itemCountEl.textContent = totalItems;
-    
-    var originalTotalEl = safeGetEl('promoSaleOriginalTotal');
-    if (originalTotalEl) originalTotalEl.textContent = formatCurrency(originalTotal);
-    
-    var promoTotalEl = safeGetEl('promoSaleTotal');
-    if (promoTotalEl) promoTotalEl.textContent = formatCurrency(promoTotal);
-    
-    var discountEl = safeGetEl('promoSaleDiscount');
-    if (discountEl) discountEl.textContent = formatCurrency(originalTotal - promoTotal);
+    safeGetEl('promoSaleItemCount').textContent = totalItems;
+    safeGetEl('promoSaleOriginalTotal').textContent = formatCurrency(originalTotal);
+    safeGetEl('promoSaleTotal').textContent = formatCurrency(promoTotal);
+    safeGetEl('promoSaleDiscount').textContent = formatCurrency(originalTotal - promoTotal);
   };
 
-  // ============================================
-  // BULK SALE MODAL
-  // ============================================
+  // ------ Bulk Sale Modal ------
   window.openBulkSaleModal = function() {
-    loadStockData().then(function() {
-      showBulkSaleModalContent();
-    });
+    loadStockData().then(function() { showBulkSaleModalContent(); });
   };
 
   function showBulkSaleModalContent() {
     var stockOptions = getStockOptionsHtml();
     var today = new Date().toISOString().split('T')[0];
-    var nextMonth = new Date();
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    var nextMonth = new Date(); nextMonth.setMonth(nextMonth.getMonth() + 1);
     var nextMonthStr = nextMonth.toISOString().split('T')[0];
-
     var custOptions = allCustomers.map(function(c) {
       return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>';
     }).join('');
@@ -988,42 +939,31 @@
 
     setTimeout(function() {
       $('#bulkCustomer').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
-      
       $('.bulk-select').each(function() {
-        $(this).select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { 
-          window._updateBulkSaleItemPrice(this); 
-          window._updateBulkSaleSummary(); 
+        $(this).select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() {
+          window._updateBulkSaleItemPrice(this);
+          window._updateBulkSaleSummary();
         });
       });
-      
-      $('.bulk-qty, .bulk-new-price, .bulk-item-name').on('input', function() { 
-        window._updateBulkSaleSummary(); 
-      });
-
+      $('.bulk-qty, .bulk-new-price, .bulk-item-name').on('input', function() { window._updateBulkSaleSummary(); });
       $('#bulkSaleMinQty').on('input', function() {
         var minQty = parseInt(this.value) || 0;
         var requiredEl = safeGetEl('bulkRequiredPieces');
         if (requiredEl) requiredEl.textContent = minQty;
         window._updateBulkSaleSummary();
       });
-
       $('#bulkSplitCash, #bulkSplitSecond').on('input', function() {
         var cash = parseFloat($('#bulkSplitCash').val()) || 0;
         var second = parseFloat($('#bulkSplitSecond').val()) || 0;
         $('#bulkSplitTotal').text(formatCurrency(cash + second));
       });
-
       document.querySelectorAll('#bulkPaymentContainer .payment-method').forEach(function(el) {
         el.addEventListener('click', function() {
-          document.querySelectorAll('#bulkPaymentContainer .payment-method').forEach(function(btn) {
-            btn.classList.remove('selected');
-          });
+          document.querySelectorAll('#bulkPaymentContainer .payment-method').forEach(function(btn) { btn.classList.remove('selected'); });
           this.classList.add('selected');
           var method = this.dataset.method;
           var splitSection = safeGetEl('bulkSplitPayment');
-          if (splitSection) {
-            splitSection.classList.toggle('active', method === 'cash_transfer' || method === 'cash_pos');
-          }
+          if (splitSection) splitSection.classList.toggle('active', method === 'cash_transfer' || method === 'cash_pos');
           if (method === 'cash_transfer') {
             var label = safeGetEl('bulkSplitSecondLabel');
             if (label) label.textContent = 'Transfer Amount:';
@@ -1033,7 +973,6 @@
           }
         });
       });
-
       window._updateBulkSaleSummary();
     }, 200);
   }
@@ -1051,7 +990,6 @@
 
   window._addBulkSaleItem = function() {
     var stockOptions = getStockOptionsHtml();
-    
     var div = document.createElement('div');
     div.className = 'bulk-item-row';
     div.innerHTML = '<select class="form-control bulk-select" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
@@ -1061,19 +999,13 @@
       '<input type="number" class="form-control bulk-new-price" placeholder="Bulk ₦" step="0.01" style="flex:0.5;min-width:80px;">' +
       '<span class="bulk-total" style="flex:0.5;min-width:80px;">₦0</span>' +
       '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.bulk-item-row\').remove();window._updateBulkSaleSummary();"><i class="fas fa-times"></i></button>';
-    
     var bulkItemsDiv = safeGetEl('bulkSaleItems');
     if (bulkItemsDiv) bulkItemsDiv.appendChild(div);
-    
-    $(div).find('.bulk-select').select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { 
-      window._updateBulkSaleItemPrice(this); 
-      window._updateBulkSaleSummary(); 
+    $(div).find('.bulk-select').select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() {
+      window._updateBulkSaleItemPrice(this);
+      window._updateBulkSaleSummary();
     });
-    
-    div.querySelectorAll('.bulk-qty, .bulk-new-price, .bulk-item-name').forEach(function(el) { 
-      el.addEventListener('input', window._updateBulkSaleSummary); 
-    });
-    
+    div.querySelectorAll('.bulk-qty, .bulk-new-price, .bulk-item-name').forEach(function(el) { el.addEventListener('input', window._updateBulkSaleSummary); });
     window._updateBulkSaleSummary();
   };
 
@@ -1081,104 +1013,57 @@
     var row = selectEl.closest('.bulk-item-row');
     if (!row) return;
     var opt = selectEl.options[selectEl.selectedIndex];
-    if (!opt || !opt.value) {
-      row.querySelector('.bulk-org-price').textContent = '₦0';
-      return;
-    }
+    if (!opt || !opt.value) { row.querySelector('.bulk-org-price').textContent = '₦0'; return; }
     var price = parseFloat(opt.getAttribute('data-price')) || 0;
-    
     var nameInput = row.querySelector('.bulk-item-name');
-    if (nameInput && !nameInput.value) {
-      nameInput.value = opt.getAttribute('data-name') || '';
-    }
-    
+    if (nameInput && !nameInput.value) { nameInput.value = opt.getAttribute('data-name') || ''; }
     var orgPriceSpan = row.querySelector('.bulk-org-price');
     if (orgPriceSpan) orgPriceSpan.textContent = formatCurrency(price);
-    
     var newPriceInput = row.querySelector('.bulk-new-price');
-    if (newPriceInput && !newPriceInput.value) {
-      newPriceInput.value = price;
-    }
-    
+    if (newPriceInput && !newPriceInput.value) { newPriceInput.value = price; }
     window._updateBulkSaleSummary();
   };
 
   window._updateBulkSaleSummary = function() {
-    var totalItems = 0;
-    var totalPieces = 0;
-    var originalTotal = 0;
-    var bulkTotal = 0;
+    var totalItems = 0, totalPieces = 0, originalTotal = 0, bulkTotal = 0;
     var minQty = parseInt(safeGetVal('bulkSaleMinQty', '40')) || 40;
-    
     document.querySelectorAll('#bulkSaleItems .bulk-item-row').forEach(function(row) {
       var qtyEl = row.querySelector('.bulk-qty');
       var newPriceEl = row.querySelector('.bulk-new-price');
       var orgPriceEl = row.querySelector('.bulk-org-price');
-      
       var qty = parseFloat(qtyEl && qtyEl.value) || 1;
       var newPrice = parseFloat(newPriceEl && newPriceEl.value) || 0;
       var orgPrice = parseFloat(orgPriceEl && orgPriceEl.textContent.replace(/[₦,]/g, '')) || 0;
-      
       if (qty > 0 && newPrice > 0) {
-        totalItems++;
-        totalPieces += qty;
-        originalTotal += orgPrice * qty;
-        bulkTotal += newPrice * qty;
+        totalItems++; totalPieces += qty; originalTotal += orgPrice * qty; bulkTotal += newPrice * qty;
       }
-      
       var totalSpan = row.querySelector('.bulk-total');
       if (totalSpan) totalSpan.textContent = formatCurrency(newPrice * qty);
     });
-    
-    var itemCountEl = safeGetEl('bulkSaleItemCount');
-    if (itemCountEl) itemCountEl.textContent = totalItems;
-    
-    var piecesEl = safeGetEl('bulkTotalPieces');
-    if (piecesEl) piecesEl.textContent = totalPieces;
-    
-    var requiredEl = safeGetEl('bulkRequiredPieces');
-    if (requiredEl) requiredEl.textContent = minQty;
-    
-    var originalTotalEl = safeGetEl('bulkSaleOriginalTotal');
-    if (originalTotalEl) originalTotalEl.textContent = formatCurrency(originalTotal);
-    
-    var bulkTotalEl = safeGetEl('bulkSaleTotal');
-    if (bulkTotalEl) bulkTotalEl.textContent = formatCurrency(bulkTotal);
-    
-    var savingsEl = safeGetEl('bulkSaleSavings');
-    if (savingsEl) savingsEl.textContent = formatCurrency(originalTotal - bulkTotal);
-    
+    safeGetEl('bulkSaleItemCount').textContent = totalItems;
+    safeGetEl('bulkTotalPieces').textContent = totalPieces;
+    safeGetEl('bulkRequiredPieces').textContent = minQty;
+    safeGetEl('bulkSaleOriginalTotal').textContent = formatCurrency(originalTotal);
+    safeGetEl('bulkSaleTotal').textContent = formatCurrency(bulkTotal);
+    safeGetEl('bulkSaleSavings').textContent = formatCurrency(originalTotal - bulkTotal);
     var statusMsgEl = safeGetEl('bulkStatusMsg');
     if (statusMsgEl) {
-      if (totalPieces < minQty) {
-        statusMsgEl.textContent = '⚠️ Need ' + (minQty - totalPieces) + ' more pieces';
-        statusMsgEl.style.color = 'var(--danger)';
-      } else if (totalPieces >= minQty) {
-        statusMsgEl.textContent = '✅ Bulk discount applied!';
-        statusMsgEl.style.color = 'var(--success)';
-      }
+      if (totalPieces < minQty) { statusMsgEl.textContent = '⚠️ Need ' + (minQty - totalPieces) + ' more pieces'; statusMsgEl.style.color = 'var(--danger)'; }
+      else if (totalPieces >= minQty) { statusMsgEl.textContent = '✅ Bulk discount applied!'; statusMsgEl.style.color = 'var(--success)'; }
     }
   };
 
-  // ============================================
-  // PROCESS PROMO SALE
-  // ============================================
+  // ------ Process Promo Sale ------
   window._processPromoSale = function() {
     if (isProcessing) { showToast('Processing... Please wait.', 'warning'); return; }
     window._updatePromoSaleSummary();
-
     var name = safeTrimVal('promoSaleName', '');
     var startDate = safeTrimVal('promoSaleStart', '');
     var endDate = safeTrimVal('promoSaleEnd', '');
     var condition = safeTrimVal('promoSaleCondition', '');
-
     if (!name) { showToast('Please enter a promo name', 'error'); return; }
     if (!startDate || !endDate) { showToast('Please set start and end dates', 'error'); return; }
-
-    var items = [];
-    var totalAmount = 0;
-    var originalTotal = 0;
-
+    var items = [], totalAmount = 0, originalTotal = 0;
     document.querySelectorAll('#promoSaleItems .promo-item-row').forEach(function(row) {
       var select = row.querySelector('.promo-select');
       var nameInput = row.querySelector('.promo-item-name');
@@ -1186,11 +1071,9 @@
       var qtyEl = row.querySelector('.promo-qty');
       var newPriceEl = row.querySelector('.promo-new-price');
       var orgPriceEl = row.querySelector('.promo-org-price');
-
       var qty = parseFloat(qtyEl && qtyEl.value) || 1;
       var newPrice = parseFloat(newPriceEl && newPriceEl.value) || 0;
       var orgPrice = parseFloat(orgPriceEl && orgPriceEl.textContent.replace(/[₦,]/g, '')) || 0;
-
       if (qty > 0 && newPrice > 0) {
         var item = {
           id: select && select.value || '',
@@ -1206,33 +1089,20 @@
         originalTotal += orgPrice * qty;
       }
     });
-
     if (items.length === 0) { showToast('Add at least one item with a promo price', 'error'); return; }
-
-    // Get customer info
     var customerInfo = getPromoSaleCustomerInfo();
     if (!customerInfo) return;
-
-    // Get payment info
     var paymentInfo = getPromoSalePaymentInfo(totalAmount);
     if (!paymentInfo) return;
-
     isProcessing = true;
-
-    // Process the sale with inventory deduction
     processPromoSaleTransaction(items, totalAmount, originalTotal, customerInfo, paymentInfo, {
-      name: name,
-      startDate: startDate,
-      endDate: endDate,
-      condition: condition,
-      type: 'single'
+      name: name, startDate: startDate, endDate: endDate, condition: condition, type: 'single'
     });
   };
 
   function getPromoSaleCustomerInfo() {
     var customerId = '', customerName = '', customerPhone = '', customerAddress = '';
     var isNewCustomer = false, customerData = null;
-
     if (promoCustomerType === 'existing') {
       var select = safeGetEl('promoSaleCustomer');
       if (!select || !select.value) { showToast('Select a customer', 'error'); return null; }
@@ -1244,27 +1114,17 @@
       customerName = safeTrimVal('promoSaleNewName', '');
       customerPhone = safeTrimVal('promoSaleNewPhone', '');
       customerAddress = safeTrimVal('promoSaleNewAddress', '');
-      if (!customerName || !customerPhone || !customerAddress) {
-        showToast('Fill all required customer fields', 'error');
-        return null;
-      }
+      if (!customerName || !customerPhone || !customerAddress) { showToast('Fill all required customer fields', 'error'); return null; }
       isNewCustomer = true;
       customerData = { fullName: customerName, phone: customerPhone, address: customerAddress, status: 'pending_approval', createdBy: currentUser.uid, createdByName: userData.fullName };
     }
-
     return { customerId, customerName, customerPhone, customerAddress, isNewCustomer, customerData };
   }
 
   function getPromoSalePaymentInfo(totalAmount) {
-    var paymentMethod = 'cash';
-    var paymentDetails = {};
-
-    // Get selected payment method
+    var paymentMethod = 'cash', paymentDetails = {};
     var selectedPaymentEl = document.querySelector('#promoSalePaymentContainer .payment-method.selected');
-    if (selectedPaymentEl) {
-      paymentMethod = selectedPaymentEl.dataset.method;
-    }
-
+    if (selectedPaymentEl) paymentMethod = selectedPaymentEl.dataset.method;
     if (paymentMethod === 'cash_transfer') {
       var cashAmount = parseFloat(safeGetVal('promoSaleSplitCash', '0')) || 0;
       var transferAmount = parseFloat(safeGetVal('promoSaleSplitSecond', '0')) || 0;
@@ -1288,91 +1148,52 @@
       paymentMethod = methodLabels[paymentMethod] || 'Cash';
       paymentDetails = { [paymentMethod.toLowerCase()]: totalAmount };
     }
-
     return { paymentMethod, paymentDetails };
   }
 
-  // ============================================
-  // PROCESS BULK SALE
-  // ============================================
+  // ------ Process Bulk Sale ------
   window._processBulkSale = function() {
     if (isProcessing) { showToast('Processing... Please wait.', 'warning'); return; }
     window._updateBulkSaleSummary();
-
     var name = safeTrimVal('bulkSaleName', '');
     var startDate = safeTrimVal('bulkSaleStart', '');
     var endDate = safeTrimVal('bulkSaleEnd', '');
     var condition = safeTrimVal('bulkSaleCondition', '');
     var minQty = parseInt(safeGetVal('bulkSaleMinQty', '40')) || 40;
-
     if (!name) { showToast('Please enter a promo name', 'error'); return; }
     if (!startDate || !endDate) { showToast('Please set start and end dates', 'error'); return; }
-
-    var items = [];
-    var totalAmount = 0;
-    var originalTotal = 0;
-    var totalPieces = 0;
-
+    var items = [], totalAmount = 0, originalTotal = 0, totalPieces = 0;
     document.querySelectorAll('#bulkSaleItems .bulk-item-row').forEach(function(row) {
       var select = row.querySelector('.bulk-select');
       var nameInput = row.querySelector('.bulk-item-name');
       var qtyEl = row.querySelector('.bulk-qty');
       var newPriceEl = row.querySelector('.bulk-new-price');
       var orgPriceEl = row.querySelector('.bulk-org-price');
-
       var qty = parseFloat(qtyEl && qtyEl.value) || 1;
       var newPrice = parseFloat(newPriceEl && newPriceEl.value) || 0;
       var orgPrice = parseFloat(orgPriceEl && orgPriceEl.textContent.replace(/[₦,]/g, '')) || 0;
-
       if (qty > 0 && newPrice > 0) {
-        var item = {
-          id: select && select.value || '',
-          name: nameInput && nameInput.value || '',
-          quantity: qty,
-          originalPrice: orgPrice,
-          promoPrice: newPrice,
-          isBulk: true
-        };
+        var item = { id: select && select.value || '', name: nameInput && nameInput.value || '', quantity: qty, originalPrice: orgPrice, promoPrice: newPrice, isBulk: true };
         items.push(item);
-        totalPieces += qty;
-        totalAmount += newPrice * qty;
-        originalTotal += orgPrice * qty;
+        totalPieces += qty; totalAmount += newPrice * qty; originalTotal += orgPrice * qty;
       }
     });
-
     if (items.length === 0) { showToast('Add at least one item with a bulk price', 'error'); return; }
-
-    if (totalPieces < minQty) {
-      showToast('Bulk requires minimum ' + minQty + ' pieces. Currently ' + totalPieces, 'error');
-      return;
-    }
-
-    // Get customer info
+    if (totalPieces < minQty) { showToast('Bulk requires minimum ' + minQty + ' pieces. Currently ' + totalPieces, 'error'); return; }
     var customerInfo = getBulkCustomerInfo();
     if (!customerInfo) return;
-
-    // Get payment info
     var paymentInfo = getBulkPaymentInfo(totalAmount);
     if (!paymentInfo) return;
-
     isProcessing = true;
-
-    // Process the sale with inventory deduction
     processPromoSaleTransaction(items, totalAmount, originalTotal, customerInfo, paymentInfo, {
-      name: name,
-      startDate: startDate,
-      endDate: endDate,
-      condition: condition,
-      type: 'bulk',
-      bulkMinQty: minQty,
-      bulkTotalPieces: totalPieces
+      name: name, startDate: startDate, endDate: endDate, condition: condition, type: 'bulk',
+      bulkMinQty: minQty, bulkTotalPieces: totalPieces
     });
   };
 
   function getBulkCustomerInfo() {
     var customerId = '', customerName = '', customerPhone = '', customerAddress = '';
     var isNewCustomer = false, customerData = null;
-
     if (bulkCustomerType === 'existing') {
       var select = safeGetEl('bulkCustomer');
       if (!select || !select.value) { showToast('Select a customer', 'error'); return null; }
@@ -1384,26 +1205,17 @@
       customerName = safeTrimVal('bulkNewName', '');
       customerPhone = safeTrimVal('bulkNewPhone', '');
       customerAddress = safeTrimVal('bulkNewAddress', '');
-      if (!customerName || !customerPhone || !customerAddress) {
-        showToast('Fill all required customer fields', 'error');
-        return null;
-      }
+      if (!customerName || !customerPhone || !customerAddress) { showToast('Fill all required customer fields', 'error'); return null; }
       isNewCustomer = true;
       customerData = { fullName: customerName, phone: customerPhone, address: customerAddress, status: 'pending_approval', createdBy: currentUser.uid, createdByName: userData.fullName };
     }
-
     return { customerId, customerName, customerPhone, customerAddress, isNewCustomer, customerData };
   }
 
   function getBulkPaymentInfo(totalAmount) {
-    var paymentMethod = 'cash';
-    var paymentDetails = {};
-
+    var paymentMethod = 'cash', paymentDetails = {};
     var selectedPaymentEl = document.querySelector('#bulkPaymentContainer .payment-method.selected');
-    if (selectedPaymentEl) {
-      paymentMethod = selectedPaymentEl.dataset.method;
-    }
-
+    if (selectedPaymentEl) paymentMethod = selectedPaymentEl.dataset.method;
     if (paymentMethod === 'cash_transfer') {
       var cashAmount = parseFloat(safeGetVal('bulkSplitCash', '0')) || 0;
       var transferAmount = parseFloat(safeGetVal('bulkSplitSecond', '0')) || 0;
@@ -1427,42 +1239,31 @@
       paymentMethod = methodLabels[paymentMethod] || 'Cash';
       paymentDetails = { [paymentMethod.toLowerCase()]: totalAmount };
     }
-
     return { paymentMethod, paymentDetails };
   }
 
-  // ============================================
-  // PROCESS PROMO TRANSACTION WITH INVENTORY DEDUCTION
-  // ============================================
+  // ------ Core transaction processor ------
   async function processPromoSaleTransaction(items, totalAmount, originalTotal, customerInfo, paymentInfo, promoData) {
     try {
       var receiptNumber = generateReceiptNumber(promoData.type === 'bulk' ? 'BLK' : 'PRM');
-      var stockUpdates = [];
-      var movements = [];
-
-      // Validate stock and prepare updates
+      var stockUpdates = [], movements = [];
+      // Validate and prepare stock updates
       for (var i = 0; i < items.length; i++) {
         var item = items[i];
         if (!item.id) continue;
-
         var stockItem = allStockItems.find(function(si) { return si.id === item.id; });
         if (!stockItem) {
           showToast('Item "' + item.name + '" not found in inventory', 'error');
-          isProcessing = false;
-          return;
+          isProcessing = false; return;
         }
-
         var size = item.size || '1';
         var qty = item.quantity || 1;
         var available = getAvailableStock(stockItem, size);
         var deductQty = getDeductQuantity(stockItem, size, qty);
-
         if (deductQty > available) {
           showToast('Insufficient stock for ' + item.name + ' (' + getSizeLabel(size) + '). Available: ' + available + ', Need: ' + deductQty, 'error');
-          isProcessing = false;
-          return;
+          isProcessing = false; return;
         }
-
         var updateData = { updatedAt: serverTimestamp() };
         var change = {};
         if (size === '0.5' || size === '½' || size === 'half') {
@@ -1485,19 +1286,15 @@
         }
         stockUpdates.push({ collection: 'stock_items', id: item.id, data: updateData });
         movements.push({
-          itemId: item.id,
-          itemName: item.name,
+          itemId: item.id, itemName: item.name,
           movementType: promoData.type === 'bulk' ? 'bulk_sale' : 'promo_sale',
-          change: change,
-          reference: 'Receipt ' + receiptNumber,
+          change: change, reference: 'Receipt ' + receiptNumber,
           performedBy: currentUser ? currentUser.uid : 'unknown',
           performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
-          promoName: promoData.name,
-          promoType: promoData.type
+          promoName: promoData.name, promoType: promoData.type
         });
       }
-
-      // Prepare sale data
+      // Build sale object
       var saleData = {
         receiptNumber: receiptNumber,
         customerId: customerInfo.customerId || '',
@@ -1507,19 +1304,13 @@
         items: items.map(function(it) {
           var sz = it.size || '1';
           return {
-            id: it.id,
-            name: it.name,
-            quantity: it.quantity,
-            size: sz,
-            sizeLabel: getSizeLabel(sz),
-            unitPrice: it.promoPrice,
-            originalPrice: it.originalPrice,
-            isPromo: it.isPromo || false,
-            isBulk: it.isBulk || false
+            id: it.id, name: it.name, quantity: it.quantity,
+            size: sz, sizeLabel: getSizeLabel(sz),
+            unitPrice: it.promoPrice, originalPrice: it.originalPrice,
+            isPromo: it.isPromo || false, isBulk: it.isBulk || false
           };
         }),
-        totalAmount: totalAmount,
-        originalTotal: originalTotal,
+        totalAmount: totalAmount, originalTotal: originalTotal,
         paymentMethod: paymentInfo.paymentMethod,
         paymentDetails: paymentInfo.paymentDetails,
         attendantId: currentUser ? currentUser.uid : '',
@@ -1538,22 +1329,20 @@
         _customerData: customerInfo.customerData || null,
         createdAt: serverTimestamp()
       };
-
       if (promoData.type === 'bulk') {
         saleData.bulkMinQty = promoData.bulkMinQty;
         saleData.bulkTotalPieces = promoData.bulkTotalPieces;
         saleData.isBulk = true;
       }
-
-      // Save to Firestore
+      // Save to Firestore (or local if offline)
       await savePromoSaleToFirestore(saleData, customerInfo);
-
       showToast('Promo sale completed! #' + receiptNumber, 'success');
       isProcessing = false;
       hideModal();
       showReceiptModal(saleData);
-      loadPromos();
-
+      // Reload promo sales to update table
+      loadPromoSales();
+      loadPromos(); // refresh promo list
     } catch (e) {
       console.error('Error processing promo sale:', e);
       showToast('Error processing sale: ' + e.message, 'error');
@@ -1561,37 +1350,30 @@
     }
   }
 
+  // ------ Save to Firestore with offline support ------
   async function savePromoSaleToFirestore(saleData, customerInfo) {
     try {
       var batch = writeBatch(db);
       var customerId = saleData.customerId || '';
-
       if (customerInfo.isNewCustomer && customerInfo.customerData) {
         var custRef = doc(collection(db, 'customers'));
-        batch.set(custRef, Object.assign({}, customerInfo.customerData, {
-          createdAt: serverTimestamp(),
-          status: 'pending_approval'
-        }));
+        batch.set(custRef, Object.assign({}, customerInfo.customerData, { createdAt: serverTimestamp(), status: 'pending_approval' }));
         customerId = custRef.id;
       }
-
       var saleRef = doc(collection(db, 'promo_sales'));
       var cleanData = Object.assign({}, saleData);
-      delete cleanData._stockUpdates;
-      delete cleanData._movements;
-      delete cleanData._newCustomer;
-      delete cleanData._customerData;
+      delete cleanData._stockUpdates; delete cleanData._movements; delete cleanData._newCustomer; delete cleanData._customerData;
       cleanData.customerId = customerId;
       cleanData.createdAt = serverTimestamp();
       batch.set(saleRef, cleanData);
-
+      // Stock updates
       if (saleData._stockUpdates) {
         for (var i = 0; i < saleData._stockUpdates.length; i++) {
           var update = saleData._stockUpdates[i];
           batch.update(doc(db, update.collection, update.id), update.data);
         }
       }
-
+      // Movements
       if (saleData._movements) {
         for (var j = 0; j < saleData._movements.length; j++) {
           var mov = saleData._movements[j];
@@ -1599,7 +1381,7 @@
           batch.set(movRef, Object.assign({}, mov, { performedAt: serverTimestamp() }));
         }
       }
-
+      // Update customer stats
       if (customerId) {
         batch.update(doc(db, 'customers', customerId), {
           totalSpent: increment(saleData.totalAmount),
@@ -1607,18 +1389,75 @@
           lastPurchase: serverTimestamp()
         });
       }
-
       await batch.commit();
+      // If success, mark any offline copy as synced
+      var localId = saleData._localId;
+      if (localId) {
+        var offlineIndex = offlinePromoSales.findIndex(function(s) { return s._localId === localId; });
+        if (offlineIndex !== -1) {
+          offlinePromoSales.splice(offlineIndex, 1);
+          localStorage.setItem('offlinePromoSales', JSON.stringify(offlinePromoSales));
+        }
+      }
       return saleRef.id;
     } catch (e) {
-      console.error('Firestore save failed:', e);
-      throw e;
+      console.warn('Firestore save failed, storing offline:', e);
+      // Store offline
+      var localData = Object.assign({}, saleData);
+      localData._localId = 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      localData._synced = false;
+      localData.createdAt = new Date().toISOString();
+      // Remove serverTimestamp fields
+      delete localData.createdAt_serverTimestamp;
+      offlinePromoSales.push(localData);
+      localStorage.setItem('offlinePromoSales', JSON.stringify(offlinePromoSales));
+      // Also add to in-memory list
+      allPromoSales.unshift(localData);
+      renderPromoSales();
+      showToast('Sale saved offline. Will sync when online.', 'warning');
     }
   }
 
-  // ============================================
-  // HELPER FUNCTIONS
-  // ============================================
+  // ------ Sync offline promo sales when online ------
+  async function syncOfflinePromoSales() {
+    if (!isOnline || offlinePromoSales.length === 0) return;
+    var toSync = offlinePromoSales.slice();
+    var failed = [];
+    for (var i = 0; i < toSync.length; i++) {
+      var sale = toSync[i];
+      try {
+        // We need to reconstruct customerInfo
+        var customerInfo = {
+          customerId: sale.customerId || '',
+          customerName: sale.customerName || '',
+          customerPhone: sale.customerPhone || '',
+          customerAddress: sale.customerAddress || '',
+          isNewCustomer: sale._newCustomer || false,
+          customerData: sale._customerData || null
+        };
+        // We need to re-save to Firestore; but we have all data in sale object
+        // We'll just call savePromoSaleToFirestore again with the sale data
+        // but we need to ensure we don't loop infinitely. We'll remove from offline after success.
+        await savePromoSaleToFirestore(sale, customerInfo);
+        // If successful, remove from offline array (savePromoSaleToFirestore already removes localId)
+        // However it uses _localId, so we need to ensure we pass it.
+        // The function above will remove the item with matching _localId.
+      } catch (e) {
+        failed.push(sale);
+      }
+    }
+    if (failed.length > 0) {
+      offlinePromoSales = failed;
+      localStorage.setItem('offlinePromoSales', JSON.stringify(offlinePromoSales));
+    } else {
+      offlinePromoSales = [];
+      localStorage.setItem('offlinePromoSales', JSON.stringify([]));
+    }
+    renderPromoSales();
+    updateDebugPanel();
+  }
+
+  // ------ Helper functions for stock ------
   function getAvailableStock(item, size) {
     if (size === '0.5' || size === '½' || size === 'half') return safeNumber(item.halfQty, 0);
     if (size === '0.25' || size === '¼' || size === 'quarter') return safeNumber(item.quarterQty, 0);
@@ -1626,25 +1465,21 @@
     if (size === 'bundle') return safeNumber(item.bundleQty, 0);
     return safeNumber(item.unitQty, 0);
   }
-
   function getDeductQuantity(item, size, qty) {
     if (size === 'pack') return qty * (parseInt(item.packSize) || 12);
     if (size === 'bundle') return qty * (parseInt(item.bundleSize) || 50);
     return qty;
   }
-
   function getSizeLabel(size) {
     var labels = { '1': 'Unit', '0.5': '½', '0.25': '¼', 'half': '½', 'quarter': '¼', 'pack': 'Pack', 'bundle': 'Bundle' };
     return labels[size] || 'Unit';
   }
-
   function getStockOptionsHtml() {
     return allStockItems.map(function(i) {
       var label = i.itemType === 'fashion' ? '👗' : i.itemType === 'pack_bundle' ? '📦' : i.itemType === 'measured' ? '📏' : '🔧';
       return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-price="' + (i.unitPrice||0) + '" data-halfprice="' + (i.halfPrice||0) + '" data-quarterprice="' + (i.quarterPrice||0) + '" data-packprice="' + (i.packPrice||0) + '" data-bundleprice="' + (i.bundlePrice||0) + '" data-packsize="' + (i.packSize||12) + '" data-bundlesize="' + (i.bundleSize||50) + '">' + label + ' ' + escapeHtml(i.name||'') + ' - ' + formatCurrency(i.unitPrice||0) + '</option>';
     }).join('');
   }
-
   function getSizeOptionsHtml(selected) {
     var sizes = [
       { value: '1', label: 'Unit' },
@@ -1653,25 +1488,12 @@
       { value: 'pack', label: '📦 Pack' },
       { value: 'bundle', label: '📦 Bundle' }
     ];
-    return sizes.map(function(s) {
-      return '<option value="' + s.value + '"' + (s.value === selected ? ' selected' : '') + '>' + s.label + '</option>';
-    }).join('');
+    return sizes.map(function(s) { return '<option value="' + s.value + '"' + (s.value === selected ? ' selected' : '') + '>' + s.label + '</option>'; }).join('');
   }
+  function safeTrimVal(id, fallback) { var val = safeGetVal(id, fallback); return (typeof val === 'string') ? val.trim() : val; }
+  function safeGetVal(id, fallback) { var el = document.getElementById(id); if (!el) return (typeof fallback !== 'undefined') ? fallback : ''; return (el.value !== undefined) ? el.value : (typeof fallback !== 'undefined') ? fallback : ''; }
 
-  function safeTrimVal(id, fallback) {
-    var val = safeGetVal(id, fallback);
-    return (typeof val === 'string') ? val.trim() : val;
-  }
-
-  function safeGetVal(id, fallback) {
-    var el = document.getElementById(id);
-    if (!el) return (typeof fallback !== 'undefined') ? fallback : '';
-    return (el.value !== undefined) ? el.value : (typeof fallback !== 'undefined') ? fallback : '';
-  }
-
-  // ============================================
-  // RECEIPT MODAL WITH QR CODE
-  // ============================================
+  // ------ Receipt Modal with QR ------
   function generateQRData(sale) {
     var data = {
       receipt: sale.receiptNumber || '',
@@ -1688,15 +1510,11 @@
 
   function showReceiptModal(sale) {
     if (!sale) return;
-
     var now = new Date();
     var saleDate = sale.createdAt ? (sale.createdAt.toDate ? sale.createdAt.toDate() : new Date(sale.createdAt)) : new Date();
     var saleDateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     var saleTimeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-
     var isBulk = sale.isBulk || sale.promoType === 'bulk';
-    var isPromo = sale.isPromo || true;
-
     var itemsHtml = '';
     if (sale.items && sale.items.length > 0) {
       sale.items.forEach(function(i) {
@@ -1705,34 +1523,24 @@
         var total = qty * price;
         var origPrice = i.originalPrice || price;
         var sizeLabel = i.sizeLabel || getSizeLabel(i.size || '1');
-
         var priceDisplay = '';
         if (origPrice !== price) {
           priceDisplay = '<span style="text-decoration:line-through;color:var(--gray);font-size:0.7rem;">' + formatCurrency(origPrice) + '</span> → ' + formatCurrency(price);
         } else {
           priceDisplay = formatCurrency(price);
         }
-
         itemsHtml += '<div class="receipt-item"><span class="item-name">' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span class="item-price">' + priceDisplay + '</span></div>';
       });
     }
-
     var paymentDetailsHtml = '';
     if (sale.paymentDetails) {
       paymentDetailsHtml = '<div style="margin-top:8px;padding:8px;background:var(--gray-light);border-radius:8px;">';
       paymentDetailsHtml += '<p style="font-weight:600;font-size:0.8rem;">Payment Breakdown:</p>';
-      if (sale.paymentDetails.cash) {
-        paymentDetailsHtml += '<div class="receipt-item"><span class="item-name">💵 Cash</span><span class="item-price">' + formatCurrency(sale.paymentDetails.cash) + '</span></div>';
-      }
-      if (sale.paymentDetails.transfer) {
-        paymentDetailsHtml += '<div class="receipt-item"><span class="item-name">🏦 Transfer</span><span class="item-price">' + formatCurrency(sale.paymentDetails.transfer) + '</span></div>';
-      }
-      if (sale.paymentDetails.POS) {
-        paymentDetailsHtml += '<div class="receipt-item"><span class="item-name">💳 POS</span><span class="item-price">' + formatCurrency(sale.paymentDetails.POS) + '</span></div>';
-      }
+      if (sale.paymentDetails.cash) paymentDetailsHtml += '<div class="receipt-item"><span class="item-name">💵 Cash</span><span class="item-price">' + formatCurrency(sale.paymentDetails.cash) + '</span></div>';
+      if (sale.paymentDetails.transfer) paymentDetailsHtml += '<div class="receipt-item"><span class="item-name">🏦 Transfer</span><span class="item-price">' + formatCurrency(sale.paymentDetails.transfer) + '</span></div>';
+      if (sale.paymentDetails.POS) paymentDetailsHtml += '<div class="receipt-item"><span class="item-name">💳 POS</span><span class="item-price">' + formatCurrency(sale.paymentDetails.POS) + '</span></div>';
       paymentDetailsHtml += '</div>';
     }
-
     var promoInfo = '';
     if (sale.promoName) {
       promoInfo = '<div style="background:var(--promo-light);padding:10px;border-radius:8px;margin:8px 0;text-align:center;">' +
@@ -1743,12 +1551,9 @@
         (isBulk && sale.bulkMinQty ? '<br><span style="font-size:0.7rem;color:#7c3aed;">Min: ' + sale.bulkMinQty + ' pieces | Pieces: ' + (sale.bulkTotalPieces || 0) + '</span>' : '') +
         '</div>';
     }
-
     var qrData = generateQRData(sale);
     var qrId = 'qr_' + Date.now();
-
     var receiptIdentifier = sale.id || sale.receiptNumber || '';
-
     showModal('🧾 Receipt',
       '<div class="receipt-container">' +
         '<div class="receipt-header">' +
@@ -1777,84 +1582,48 @@
         '<p class="thanks">Thank you for your patronage!</p>' +
       '</div>' +
       '<div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">' +
-        '<button class="btn btn-primary" onclick="printReceipt(\'' + receiptIdentifier + '\')" style="flex:1;"><i class="fas fa-print"></i> Print</button>' +
+        '<button class="btn btn-primary" onclick="window.printPromoReceipt(\'' + receiptIdentifier + '\')" style="flex:1;"><i class="fas fa-print"></i> Print</button>' +
         '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>' +
       '</div>'
     );
-
     setTimeout(function() {
       var qrContainer = safeGetEl(qrId);
       if (qrContainer && typeof QRCode !== 'undefined') {
         try {
-          new QRCode(qrContainer, {
-            text: qrData,
-            width: 120,
-            height: 120,
-            colorDark: '#1a1a2e',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H
-          });
-        } catch (e) {
-          qrContainer.innerHTML = '<span style="font-size:0.7rem;color:var(--gray);">QR unavailable</span>';
-        }
+          new QRCode(qrContainer, { text: qrData, width: 120, height: 120, colorDark: '#1a1a2e', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+        } catch (e) { qrContainer.innerHTML = '<span style="font-size:0.7rem;color:var(--gray);">QR unavailable</span>'; }
       }
     }, 300);
   }
 
-  // ============================================
-  // PRINT RECEIPT
-  // ============================================
-  window.printReceipt = function(id) {
-    var sale = allPromos.find(function(p) { return p.id === id || p.receiptNumber === id; });
-    if (!sale) {
-      // Try to find in promo_sales collection
-      showToast('Printing receipt...', 'info');
-      return;
-    }
-
+  window.printPromoReceipt = function(id) {
+    var sale = findPromoSaleById(id);
+    if (!sale) { showToast('Sale not found', 'error'); return; }
+    // Build print HTML (similar to sales.html print)
     var now = new Date();
     var saleDate = sale.createdAt ? (sale.createdAt.toDate ? sale.createdAt.toDate() : new Date(sale.createdAt)) : new Date();
     var saleDateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     var saleTimeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-
     var isBulk = sale.isBulk || sale.promoType === 'bulk';
-
     var itemsHtml = '';
-    if (sale.items && sale.items.length > 0) {
+    if (sale.items) {
       sale.items.forEach(function(i) {
         var qty = i.quantity || 1;
         var price = i.unitPrice || 0;
-        var total = qty * price;
         var origPrice = i.originalPrice || price;
         var sizeLabel = i.sizeLabel || getSizeLabel(i.size || '1');
-
-        var priceDisplay = '';
-        if (origPrice !== price) {
-          priceDisplay = '<span style="text-decoration:line-through;color:var(--gray);font-size:7pt;">' + formatCurrency(origPrice) + '</span> → ' + formatCurrency(price);
-        } else {
-          priceDisplay = formatCurrency(price);
-        }
-
+        var priceDisplay = (origPrice !== price) ? '<span style="text-decoration:line-through;color:#999;font-size:7pt;">' + formatCurrency(origPrice) + '</span> → ' + formatCurrency(price) : formatCurrency(price);
         itemsHtml += '<div class="item"><span class="item-name">' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span class="item-price">' + priceDisplay + '</span></div>';
       });
     }
-
     var paymentDetailsHtml = '';
     if (sale.paymentDetails) {
-      paymentDetailsHtml = '<div style="margin-top:4px;border-top:1px dashed #ccc;padding-top:4px;">';
-      paymentDetailsHtml += '<div style="font-weight:bold;font-size:8pt;">Payment Breakdown:</div>';
-      if (sale.paymentDetails.cash) {
-        paymentDetailsHtml += '<div class="item"><span class="item-name">💵 Cash</span><span class="item-price">' + formatCurrency(sale.paymentDetails.cash) + '</span></div>';
-      }
-      if (sale.paymentDetails.transfer) {
-        paymentDetailsHtml += '<div class="item"><span class="item-name">🏦 Transfer</span><span class="item-price">' + formatCurrency(sale.paymentDetails.transfer) + '</span></div>';
-      }
-      if (sale.paymentDetails.POS) {
-        paymentDetailsHtml += '<div class="item"><span class="item-name">💳 POS</span><span class="item-price">' + formatCurrency(sale.paymentDetails.POS) + '</span></div>';
-      }
+      paymentDetailsHtml = '<div style="margin-top:4px;border-top:1px dashed #ccc;padding-top:4px;"><div style="font-weight:bold;font-size:8pt;">Payment Breakdown:</div>';
+      if (sale.paymentDetails.cash) paymentDetailsHtml += '<div class="item"><span class="item-name">💵 Cash</span><span class="item-price">' + formatCurrency(sale.paymentDetails.cash) + '</span></div>';
+      if (sale.paymentDetails.transfer) paymentDetailsHtml += '<div class="item"><span class="item-name">🏦 Transfer</span><span class="item-price">' + formatCurrency(sale.paymentDetails.transfer) + '</span></div>';
+      if (sale.paymentDetails.POS) paymentDetailsHtml += '<div class="item"><span class="item-name">💳 POS</span><span class="item-price">' + formatCurrency(sale.paymentDetails.POS) + '</span></div>';
       paymentDetailsHtml += '</div>';
     }
-
     var promoInfo = '';
     if (sale.promoName) {
       promoInfo = '<div style="text-align:center;font-size:7pt;color:#7c3aed;padding:4px;background:#ede9fe;border-radius:4px;margin:4px 0;">' +
@@ -1865,10 +1634,8 @@
         (isBulk && sale.bulkMinQty ? ' | Min: ' + sale.bulkMinQty + ' pcs' : '') +
         '</div>';
     }
-
     var qrData = generateQRData(sale);
-
-    var receiptHTML = '<html><head><title>Receipt #' + (sale.receiptNumber||'') + '</title>' +
+    var printHTML = '<html><head><title>Receipt #' + (sale.receiptNumber||'') + '</title>' +
       '<style>@page{margin:0;size:80mm auto}*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Segoe UI",Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:9pt;line-height:1.3;color:#000}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:7pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item .item-name{flex:1;padding-right:8px}.item .item-price{text-align:right;min-width:55px;white-space:nowrap}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}.website{text-align:center;font-size:6pt;color:#666;margin-top:2px}.website a{color:#666;text-decoration:none}.qr{text-align:center;margin:4px 0}.qr canvas{max-width:80px;height:auto}</style>' +
       '</head><body>' +
       '<div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#' + escapeHtml(sale.receiptNumber||'N/A') + '</p><p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p></div>' +
@@ -1880,79 +1647,46 @@
       '<div class="qr"><canvas id="qrPrintCanvas" width="80" height="80"></canvas></div>' +
       '<div class="website">🔍 Scan to verify receipt<br>🌐 Visit: <a href="https://omocreations.com.ng">omocreations.com.ng</a></div>' +
       '<p class="thanks">Thank you for your patronage!</p>' +
-      '<script>' +
-      'try { var QRCode = window.parent.QRCode; if (QRCode) { new QRCode(document.getElementById("qrPrintCanvas"), { text: "' + qrData.replace(/"/g, '\\"') + '", width: 80, height: 80, colorDark: "#1a1a2e", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H }); } } catch(e) { console.warn("QR print error:", e); }' +
-      '<\/script>' +
+      '<script>try { var QRCode = window.parent.QRCode; if (QRCode) { new QRCode(document.getElementById("qrPrintCanvas"), { text: "' + qrData.replace(/"/g, '\\"') + '", width: 80, height: 80, colorDark: "#1a1a2e", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H }); } } catch(e) { console.warn("QR print error:", e); }<\/script>' +
       '</body></html>';
-
     try {
       var printWindow = window.open('', '_blank', 'width=400,height=600');
       if (printWindow) {
-        printWindow.document.write(receiptHTML);
+        printWindow.document.write(printHTML);
         printWindow.document.close();
         printWindow.focus();
-        setTimeout(function() {
-          printWindow.print();
-          setTimeout(function() { printWindow.close(); }, 1000);
-        }, 500);
+        setTimeout(function() { printWindow.print(); setTimeout(function() { printWindow.close(); }, 1000); }, 500);
       } else {
         showToast('Please allow popups for printing', 'warning');
       }
-    } catch (e) {
-      showToast('Print failed. Please try again.', 'error');
-      console.error('Print error:', e);
-    }
+    } catch (e) { showToast('Print failed. Please try again.', 'error'); console.error('Print error:', e); }
   };
 
-  // ============================================
-  // PROMO CRUD OPERATIONS
-  // ============================================
-  window.openNewPromoModal = function() {
-    loadStockData().then(function() {
-      showPromoManagementModal(null);
-    });
-  };
-
+  // ------ Promo CRUD (unchanged) ------
+  window.openNewPromoModal = function() { loadStockData().then(function() { showPromoManagementModal(null); }); };
   window.editPromo = function(id) {
     var promo = allPromos.find(function(p) { return p.id === id; });
     if (!promo) { showToast('Promo not found', 'error'); return; }
-    loadStockData().then(function() {
-      showPromoManagementModal(promo);
-    });
+    loadStockData().then(function() { showPromoManagementModal(promo); });
   };
-
   window.duplicatePromo = function(id) {
     var promo = allPromos.find(function(p) { return p.id === id; });
     if (!promo) { showToast('Promo not found', 'error'); return; }
     var clone = JSON.parse(JSON.stringify(promo));
     clone.name = clone.name + ' (Copy)';
     clone.status = 'inactive';
-    delete clone.id;
-    delete clone.createdAt;
-    delete clone.updatedAt;
+    delete clone.id; delete clone.createdAt; delete clone.updatedAt;
     showPromoManagementModal(clone, true);
   };
 
   function showPromoManagementModal(existingPromo, isDuplicate) {
     var stockOptions = getStockOptionsHtml();
     var today = new Date().toISOString().split('T')[0];
-    var nextMonth = new Date();
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    var nextMonth = new Date(); nextMonth.setMonth(nextMonth.getMonth() + 1);
     var nextMonthStr = nextMonth.toISOString().split('T')[0];
-
-    var promo = existingPromo || {
-      name: '',
-      startDate: today,
-      endDate: nextMonthStr,
-      condition: '',
-      items: [],
-      status: 'inactive',
-      type: 'single'
-    };
-
+    var promo = existingPromo || { name: '', startDate: today, endDate: nextMonthStr, condition: '', items: [], status: 'inactive', type: 'single' };
     var isEditing = !!existingPromo && !isDuplicate;
     var isBulk = promo.type === 'bulk';
-
     var promoItemsHtml = '';
     if (promo.items && promo.items.length > 0) {
       promoItemsHtml = promo.items.map(function(item, idx) {
@@ -1964,7 +1698,6 @@
         var orgPriceClass = isBulk ? 'bulk-org-price' : 'promo-org-price';
         var totalClass = isBulk ? 'bulk-total' : 'promo-total';
         var sizeHtml = isBulk ? '' : '<select class="form-control promo-size">' + getSizeOptionsHtml(item.size || '1') + '</select>';
-
         return '<div class="' + rowClass + '">' +
           '<select class="form-control ' + selectClass + '" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
           '<input type="text" class="form-control ' + nameClass + '" placeholder="Item name" value="' + escapeHtml(item.name || '') + '" style="flex:1.5;min-width:100px;">' +
@@ -1985,7 +1718,6 @@
       var defaultOrgPriceClass = isBulk ? 'bulk-org-price' : 'promo-org-price';
       var defaultTotalClass = isBulk ? 'bulk-total' : 'promo-total';
       var defaultSizeHtml = isBulk ? '' : '<select class="form-control promo-size">' + getSizeOptionsHtml('1') + '</select>';
-
       promoItemsHtml = '<div class="' + defaultRowClass + '">' +
         '<select class="form-control ' + defaultSelectClass + '" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
         '<input type="text" class="form-control ' + defaultNameClass + '" placeholder="Item name" style="flex:1.5;min-width:100px;">' +
@@ -1997,16 +1729,12 @@
         '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.' + defaultRowClass + '\').remove();window._updatePromoManagementSummary();"><i class="fas fa-times"></i></button>' +
       '</div>';
     }
-
     var typeSelector = '<div class="promo-type-selector">' +
       '<button class="promo-type-btn' + (!isBulk ? ' active' : '') + '" onclick="window._switchPromoType(\'single\')"><span class="icon">🔥</span> Single Item Promo</button>' +
       '<button class="promo-type-btn' + (isBulk ? ' active' : '') + '" onclick="window._switchPromoType(\'bulk\')"><span class="icon">📦</span> Bulk Promo</button>' +
     '</div>';
-
     var bulkFields = isBulk ? '<div class="form-group"><label>Minimum Quantity for Bulk Discount (pieces)</label><input type="number" class="form-control" id="promoBulkMinQty" value="' + (promo.bulkMinQty || 40) + '" min="1" placeholder="e.g., 40"></div>' : '';
-
     var title = isEditing ? '✏️ Edit Promo' : '🔥 New Promo';
-
     showModal(title,
       typeSelector +
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
@@ -2039,27 +1767,17 @@
         '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Cancel</button>' +
       '</div>'
     );
-
     setTimeout(function() {
       $('.promo-select, .bulk-select').each(function() {
         var placeholder = $(this).hasClass('promo-select') ? 'Search product...' : 'Search product...';
         $(this).select2({ placeholder: placeholder, allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() {
-          if ($(this).hasClass('promo-select')) {
-            window._updatePromoManageItemPrice(this);
-          } else {
-            window._updateBulkManageItemPrice(this);
-          }
+          if ($(this).hasClass('promo-select')) window._updatePromoManageItemPrice(this);
+          else window._updateBulkManageItemPrice(this);
           window._updatePromoManagementSummary();
         });
       });
-
-      $('.promo-qty, .promo-new-price, .promo-item-name, .bulk-qty, .bulk-new-price, .bulk-item-name').on('input', function() {
-        window._updatePromoManagementSummary();
-      });
-      $('.promo-size').on('change', function() {
-        window._updatePromoManagementSummary();
-      });
-
+      $('.promo-qty, .promo-new-price, .promo-item-name, .bulk-qty, .bulk-new-price, .bulk-item-name').on('input', function() { window._updatePromoManagementSummary(); });
+      $('.promo-size').on('change', function() { window._updatePromoManagementSummary(); });
       if (promo.items && promo.items.length > 0) {
         var rows = document.querySelectorAll('#promoManageItems .promo-item-row, #promoManageItems .bulk-item-row');
         promo.items.forEach(function(item, idx) {
@@ -2070,7 +1788,6 @@
           var qtyInput = row.querySelector('.promo-qty, .bulk-qty');
           var newPriceInput = row.querySelector('.promo-new-price, .bulk-new-price');
           var sizeSelect = row.querySelector('.promo-size');
-
           if (select && item.id) $(select).val(item.id).trigger('change');
           if (nameInput) nameInput.value = item.name || '';
           if (qtyInput) qtyInput.value = item.quantity || 1;
@@ -2078,37 +1795,22 @@
           if (sizeSelect && item.size) sizeSelect.value = item.size;
         });
       }
-
       window._updatePromoManagementSummary();
     }, 200);
   }
 
   window._switchPromoType = function(type) {
     var isBulk = type === 'bulk';
-    document.querySelectorAll('.promo-type-btn').forEach(function(btn) {
-      btn.classList.toggle('active', btn.textContent.includes(isBulk ? 'Bulk' : 'Single'));
-    });
-
-    // Show/hide bulk fields
+    document.querySelectorAll('.promo-type-btn').forEach(function(btn) { btn.classList.toggle('active', btn.textContent.includes(isBulk ? 'Bulk' : 'Single')); });
     var bulkField = safeGetEl('promoBulkMinQty');
-    if (bulkField) {
-      bulkField.closest('.form-group').style.display = isBulk ? 'block' : 'none';
-    }
-
-    // Update summary labels
+    if (bulkField) bulkField.closest('.form-group').style.display = isBulk ? 'block' : 'none';
     var totalLabel = safeGetEl('promoManageTotal');
-    if (totalLabel) {
-      totalLabel.style.color = isBulk ? '#7c3aed' : 'var(--promo)';
-      totalLabel.previousSibling.textContent = isBulk ? 'Bulk Total:' : 'Promo Total:';
-    }
-
-    // Rebuild items with new type
+    if (totalLabel) { totalLabel.style.color = isBulk ? '#7c3aed' : 'var(--promo)'; totalLabel.previousSibling.textContent = isBulk ? 'Bulk Total:' : 'Promo Total:'; }
     var itemsContainer = safeGetEl('promoManageItems');
     if (itemsContainer) {
       var items = itemsContainer.querySelectorAll('.promo-item-row, .bulk-item-row');
       var stockOptions = getStockOptionsHtml();
       var newHtml = '';
-
       if (items.length === 0) {
         var defaultRowClass = isBulk ? 'bulk-item-row' : 'promo-item-row';
         var defaultSelectClass = isBulk ? 'bulk-select' : 'promo-select';
@@ -2118,7 +1820,6 @@
         var defaultOrgPriceClass = isBulk ? 'bulk-org-price' : 'promo-org-price';
         var defaultTotalClass = isBulk ? 'bulk-total' : 'promo-total';
         var defaultSizeHtml = isBulk ? '' : '<select class="form-control promo-size">' + getSizeOptionsHtml('1') + '</select>';
-
         newHtml = '<div class="' + defaultRowClass + '">' +
           '<select class="form-control ' + defaultSelectClass + '" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
           '<input type="text" class="form-control ' + defaultNameClass + '" placeholder="Item name" style="flex:1.5;min-width:100px;">' +
@@ -2139,7 +1840,6 @@
           var newPriceClass = isBulk ? 'bulk-new-price' : 'promo-new-price';
           var newOrgPriceClass = isBulk ? 'bulk-org-price' : 'promo-org-price';
           var newTotalClass = isBulk ? 'bulk-total' : 'promo-total';
-
           var select = row.querySelector('.promo-select, .bulk-select');
           var nameInput = row.querySelector('.promo-item-name, .bulk-item-name');
           var qtyInput = row.querySelector('.promo-qty, .bulk-qty');
@@ -2147,16 +1847,13 @@
           var orgPriceSpan = row.querySelector('.promo-org-price, .bulk-org-price');
           var totalSpan = row.querySelector('.promo-total, .bulk-total');
           var sizeSelect = row.querySelector('.promo-size');
-
           var selectVal = select ? $(select).val() : '';
           var nameVal = nameInput ? nameInput.value : '';
           var qtyVal = qtyInput ? qtyInput.value : 1;
           var priceVal = priceInput ? priceInput.value : '';
           var orgPriceText = orgPriceSpan ? orgPriceSpan.textContent : '₦0';
           var totalText = totalSpan ? totalSpan.textContent : '₦0';
-
           var sizeHtml = isBulk ? '' : '<select class="form-control promo-size">' + getSizeOptionsHtml(sizeSelect ? sizeSelect.value : '1') + '</select>';
-
           newHtml += '<div class="' + newRowClass + '">' +
             '<select class="form-control ' + newSelectClass + '" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
             '<input type="text" class="form-control ' + newNameClass + '" placeholder="Item name" value="' + escapeHtml(nameVal) + '" style="flex:1.5;min-width:100px;">' +
@@ -2169,29 +1866,17 @@
           '</div>';
         });
       }
-
       itemsContainer.innerHTML = newHtml;
-
-      // Re-initialize select2
       $('.promo-select, .bulk-select').each(function() {
         var placeholder = $(this).hasClass('promo-select') ? 'Search product...' : 'Search product...';
         $(this).select2({ placeholder: placeholder, allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() {
-          if ($(this).hasClass('promo-select')) {
-            window._updatePromoManageItemPrice(this);
-          } else {
-            window._updateBulkManageItemPrice(this);
-          }
+          if ($(this).hasClass('promo-select')) window._updatePromoManageItemPrice(this);
+          else window._updateBulkManageItemPrice(this);
           window._updatePromoManagementSummary();
         });
       });
-
-      $('.promo-qty, .promo-new-price, .promo-item-name, .bulk-qty, .bulk-new-price, .bulk-item-name').on('input', function() {
-        window._updatePromoManagementSummary();
-      });
-      $('.promo-size').on('change', function() {
-        window._updatePromoManagementSummary();
-      });
-
+      $('.promo-qty, .promo-new-price, .promo-item-name, .bulk-qty, .bulk-new-price, .bulk-item-name').on('input', function() { window._updatePromoManagementSummary(); });
+      $('.promo-size').on('change', function() { window._updatePromoManagementSummary(); });
       window._updatePromoManagementSummary();
     }
   };
@@ -2199,7 +1884,6 @@
   window._addPromoManageItem = function() {
     var stockOptions = getStockOptionsHtml();
     var isBulk = document.querySelector('.promo-type-btn.active') && document.querySelector('.promo-type-btn.active').textContent.includes('Bulk');
-
     var rowClass = isBulk ? 'bulk-item-row' : 'promo-item-row';
     var selectClass = isBulk ? 'bulk-select' : 'promo-select';
     var nameClass = isBulk ? 'bulk-item-name' : 'promo-item-name';
@@ -2208,9 +1892,7 @@
     var orgPriceClass = isBulk ? 'bulk-org-price' : 'promo-org-price';
     var totalClass = isBulk ? 'bulk-total' : 'promo-total';
     var sizeHtml = isBulk ? '' : '<select class="form-control promo-size">' + getSizeOptionsHtml('1') + '</select>';
-
-    var div = document.createElement('div');
-    div.className = rowClass;
+    var div = document.createElement('div'); div.className = rowClass;
     div.innerHTML = '<select class="form-control ' + selectClass + '" style="flex:2;min-width:150px;"><option value="">-- Search product --</option>' + stockOptions + '</select>' +
       '<input type="text" class="form-control ' + nameClass + '" placeholder="Item name" style="flex:1.5;min-width:100px;">' +
       (isBulk ? '' : sizeHtml) +
@@ -2219,26 +1901,15 @@
       '<input type="number" class="form-control ' + priceClass + '" placeholder="' + (isBulk ? 'Bulk' : 'Promo') + ' ₦" step="0.01" style="flex:0.5;min-width:80px;">' +
       '<span class="' + totalClass + '" style="flex:0.5;min-width:80px;">₦0</span>' +
       '<button class="btn btn-sm btn-danger" onclick="this.closest(\'.' + rowClass + '\').remove();window._updatePromoManagementSummary();"><i class="fas fa-times"></i></button>';
-
     var itemsContainer = safeGetEl('promoManageItems');
     if (itemsContainer) itemsContainer.appendChild(div);
-
     $(div).find('.' + selectClass).select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() {
-      if ($(this).hasClass('promo-select')) {
-        window._updatePromoManageItemPrice(this);
-      } else {
-        window._updateBulkManageItemPrice(this);
-      }
+      if ($(this).hasClass('promo-select')) window._updatePromoManageItemPrice(this);
+      else window._updateBulkManageItemPrice(this);
       window._updatePromoManagementSummary();
     });
-
-    div.querySelectorAll('.' + qtyClass + ', .' + priceClass + ', .' + nameClass).forEach(function(el) {
-      el.addEventListener('input', window._updatePromoManagementSummary);
-    });
-    div.querySelectorAll('.promo-size').forEach(function(el) {
-      el.addEventListener('change', window._updatePromoManagementSummary);
-    });
-
+    div.querySelectorAll('.' + qtyClass + ', .' + priceClass + ', .' + nameClass).forEach(function(el) { el.addEventListener('input', window._updatePromoManagementSummary); });
+    div.querySelectorAll('.promo-size').forEach(function(el) { el.addEventListener('change', window._updatePromoManagementSummary); });
     window._updatePromoManagementSummary();
   };
 
@@ -2246,10 +1917,7 @@
     var row = selectEl.closest('.promo-item-row');
     if (!row) return;
     var opt = selectEl.options[selectEl.selectedIndex];
-    if (!opt || !opt.value) {
-      row.querySelector('.promo-org-price').textContent = '₦0';
-      return;
-    }
+    if (!opt || !opt.value) { row.querySelector('.promo-org-price').textContent = '₦0'; return; }
     var price = parseFloat(opt.getAttribute('data-price')) || 0;
     var sizeSelect = row.querySelector('.promo-size');
     var size = sizeSelect ? sizeSelect.value : '1';
@@ -2257,20 +1925,12 @@
     else if (size === '0.25' && parseFloat(opt.getAttribute('data-quarterprice')) > 0) price = parseFloat(opt.getAttribute('data-quarterprice'));
     else if (size === 'pack' && parseFloat(opt.getAttribute('data-packprice')) > 0) price = parseFloat(opt.getAttribute('data-packprice'));
     else if (size === 'bundle' && parseFloat(opt.getAttribute('data-bundleprice')) > 0) price = parseFloat(opt.getAttribute('data-bundleprice'));
-
     var nameInput = row.querySelector('.promo-item-name');
-    if (nameInput && !nameInput.value) {
-      nameInput.value = opt.getAttribute('data-name') || '';
-    }
-
+    if (nameInput && !nameInput.value) nameInput.value = opt.getAttribute('data-name') || '';
     var orgPriceSpan = row.querySelector('.promo-org-price');
     if (orgPriceSpan) orgPriceSpan.textContent = formatCurrency(price);
-
     var newPriceInput = row.querySelector('.promo-new-price');
-    if (newPriceInput && !newPriceInput.value) {
-      newPriceInput.value = price;
-    }
-
+    if (newPriceInput && !newPriceInput.value) newPriceInput.value = price;
     window._updatePromoManagementSummary();
   };
 
@@ -2278,70 +1938,40 @@
     var row = selectEl.closest('.bulk-item-row');
     if (!row) return;
     var opt = selectEl.options[selectEl.selectedIndex];
-    if (!opt || !opt.value) {
-      row.querySelector('.bulk-org-price').textContent = '₦0';
-      return;
-    }
+    if (!opt || !opt.value) { row.querySelector('.bulk-org-price').textContent = '₦0'; return; }
     var price = parseFloat(opt.getAttribute('data-price')) || 0;
-
     var nameInput = row.querySelector('.bulk-item-name');
-    if (nameInput && !nameInput.value) {
-      nameInput.value = opt.getAttribute('data-name') || '';
-    }
-
+    if (nameInput && !nameInput.value) nameInput.value = opt.getAttribute('data-name') || '';
     var orgPriceSpan = row.querySelector('.bulk-org-price');
     if (orgPriceSpan) orgPriceSpan.textContent = formatCurrency(price);
-
     var newPriceInput = row.querySelector('.bulk-new-price');
-    if (newPriceInput && !newPriceInput.value) {
-      newPriceInput.value = price;
-    }
-
+    if (newPriceInput && !newPriceInput.value) newPriceInput.value = price;
     window._updatePromoManagementSummary();
   };
 
   window._updatePromoManagementSummary = function() {
-    var totalItems = 0;
-    var originalTotal = 0;
-    var promoTotal = 0;
+    var totalItems = 0, originalTotal = 0, promoTotal = 0;
     var isBulk = document.querySelector('.promo-type-btn.active') && document.querySelector('.promo-type-btn.active').textContent.includes('Bulk');
-
     var itemsSelector = isBulk ? '#promoManageItems .bulk-item-row' : '#promoManageItems .promo-item-row';
     var qtySelector = isBulk ? '.bulk-qty' : '.promo-qty';
     var priceSelector = isBulk ? '.bulk-new-price' : '.promo-new-price';
     var orgPriceSelector = isBulk ? '.bulk-org-price' : '.promo-org-price';
     var totalSelector = isBulk ? '.bulk-total' : '.promo-total';
-
     document.querySelectorAll(itemsSelector).forEach(function(row) {
       var qtyEl = row.querySelector(qtySelector);
       var newPriceEl = row.querySelector(priceSelector);
       var orgPriceEl = row.querySelector(orgPriceSelector);
-
       var qty = parseFloat(qtyEl && qtyEl.value) || 1;
       var newPrice = parseFloat(newPriceEl && newPriceEl.value) || 0;
       var orgPrice = parseFloat(orgPriceEl && orgPriceEl.textContent.replace(/[₦,]/g, '')) || 0;
-
-      if (qty > 0 && newPrice > 0) {
-        totalItems++;
-        originalTotal += orgPrice * qty;
-        promoTotal += newPrice * qty;
-      }
-
+      if (qty > 0 && newPrice > 0) { totalItems++; originalTotal += orgPrice * qty; promoTotal += newPrice * qty; }
       var totalSpan = row.querySelector(totalSelector);
       if (totalSpan) totalSpan.textContent = formatCurrency(newPrice * qty);
     });
-
-    var itemCountEl = safeGetEl('promoManageItemCount');
-    if (itemCountEl) itemCountEl.textContent = totalItems;
-
-    var originalTotalEl = safeGetEl('promoManageOriginalTotal');
-    if (originalTotalEl) originalTotalEl.textContent = formatCurrency(originalTotal);
-
-    var promoTotalEl = safeGetEl('promoManageTotal');
-    if (promoTotalEl) promoTotalEl.textContent = formatCurrency(promoTotal);
-
-    var discountEl = safeGetEl('promoManageDiscount');
-    if (discountEl) discountEl.textContent = formatCurrency(originalTotal - promoTotal);
+    safeGetEl('promoManageItemCount').textContent = totalItems;
+    safeGetEl('promoManageOriginalTotal').textContent = formatCurrency(originalTotal);
+    safeGetEl('promoManageTotal').textContent = formatCurrency(promoTotal);
+    safeGetEl('promoManageDiscount').textContent = formatCurrency(originalTotal - promoTotal);
   };
 
   window._savePromoManagement = function(id, isEditing) {
@@ -2351,10 +1981,8 @@
     var condition = safeTrimVal('promoManageCondition', '');
     var isBulk = document.querySelector('.promo-type-btn.active') && document.querySelector('.promo-type-btn.active').textContent.includes('Bulk');
     var bulkMinQty = parseInt(safeGetVal('promoBulkMinQty', '40')) || 40;
-
     if (!name) { showToast('Please enter a promo name', 'error'); return; }
     if (!startDate || !endDate) { showToast('Please set start and end dates', 'error'); return; }
-
     var items = [];
     var itemsSelector = isBulk ? '#promoManageItems .bulk-item-row' : '#promoManageItems .promo-item-row';
     var selectSelector = isBulk ? '.bulk-select' : '.promo-select';
@@ -2363,7 +1991,6 @@
     var priceSelector = isBulk ? '.bulk-new-price' : '.promo-new-price';
     var orgPriceSelector = isBulk ? '.bulk-org-price' : '.promo-org-price';
     var sizeSelector = isBulk ? null : '.promo-size';
-
     document.querySelectorAll(itemsSelector).forEach(function(row) {
       var select = row.querySelector(selectSelector);
       var nameInput = row.querySelector(nameSelector);
@@ -2371,112 +1998,81 @@
       var newPriceEl = row.querySelector(priceSelector);
       var orgPriceEl = row.querySelector(orgPriceSelector);
       var sizeSelect = sizeSelector ? row.querySelector(sizeSelector) : null;
-
       var qty = parseFloat(qtyEl && qtyEl.value) || 1;
       var newPrice = parseFloat(newPriceEl && newPriceEl.value) || 0;
       var orgPrice = parseFloat(orgPriceEl && orgPriceEl.textContent.replace(/[₦,]/g, '')) || 0;
-
       if (qty > 0 && newPrice > 0) {
-        var item = {
-          id: select && select.value || '',
-          name: nameInput && nameInput.value || '',
-          quantity: qty,
-          originalPrice: orgPrice,
-          promoPrice: newPrice
-        };
-        if (sizeSelect && !isBulk) {
-          item.size = sizeSelect.value || '1';
-        }
+        var item = { id: select && select.value || '', name: nameInput && nameInput.value || '', quantity: qty, originalPrice: orgPrice, promoPrice: newPrice };
+        if (sizeSelect && !isBulk) item.size = sizeSelect.value || '1';
         items.push(item);
       }
     });
-
     if (items.length === 0) { showToast('Add at least one item with a price', 'error'); return; }
-
     var promoData = {
-      name: name,
-      startDate: startDate,
-      endDate: endDate,
-      condition: condition,
-      items: items,
-      type: isBulk ? 'bulk' : 'single',
-      status: isEditing ? 'inactive' : 'inactive',
-      updatedAt: serverTimestamp()
+      name: name, startDate: startDate, endDate: endDate, condition: condition, items: items,
+      type: isBulk ? 'bulk' : 'single', status: isEditing ? 'inactive' : 'inactive', updatedAt: serverTimestamp()
     };
-
-    if (isBulk) {
-      promoData.bulkMinQty = bulkMinQty;
-    }
-
-    if (!isEditing) {
-      promoData.createdAt = serverTimestamp();
-    }
-
+    if (isBulk) promoData.bulkMinQty = bulkMinQty;
+    if (!isEditing) promoData.createdAt = serverTimestamp();
     if (isEditing && id) {
       updateDoc(doc(db, 'promos', id), promoData).then(function() {
         showToast('Promo updated successfully!', 'success');
         hideModal();
         loadPromos();
-      }).catch(function(e) {
-        showToast('Error updating promo: ' + e.message, 'error');
-      });
+      }).catch(function(e) { showToast('Error updating promo: ' + e.message, 'error'); });
     } else {
       addDoc(collection(db, 'promos'), promoData).then(function() {
         showToast('Promo created successfully!', 'success');
         hideModal();
         loadPromos();
-      }).catch(function(e) {
-        showToast('Error creating promo: ' + e.message, 'error');
-      });
+      }).catch(function(e) { showToast('Error creating promo: ' + e.message, 'error'); });
     }
   };
 
-  // ============================================
-  // DELETE / TOGGLE PROMO
-  // ============================================
   window.deletePromo = function(id) {
     if (!confirm('Delete this promo permanently?')) return;
-    deleteDoc(doc(db, 'promos', id)).then(function() {
-      showToast('Promo deleted', 'success');
-      loadPromos();
-    }).catch(function(e) {
-      showToast('Error deleting: ' + e.message, 'error');
-    });
+    deleteDoc(doc(db, 'promos', id)).then(function() { showToast('Promo deleted', 'success'); loadPromos(); })
+      .catch(function(e) { showToast('Error deleting: ' + e.message, 'error'); });
   };
 
   window.togglePromoStatus = function(id, status) {
     updateDoc(doc(db, 'promos', id), { status: status, updatedAt: serverTimestamp() }).then(function() {
       showToast('Promo ' + (status === 'active' ? 'activated' : 'deactivated'), 'success');
       loadPromos();
-    }).catch(function(e) {
-      showToast('Error: ' + e.message, 'error');
-    });
+    }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
   };
 
-  window.refreshData = function() {
-    loadPromos();
-    showToast('Refreshed', 'success');
+  window.refreshData = function() { loadPromos(); loadPromoSales(); showToast('Refreshed', 'success'); };
+  window.refreshPromoSales = function() { loadPromoSales(); showToast('Promo sales refreshed', 'success'); };
+
+  window.exportPromoSales = function() {
+    if (allPromoSales.length === 0) { showToast('No promo sales to export', 'warning'); return; }
+    var headers = ['Receipt #', 'Date', 'Customer', 'Phone', 'Items', 'Total', 'Payment', 'Promo', 'Type', 'Attendant'];
+    var rows = allPromoSales.map(function(s) {
+      var dateStr = formatDateTime(s.createdAt);
+      return [
+        s.receiptNumber || '',
+        dateStr,
+        s.customerName || '',
+        s.customerPhone || '',
+        s.items ? s.items.length : 0,
+        s.totalAmount || 0,
+        s.paymentMethod || '',
+        s.promoName || '',
+        s.isBulk ? 'Bulk' : 'Promo',
+        s.attendantName || ''
+      ];
+    });
+    var csv = [headers.join(','), ...rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g,'""') + '"'; }).join(','); })].join('\n');
+    var b = new Blob([csv], { type: 'text/csv' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = 'promo_sales_audit_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+    showToast('Exported ' + allPromoSales.length + ' promo sales', 'success');
   };
 
-  var searchInput = safeGetEl('promoSearchInput');
-  if (searchInput) {
-    var searchTimeout;
-    searchInput.addEventListener('input', function() {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(renderPromos, 300);
-    });
-  }
-
-  var statusFilter = safeGetEl('promoStatusFilter');
-  if (statusFilter) {
-    statusFilter.addEventListener('change', function() {
-      renderPromos();
-    });
-  }
-
-  // ============================================
-  // AUTH
-  // ============================================
+  // ------ Auth and init ------
   onAuthStateChanged(auth, async function(u) {
     if (!u) { window.location.href = 'auth.html'; return; }
     currentUser = u;
@@ -2484,30 +2080,27 @@
       var snap = await getDoc(doc(db, 'users', u.uid));
       if (!snap.exists() || snap.data().status !== 'active') { await signOut(auth); window.location.href = 'auth.html'; return; }
       userData = snap.data();
-
       var userNameEl = safeGetEl('userName'); if (userNameEl) userNameEl.textContent = (userData.fullName || 'Staff').split(' ')[0];
       var userRoleEl = safeGetEl('userRole'); if (userRoleEl) userRoleEl.textContent = (userData.role || '').replace('_', ' ');
       var userAvatarEl = safeGetEl('userAvatar'); if (userAvatarEl) userAvatarEl.textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
       var currentDateEl = safeGetEl('currentDate'); if (currentDateEl) currentDateEl.textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-
       buildSidebar();
       await loadStockData();
       loadPromos();
-    } catch (e) {
-      console.error('Init error:', e);
-      showToast('Error loading', 'error');
-    }
+      loadPromoSales();
+      // Sync offline sales on load
+      if (isOnline) syncOfflinePromoSales();
+    } catch (e) { console.error('Init error:', e); showToast('Error loading', 'error'); }
   });
 
-  window.addEventListener('beforeunload', function() {
-    unsubscribes.forEach(function(u) { u(); });
-  });
+  window.addEventListener('beforeunload', function() { unsubscribes.forEach(function(u) { u(); }); });
 
-  // Online/Offline
   window.addEventListener('online', function() {
     isOnline = true;
     var banner = safeGetEl('offlineBanner'); if (banner) banner.classList.remove('show');
     loadPromos();
+    loadPromoSales();
+    syncOfflinePromoSales();
     showToast('Back online!', 'success');
   });
 
@@ -2517,10 +2110,10 @@
     showToast('You are offline. Changes will sync when reconnected.', 'warning');
   });
 
-  if (!navigator.onLine) {
-    isOnline = false;
-    var banner = safeGetEl('offlineBanner'); if (banner) banner.classList.add('show');
-  }
+  if (!navigator.onLine) { isOnline = false; var banner = safeGetEl('offlineBanner'); if (banner) banner.classList.add('show'); }
+
+  // small debug panel (optional)
+  function updateDebugPanel() {}
 </script>
 </body>
 </html>
