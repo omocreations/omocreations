@@ -13,6 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -162,6 +163,7 @@
     .badge-info { background:rgba(59,130,246,0.1); color:var(--info); }
     .badge-purple { background:rgba(139,92,246,0.1); color:#8b5cf6; }
     .badge-borrow { background:rgba(245,158,11,0.15); color:#b45309; }
+    .badge-promo { background:rgba(255,77,166,0.15); color:var(--primary); }
 
     .btn { padding:8px 16px; border-radius:40px; font-weight:600; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; background:white; border:1px solid rgba(0,0,0,0.08); transition:all 0.2s; font-family:'Poppins',sans-serif; white-space:nowrap; }
     .btn:hover { transform:translateY(-2px); }
@@ -172,6 +174,8 @@
     .btn-success { background:var(--success); color:white; border:none; }
     .btn-danger { background:var(--danger); color:white; border:none; }
     .btn-warning { background:var(--warning); color:white; border:none; }
+    .btn-promo { background:linear-gradient(135deg,#8b5cf6,#6d28d9); color:white; border:none; }
+    .btn-promo:hover { background:linear-gradient(135deg,#7c3aed,#5b21b6); }
 
     .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:2000; padding:16px; }
     .modal-overlay.active { display:flex; }
@@ -188,9 +192,15 @@
     .customer-type-btn { flex:1; padding:12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; background:white; cursor:pointer; font-weight:600; font-size:0.85rem; font-family:'Poppins',sans-serif; transition:all 0.2s; }
     .customer-type-btn.active { border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
 
-    .payment-methods { display:flex; gap:10px; margin-top:5px; flex-wrap:wrap; }
-    .payment-method { flex:1; min-width:80px; text-align:center; padding:12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:12px; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; font-size:0.8rem; }
-    .payment-method.selected { border-color:var(--primary); background:var(--primary-soft); font-weight:600; }
+    .payment-methods { display:flex; gap:8px; margin-top:5px; flex-wrap:wrap; }
+    .payment-method { flex:1; min-width:70px; text-align:center; padding:10px 8px; border:1.5px solid rgba(0,0,0,0.08); border-radius:12px; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; font-size:0.75rem; }
+    .payment-method.selected { border-color:var(--primary); background:var(--primary-soft); font-weight:600; color:var(--primary); }
+
+    .split-payment-section { background:var(--gray-light); border-radius:14px; padding:16px; margin-top:10px; display:none; }
+    .split-payment-section.active { display:block; }
+    .split-row { display:flex; gap:12px; margin-bottom:10px; align-items:center; flex-wrap:wrap; }
+    .split-row label { font-size:0.75rem; font-weight:600; min-width:70px; }
+    .split-row input { flex:1; min-width:100px; }
 
     #companyPaymentContainer .payment-method.selected {
       background: var(--primary-soft) !important;
@@ -246,16 +256,20 @@
     .wholesale-pack-size-box label { font-weight:700; color:var(--primary); }
     .wholesale-pack-size-box input { font-size:1.3rem; font-weight:700; text-align:center; }
 
-    .receipt-container { background:#f8f9fa; border-radius:12px; padding:20px; font-family:'Segoe UI',Roboto,'Helvetica Neue',sans-serif; font-weight:normal; }
-    .receipt-header { text-align:center; border-bottom:1px dashed #ccc; padding-bottom:10px; margin-bottom:10px; }
-    .receipt-header h2 { font-weight:bold; margin:0; }
-    .receipt-header .addr { font-weight:bold; margin:2px 0; }
-    .receipt-header .rec { margin:2px 0; font-weight:normal; }
-    .receipt-items { margin:15px 0; }
-    .receipt-item { display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:5px; font-weight:normal; }
-    .receipt-total { border-top:1px dashed #ccc; padding-top:10px; font-weight:bold; font-size:1.1rem; display:flex; justify-content:space-between; }
-    .cust-info { font-weight:normal; margin:4px 0; line-height:1.3; }
-    .thanks { text-align:center; font-style:italic; margin-top:15px; font-weight:normal; }
+    .receipt-container { background:#f8f9fa; border-radius:12px; padding:16px; font-family:'Segoe UI',Roboto,'Helvetica Neue',sans-serif; font-weight:normal; max-width:100%; overflow-x:hidden; }
+    .receipt-header { text-align:center; border-bottom:1px dashed #ccc; padding-bottom:8px; margin-bottom:8px; }
+    .receipt-header h2 { font-weight:bold; margin:0; font-size:1.1rem; }
+    .receipt-header .addr { font-weight:bold; margin:1px 0; font-size:0.7rem; }
+    .receipt-header .rec { margin:2px 0; font-weight:normal; font-size:0.85rem; }
+    .receipt-items { margin:8px 0; }
+    .receipt-item { display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:3px; font-weight:normal; }
+    .receipt-total { border-top:1px dashed #ccc; padding-top:8px; font-weight:bold; font-size:1rem; display:flex; justify-content:space-between; }
+    .cust-info { font-weight:normal; margin:3px 0; line-height:1.3; font-size:0.8rem; }
+    .thanks { text-align:center; font-style:italic; margin-top:10px; font-weight:normal; font-size:0.8rem; }
+    .receipt-qr { text-align:center; margin:6px 0; }
+    .receipt-qr canvas { max-width:90px; height:auto; }
+    .receipt-website { text-align:center; font-size:0.65rem; color:var(--gray); margin-top:4px; }
+    .receipt-website a { color:var(--primary); text-decoration:none; font-weight:600; }
 
     .return-options { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px; margin:15px 0; }
     .return-option { padding:14px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:12px; }
@@ -320,6 +334,8 @@
       .stat-card { padding:14px 12px; } .stat-value { font-size:1.4rem; } .panel { padding:16px 12px; border-radius:18px; }
       .data-table { min-width:900px; } .data-table th, .data-table td { padding:10px 6px; font-size:0.75rem; } .modal { padding:20px; border-radius:20px; }
       .draft-tabs-bar { padding: 0 8px; }
+      .payment-methods .payment-method { min-width:50px; font-size:0.65rem; padding:8px 4px; }
+      .receipt-qr canvas { max-width:70px; }
     }
     @media (max-width:480px) { .stats-grid { grid-template-columns:1fr; } }
   </style>
@@ -346,9 +362,10 @@
 <main class="main-content">
   <header class="top-bar">
     <div class="top-bar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h1 class="page-title">Sales & Transactions</h1></div>
-    <div style="display:flex;align-items:center;gap:12px;">
-      <button class="btn btn-outline btn-sm" onclick="toggleDebugPanel()" title="Debug Info"><i class="fas fa-bug"></i> Debug</button>
-      <span id="syncStatus" style="font-size:0.75rem;color:var(--gray);"></span>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-promo btn-sm" onclick="navigateTo('promo.html')"><i class="fas fa-tags"></i> Promo</button>
+      <button class="btn btn-outline btn-sm" onclick="toggleDebugPanel()" title="Debug Info"><i class="fas fa-bug"></i></button>
+      <span id="syncStatus" style="font-size:0.7rem;color:var(--gray);"></span>
       <button class="btn btn-outline btn-sm" onclick="navigateTo('history.html')"><i class="fas fa-history"></i> History</button>
       <span class="current-date" id="currentDate"></span>
     </div>
@@ -377,11 +394,12 @@
     <div class="panel">
       <div class="panel-header">
         <h3><i class="fas fa-history"></i> Recent Sales</h3>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-promo btn-sm" onclick="navigateTo('promo.html')"><i class="fas fa-tags"></i> Promo</button>
           <button class="btn btn-outline btn-sm" onclick="exportSalesData()"><i class="fas fa-download"></i> Export</button>
           <button class="btn btn-outline btn-sm" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
           <button class="btn btn-primary btn-sm" onclick="openNewSaleModal()"><i class="fas fa-plus"></i> New Sale</button>
-          <button class="btn btn-primary btn-sm" onclick="openCompanySaleModal()"><i class="fas fa-building"></i> Sell to Company</button>
+          <button class="btn btn-primary btn-sm" onclick="openCompanySaleModal()"><i class="fas fa-building"></i> Company</button>
           <button class="btn btn-success btn-sm" onclick="openWholesaleSaleModal()"><i class="fas fa-tags"></i> Wholesale</button>
         </div>
       </div>
@@ -403,6 +421,7 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -445,6 +464,7 @@
   let isOnline = navigator.onLine;
   
   let isProcessingSale = false;
+  let processingLock = false;
   
   let returnHistory = JSON.parse(localStorage.getItem('returnHistory') || '{}');
   let selectedRefundMethod = 'cash';
@@ -472,6 +492,9 @@
   let wholesaleCustomerType = 'existing';
   let wholesalePayment = 'cash';
   let companySelectedPayment = 'cash';
+
+  // ----- SPLIT PAYMENT STATE -----
+  let regularSplitMethod = 'cash';
 
   function safeNumber(val, fallback) {
     fallback = (typeof fallback === 'undefined') ? 0 : fallback;
@@ -527,6 +550,7 @@
     html += '<div class="debug-item"><strong>💳 Reg Payment:</strong> ' + selectedPayment + '</div>';
     html += '<div class="debug-item"><strong>🏢 Co Payment:</strong> ' + companySelectedPayment + '</div>';
     html += '<div class="debug-item"><strong>📦 WS Payment:</strong> ' + wholesalePayment + '</div>';
+    html += '<div class="debug-item"><strong>🔀 Split Method:</strong> ' + regularSplitMethod + '</div>';
     
     if (activeDraftId) {
       var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
@@ -570,6 +594,7 @@
     console.log('Wholesale payment var:', wholesalePayment);
     console.log('Company payment var:', companySelectedPayment);
     console.log('Regular payment var:', selectedPayment);
+    console.log('Regular split method:', regularSplitMethod);
     
     var wsPayBtns = document.querySelectorAll('.ws-pay');
     console.log('WS pay buttons found:', wsPayBtns.length);
@@ -941,6 +966,7 @@
       '<button class="nav-item" onclick="navigateTo(\'purchases.html\')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>' +
       '<button class="nav-item" onclick="navigateTo(\'customers.html\')"><i class="fas fa-users"></i><span>Customers</span></button>' +
       '<button class="nav-item active"><i class="fas fa-cash-register"></i><span>Sales</span></button>' +
+      '<button class="nav-item" onclick="navigateTo(\'promo.html\')"><i class="fas fa-tags"></i><span>Promo</span></button>' +
       '</div>' +
       (isAdmin() ? '<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>' +
       '<button class="nav-item" onclick="navigateTo(\'staff-management.html\')"><i class="fas fa-users-cog"></i><span>Staff</span></button>' +
@@ -1411,6 +1437,7 @@
       items: [],
       paymentMethod: 'cash',
       selectedPayment: 'cash',
+      regularSplitMethod: 'cash',
       totalAmount: 0,
       wholesalePackSize: 50,
       wholesaleCustomerType: 'existing',
@@ -1552,6 +1579,7 @@
     } else {
       draft.customerType = customerType;
       draft.selectedPayment = selectedPayment;
+      draft.regularSplitMethod = regularSplitMethod;
       
       if (customerType === 'existing') {
         var sel = safeGetEl('existingCustomerSelect');
@@ -1682,6 +1710,7 @@
     
     customerType = draft.customerType || 'existing';
     selectedPayment = draft.selectedPayment || 'cash';
+    regularSplitMethod = draft.regularSplitMethod || 'cash';
     
     if (draft.type === 'wholesale') {
       wholesaleCustomerType = draft.wholesaleCustomerType || 'existing';
@@ -1736,7 +1765,7 @@
     }
     
     if (draftTabs.length === 0) {
-      bar.innerHTML = '<span style="padding:8px 14px;font-size:0.75rem;color:var(--gray);">No active drafts. Click <strong>New Sale</strong>, <strong>Sell to Company</strong>, or <strong>Wholesale</strong> to start.</span>';
+      bar.innerHTML = '<span style="padding:8px 14px;font-size:0.75rem;color:var(--gray);">No active drafts. Click <strong>New Sale</strong>, <strong>Company</strong>, or <strong>Wholesale</strong> to start.</span>';
       bar.style.display = 'flex';
       return;
     }
@@ -1767,7 +1796,7 @@
   };
 
   // ============================================
-  // PAYMENT CLICK HANDLER (Event Delegation Fix)
+  // PAYMENT CLICK HANDLER (Event Delegation)
   // ============================================
   document.addEventListener('click', function(e) {
     var target = e.target;
@@ -1792,9 +1821,22 @@
         if (containerId === 'companyPaymentContainer') {
           companySelectedPayment = method;
           console.log('🐛 DEBUG: Company payment selected:', companySelectedPayment);
-        } else {
+        } else if (containerId === 'paymentMethodsContainer') {
           selectedPayment = method;
+          regularSplitMethod = method;
           console.log('🐛 DEBUG: Regular payment selected:', selectedPayment);
+          // Show/hide split payment section
+          var splitSection = safeGetEl('regularSplitPayment');
+          if (splitSection) {
+            splitSection.classList.toggle('active', method === 'cash_transfer' || method === 'cash_pos');
+            if (method === 'cash_transfer') {
+              var label = safeGetEl('regularSplitSecondLabel');
+              if (label) label.textContent = 'Transfer Amount:';
+            } else if (method === 'cash_pos') {
+              var label = safeGetEl('regularSplitSecondLabel');
+              if (label) label.textContent = 'POS Amount:';
+            }
+          }
         }
         
         if (typeof window._markDraftDirty === 'function') window._markDraftDirty();
@@ -1826,7 +1868,7 @@
   });
 
   // ============================================
-  // NEW SALE MODAL
+  // NEW SALE MODAL - UPDATED WITH SPLIT PAYMENT GRID
   // ============================================
   async function openNewSaleModalWithDraft(draft) {
     await loadCustomersAndStock();
@@ -1835,6 +1877,7 @@
     currentModalType = 'sale';
     customerType = draft.customerType || 'existing';
     selectedPayment = draft.selectedPayment || 'cash';
+    regularSplitMethod = draft.regularSplitMethod || 'cash';
     
     var custOptions = allCustomers.map(function(c) { 
       return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '" data-address="' + escapeHtml(c.address||c.location||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + ' (' + (c.purchaseCount||0) + ' purchases)</option>'; 
@@ -1877,6 +1920,11 @@
       itemsHtml = '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
     }
 
+    // Determine which payment method should be selected
+    var payMethods = ['cash', 'transfer', 'pos', 'cash_transfer', 'cash_pos'];
+    var selectedMethod = regularSplitMethod && payMethods.includes(regularSplitMethod) ? regularSplitMethod : 'cash';
+    var isSplit = selectedMethod === 'cash_transfer' || selectedMethod === 'cash_pos';
+
     showModal('New Sale',
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
@@ -1900,9 +1948,16 @@
       '<button type="button" class="btn btn-outline btn-sm" onclick="window._addSaleItem();window._markDraftDirty();"><i class="fas fa-plus"></i> Add Item</button>' +
       '<div class="form-group" style="margin-top:20px;"><label>Payment</label>' +
         '<div class="payment-methods" id="paymentMethodsContainer">' +
-          '<div class="payment-method' + (selectedPayment === 'cash' ? ' selected' : '') + '" data-method="cash">💵 Cash</div>' +
-          '<div class="payment-method' + (selectedPayment === 'transfer' ? ' selected' : '') + '" data-method="transfer">🏦 Transfer</div>' +
-          '<div class="payment-method' + (selectedPayment === 'pos' ? ' selected' : '') + '" data-method="pos">💳 POS</div>' +
+          '<div class="payment-method' + (selectedMethod === 'cash' ? ' selected' : '') + '" data-method="cash">💵 Cash</div>' +
+          '<div class="payment-method' + (selectedMethod === 'transfer' ? ' selected' : '') + '" data-method="transfer">🏦 Transfer</div>' +
+          '<div class="payment-method' + (selectedMethod === 'pos' ? ' selected' : '') + '" data-method="pos">💳 POS</div>' +
+          '<div class="payment-method' + (selectedMethod === 'cash_transfer' ? ' selected' : '') + '" data-method="cash_transfer">💵+🏦 Cash &amp; Transfer</div>' +
+          '<div class="payment-method' + (selectedMethod === 'cash_pos' ? ' selected' : '') + '" data-method="cash_pos">💵+💳 Cash &amp; POS</div>' +
+        '</div>' +
+        '<div class="split-payment-section' + (isSplit ? ' active' : '') + '" id="regularSplitPayment">' +
+          '<div class="split-row"><label>Cash Amount:</label><input type="number" class="form-control" id="regularSplitCash" placeholder="₦" step="0.01" min="0"></div>' +
+          '<div class="split-row"><label id="regularSplitSecondLabel">' + (selectedMethod === 'cash_pos' ? 'POS Amount:' : 'Transfer Amount:') + '</label><input type="number" class="form-control" id="regularSplitSecond" placeholder="₦" step="0.01" min="0"></div>' +
+          '<div style="font-size:0.8rem;color:var(--gray);">Total paid: <span id="regularSplitTotal">₦0</span></div>' +
         '</div>' +
       '</div>' +
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div>' +
@@ -1910,6 +1965,16 @@
     );
 
     setTimeout(function() {
+      // Set selected payment method on buttons
+      document.querySelectorAll('#paymentMethodsContainer .payment-method').forEach(function(el) {
+        if (el.dataset.method === selectedMethod) {
+          el.classList.add('selected');
+          el.style.background = 'var(--primary-soft)';
+          el.style.color = 'var(--primary)';
+          el.style.borderColor = 'var(--primary)';
+        }
+      });
+      
       $('#existingCustomerSelect').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
       
       if (draft.customerId && customerType === 'existing') {
@@ -1927,6 +1992,14 @@
       $('.item-qty').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-size').on('change', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-custom-price').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
+      
+      // Split payment input handlers
+      $('#regularSplitCash, #regularSplitSecond').on('input', function() {
+        var cash = parseFloat($('#regularSplitCash').val()) || 0;
+        var second = parseFloat($('#regularSplitSecond').val()) || 0;
+        $('#regularSplitTotal').text(formatCurrency(cash + second));
+        window._markDraftDirty();
+      });
       
       window._updateSaleSummary();
       console.log('🐛 DEBUG: Regular sale draft restored - items:', draft.items.length, '| customer:', draft.customerName);
@@ -1952,6 +2025,7 @@
 
     customerType = 'existing';
     selectedPayment = 'cash';
+    regularSplitMethod = 'cash';
 
     var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '" data-address="' + escapeHtml(c.address||c.location||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + ' (' + (c.purchaseCount||0) + ' purchases)</option>'; }).join('');
     var stockOptions = getStockOptionsHtml();
@@ -1969,7 +2043,7 @@
       '<div id="newCustomerSection" style="display:none;"><div class="form-group"><label>Full Name *</label><input type="text" class="form-control" id="newCustomerName" oninput="window._markDraftDirty()"></div><div class="form-group"><label>Phone *</label><input type="tel" class="form-control" id="newCustomerPhone" oninput="window._markDraftDirty()"></div><div class="form-group"><label>Address *</label><textarea class="form-control" id="newCustomerAddress" rows="2" oninput="window._markDraftDirty()"></textarea></div><div class="form-group"><label>Email</label><input type="email" class="form-control" id="newCustomerEmail" oninput="window._markDraftDirty()"></div></div>' +
       '<div id="saleItems"><div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div></div>' +
       '<button type="button" class="btn btn-outline btn-sm" onclick="window._addSaleItem();window._markDraftDirty();"><i class="fas fa-plus"></i> Add Item</button>' +
-      '<div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods" id="paymentMethodsContainer"><div class="payment-method selected" data-method="cash">💵 Cash</div><div class="payment-method" data-method="transfer">🏦 Transfer</div><div class="payment-method" data-method="pos">💳 POS</div></div></div>' +
+      '<div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods" id="paymentMethodsContainer"><div class="payment-method selected" data-method="cash">💵 Cash</div><div class="payment-method" data-method="transfer">🏦 Transfer</div><div class="payment-method" data-method="pos">💳 POS</div><div class="payment-method" data-method="cash_transfer">💵+🏦 Cash &amp; Transfer</div><div class="payment-method" data-method="cash_pos">💵+💳 Cash &amp; POS</div></div><div class="split-payment-section" id="regularSplitPayment"><div class="split-row"><label>Cash Amount:</label><input type="number" class="form-control" id="regularSplitCash" placeholder="₦" step="0.01" min="0"></div><div class="split-row"><label id="regularSplitSecondLabel">Transfer Amount:</label><input type="number" class="form-control" id="regularSplitSecond" placeholder="₦" step="0.01" min="0"></div><div style="font-size:0.8rem;color:var(--gray);">Total paid: <span id="regularSplitTotal">₦0</span></div></div></div>' +
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div>' +
       '<button class="btn btn-primary" id="processSaleBtn" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>'
     );
@@ -1980,6 +2054,14 @@
       firstSelect.select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { window._updateSizeDropdown(this); window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-qty').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-size').on('change', function() { window._updateSaleSummary(); window._markDraftDirty(); });
+      
+      $('#regularSplitCash, #regularSplitSecond').on('input', function() {
+        var cash = parseFloat($('#regularSplitCash').val()) || 0;
+        var second = parseFloat($('#regularSplitSecond').val()) || 0;
+        $('#regularSplitTotal').text(formatCurrency(cash + second));
+        window._markDraftDirty();
+      });
+      
       window._updateSaleSummary();
     }, 150);
   };
@@ -2118,14 +2200,55 @@
 
   window._selectPayment = function(method) {
     selectedPayment = method;
+    regularSplitMethod = method;
   };
 
+  // ============================================
+  // PROCESS SALE - WITH DOUBLE-CLICK PROTECTION
+  // ============================================
   window._processSale = function() {
-    if (!window._updateSaleSummary()) { showToast('Some items exceed stock. Please adjust quantities.', 'error'); return; }
+    // --- DOUBLE-CLICK PROTECTION ---
+    if (isProcessingSale) {
+      showToast('⏳ Sale is already processing. Please wait...', 'warning');
+      return;
+    }
+    
+    // Disable the button immediately to prevent double clicks
+    var processBtn = safeGetEl('processSaleBtn');
+    if (processBtn) {
+      processBtn.disabled = true;
+      processBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    }
+    
+    // Set the lock
+    isProcessingSale = true;
+    processingLock = true;
+    
+    // Validate
+    if (!window._updateSaleSummary()) { 
+      showToast('Some items exceed stock. Please adjust quantities.', 'error');
+      isProcessingSale = false;
+      processingLock = false;
+      if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale';
+      }
+      return; 
+    }
+    
     var customerId = '', customerName = '', customerPhone = '', customerAddress = '', customerEmail = '', isNewCustomer = false, customerData = null;
     if (customerType === 'existing') {
       var select = safeGetEl('existingCustomerSelect');
-      if (!select || !select.value) { showToast('Select a customer', 'error'); return; }
+      if (!select || !select.value) { 
+        showToast('Select a customer', 'error');
+        isProcessingSale = false;
+        processingLock = false;
+        if (processBtn) {
+          processBtn.disabled = false;
+          processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale';
+        }
+        return; 
+      }
       customerId = select.value;
       var opt = select.options[select.selectedIndex];
       customerName = opt.dataset.name || ''; customerPhone = opt.dataset.phone || ''; customerAddress = opt.dataset.address || '';
@@ -2134,12 +2257,24 @@
       customerPhone = safeTrimVal('newCustomerPhone', '');
       customerAddress = safeTrimVal('newCustomerAddress', '');
       customerEmail = safeTrimVal('newCustomerEmail', '');
-      if (!customerName || !customerPhone || !customerAddress) { showToast('Fill all required customer fields', 'error'); return; }
+      if (!customerName || !customerPhone || !customerAddress) { 
+        showToast('Fill all required customer fields', 'error');
+        isProcessingSale = false;
+        processingLock = false;
+        if (processBtn) {
+          processBtn.disabled = false;
+          processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale';
+        }
+        return; 
+      }
       isNewCustomer = true;
       customerData = { fullName: customerName, phone: customerPhone, address: customerAddress, email: customerEmail, status: 'pending_approval', createdBy: currentUser.uid, createdByName: userData.fullName };
     }
+    
     var items = [], total = 0;
+    var hasError = false;
     document.querySelectorAll('#saleItems .item-row').forEach(function(row) {
+      if (hasError) return;
       var checkbox = row.querySelector('.non-inv-check');
       var qtyEl = row.querySelector('.item-qty');
       var qty = parseFloat(qtyEl && qtyEl.value) || 1;
@@ -2148,7 +2283,11 @@
         var priceEl = row.querySelector('.item-custom-price');
         var name = nameEl && nameEl.value.trim();
         var price = parseFloat(priceEl && priceEl.value) || 0;
-        if (!name || price <= 0) { showToast('Enter valid name and price for non-inventory item', 'error'); return; }
+        if (!name || price <= 0) { 
+          showToast('Enter valid name and price for non-inventory item', 'error'); 
+          hasError = true;
+          return;
+        }
         items.push({ name: name, quantity: qty, unitPrice: price, size: '1', sizeLabel: 'Unit', isNonInventory: true });
         total += price * qty;
       } else {
@@ -2168,10 +2307,71 @@
         }
       }
     });
-    if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
+    
+    if (hasError) {
+      isProcessingSale = false;
+      processingLock = false;
+      if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale';
+      }
+      return;
+    }
+    
+    if (items.length === 0) { 
+      showToast('Add at least one item', 'error');
+      isProcessingSale = false;
+      processingLock = false;
+      if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale';
+      }
+      return; 
+    }
+    
+    // Validate split payment if needed
+    var paymentMethod = selectedPayment;
+    var paymentDetails = {};
+    if (paymentMethod === 'cash_transfer') {
+      var cashAmt = parseFloat(safeGetVal('regularSplitCash', '0')) || 0;
+      var transferAmt = parseFloat(safeGetVal('regularSplitSecond', '0')) || 0;
+      if (cashAmt + transferAmt !== total) {
+        showToast('Total paid (₦' + formatCurrency(cashAmt + transferAmt) + ') does not match total (₦' + formatCurrency(total) + ')', 'error');
+        isProcessingSale = false;
+        processingLock = false;
+        if (processBtn) {
+          processBtn.disabled = false;
+          processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale';
+        }
+        return;
+      }
+      paymentDetails = { cash: cashAmt, transfer: transferAmt };
+      paymentMethod = 'Cash + Transfer';
+    } else if (paymentMethod === 'cash_pos') {
+      var cashAmt = parseFloat(safeGetVal('regularSplitCash', '0')) || 0;
+      var posAmt = parseFloat(safeGetVal('regularSplitSecond', '0')) || 0;
+      if (cashAmt + posAmt !== total) {
+        showToast('Total paid (₦' + formatCurrency(cashAmt + posAmt) + ') does not match total (₦' + formatCurrency(total) + ')', 'error');
+        isProcessingSale = false;
+        processingLock = false;
+        if (processBtn) {
+          processBtn.disabled = false;
+          processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale';
+        }
+        return;
+      }
+      paymentDetails = { cash: cashAmt, POS: posAmt };
+      paymentMethod = 'Cash + POS';
+    } else {
+      var methodLabels = { 'cash': 'Cash', 'transfer': 'Transfer', 'pos': 'POS' };
+      paymentMethod = methodLabels[paymentMethod] || 'Cash';
+      paymentDetails = { [paymentMethod.toLowerCase()]: total };
+    }
+    
+    // Proceed with PIN
     showPinModal('Process Sale', 'sell items worth ' + formatCurrency(total), function() {
       var customerInfo = { customerId: customerId, customerName: customerName, customerPhone: customerPhone, customerAddress: customerAddress, _isNew: isNewCustomer, _customerData: customerData };
-      var result = processSaleCommon(items, total, customerInfo, selectedPayment, false, {}, 'regular');
+      var result = processSaleCommon(items, total, customerInfo, paymentMethod, false, { paymentDetails: paymentDetails }, 'regular');
       if (result) { 
         showToast('Sale completed! #' + result.receiptNumber, 'success'); 
         showReceiptModal(result); 
@@ -2179,7 +2379,28 @@
         window._clearActiveDraft();
         setTimeout(function() { updateStats(); }, 500);
       }
+      // Release lock
+      isProcessingSale = false;
+      processingLock = false;
+      var btn = safeGetEl('processSaleBtn');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale';
+      }
     }, 'attendant');
+    
+    // Re-enable button if PIN modal is closed/cancelled
+    var origHideModal = window.hideModal;
+    window.hideModal = function() {
+      origHideModal();
+      isProcessingSale = false;
+      processingLock = false;
+      var btn = safeGetEl('processSaleBtn');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> Process Sale';
+      }
+    };
   };
 
   // ============================================
@@ -2416,13 +2637,44 @@
   };
 
   window._processCompanySale = function() {
-    if (!window._updateCompanySummary()) { showToast('Some items exceed stock. Please adjust quantities.', 'error'); return; }
+    if (isProcessingSale) {
+      showToast('⏳ Sale is already processing. Please wait...', 'warning');
+      return;
+    }
+    
+    var processBtn = safeGetEl('processCompanyBtn');
+    if (processBtn) {
+      processBtn.disabled = true;
+      processBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    }
+    
+    isProcessingSale = true;
+    
+    if (!window._updateCompanySummary()) { 
+      showToast('Some items exceed stock. Please adjust quantities.', 'error');
+      isProcessingSale = false;
+      if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Process Company Sale';
+      }
+      return; 
+    }
     var collectedBy = safeTrimVal('companyCollectedBy', '');
     var usage = safeTrimVal('companyUsage', '');
-    if (!collectedBy || !usage) { showToast('Collected by and usage are required', 'error'); return; }
+    if (!collectedBy || !usage) { 
+      showToast('Collected by and usage are required', 'error');
+      isProcessingSale = false;
+      if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Process Company Sale';
+      }
+      return; 
+    }
 
     var items = [], total = 0;
+    var hasError = false;
     document.querySelectorAll('#companyItems .item-row').forEach(function(row) {
+      if (hasError) return;
       var checkbox = row.querySelector('.non-inv-check');
       var qtyEl = row.querySelector('.item-qty');
       var qty = parseFloat(qtyEl && qtyEl.value) || 1;
@@ -2431,7 +2683,11 @@
         var priceEl = row.querySelector('.item-custom-price');
         var name = nameEl && nameEl.value.trim();
         var price = parseFloat(priceEl && priceEl.value) || 0;
-        if (!name || price <= 0) { showToast('Enter valid name and price', 'error'); return; }
+        if (!name || price <= 0) { 
+          showToast('Enter valid name and price', 'error'); 
+          hasError = true;
+          return;
+        }
         items.push({ name: name, quantity: qty, unitPrice: price, size: '1', sizeLabel: 'Unit', isNonInventory: true });
         total += price * qty;
       } else {
@@ -2451,7 +2707,25 @@
         }
       }
     });
-    if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
+    
+    if (hasError) {
+      isProcessingSale = false;
+      if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Process Company Sale';
+      }
+      return;
+    }
+    
+    if (items.length === 0) { 
+      showToast('Add at least one item', 'error');
+      isProcessingSale = false;
+      if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Process Company Sale';
+      }
+      return; 
+    }
 
     showPinModal('Process Company Sale', 'process company sale of ' + formatCurrency(total), function() {
       var customerInfo = { customerId: '', customerName: 'Company', customerPhone: '', customerAddress: '' };
@@ -2463,29 +2737,30 @@
         window._clearActiveDraft();
         setTimeout(function() { updateStats(); }, 500);
       }
+      isProcessingSale = false;
+      if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Process Company Sale';
+      }
     }, 'attendant');
   };
 
   // ============================================
-  // WHOLESALE SALE MODAL - FIXED: ALL INVENTORY ITEMS SHOW IN BORROW
+  // WHOLESALE SALE MODAL
   // ============================================
   async function openWholesaleSaleModalWithDraft(draft) {
     await loadCustomersAndStock();
     currentModalType = 'wholesale';
     
-    // Store items with stock
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
-    
-    // FIX: ALL stock items with quantity > 0 are borrowable, not just those NOT in store
     var borrowableItems = allStockItems.filter(function(si) {
-      return (si.unitQty || 0) > 0;  // Show ALL inventory items with stock
+      return (si.unitQty || 0) > 0;
     });
     var hasBorrowable = borrowableItems.length > 0;
 
     var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>'; }).join('');
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
     
-    // FIX: Show ALL inventory items as borrowable with clear indication
     var borrowOptions = borrowableItems.map(function(i) {
       var inStore = allStoreItems.some(function(store) { 
         return store.id === i.id || store.name === i.name; 
@@ -2641,19 +2916,15 @@
     
     await loadCustomersAndStock();
     
-    // Store items with stock
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
-    
-    // FIX: ALL stock items with quantity > 0 are borrowable
     var borrowableItems = allStockItems.filter(function(si) {
-      return (si.unitQty || 0) > 0;  // Show ALL inventory items with stock
+      return (si.unitQty || 0) > 0;
     });
     var hasBorrowable = borrowableItems.length > 0;
 
     var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>'; }).join('');
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
     
-    // FIX: Show ALL inventory items as borrowable with clear indication
     var borrowOptions = borrowableItems.map(function(i) {
       var inStore = allStoreItems.some(function(store) { 
         return store.id === i.id || store.name === i.name; 
@@ -2743,15 +3014,12 @@
 
   window._addWSItem = function() {
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
-    
-    // FIX: ALL stock items with quantity > 0 are borrowable
     var borrowableItems = allStockItems.filter(function(si) {
       return (si.unitQty || 0) > 0;
     });
     
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
     
-    // FIX: Show ALL inventory items as borrowable
     var borrowOptions = borrowableItems.map(function(i) {
       var inStore = allStoreItems.some(function(store) { 
         return store.id === i.id || store.name === i.name; 
@@ -2875,12 +3143,33 @@
   };
 
   window._processWS = function() {
+    if (isProcessingSale) {
+      showToast('⏳ Sale is already processing. Please wait...', 'warning');
+      return;
+    }
+    
+    var processBtn = safeGetEl('processWSBtn');
+    if (processBtn) {
+      processBtn.disabled = true;
+      processBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    }
+    
+    isProcessingSale = true;
+    
     var packSize = parseInt(safeGetVal('wsPackSize', '50')) || 50;
     var customerId = '', customerName = '', customerPhone = '', isNewCustomer = false, customerData = null;
     
     if (wholesaleCustomerType === 'existing') {
       var select = safeGetEl('wsExistingCustomer');
-      if (!select || !select.value) { showToast('Select a customer', 'error'); return; }
+      if (!select || !select.value) { 
+        showToast('Select a customer', 'error');
+        isProcessingSale = false;
+        if (processBtn) {
+          processBtn.disabled = false;
+          processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete Wholesale Sale';
+        }
+        return; 
+      }
       customerId = select.value;
       var opt = select.options[select.selectedIndex];
       customerName = opt.getAttribute('data-name') || ''; 
@@ -2888,7 +3177,15 @@
     } else {
       customerName = safeTrimVal('wsNewName', '');
       customerPhone = safeTrimVal('wsNewPhone', '');
-      if (!customerName || !customerPhone) { showToast('Customer name & phone required', 'error'); return; }
+      if (!customerName || !customerPhone) { 
+        showToast('Customer name & phone required', 'error');
+        isProcessingSale = false;
+        if (processBtn) {
+          processBtn.disabled = false;
+          processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete Wholesale Sale';
+        }
+        return; 
+      }
       isNewCustomer = true;
       customerData = { 
         fullName: customerName, 
@@ -2933,11 +3230,44 @@
       totalAmount += qty * price;
     });
     
-    if (hasError) return;
-    if (items.length === 0) { showToast('Add at least one item', 'error'); return; }
-    if (totalPieces < packSize) { showToast('Wholesale requires ' + packSize + ' pieces. You\'ve selected ' + totalPieces, 'error'); return; }
+    if (hasError) {
+      isProcessingSale = false;
+      if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete Wholesale Sale';
+      }
+      return;
+    }
+    
+    if (items.length === 0) { 
+      showToast('Add at least one item', 'error');
+      isProcessingSale = false;
+      if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete Wholesale Sale';
+      }
+      return; 
+    }
+    
+    if (totalPieces < packSize) { 
+      showToast('Wholesale requires ' + packSize + ' pieces. You\'ve selected ' + totalPieces, 'error');
+      isProcessingSale = false;
+      if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete Wholesale Sale';
+      }
+      return; 
+    }
+    
     if (totalPieces > packSize) { 
-      if (!confirm('You\'ve selected ' + totalPieces + ' pieces (' + (totalPieces - packSize) + ' extra). Continue?')) return; 
+      if (!confirm('You\'ve selected ' + totalPieces + ' pieces (' + (totalPieces - packSize) + ' extra). Continue?')) {
+        isProcessingSale = false;
+        if (processBtn) {
+          processBtn.disabled = false;
+          processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete Wholesale Sale';
+        }
+        return; 
+      }
     }
 
     showPinModal('Process Wholesale Sale', 'sell ' + totalPieces + ' pieces for ' + formatCurrency(totalAmount), function() {
@@ -2961,6 +3291,11 @@
         hideModal();
         window._clearActiveDraft();
         setTimeout(function() { updateStats(); }, 500);
+      }
+      isProcessingSale = false;
+      if (processBtn) {
+        processBtn.disabled = false;
+        processBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete Wholesale Sale';
       }
     }, 'attendant');
   };
@@ -3200,6 +3535,7 @@
         };
       }),
       totalAmount: total, paymentMethod: paymentMethod,
+      paymentDetails: extraData ? extraData.paymentDetails : null,
       attendantId: currentUser ? currentUser.uid : '',
       attendantName: userData ? (userData.fullName || 'Staff') : 'Staff',
       status: 'completed', _type: saleType,
@@ -3323,24 +3659,20 @@
   }
 
   // ============================================
-  // RECEIPTS - FIXED: COMBINE DUPLICATE ITEMS
+  // RECEIPTS - WITH QR CODE
   // ============================================
   
-  // Helper function to combine items with same name + size + price
   function combineItems(items) {
     if (!items || items.length === 0) return [];
     
     var combined = {};
     items.forEach(function(item) {
-      // Create a unique key based on name + size + unitPrice
       var key = (item.name || 'Item') + '|' + (item.size || '1') + '|' + (item.sizeLabel || 'Unit') + '|' + (item.unitPrice || 0);
       
       if (combined[key]) {
-        // Add quantity and total to existing entry
         combined[key].quantity += (item.quantity || item.pieces || 1);
         combined[key].total = combined[key].quantity * combined[key].unitPrice;
       } else {
-        // Create new entry
         combined[key] = {
           name: item.name || 'Item',
           size: item.size || '1',
@@ -3363,14 +3695,28 @@
 
   function getDisplayItems(items) {
     if (!items || items.length === 0) return [];
-    
     var combined = combineItems(items);
-    
-    combined.sort(function(a, b) {
-      return a.name.localeCompare(b.name);
-    });
-    
+    combined.sort(function(a, b) { return a.name.localeCompare(b.name); });
     return combined;
+  }
+
+  // Generate QR data for receipt
+  function generateQRData(sale) {
+    var data = {
+      receipt: sale.receiptNumber || '',
+      store: 'OmoCreations',
+      total: safeNumber(sale.totalAmount, 0),
+      date: formatDate(sale.createdAt),
+      time: formatTime(sale.createdAt),
+      customer: sale.customerName || 'Walk-in',
+      phone: sale.customerPhone || '',
+      items: sale.items ? sale.items.map(function(i) {
+        return { name: i.name || 'Item', qty: i.quantity || i.pieces || 1, price: i.unitPrice || 0 };
+      }) : [],
+      website: 'https://omocreations.com.ng',
+      attendant: sale.attendantName || 'Staff'
+    };
+    return JSON.stringify(data);
   }
 
   window.showReceiptModal = function(sale) {
@@ -3453,7 +3799,6 @@
       var actionLabels = { 'refund': '💵 Full Refund', 'exchange': '🔄 Exchanged', 'store_credit': '🏦 Store Credit', 'replace': '🔄 Replaced' };
       itemsHtml += '<div style="text-align:center;margin-top:8px;padding:6px;background:var(--primary-soft);border-radius:8px;font-size:0.8rem;font-weight:600;">Action: ' + (actionLabels[sale.returnAction] || escapeHtml(sale.returnAction || 'Return')) + '</div>';
     } else {
-      // ===== FIX: USE COMBINED ITEMS ON RECEIPT =====
       if (sale.items && sale.items.length > 0) {
         var displayItems = getDisplayItems(sale.items);
         displayItems.forEach(function(i) {
@@ -3461,7 +3806,6 @@
           var price = i.unitPrice || 0;
           var total = qty * price;
           var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
-          // Clean receipt - no borrow badges for customer
           itemsHtml += '<div class="receipt-item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
         });
       }
@@ -3486,8 +3830,6 @@
         wholesaleInfo += '<p class="rec" style="color:var(--warning);">Exceeded by: ' + (sale.extraPieces || 0) + ' pcs</p>';
       }
     }
-    
-    var borrowInfo = '';
     
     var customerTypeBadge = '';
     if (sale._customerType === 'new') {
@@ -3520,6 +3862,21 @@
       dateDisplay = '<p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>';
     }
     
+    // Payment breakdown display
+    var paymentBreakdownHtml = '';
+    if (sale.paymentDetails && Object.keys(sale.paymentDetails).length > 0) {
+      paymentBreakdownHtml = '<div style="margin-top:6px;padding:6px;background:var(--gray-light);border-radius:8px;font-size:0.7rem;">';
+      var pKeys = Object.keys(sale.paymentDetails);
+      pKeys.forEach(function(key) {
+        var label = key.charAt(0).toUpperCase() + key.slice(1);
+        paymentBreakdownHtml += '<div class="receipt-item" style="font-size:0.7rem;"><span>' + label + ':</span><span>' + formatCurrency(sale.paymentDetails[key]) + '</span></div>';
+      });
+      paymentBreakdownHtml += '</div>';
+    }
+    
+    var qrId = 'qr_' + Date.now();
+    var qrData = generateQRData(sale);
+    
     showModal(title,
       '<div class="receipt-container">' +
         '<div class="receipt-header">' +
@@ -3532,17 +3889,21 @@
           dateDisplay +
           originalReceiptInfo +
           wholesaleInfo +
-          borrowInfo +
         '</div>' +
-        '' +
         '<p class="cust-info">' +
           '<strong>Customer:</strong> ' + escapeHtml(sale.customerName || 'Walk-in') + customerTypeBadge +
           (sale.customerPhone ? '<br><strong>Phone:</strong> ' + escapeHtml(sale.customerPhone) : '') +
           '<br><strong>Served by:</strong> ' + escapeHtml(sale.attendantName || 'Staff') +
         '</p>' +
         extraInfo +
+        paymentBreakdownHtml +
         '<div class="receipt-items">' + itemsHtml + '</div>' +
         (isExchange ? '' : (isReturn ? '' : '<div class="receipt-total"><span>Total:</span><span>' + formatCurrency(displayTotal) + '</span></div>')) +
+        '<div class="receipt-qr" id="' + qrId + '"></div>' +
+        '<div class="receipt-website">' +
+          '🔍 Scan to verify receipt<br>' +
+          '🌐 Visit our website: <a href="https://omocreations.com.ng" target="_blank" style="color:var(--primary);text-decoration:none;font-weight:600;">omocreations.com.ng</a>' +
+        '</div>' +
         '<p class="thanks">Thank you for your patronage!</p>' +
       '</div>' +
       '<div style="display:flex;gap:10px;margin-top:20px;">' +
@@ -3551,11 +3912,229 @@
       '</div>'
     );
     
+    // Generate QR code
+    setTimeout(function() {
+      var qrContainer = safeGetEl(qrId);
+      if (qrContainer && typeof QRCode !== 'undefined') {
+        try {
+          new QRCode(qrContainer, { 
+            text: qrData, 
+            width: 100, 
+            height: 100, 
+            colorDark: '#1a1a2e', 
+            colorLight: '#ffffff', 
+            correctLevel: QRCode.CorrectLevel.H 
+          });
+        } catch (e) { 
+          qrContainer.innerHTML = '<span style="font-size:0.7rem;color:var(--gray);">QR unavailable</span>'; 
+        }
+      }
+    }, 300);
+    
     currentModalType = prevModalType;
   };
 
   // ============================================
-  // COMPANY RECORD VIEW - Shows stock sources
+  // PRINT RECEIPT - WITH QR CODE
+  // ============================================
+  window.printReceipt = function(id) {
+    var s = findSaleByIdentifier(id);
+    if (!s) { showToast('Sale not found for printing', 'error'); return; }
+    
+    var now = new Date();
+    var saleDate = getSaleDate(s);
+    var saleDateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    var saleTimeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    var currentDateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    var currentTimeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    
+    var isExchange = s.isExchange || s.exchangeType;
+    var isReturn = s.isReturn || s.returnAction;
+    var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
+    var isCompany = s.isCompanySale;
+    
+    var itemsHtml = '';
+    
+    if (isExchange) {
+      itemsHtml += '<div style="font-weight:bold;color:#10b981;margin-top:8px;border-top:1px dashed #ccc;padding-top:4px;">RETURNED ITEMS</div>';
+      if (s.returnedItems) {
+        var returnedCombined = combineItems(s.returnedItems);
+        returnedCombined.forEach(function(i) {
+          var qty = i.quantity || 1;
+          var total = qty * (i.unitPrice || 0);
+          itemsHtml += '<div class="item"><span>↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#10b981;">+' + formatCurrency(total) + '</span></div>';
+        });
+      }
+      itemsHtml += '<div class="total" style="color:#10b981;">Return Value: ' + formatCurrency(s.totalRefund || s.returnedValue || 0) + '</div>';
+      
+      itemsHtml += '<div style="font-weight:bold;color:#ff4da6;margin-top:8px;border-top:1px dashed #ccc;padding-top:4px;">EXCHANGE ITEMS</div>';
+      if (s.exchangeItems) {
+        var exchangeCombined = combineItems(s.exchangeItems);
+        exchangeCombined.forEach(function(i) {
+          var qty = i.quantity || 1;
+          var total = qty * (i.unitPrice || 0);
+          itemsHtml += '<div class="item"><span>↪ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
+        });
+      }
+      itemsHtml += '<div class="total" style="color:#ff4da6;">Exchange Total: ' + formatCurrency(s.exchangeTotal || 0) + '</div>';
+      
+      if (s.difference > 0) {
+        if (s.differenceType === 'customer_pays') {
+          itemsHtml += '<div class="item" style="font-weight:bold;"><span>Additional Payment (' + escapeHtml(s.exchangePayment || s.paymentMethod || 'Cash') + ')</span><span>' + formatCurrency(s.difference) + '</span></div>';
+        } else if (s.differenceType === 'refund_customer') {
+          itemsHtml += '<div class="item" style="font-weight:bold;color:#ef4444;"><span>Refund to Customer</span><span>-' + formatCurrency(s.difference) + '</span></div>';
+        }
+      }
+    } else if (isReturn) {
+      itemsHtml += '<div style="font-weight:bold;color:#ef4444;margin-top:8px;border-top:1px dashed #ccc;padding-top:4px;">RETURNED ITEMS</div>';
+      if (s.returnedItems) {
+        var returnedCombined = combineItems(s.returnedItems);
+        returnedCombined.forEach(function(i) {
+          var qty = i.quantity || 1;
+          var total = qty * (i.unitPrice || 0);
+          itemsHtml += '<div class="item"><span>↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#ef4444;">-' + formatCurrency(total) + '</span></div>';
+        });
+      }
+      itemsHtml += '<div class="total" style="color:#ef4444;">Total Refund: -' + formatCurrency(s.totalRefund || 0) + '</div>';
+      
+      var actionLabels = { 'refund': 'Full Refund', 'exchange': 'Exchanged', 'store_credit': 'Store Credit', 'replace': 'Replaced' };
+      itemsHtml += '<div style="text-align:center;margin-top:4px;font-weight:bold;">Action: ' + (actionLabels[s.returnAction] || escapeHtml(s.returnAction || 'Return')) + '</div>';
+    } else {
+      if (s.items) {
+        var combinedItems = combineItems(s.items);
+        combinedItems.sort(function(a, b) { return a.name.localeCompare(b.name); });
+        combinedItems.forEach(function(i) {
+          var qty = i.quantity || 1;
+          var total = qty * (i.unitPrice || 0);
+          var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
+          itemsHtml += '<div class="item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
+        });
+      }
+    }
+    
+    var displayTotal = 0;
+    if (isExchange) displayTotal = s.exchangeTotal || s.totalAmount || 0;
+    else if (isReturn) displayTotal = -(s.totalRefund || 0);
+    else displayTotal = safeNumber(s.totalAmount, 0);
+    
+    var companyInfo = '';
+    if (isCompany) {
+      companyInfo = '<p class="cust">Collected by: ' + escapeHtml(s.collectedBy || 'N/A') + '<br>Usage: ' + escapeHtml(s.usage || 'N/A') + '</p>';
+    }
+    
+    var wholesaleInfo = '';
+    if (isWholesale) {
+      wholesaleInfo = '<p class="rec">Pack Size: ' + (s.wholesalePackSize || 50) + ' pcs | Sold: ' + (s.totalPieces || 0) + ' pcs</p>';
+    }
+    
+    var originalReceiptInfo = '';
+    if (s.originalReceiptNumber) {
+      originalReceiptInfo = '<p class="rec" style="font-size:8pt;">Original: #' + escapeHtml(s.originalReceiptNumber) + '</p>';
+    }
+    
+    var dateDisplay = '';
+    if (isReturn || isExchange) {
+      dateDisplay = '<p class="rec" style="font-size:7pt;">Purchased: ' + saleDateStr + ' ' + saleTimeStr + '</p>' +
+                    '<p class="rec">Returned: ' + currentDateStr + ' ' + currentTimeStr + '</p>';
+    } else {
+      dateDisplay = '<p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>';
+    }
+    
+    var qrData = generateQRData(s);
+    
+    var receiptHTML = '<html><head><title>Receipt #' + (s.receiptNumber||'') + '</title>' +
+      '<style>@page{margin:0;size:80mm auto}*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Segoe UI",Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:9pt;line-height:1.3;color:#000}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:11pt;margin:0;font-weight:bold}.h .addr{font-size:6pt;margin:0;font-weight:bold}.h .rec{font-size:8pt;margin:2px 0;font-weight:normal}.cust{font-size:8pt;margin:3px 0;line-height:1.2;font-weight:normal}.items{margin:3px 0}.item{display:flex;justify-content:space-between;font-size:8pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1;padding-right:6px}.item span:last-child{text-align:right;min-width:50px;white-space:nowrap}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:9pt;text-align:right}.thanks{text-align:center;font-size:8pt;margin-top:4px;font-style:italic;font-weight:normal}.qr{text-align:center;margin:4px 0}.qr canvas{max-width:70px;height:auto}.website{text-align:center;font-size:5pt;color:#666;margin-top:2px}.website a{color:var(--primary);text-decoration:none;font-weight:600;color:#ff4da6}</style>' +
+      '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>' +
+      '</head><body>' +
+      '<div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#' + escapeHtml(s.receiptNumber||'N/A') + '</p>' + dateDisplay + originalReceiptInfo + wholesaleInfo + '</div>' +
+      '<p class="cust">Customer: ' + escapeHtml(s.customerName||'Walk-in') + (s.customerPhone ? '<br>Phone: ' + escapeHtml(s.customerPhone) : '') + '<br>Served by: ' + escapeHtml(s.attendantName||'Staff') + '</p>' +
+      companyInfo +
+      '<div class="items">' + itemsHtml + '</div>' +
+      (isExchange ? '' : (isReturn ? '' : '<div class="total">Total: ' + formatCurrency(displayTotal) + '</div>')) +
+      '<div class="qr" id="qrPrintContainer"></div>' +
+      '<div class="website">🔍 Scan to verify receipt<br>🌐 <a href="https://omocreations.com.ng" target="_blank">omocreations.com.ng</a></div>' +
+      '<p class="thanks">Thank you for your patronage!</p>' +
+      '<script>try { var QRCode = window.QRCode; if (QRCode) { new QRCode(document.getElementById("qrPrintContainer"), { text: "' + qrData.replace(/"/g, '\\"') + '", width: 70, height: 70, colorDark: "#1a1a2e", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H }); } } catch(e) { console.warn("QR print error:", e); }<\/script>' +
+      '</body></html>';
+    
+    try {
+      var printWindow = window.open('', '_blank', 'width=400,height=600');
+      if (printWindow) {
+        printWindow.document.write(receiptHTML);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(function() {
+          printWindow.print();
+          setTimeout(function() { printWindow.close(); }, 1000);
+        }, 500);
+      } else {
+        var oldFrame = safeGetEl('printIframe');
+        if (oldFrame) oldFrame.remove();
+        var iframe = document.createElement('iframe');
+        iframe.id = 'printIframe';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        iframe.contentWindow.document.open();
+        iframe.contentWindow.document.write(receiptHTML);
+        iframe.contentWindow.document.close();
+        iframe.onload = function() {
+          setTimeout(function() {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            setTimeout(function() { iframe.remove(); }, 1000);
+          }, 300);
+        };
+      }
+      
+      logAudit('receipt_printed', 'Receipt printed: #' + (s.receiptNumber || 'N/A'), {
+        receiptNumber: s.receiptNumber || 'N/A',
+        customerName: s.customerName || 'Walk-in',
+        totalAmount: displayTotal,
+        paymentMethod: s.paymentMethod || 'unknown',
+        saleType: isExchange ? 'exchange' : (isReturn ? 'return' : (s._type || 'regular')),
+        printedBy: userData ? userData.fullName : 'Staff',
+        printedAt: new Date().toISOString()
+      });
+    } catch (e) {
+      showToast('Print failed. Please try again.', 'error');
+      console.error('Print error:', e);
+    }
+  };
+
+  window.printReceiptModal = function(id) { hideModal(); setTimeout(function() { window.printReceipt(id); }, 300); };
+
+  // ============================================
+  // VIEW RECEIPT (alias)
+  // ============================================
+  window.viewReceipt = function(id) { 
+    var s = findSaleByIdentifier(id); 
+    if (s) showReceiptModal(s);
+    else showToast('Receipt not found', 'error');
+  };
+
+  // ============================================
+  // RETURN PAGE NAVIGATION
+  // ============================================
+  window.openReturnPage = function(saleId) {
+    var sale = findSaleByIdentifier(saleId);
+    if (!sale) { showToast('Sale not found', 'error'); return; }
+    
+    if (sale.status === 'returned') { 
+      showToast('This sale has already been fully returned', 'error'); 
+      return; 
+    }
+    
+    if (sale._type === 'wholesale' || sale.wholesalePackSize) {
+      showToast('Wholesale returns must be processed via Inventory Adjustment with admin approval', 'warning');
+      return;
+    }
+    
+    sessionStorage.setItem('returnSaleId', saleId);
+    window.location.href = 'returns.html';
+  };
+
+  // ============================================
+  // VIEW COMPANY RECORD
   // ============================================
   window.viewCompanyRecord = function(id) {
     var s = findSaleByIdentifier(id);
@@ -3796,199 +4375,6 @@
       showToast('Print failed. Please try again.', 'error');
       console.error('Print error:', e);
     }
-  };
-
-  window.viewReceipt = function(id) { 
-    var s = findSaleByIdentifier(id); 
-    if (s) showReceiptModal(s);
-    else showToast('Receipt not found', 'error');
-  };
-
-  // ============================================
-  // PRINT RECEIPT - FIXED: COMBINE ITEMS
-  // ============================================
-  window.printReceipt = function(id) {
-    var s = findSaleByIdentifier(id);
-    if (!s) { showToast('Sale not found for printing', 'error'); return; }
-    
-    var now = new Date();
-    var saleDate = getSaleDate(s);
-    var saleDateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    var saleTimeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    var currentDateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    var currentTimeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    
-    var isExchange = s.isExchange || s.exchangeType;
-    var isReturn = s.isReturn || s.returnAction;
-    var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
-    var isCompany = s.isCompanySale;
-    
-    var itemsHtml = '';
-    
-    if (isExchange) {
-      itemsHtml += '<div style="font-weight:bold;color:#10b981;margin-top:8px;border-top:1px dashed #ccc;padding-top:4px;">RETURNED ITEMS</div>';
-      if (s.returnedItems) {
-        var returnedCombined = combineItems(s.returnedItems);
-        returnedCombined.forEach(function(i) {
-          var qty = i.quantity || 1;
-          var total = qty * (i.unitPrice || 0);
-          itemsHtml += '<div class="item"><span>↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#10b981;">+' + formatCurrency(total) + '</span></div>';
-        });
-      }
-      itemsHtml += '<div class="total" style="color:#10b981;">Return Value: ' + formatCurrency(s.totalRefund || s.returnedValue || 0) + '</div>';
-      
-      itemsHtml += '<div style="font-weight:bold;color:#ff4da6;margin-top:8px;border-top:1px dashed #ccc;padding-top:4px;">EXCHANGE ITEMS</div>';
-      if (s.exchangeItems) {
-        var exchangeCombined = combineItems(s.exchangeItems);
-        exchangeCombined.forEach(function(i) {
-          var qty = i.quantity || 1;
-          var total = qty * (i.unitPrice || 0);
-          itemsHtml += '<div class="item"><span>↪ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
-        });
-      }
-      itemsHtml += '<div class="total" style="color:#ff4da6;">Exchange Total: ' + formatCurrency(s.exchangeTotal || 0) + '</div>';
-      
-      if (s.difference > 0) {
-        if (s.differenceType === 'customer_pays') {
-          itemsHtml += '<div class="item" style="font-weight:bold;"><span>Additional Payment (' + escapeHtml(s.exchangePayment || s.paymentMethod || 'Cash') + ')</span><span>' + formatCurrency(s.difference) + '</span></div>';
-        } else if (s.differenceType === 'refund_customer') {
-          itemsHtml += '<div class="item" style="font-weight:bold;color:#ef4444;"><span>Refund to Customer</span><span>-' + formatCurrency(s.difference) + '</span></div>';
-        }
-      }
-    } else if (isReturn) {
-      itemsHtml += '<div style="font-weight:bold;color:#ef4444;margin-top:8px;border-top:1px dashed #ccc;padding-top:4px;">RETURNED ITEMS</div>';
-      if (s.returnedItems) {
-        var returnedCombined = combineItems(s.returnedItems);
-        returnedCombined.forEach(function(i) {
-          var qty = i.quantity || 1;
-          var total = qty * (i.unitPrice || 0);
-          itemsHtml += '<div class="item"><span>↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#ef4444;">-' + formatCurrency(total) + '</span></div>';
-        });
-      }
-      itemsHtml += '<div class="total" style="color:#ef4444;">Total Refund: -' + formatCurrency(s.totalRefund || 0) + '</div>';
-      
-      var actionLabels = { 'refund': 'Full Refund', 'exchange': 'Exchanged', 'store_credit': 'Store Credit', 'replace': 'Replaced' };
-      itemsHtml += '<div style="text-align:center;margin-top:4px;font-weight:bold;">Action: ' + (actionLabels[s.returnAction] || escapeHtml(s.returnAction || 'Return')) + '</div>';
-    } else {
-      // ===== FIX: USE COMBINED ITEMS =====
-      if (s.items) {
-        var combinedItems = combineItems(s.items);
-        combinedItems.sort(function(a, b) { return a.name.localeCompare(b.name); });
-        combinedItems.forEach(function(i) {
-          var qty = i.quantity || 1;
-          var total = qty * (i.unitPrice || 0);
-          var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
-          itemsHtml += '<div class="item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
-        });
-      }
-    }
-    
-    var displayTotal = 0;
-    if (isExchange) displayTotal = s.exchangeTotal || s.totalAmount || 0;
-    else if (isReturn) displayTotal = -(s.totalRefund || 0);
-    else displayTotal = safeNumber(s.totalAmount, 0);
-    
-    var companyInfo = '';
-    if (isCompany) {
-      companyInfo = '<p class="cust">Collected by: ' + escapeHtml(s.collectedBy || 'N/A') + '<br>Usage: ' + escapeHtml(s.usage || 'N/A') + '</p>';
-    }
-    
-    var wholesaleInfo = '';
-    if (isWholesale) {
-      wholesaleInfo = '<p class="rec">Pack Size: ' + (s.wholesalePackSize || 50) + ' pcs | Sold: ' + (s.totalPieces || 0) + ' pcs</p>';
-    }
-    
-    var borrowInfo = '';
-    
-    var originalReceiptInfo = '';
-    if (s.originalReceiptNumber) {
-      originalReceiptInfo = '<p class="rec" style="font-size:8pt;">Original: #' + escapeHtml(s.originalReceiptNumber) + '</p>';
-    }
-    
-    var dateDisplay = '';
-    if (isReturn || isExchange) {
-      dateDisplay = '<p class="rec" style="font-size:7pt;">Purchased: ' + saleDateStr + ' ' + saleTimeStr + '</p>' +
-                    '<p class="rec">Returned: ' + currentDateStr + ' ' + currentTimeStr + '</p>';
-    } else {
-      dateDisplay = '<p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>';
-    }
-    
-    var receiptHTML = '<html><head><title>Receipt #' + (s.receiptNumber||'') + '</title>' +
-      '<style>@page{margin:0;size:80mm auto}*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Segoe UI",Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3;color:#000}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:7pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1;padding-right:8px}.item span:last-child{text-align:right;min-width:55px;white-space:nowrap}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style>' +
-      '</head><body>' +
-      '<div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#' + escapeHtml(s.receiptNumber||'N/A') + '</p>' + dateDisplay + originalReceiptInfo + wholesaleInfo + borrowInfo + '</div>' +
-      '<p class="cust">Customer: ' + escapeHtml(s.customerName||'Walk-in') + (s.customerPhone ? '<br>Phone: ' + escapeHtml(s.customerPhone) : '') + '<br>Served by: ' + escapeHtml(s.attendantName||'Staff') + '</p>' +
-      companyInfo +
-      '<div class="items">' + itemsHtml + '</div>' +
-      (isExchange ? '' : (isReturn ? '' : '<div class="total">Total: ' + formatCurrency(displayTotal) + '</div>')) +
-      '<p class="thanks">Thank you for your patronage!</p>' +
-      '</body></html>';
-    
-    try {
-      var printWindow = window.open('', '_blank', 'width=400,height=600');
-      if (printWindow) {
-        printWindow.document.write(receiptHTML);
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(function() {
-          printWindow.print();
-          setTimeout(function() { printWindow.close(); }, 1000);
-        }, 500);
-      } else {
-        var oldFrame = safeGetEl('printIframe');
-        if (oldFrame) oldFrame.remove();
-        var iframe = document.createElement('iframe');
-        iframe.id = 'printIframe';
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-        iframe.contentWindow.document.open();
-        iframe.contentWindow.document.write(receiptHTML);
-        iframe.contentWindow.document.close();
-        iframe.onload = function() {
-          setTimeout(function() {
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-            setTimeout(function() { iframe.remove(); }, 1000);
-          }, 300);
-        };
-      }
-      
-      logAudit('receipt_printed', 'Receipt printed: #' + (s.receiptNumber || 'N/A'), {
-        receiptNumber: s.receiptNumber || 'N/A',
-        customerName: s.customerName || 'Walk-in',
-        totalAmount: displayTotal,
-        paymentMethod: s.paymentMethod || 'unknown',
-        saleType: isExchange ? 'exchange' : (isReturn ? 'return' : (s._type || 'regular')),
-        printedBy: userData ? userData.fullName : 'Staff',
-        printedAt: new Date().toISOString()
-      });
-    } catch (e) {
-      showToast('Print failed. Please try again.', 'error');
-      console.error('Print error:', e);
-    }
-  };
-
-  window.printReceiptModal = function(id) { hideModal(); setTimeout(function() { window.printReceipt(id); }, 300); };
-
-  // ============================================
-  // RETURN PAGE NAVIGATION
-  // ============================================
-  window.openReturnPage = function(saleId) {
-    var sale = findSaleByIdentifier(saleId);
-    if (!sale) { showToast('Sale not found', 'error'); return; }
-    
-    if (sale.status === 'returned') { 
-      showToast('This sale has already been fully returned', 'error'); 
-      return; 
-    }
-    
-    if (sale._type === 'wholesale' || sale.wholesalePackSize) {
-      showToast('Wholesale returns must be processed via Inventory Adjustment with admin approval', 'warning');
-      return;
-    }
-    
-    sessionStorage.setItem('returnSaleId', saleId);
-    window.location.href = 'returns.html';
   };
 
   // ============================================
