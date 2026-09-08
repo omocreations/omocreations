@@ -481,8 +481,10 @@
   let wholesalePayment = 'cash';
   let companySelectedPayment = 'cash';
 
-  // Track processed sale IDs to prevent duplicates
   let processedSaleIds = new Set();
+  let activeTransactionLocks = new Map();
+  let transactionQueue = [];
+  let isProcessingQueue = false;
 
   function safeNumber(val, fallback) {
     fallback = (typeof fallback === 'undefined') ? 0 : fallback;
@@ -539,6 +541,7 @@
     html += '<div class="debug-item"><strong>🏢 Co Payment:</strong> ' + companySelectedPayment + '</div>';
     html += '<div class="debug-item"><strong>📦 WS Payment:</strong> ' + wholesalePayment + '</div>';
     html += '<div class="debug-item"><strong>🔢 Processed IDs:</strong> ' + processedSaleIds.size + '</div>';
+    html += '<div class="debug-item"><strong>🔒 Active Locks:</strong> ' + activeTransactionLocks.size + '</div>';
     
     if (activeDraftId) {
       var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
@@ -562,6 +565,7 @@
     
     html += '<button onclick="window._retrySync()" style="margin-top:8px;">🔄 Retry Sync</button> ';
     html += '<button onclick="window._testDrafts()" style="margin-top:8px;">🧪 Test Drafts</button>';
+    html += '<button onclick="window._debugReceipts()" style="margin-top:8px;">📋 Debug Receipts</button>';
     
     content.innerHTML = html;
   }
@@ -604,6 +608,12 @@
     localStorage.setItem('syncErrors', '[]');
     updateDebugPanel();
     showToast('Errors cleared', 'success');
+  };
+
+  window._debugReceipts = function() {
+    debugReceiptStatus();
+    updateDebugPanel();
+    showToast('Receipt debug info logged to console 📋', 'info');
   };
 
   function savePendingCustomer(customerData) {
@@ -713,23 +723,214 @@
     var syncStatus = safeGetEl('syncStatus'); if (syncStatus) syncStatus.textContent = '⚠️ Offline';
   }
 
-  function saveOfflineSale(saleData) {
-    // Check if this sale already exists in offline queue
-    var exists = offlineSales.some(function(s) {
-      return s.receiptNumber === saleData.receiptNumber ||
-             (s.id && s.id === saleData.id) ||
-             (s._localId && s._localId === saleData._localId);
+  function generateReceiptNumber(prefix) {
+    prefix = prefix || 'RCP';
+    
+    const now = new Date();
+    
+    // 1. Date-based component (YYYYMMDD)
+    const dateStr = now.getFullYear() +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        String(now.getDate()).padStart(2, '0');
+    
+    // 2. Time-based component (HHMMSS)
+    const timeStr = String(now.getHours()).padStart(2, '0') +
+        String(now.getMinutes()).padStart(2, '0') +
+        String(now.getSeconds()).padStart(2, '0');
+    
+    // 3. Millisecond-based random component
+    const msStr = String(now.getMilliseconds()).padStart(3, '0');
+    const randomStr = Math.random().toString(36).substr(2, 4).toUpperCase();
+    
+    // 4. Try to get counter from localStorage with better handling
+    let counter = 0;
+    const counterKey = 'receiptCounter_' + prefix + '_' + dateStr;
+    
+    try {
+      const sessionCounter = sessionStorage.getItem(counterKey);
+      if (sessionCounter) {
+        counter = parseInt(sessionCounter) || 0;
+      }
+      counter++;
+      sessionStorage.setItem(counterKey, String(counter));
+      
+      localStorage.setItem(counterKey, String(counter));
+    } catch (e) {
+      try {
+        const stored = localStorage.getItem(counterKey);
+        counter = parseInt(stored) || 0;
+        counter++;
+        localStorage.setItem(counterKey, String(counter));
+      } catch (e2) {
+        counter = Math.floor(Math.random() * 10000);
+      }
+    }
+    
+    const paddedCounter = String(counter).padStart(4, '0');
+    const receiptNumber = prefix + '-' + dateStr + '-' + timeStr + '-' + paddedCounter;
+    
+    const exists = allSales.some(function(s) { 
+      return s.receiptNumber === receiptNumber; 
     });
     
     if (exists) {
-      console.warn('⚠️ Sale already in offline queue, skipping:', saleData.receiptNumber);
-      return;
+      const extraRandom = Math.random().toString(36).substr(2, 6).toUpperCase();
+      return prefix + '-' + dateStr + '-' + timeStr + '-' + paddedCounter + '-' + extraRandom;
+    }
+    
+    return receiptNumber;
+  }
+
+  function validateReceiptUniqueness(receiptNumber, maxAttempts) {
+    maxAttempts = maxAttempts || 5;
+    let attempts = 0;
+    
+    while (attempts < maxAttempts) {
+      const exists = allSales.some(function(s) { 
+        return s.receiptNumber === receiptNumber; 
+      });
+      
+      if (!exists) {
+        return receiptNumber;
+      }
+      
+      const now = new Date();
+      const dateStr = now.getFullYear() +
+          String(now.getMonth() + 1).padStart(2, '0') +
+          String(now.getDate()).padStart(2, '0');
+      const timeStr = String(now.getHours()).padStart(2, '0') +
+          String(now.getMinutes()).padStart(2, '0') +
+          String(now.getSeconds()).padStart(2, '0');
+      const randomStr = Math.random().toString(36).substr(2, 4).toUpperCase();
+      
+      const prefix = receiptNumber.split('-')[0] || 'RCP';
+      receiptNumber = prefix + '-' + dateStr + '-' + timeStr + '-' + randomStr;
+      attempts++;
+    }
+    
+    const now = new Date();
+    const timestamp = now.getTime().toString(36).toUpperCase();
+    const prefix = receiptNumber.split('-')[0] || 'RCP';
+    return prefix + '-' + timestamp + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+  }
+
+  function debugReceiptStatus() {
+    console.log('📋 === RECEIPT DEBUG INFO ===');
+    console.log('Total sales in memory:', allSales.length);
+    console.log('Total offline sales:', offlineSales.length);
+    
+    const lastReceipts = allSales.slice(0, 10).map(function(s) {
+      return s.receiptNumber;
+    });
+    console.log('Last 10 receipts:', lastReceipts);
+    
+    const receiptSet = new Set();
+    const duplicates = [];
+    allSales.forEach(function(s) {
+      if (receiptSet.has(s.receiptNumber)) {
+        duplicates.push(s.receiptNumber);
+      }
+      receiptSet.add(s.receiptNumber);
+    });
+    
+    if (duplicates.length > 0) {
+      console.warn('⚠️ Duplicate receipts found:', duplicates);
+    } else {
+      console.log('✅ No duplicate receipts found');
+    }
+  }
+
+  function hasRecentTransaction(customerPhone, minutes) {
+    minutes = minutes || 2;
+    if (!customerPhone) return false;
+    
+    const lock = activeTransactionLocks.get(customerPhone);
+    if (!lock) return false;
+    
+    const now = Date.now();
+    const elapsed = (now - lock) / (1000 * 60);
+    
+    if (elapsed < minutes) {
+      return true;
+    } else {
+      activeTransactionLocks.delete(customerPhone);
+      return false;
+    }
+  }
+
+  function lockCustomerTransaction(customerPhone) {
+    if (!customerPhone) return false;
+    
+    if (hasRecentTransaction(customerPhone)) {
+      return false;
+    }
+    
+    activeTransactionLocks.set(customerPhone, Date.now());
+    return true;
+  }
+
+  function unlockCustomerTransaction(customerPhone) {
+    if (customerPhone) {
+      activeTransactionLocks.delete(customerPhone);
+    }
+    processQueue();
+  }
+
+  async function processQueue() {
+    if (isProcessingQueue || transactionQueue.length === 0) return;
+    
+    isProcessingQueue = true;
+    
+    while (transactionQueue.length > 0) {
+      const task = transactionQueue.shift();
+      try {
+        await task();
+      } catch (e) {
+        console.error('Queue task failed:', e);
+      }
+    }
+    
+    isProcessingQueue = false;
+  }
+
+  function saveOfflineSale(saleData) {
+    var exists = offlineSales.some(function(s) {
+      return s.receiptNumber === saleData.receiptNumber ||
+             (s.id && s.id === saleData.id) ||
+             (s._localId && s._localId === saleData._localId) ||
+             (s.customerPhone === saleData.customerPhone && 
+              s.totalAmount === saleData.totalAmount &&
+              Math.abs(new Date(s.createdAt || s._queuedAt || 0) - new Date(saleData.createdAt || saleData._queuedAt || 0)) < 5000);
+    });
+    
+    if (exists) {
+      console.warn('⚠️ Sale already in offline queue, generating new receipt:', saleData.receiptNumber);
+      const prefix = saleData._type === 'wholesale' ? 'WSL' : 'RCP';
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substr(2, 8).toUpperCase();
+      saleData.receiptNumber = prefix + '-' + timestamp + '-' + random;
+      saleData._localId = 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+      saleData._duplicateFixed = true;
+    }
+    
+    var inMemory = allSales.some(function(s) {
+      return s.receiptNumber === saleData.receiptNumber;
+    });
+    
+    if (inMemory) {
+      console.warn('⚠️ Receipt already in memory, generating another new one');
+      const prefix = saleData._type === 'wholesale' ? 'WSL' : 'RCP';
+      const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      }).toUpperCase();
+      saleData.receiptNumber = prefix + '-' + uuid;
     }
     
     offlineSales.push(saleData);
     localStorage.setItem('offlineSales', JSON.stringify(offlineSales));
     
-    // Also check if already in allSales
     var inAllSales = allSales.some(function(s) {
       return s.receiptNumber === saleData.receiptNumber ||
              (s.id && s.id === saleData.id) ||
@@ -742,6 +943,7 @@
     
     renderSales();
     updateDebugPanel();
+    updateStats();
   }
 
   async function syncOfflineSales() {
@@ -780,7 +982,7 @@
         var cleanData = Object.assign({}, saleData);
         delete cleanData._type; delete cleanData._newCustomer; delete cleanData._customerData;
         delete cleanData._stockUpdates; delete cleanData._movements; delete cleanData._localId; delete cleanData._synced;
-        delete cleanData._customerType; delete cleanData._borrowedItems;
+        delete cleanData._customerType; delete cleanData._borrowedItems; delete cleanData._duplicateFixed;
         cleanData.customerId = customerId;
         cleanData.createdAt = serverTimestamp();
         batch.set(saleRef, cleanData);
@@ -802,7 +1004,6 @@
         
         await batch.commit();
         
-        // Mark as synced
         var syncedSale = allSales.find(function(s) { return s._localId === saleData._localId; });
         if (syncedSale) { syncedSale.id = saleRef.id; syncedSale._synced = true; }
         
@@ -843,17 +1044,6 @@
   
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
-  
-  function generateReceiptNumber(prefix) {
-    prefix = prefix || 'RCP';
-    // Use page-specific counter to avoid conflicts
-    var key = 'receiptCounter_' + prefix;
-    var counter = parseInt(localStorage.getItem(key) || '0');
-    counter++;
-    localStorage.setItem(key, counter.toString());
-    var padded = counter.toString().padStart(6, '0');
-    return prefix + '-' + padded;
-  }
 
   function formatDateTime(d) {
     if (!d) return 'Unknown';
@@ -1239,7 +1429,6 @@
     return sale;
   }
 
-  // Combine duplicate items on receipt
   function combineItems(items) {
     if (!items || items.length === 0) return [];
     
@@ -1341,9 +1530,6 @@
     return qty;
   }
 
-  // ============================================
-  // DRAFT SYSTEM
-  // ============================================
   function saveDraftsToStorage() {
     localStorage.setItem('draftTabs', JSON.stringify(draftTabs));
     renderDraftTabs();
@@ -1719,9 +1905,6 @@
     showToast('Draft saved! ✅', 'success');
   };
 
-  // ============================================
-  // PAYMENT CLICK HANDLER (Event Delegation Fix)
-  // ============================================
   document.addEventListener('click', function(e) {
     var target = e.target;
     
@@ -1742,7 +1925,6 @@
         var method = target.dataset.method;
         var containerId = container.id || '';
         
-        // Update the appropriate payment variable
         if (containerId.includes('company') || containerId === 'companyPaymentContainer') {
           companySelectedPayment = method;
           console.log('🐛 DEBUG: Company payment selected:', companySelectedPayment);
@@ -1754,20 +1936,17 @@
           console.log('🐛 DEBUG: Regular payment selected:', selectedPayment);
         }
         
-        // Show/hide split payment section
         var splitSection = container.parentElement.querySelector('.split-payment-section');
         if (splitSection) {
           var isSplit = method === 'cash_transfer' || method === 'cash_pos';
           splitSection.style.display = isSplit ? 'block' : 'none';
           
-          // Update split label
           var label = splitSection.querySelector('.split-row:last-child label');
           if (label) {
             if (method === 'cash_transfer') label.textContent = 'Transfer Amount:';
             else if (method === 'cash_pos') label.textContent = 'POS Amount:';
           }
           
-          // Reset split inputs
           var inputs = splitSection.querySelectorAll('input');
           inputs.forEach(function(inp) { inp.value = ''; });
         }
@@ -1800,9 +1979,6 @@
     }
   });
 
-  // ============================================
-  // SPLIT PAYMENT FUNCTIONS
-  // ============================================
   function setupSplitPayment(containerId) {
     var container = safeGetEl(containerId);
     if (!container) return;
@@ -1814,7 +1990,6 @@
     var secondInput = splitSection.querySelector('.split-row:last-child input');
     var totalDisplay = splitSection.querySelector('.split-total-display');
     
-    // Create total display if it doesn't exist
     if (!totalDisplay) {
       var displayDiv = document.createElement('div');
       displayDiv.className = 'split-total-display';
@@ -1835,14 +2010,12 @@
     }
     
     function validateSplitPayment() {
-      // Get sale total from the appropriate summary
       var totalEl = safeGetEl('saleTotal') || safeGetEl('companyTotal') || safeGetEl('wsTotalAmount');
       if (!totalEl) return true;
       
       var saleTotal = parseFloat(totalEl.textContent.replace(/[₦,]/g, '')) || 0;
       var paidTotal = updateSplitTotal();
       
-      // Find or create validation message
       var validationMsg = splitSection.querySelector('.split-validation-msg');
       if (!validationMsg) {
         validationMsg = document.createElement('div');
@@ -1869,7 +2042,6 @@
       return true;
     }
     
-    // Attach event listeners
     if (cashInput) {
       cashInput.addEventListener('input', function() {
         updateSplitTotal();
@@ -1885,18 +2057,13 @@
       });
     }
     
-    // Store reference for validation
     container._splitValidation = validateSplitPayment;
     container._splitUpdate = updateSplitTotal;
   }
 
-  // ============================================
-  // LOAD SALES WITH DEDUPLICATION
-  // ============================================
   function loadSales() {
     cleanup();
     
-    // Clear processed IDs on reload
     processedSaleIds.clear();
     
     var salesQuery = query(collection(db, 'sales'), orderBy('createdAt', 'desc'));
@@ -1905,7 +2072,6 @@
         var data = d.data();
         var saleId = d.id;
         
-        // Skip if already processed
         if (processedSaleIds.has(saleId)) {
           console.warn('⚠️ Duplicate sale detected, skipping:', saleId);
           return null;
@@ -1920,18 +2086,15 @@
         }, data);
       }).filter(function(s) { return s !== null; });
       
-      // Filter out duplicates from offline sales
       var serverIds = new Set(serverSales.map(function(s) { return s.id || s._serverId; }));
       var serverReceipts = new Set(serverSales.map(function(s) { return s.receiptNumber; }));
       
       var mergedOffline = offlineSales.filter(function(s) { 
-        // Skip if already in server
         if (s.id && serverIds.has(s.id)) return false;
         if (s.receiptNumber && serverReceipts.has(s.receiptNumber)) return false;
         return !s._synced; 
       });
       
-      // Remove duplicates within mergedOffline
       var offlineIds = new Set();
       var offlineReceipts = new Set();
       var uniqueOffline = mergedOffline.filter(function(s) {
@@ -1948,7 +2111,6 @@
       
       allSales = serverSales.concat(uniqueOffline);
       
-      // Final deduplication by receipt number
       var seenReceipts = new Set();
       allSales = allSales.filter(function(s) {
         var receipt = s.receiptNumber;
@@ -1967,7 +2129,6 @@
       renderSales();
     }));
     
-    // Load wholesale sales with deduplication
     var wsQuery = query(collection(db, 'wholesale_sales'), orderBy('createdAt', 'desc'));
     unsubscribes.push(onSnapshot(wsQuery, function(snap) {
       var wsSales = snap.docs.map(function(d) { 
@@ -1998,7 +2159,6 @@
       updateDebugPanel();
     }));
     
-    // Load returns
     unsubscribes.push(onSnapshot(query(collection(db, 'returns'), orderBy('createdAt', 'desc')), function(snap) {
       allReturns = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
       allReturns.forEach(function(r) {
@@ -2067,9 +2227,6 @@
     updateStats();
   }
 
-  // ============================================
-  // RECEIPT WITH QR CODE
-  // ============================================
   function generateQRData(sale) {
     var data = {
       receipt: sale.receiptNumber || '',
@@ -2162,7 +2319,6 @@
     var qrId = 'qr_' + Date.now();
     var receiptIdentifier = sale.id || sale._localId || sale.receiptNumber || '';
     
-    // Build receipt content with QR code
     var receiptContent = 
       '<div class="receipt-container">' +
         '<div class="receipt-header">' +
@@ -2199,12 +2355,10 @@
     
     showModal(title, receiptContent);
     
-    // Generate QR code after modal is rendered
     setTimeout(function() {
       var qrContainer = safeGetEl(qrId);
       if (qrContainer && typeof QRCode !== 'undefined') {
         try {
-          // Clear any existing QR
           qrContainer.innerHTML = '';
           new QRCode(qrContainer, { 
             text: qrData, 
@@ -2224,16 +2378,12 @@
     currentModalType = prevModalType;
   }
 
-  // Override viewReceipt to use QR version
   window.viewReceipt = function(id) { 
     var s = findSaleByIdentifier(id); 
     if (s) showReceiptModalWithQR(s);
     else showToast('Receipt not found', 'error');
   };
 
-  // ============================================
-  // PRINT RECEIPT WITH QR
-  // ============================================
   window.printReceipt = function(id) {
     var s = findSaleByIdentifier(id);
     if (!s) { showToast('Sale not found for printing', 'error'); return; }
@@ -2325,9 +2475,6 @@
     setTimeout(function() { window.printReceipt(id); }, 300); 
   };
 
-  // ============================================
-  // NEW SALE MODAL WITH SPLIT PAYMENT
-  // ============================================
   async function openNewSaleModalWithDraft(draft) {
     await loadCustomersAndStock();
     if (allStockItems.length === 0) { showToast('No items available', 'error'); return; }
@@ -2377,7 +2524,6 @@
       itemsHtml = '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
     }
 
-    // Build modal content with split payment
     var modalContent = 
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
@@ -2446,7 +2592,6 @@
       $('.item-size').on('change', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-custom-price').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       
-      // Setup split payment
       setupSplitPayment('paymentMethodsContainer');
       
       window._updateSaleSummary();
@@ -2525,7 +2670,6 @@
       $('.item-qty').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-size').on('change', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       
-      // Setup split payment
       setupSplitPayment('paymentMethodsContainer');
       
       window._updateSaleSummary();
@@ -2672,7 +2816,6 @@
     
     if (!window._updateSaleSummary()) { showToast('Some items exceed stock. Please adjust quantities.', 'error'); return; }
     
-    // Validate split payment
     var container = safeGetEl('paymentMethodsContainer');
     if (container) {
       var selectedMethod = container.querySelector('.payment-method.selected');
@@ -2710,6 +2853,23 @@
       isNewCustomer = true;
       customerData = { fullName: customerName, phone: customerPhone, address: customerAddress, email: customerEmail, status: 'pending_approval', createdBy: currentUser.uid, createdByName: userData.fullName };
     }
+    
+    if (customerPhone && hasRecentTransaction(customerPhone, 2)) {
+      var lastSale = allSales.filter(function(s) {
+        return s.customerPhone === customerPhone && s.status !== 'returned';
+      }).sort(function(a, b) {
+        return getSaleDate(b) - getSaleDate(a);
+      })[0];
+      
+      if (lastSale) {
+        var lastTime = getSaleDate(lastSale);
+        var now = new Date();
+        var minutesAgo = Math.round((now - lastTime) / (1000 * 60));
+        showDuplicateWarning(customerName, minutesAgo);
+        return;
+      }
+    }
+    
     var items = [], total = 0;
     document.querySelectorAll('#saleItems .item-row').forEach(function(row) {
       var checkbox = row.querySelector('.non-inv-check');
@@ -2754,323 +2914,489 @@
     }, 'attendant');
   };
 
-  // ============================================
-  // PROCESS SALE COMMON (with deduplication)
-  // ============================================
+  function showDuplicateWarning(customerName, lastPurchaseTime) {
+    const warningHTML = 
+        '<div style="background:rgba(239,68,68,0.08);border:2px solid var(--danger);border-radius:12px;padding:16px;margin:12px 0;">' +
+          '<div style="display:flex;align-items:center;gap:12px;">' +
+            '<i class="fas fa-exclamation-triangle" style="color:var(--danger);font-size:1.5rem;"></i>' +
+            '<div>' +
+              '<strong style="color:var(--danger);">⚠️ Recent Purchase Detected!</strong>' +
+              '<p style="margin:4px 0 0 0;font-size:0.85rem;color:var(--gray);">' +
+                escapeHtml(customerName) + ' made a purchase ' + lastPurchaseTime + ' minutes ago.' +
+                '<br>Please verify this is not a duplicate transaction.' +
+              '</p>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:10px;margin-top:10px;">' +
+            '<button class="btn btn-danger btn-sm" onclick="window._cancelDuplicateTransaction()">' +
+              '<i class="fas fa-times"></i> Cancel' +
+            '</button>' +
+            '<button class="btn btn-warning btn-sm" onclick="window._forceDuplicateTransaction()">' +
+              '<i class="fas fa-check"></i> Process Anyway' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+    
+    const content = safeGetEl('modalContent');
+    if (content) {
+      const existing = content.querySelector('.duplicate-warning');
+      if (existing) existing.remove();
+      
+      const warningDiv = document.createElement('div');
+      warningDiv.className = 'duplicate-warning';
+      warningDiv.innerHTML = warningHTML;
+      content.insertBefore(warningDiv, content.firstChild);
+    }
+  }
+
+  window._cancelDuplicateTransaction = function() {
+    const warning = document.querySelector('.duplicate-warning');
+    if (warning) warning.remove();
+    showToast('Transaction cancelled', 'warning');
+  };
+
+  window._forceDuplicateTransaction = function() {
+    const warning = document.querySelector('.duplicate-warning');
+    if (warning) warning.remove();
+    showToast('Processing duplicate transaction...', 'warning');
+    
+    if (currentModalType === 'sale') {
+      window._processSale();
+    } else if (currentModalType === 'company') {
+      window._processCompanySale();
+    } else if (currentModalType === 'wholesale') {
+      window._processWS();
+    }
+  };
+
   function processSaleCommon(items, total, customerInfo, paymentMethod, isCompanySale, extraData, saleType) {
     if (isProcessingSale) {
       showToast('Processing in progress... Please wait.', 'warning');
       return null;
     }
     
-    // Prevent duplicate processing
-    isProcessingSale = true;
+    const customerPhone = customerInfo.customerPhone || customerInfo.phone || '';
     
-    var receiptNumber = generateReceiptNumber(saleType === 'wholesale' ? 'WSL' : 'RCP');
+    if (customerPhone && hasRecentTransaction(customerPhone, 2)) {
+      showToast('⚠️ This customer made a purchase within the last 2 minutes. Please wait before processing another sale.', 'warning');
+      return null;
+    }
     
-    // Check if this receipt number already exists
-    var exists = allSales.some(function(s) { 
-      return s.receiptNumber === receiptNumber; 
-    });
+    if (customerPhone && !lockCustomerTransaction(customerPhone)) {
+      showToast('⚠️ Another transaction for this customer is being processed. Please wait.', 'warning');
+      return null;
+    }
     
-    if (exists) {
-      // Generate a new receipt number
-      receiptNumber = generateReceiptNumber(saleType === 'wholesale' ? 'WSL' : 'RCP');
-      // Retry once
-      var existsAgain = allSales.some(function(s) { 
+    try {
+      isProcessingSale = true;
+      
+      let receiptNumber = generateReceiptNumber(saleType === 'wholesale' ? 'WSL' : 'RCP');
+      receiptNumber = validateReceiptUniqueness(receiptNumber, 3);
+      console.log('📋 Generated receipt number:', receiptNumber);
+      
+      var exists = allSales.some(function(s) { 
         return s.receiptNumber === receiptNumber; 
       });
-      if (existsAgain) {
-        isProcessingSale = false;
-        showToast('Error: Duplicate receipt number. Please try again.', 'error');
-        return null;
+      
+      if (exists) {
+        console.warn('⚠️ Duplicate receipt number detected, generating new one...');
+        const now = new Date();
+        const prefix = saleType === 'wholesale' ? 'WSL' : 'RCP';
+        const timestamp = now.getTime();
+        const random = Math.random().toString(36).substr(2, 8).toUpperCase();
+        receiptNumber = prefix + '-' + timestamp + '-' + random;
+        
+        const finalCheck = allSales.some(function(s) { 
+          return s.receiptNumber === receiptNumber; 
+        });
+        
+        if (finalCheck) {
+          const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          }).toUpperCase();
+          receiptNumber = prefix + '-' + uuid;
+        }
+        console.log('🔄 New receipt number generated:', receiptNumber);
       }
-    }
-    
-    var stockUpdates = [];
-    var movements = [];
-    var borrowedItems = [];
-    var customerId = customerInfo.customerId || '';
-
-    if (customerInfo._isNew && customerInfo._customerData) {
-      savePendingCustomer(customerInfo._customerData);
-    }
-
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i];
-      if (item.isNonInventory || !item.id) continue;
-
-      if (saleType === 'wholesale') {
-        var storeItem = allStoreItems.find(function(si) { return si.id === item.id; });
-        var availableInStore = storeItem ? safeNumber(storeItem.unitQty, 0) : 0;
-        var needed = item.pieces || item.quantity || 1;
+      
+      if (customerPhone) {
+        const recentSales = allSales.filter(function(s) {
+          if (!s.customerPhone) return false;
+          if (s.customerPhone !== customerPhone) return false;
+          if (s.status === 'returned') return false;
+          
+          const saleDate = getSaleDate(s);
+          const now = new Date();
+          const diffMinutes = (now - saleDate) / (1000 * 60);
+          if (diffMinutes > 2) return false;
+          
+          const amountDiff = Math.abs(s.totalAmount - total);
+          const percentDiff = amountDiff / Math.max(s.totalAmount, total);
+          if (percentDiff > 0.1) return false;
+          
+          return true;
+        });
         
-        if (!storeItem) {
-          console.log('⚠️ Item not in store: ' + item.id + ' - checking inventory...');
-          
-          var invItem = allStockItems.find(function(si) { return si.id === item.id; });
-          if (!invItem) {
-            invItem = allStockItems.find(function(si) { 
-              return si.name && item.name && si.name.toLowerCase() === item.name.toLowerCase();
-            });
-          }
-          
-          if (invItem && safeNumber(invItem.unitQty, 0) >= needed) {
-            console.log('📦 Fully borrowing from inventory: ' + invItem.name + ' (' + needed + ' units)');
-            
-            borrowedItems.push({
-              itemId: invItem.id,
-              itemName: invItem.name,
-              quantity: needed,
-              fromInventory: true,
-              storeItemId: null,
-              storeItemName: null,
-              fullyBorrowed: true
-            });
-            
-            stockUpdates.push({ 
-              collection: 'stock_items', 
-              id: invItem.id, 
-              data: { 
-                unitQty: safeNumber(invItem.unitQty, 0) - needed, 
-                updatedAt: serverTimestamp() 
-              } 
-            });
-            
-            movements.push({ 
-              itemId: invItem.id, 
-              itemName: invItem.name, 
-              movementType: 'inventory_to_wholesale', 
-              change: { unit: -needed }, 
-              reference: 'Borrowed fully from inventory for Wholesale Receipt ' + receiptNumber + ' (No store stock available)', 
-              performedBy: currentUser ? currentUser.uid : 'unknown', 
-              performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
-              storeItemId: null,
-              storeItemName: null,
-              note: 'Fully borrowed ' + needed + ' units from inventory - item not available in store'
-            });
-            
-            item.borrowed = true;
-            item.borrowedQty = needed;
-            item.storeQty = 0;
-            item.fullyBorrowed = true;
-            
-            continue;
-          } else {
-            showToast(
-              'Item "' + (item.name || 'Unknown') + '" not found in store or inventory, or insufficient stock. ' +
-              'Available in inventory: ' + (invItem ? safeNumber(invItem.unitQty, 0) : 0) + ' pcs. ' +
-              'Total needed: ' + needed + ' pcs.',
-              'error'
-            );
-            isProcessingSale = false;
-            return null;
-          }
-        }
-        
-        var fromStore = Math.min(needed, availableInStore);
-        var fromInventory = needed - fromStore;
-        
-        if (fromInventory > 0) {
-          var stockItem = null;
-          
-          if (storeItem.linkedInventoryId) {
-            stockItem = allStockItems.find(function(si) { return si.id === storeItem.linkedInventoryId; });
-          }
-          
-          if (!stockItem) {
-            stockItem = allStockItems.find(function(si) { 
-              return si.name.toLowerCase() === item.name.toLowerCase() ||
-                     si.name.toLowerCase() === storeItem.name.toLowerCase();
-            });
-          }
-          
-          if (stockItem && safeNumber(stockItem.unitQty, 0) >= fromInventory) {
-            console.log('📦 Borrowing from inventory: ' + stockItem.name + ' (' + fromInventory + ' units) to supplement store (' + fromStore + ' units)');
-            
-            borrowedItems.push({
-              itemId: stockItem.id,
-              itemName: stockItem.name,
-              quantity: fromInventory,
-              fromInventory: true,
-              storeItemId: storeItem.id,
-              storeItemName: storeItem.name,
-              fullyBorrowed: false
-            });
-            
-            stockUpdates.push({ 
-              collection: 'stock_items', 
-              id: stockItem.id, 
-              data: { 
-                unitQty: safeNumber(stockItem.unitQty, 0) - fromInventory, 
-                updatedAt: serverTimestamp() 
-              } 
-            });
-            
-            movements.push({ 
-              itemId: stockItem.id, 
-              itemName: stockItem.name, 
-              movementType: 'inventory_to_store_sale', 
-              change: { unit: -fromInventory }, 
-              reference: 'Borrowed from inventory for Wholesale Receipt ' + receiptNumber + ' (Store: ' + storeItem.name + ' had ' + availableInStore + ', needed ' + needed + ')', 
-              performedBy: currentUser ? currentUser.uid : 'unknown', 
-              performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
-              storeItemId: storeItem.id,
-              storeItemName: storeItem.name,
-              note: 'Borrowed ' + fromInventory + ' units from inventory to supplement store stock (' + availableInStore + ' available, needed ' + needed + ')'
-            });
-            
-            item.borrowed = true;
-            item.borrowedQty = fromInventory;
-            item.storeQty = fromStore;
-            item.fullyBorrowed = false;
-          } else {
-            showToast(
-              'Insufficient stock for ' + item.name + '. ' +
-              'Available in store: ' + availableInStore + ' pcs. ' +
-              'Available in inventory: ' + (stockItem ? safeNumber(stockItem.unitQty, 0) : 0) + ' pcs. ' +
-              'Total needed: ' + needed + ' pcs.',
-              'error'
-            );
-            isProcessingSale = false;
-            return null;
-          }
-        }
-        
-        if (fromStore > 0) {
-          stockUpdates.push({ 
-            collection: 'store_items', 
-            id: item.id, 
-            data: { 
-              unitQty: availableInStore - fromStore, 
-              updatedAt: serverTimestamp() 
-            } 
-          });
-          
-          movements.push({ 
-            itemId: item.id, 
-            itemName: item.name, 
-            movementType: 'wholesale_sale', 
-            change: { unit: -fromStore }, 
-            reference: 'Wholesale Receipt ' + receiptNumber, 
-            performedBy: currentUser ? currentUser.uid : 'unknown', 
-            performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
-            storeItemId: storeItem.id,
-            storeItemName: storeItem.name
-          });
-        }
-      } else {
-        var stockItem = allStockItems.find(function(si) { return si.id === item.id; });
-        if (!stockItem) continue;
-        var size = item.size || '1';
-        var qty = item.quantity || 1;
-        var available = getAvailableStock(stockItem, size);
-        var deductQty = getDeductQuantity(stockItem, size, qty);
-        if (deductQty > available) {
-          showToast('Insufficient stock for ' + item.name + ' (' + (item.sizeLabel || getSizeLabel(size)) + '). Available: ' + available + ', Need: ' + deductQty, 'error');
+        if (recentSales.length > 0) {
+          unlockCustomerTransaction(customerPhone);
           isProcessingSale = false;
+          showToast('⚠️ Duplicate transaction detected! Customer already purchased similar items within 2 minutes.', 'warning');
           return null;
         }
-        var updateData = { updatedAt: serverTimestamp() };
-        var change = {};
-        if (size === '0.5' || size === '½' || size === 'half') {
-          updateData.halfQty = safeNumber(stockItem.halfQty, 0) - qty;
-          change.half = -qty;
-        } else if (size === '0.25' || size === '¼' || size === 'quarter') {
-          updateData.quarterQty = safeNumber(stockItem.quarterQty, 0) - qty;
-          change.quarter = -qty;
-        } else if (size === 'pack') {
-          updateData.packQty = safeNumber(stockItem.packQty, 0) - qty;
-          updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
-          change.unit = -deductQty;
-        } else if (size === 'bundle') {
-          updateData.bundleQty = safeNumber(stockItem.bundleQty, 0) - qty;
-          updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
-          change.unit = -deductQty;
-        } else {
-          updateData.unitQty = safeNumber(stockItem.unitQty, 0) - qty;
-          change.unit = -qty;
-        }
-        stockUpdates.push({ collection: 'stock_items', id: item.id, data: updateData });
-        movements.push({ itemId: item.id, itemName: item.name, movementType: 'sale', change: change, reference: 'Receipt ' + receiptNumber, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff' });
       }
-    }
+      
+      var stockUpdates = [];
+      var movements = [];
+      var borrowedItems = [];
+      var customerId = customerInfo.customerId || '';
 
-    var saleData = {
-      receiptNumber: receiptNumber, customerId: customerId,
-      customerName: customerInfo.customerName || 'Walk-in',
-      customerPhone: customerInfo.customerPhone || '',
-      customerAddress: customerInfo.customerAddress || '',
-      isCompanySale: isCompanySale || false,
-      items: items.map(function(it) {
-        var sz = it.size || '1';
-        return { 
-          id: it.id, name: it.name, quantity: it.quantity || it.pieces, pieces: it.pieces, 
-          size: sz, sizeLabel: it.sizeLabel || getSizeLabel(sz), unitPrice: it.unitPrice, 
-          isNonInventory: it.isNonInventory || false, 
-          borrowed: it.borrowed || false, 
-          borrowedQty: it.borrowedQty || 0, 
-          storeQty: it.storeQty || 0,
-          fullyBorrowed: it.fullyBorrowed || false
-        };
-      }),
-      totalAmount: total, paymentMethod: paymentMethod,
-      attendantId: currentUser ? currentUser.uid : '',
-      attendantName: userData ? (userData.fullName || 'Staff') : 'Staff',
-      status: 'completed', _type: saleType,
-      _stockUpdates: stockUpdates, _movements: movements,
-      _localId: 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-      _newCustomer: customerInfo._isNew,
-      _customerData: customerInfo._customerData || null,
-      _borrowedItems: borrowedItems.length > 0 ? borrowedItems : null,
-      _customerType: customerInfo._isNew ? 'new' : (customerInfo.customerId ? 'existing' : 'walk-in')
-    };
-    if (extraData) Object.assign(saleData, extraData);
+      if (customerInfo._isNew && customerInfo._customerData) {
+        savePendingCustomer(customerInfo._customerData);
+      }
 
-    var saleDataRef = saleData;
-    
-    if (isOnline) {
-      saveSaleToFirestore(saleDataRef, customerInfo).then(function() {
-        isProcessingSale = false;
-        updateDebugPanel();
-      }).catch(function(e) {
-        isProcessingSale = false;
-        updateDebugPanel();
-        console.error('Save failed:', e);
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        if (item.isNonInventory || !item.id) continue;
+
+        if (saleType === 'wholesale') {
+          var storeItem = allStoreItems.find(function(si) { return si.id === item.id; });
+          var availableInStore = storeItem ? safeNumber(storeItem.unitQty, 0) : 0;
+          var needed = item.pieces || item.quantity || 1;
+          
+          if (!storeItem) {
+            console.log('⚠️ Item not in store: ' + item.id + ' - checking inventory...');
+            
+            var invItem = allStockItems.find(function(si) { return si.id === item.id; });
+            if (!invItem) {
+              invItem = allStockItems.find(function(si) { 
+                return si.name && item.name && si.name.toLowerCase() === item.name.toLowerCase();
+              });
+            }
+            
+            if (invItem && safeNumber(invItem.unitQty, 0) >= needed) {
+              console.log('📦 Fully borrowing from inventory: ' + invItem.name + ' (' + needed + ' units)');
+              
+              borrowedItems.push({
+                itemId: invItem.id,
+                itemName: invItem.name,
+                quantity: needed,
+                fromInventory: true,
+                storeItemId: null,
+                storeItemName: null,
+                fullyBorrowed: true
+              });
+              
+              stockUpdates.push({ 
+                collection: 'stock_items', 
+                id: invItem.id, 
+                data: { 
+                  unitQty: safeNumber(invItem.unitQty, 0) - needed, 
+                  updatedAt: serverTimestamp() 
+                } 
+              });
+              
+              movements.push({ 
+                itemId: invItem.id, 
+                itemName: invItem.name, 
+                movementType: 'inventory_to_wholesale', 
+                change: { unit: -needed }, 
+                reference: 'Borrowed fully from inventory for Wholesale Receipt ' + receiptNumber + ' (No store stock available)', 
+                performedBy: currentUser ? currentUser.uid : 'unknown', 
+                performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+                storeItemId: null,
+                storeItemName: null,
+                note: 'Fully borrowed ' + needed + ' units from inventory - item not available in store'
+              });
+              
+              item.borrowed = true;
+              item.borrowedQty = needed;
+              item.storeQty = 0;
+              item.fullyBorrowed = true;
+              
+              continue;
+            } else {
+              showToast(
+                'Item "' + (item.name || 'Unknown') + '" not found in store or inventory, or insufficient stock. ' +
+                'Available in inventory: ' + (invItem ? safeNumber(invItem.unitQty, 0) : 0) + ' pcs. ' +
+                'Total needed: ' + needed + ' pcs.',
+                'error'
+              );
+              isProcessingSale = false;
+              if (customerPhone) unlockCustomerTransaction(customerPhone);
+              return null;
+            }
+          }
+          
+          var fromStore = Math.min(needed, availableInStore);
+          var fromInventory = needed - fromStore;
+          
+          if (fromInventory > 0) {
+            var stockItem = null;
+            
+            if (storeItem.linkedInventoryId) {
+              stockItem = allStockItems.find(function(si) { return si.id === storeItem.linkedInventoryId; });
+            }
+            
+            if (!stockItem) {
+              stockItem = allStockItems.find(function(si) { 
+                return si.name.toLowerCase() === item.name.toLowerCase() ||
+                       si.name.toLowerCase() === storeItem.name.toLowerCase();
+              });
+            }
+            
+            if (stockItem && safeNumber(stockItem.unitQty, 0) >= fromInventory) {
+              console.log('📦 Borrowing from inventory: ' + stockItem.name + ' (' + fromInventory + ' units) to supplement store (' + fromStore + ' units)');
+              
+              borrowedItems.push({
+                itemId: stockItem.id,
+                itemName: stockItem.name,
+                quantity: fromInventory,
+                fromInventory: true,
+                storeItemId: storeItem.id,
+                storeItemName: storeItem.name,
+                fullyBorrowed: false
+              });
+              
+              stockUpdates.push({ 
+                collection: 'stock_items', 
+                id: stockItem.id, 
+                data: { 
+                  unitQty: safeNumber(stockItem.unitQty, 0) - fromInventory, 
+                  updatedAt: serverTimestamp() 
+                } 
+              });
+              
+              movements.push({ 
+                itemId: stockItem.id, 
+                itemName: stockItem.name, 
+                movementType: 'inventory_to_store_sale', 
+                change: { unit: -fromInventory }, 
+                reference: 'Borrowed from inventory for Wholesale Receipt ' + receiptNumber + ' (Store: ' + storeItem.name + ' had ' + availableInStore + ', needed ' + needed + ')', 
+                performedBy: currentUser ? currentUser.uid : 'unknown', 
+                performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+                storeItemId: storeItem.id,
+                storeItemName: storeItem.name,
+                note: 'Borrowed ' + fromInventory + ' units from inventory to supplement store stock (' + availableInStore + ' available, needed ' + needed + ')'
+              });
+              
+              item.borrowed = true;
+              item.borrowedQty = fromInventory;
+              item.storeQty = fromStore;
+              item.fullyBorrowed = false;
+            } else {
+              showToast(
+                'Insufficient stock for ' + item.name + '. ' +
+                'Available in store: ' + availableInStore + ' pcs. ' +
+                'Available in inventory: ' + (stockItem ? safeNumber(stockItem.unitQty, 0) : 0) + ' pcs. ' +
+                'Total needed: ' + needed + ' pcs.',
+                'error'
+              );
+              isProcessingSale = false;
+              if (customerPhone) unlockCustomerTransaction(customerPhone);
+              return null;
+            }
+          }
+          
+          if (fromStore > 0) {
+            stockUpdates.push({ 
+              collection: 'store_items', 
+              id: item.id, 
+              data: { 
+                unitQty: availableInStore - fromStore, 
+                updatedAt: serverTimestamp() 
+              } 
+            });
+            
+            movements.push({ 
+              itemId: item.id, 
+              itemName: item.name, 
+              movementType: 'wholesale_sale', 
+              change: { unit: -fromStore }, 
+              reference: 'Wholesale Receipt ' + receiptNumber, 
+              performedBy: currentUser ? currentUser.uid : 'unknown', 
+              performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+              storeItemId: storeItem.id,
+              storeItemName: storeItem.name
+            });
+          }
+        } else {
+          var stockItem = allStockItems.find(function(si) { return si.id === item.id; });
+          if (!stockItem) continue;
+          var size = item.size || '1';
+          var qty = item.quantity || 1;
+          var available = getAvailableStock(stockItem, size);
+          var deductQty = getDeductQuantity(stockItem, size, qty);
+          if (deductQty > available) {
+            showToast('Insufficient stock for ' + item.name + ' (' + (item.sizeLabel || getSizeLabel(size)) + '). Available: ' + available + ', Need: ' + deductQty, 'error');
+            isProcessingSale = false;
+            if (customerPhone) unlockCustomerTransaction(customerPhone);
+            return null;
+          }
+          var updateData = { updatedAt: serverTimestamp() };
+          var change = {};
+          if (size === '0.5' || size === '½' || size === 'half') {
+            updateData.halfQty = safeNumber(stockItem.halfQty, 0) - qty;
+            change.half = -qty;
+          } else if (size === '0.25' || size === '¼' || size === 'quarter') {
+            updateData.quarterQty = safeNumber(stockItem.quarterQty, 0) - qty;
+            change.quarter = -qty;
+          } else if (size === 'pack') {
+            updateData.packQty = safeNumber(stockItem.packQty, 0) - qty;
+            updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
+            change.unit = -deductQty;
+          } else if (size === 'bundle') {
+            updateData.bundleQty = safeNumber(stockItem.bundleQty, 0) - qty;
+            updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
+            change.unit = -deductQty;
+          } else {
+            updateData.unitQty = safeNumber(stockItem.unitQty, 0) - qty;
+            change.unit = -qty;
+          }
+          stockUpdates.push({ collection: 'stock_items', id: item.id, data: updateData });
+          movements.push({ itemId: item.id, itemName: item.name, movementType: 'sale', change: change, reference: 'Receipt ' + receiptNumber, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff' });
+        }
+      }
+
+      var saleData = {
+        receiptNumber: receiptNumber, customerId: customerId,
+        customerName: customerInfo.customerName || 'Walk-in',
+        customerPhone: customerInfo.customerPhone || '',
+        customerAddress: customerInfo.customerAddress || '',
+        isCompanySale: isCompanySale || false,
+        items: items.map(function(it) {
+          var sz = it.size || '1';
+          return { 
+            id: it.id, name: it.name, quantity: it.quantity || it.pieces, pieces: it.pieces, 
+            size: sz, sizeLabel: it.sizeLabel || getSizeLabel(sz), unitPrice: it.unitPrice, 
+            isNonInventory: it.isNonInventory || false, 
+            borrowed: it.borrowed || false, 
+            borrowedQty: it.borrowedQty || 0, 
+            storeQty: it.storeQty || 0,
+            fullyBorrowed: it.fullyBorrowed || false
+          };
+        }),
+        totalAmount: total, paymentMethod: paymentMethod,
+        attendantId: currentUser ? currentUser.uid : '',
+        attendantName: userData ? (userData.fullName || 'Staff') : 'Staff',
+        status: 'completed', _type: saleType,
+        _stockUpdates: stockUpdates, _movements: movements,
+        _localId: 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+        _newCustomer: customerInfo._isNew,
+        _customerData: customerInfo._customerData || null,
+        _borrowedItems: borrowedItems.length > 0 ? borrowedItems : null,
+        _customerType: customerInfo._isNew ? 'new' : (customerInfo.customerId ? 'existing' : 'walk-in'),
+        _receiptGeneration: {
+          timestamp: new Date().toISOString(),
+          method: 'enhanced_generator'
+        }
+      };
+      if (extraData) Object.assign(saleData, extraData);
+
+      var saleDataRef = saleData;
+      
+      const existingInMemory = allSales.some(function(s) { 
+        return s.receiptNumber === saleDataRef.receiptNumber; 
       });
-    } else {
-      saleDataRef.createdAt = new Date().toISOString();
-      saleDataRef._synced = false;
-      saveOfflineSale(saleDataRef);
+      
+      if (!existingInMemory) {
+        allSales.unshift(saleDataRef);
+        renderSales();
+      } else {
+        console.warn('⚠️ Receipt already in memory, generating new...');
+        const newPrefix = saleType === 'wholesale' ? 'WSL' : 'RCP';
+        const newReceipt = newPrefix + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 10).toUpperCase();
+        saleDataRef.receiptNumber = newReceipt;
+        allSales.unshift(saleDataRef);
+        renderSales();
+      }
+      
+      if (isOnline) {
+        saveSaleToFirestore(saleDataRef, customerInfo).then(function(savedId) {
+          if (savedId) {
+            console.log('✅ Sale saved to Firestore with ID:', savedId);
+            const idx = allSales.findIndex(function(s) { 
+              return s._localId === saleDataRef._localId; 
+            });
+            if (idx !== -1) {
+              allSales[idx].id = savedId;
+              allSales[idx]._synced = true;
+              renderSales();
+            }
+          }
+          isProcessingSale = false;
+          if (customerPhone) {
+            setTimeout(function() { unlockCustomerTransaction(customerPhone); }, 30000);
+          }
+          updateDebugPanel();
+        }).catch(function(e) {
+          console.error('Firestore save failed:', e);
+          saleDataRef.createdAt = new Date().toISOString();
+          saleDataRef._synced = false;
+          saveOfflineSale(saleDataRef);
+          isProcessingSale = false;
+          if (customerPhone) {
+            setTimeout(function() { unlockCustomerTransaction(customerPhone); }, 30000);
+          }
+          updateDebugPanel();
+        });
+      } else {
+        saleDataRef.createdAt = new Date().toISOString();
+        saleDataRef._synced = false;
+        saveOfflineSale(saleDataRef);
+        isProcessingSale = false;
+        if (customerPhone) {
+          setTimeout(function() { unlockCustomerTransaction(customerPhone); }, 30000);
+        }
+        updateDebugPanel();
+      }
+      
+      logAudit('sale_processed', 'Sale ' + receiptNumber + ': ' + formatCurrency(total), {
+        receiptNumber: receiptNumber,
+        customerName: customerInfo.customerName || 'Walk-in',
+        customerPhone: customerInfo.customerPhone || '',
+        customerType: customerInfo._isNew ? 'new' : (customerInfo.customerId ? 'existing' : 'walk-in'),
+        totalAmount: total,
+        paymentMethod: paymentMethod,
+        saleType: saleType,
+        itemCount: items.length,
+        isCompanySale: isCompanySale || false,
+        borrowedItems: borrowedItems.length
+      });
+      
+      setTimeout(function() {
+        renderSales();
+        updateStats();
+      }, 100);
+      
       isProcessingSale = false;
-      updateDebugPanel();
+      return saleDataRef;
+    } catch (e) {
+      console.error('Error in processSaleCommon:', e);
+      if (customerPhone) unlockCustomerTransaction(customerPhone);
+      isProcessingSale = false;
+      showToast('Error processing sale: ' + e.message, 'error');
+      return null;
     }
-    
-    logAudit('sale_processed', 'Sale ' + receiptNumber + ': ' + formatCurrency(total), {
-      receiptNumber: receiptNumber,
-      customerName: customerInfo.customerName || 'Walk-in',
-      customerPhone: customerInfo.customerPhone || '',
-      customerType: customerInfo._isNew ? 'new' : (customerInfo.customerId ? 'existing' : 'walk-in'),
-      totalAmount: total,
-      paymentMethod: paymentMethod,
-      saleType: saleType,
-      itemCount: items.length,
-      isCompanySale: isCompanySale || false,
-      borrowedItems: borrowedItems.length
-    });
-    
-    // Add to processed IDs to prevent duplicates
-    if (saleDataRef.id) processedSaleIds.add(saleDataRef.id);
-    if (saleDataRef.receiptNumber) {
-      // Also track by receipt number
-    }
-    
-    isProcessingSale = false;
-    return saleDataRef;
   }
 
   async function saveSaleToFirestore(saleData, customerInfo) {
     try {
+      const existingQuery = query(
+        collection(db, saleData._type === 'wholesale' ? 'wholesale_sales' : 'sales'),
+        where('receiptNumber', '==', saleData.receiptNumber)
+      );
+      const existingSnap = await getDocs(existingQuery);
+      
+      if (!existingSnap.empty) {
+        console.warn('⚠️ Sale with receipt #' + saleData.receiptNumber + ' already exists in Firestore');
+        const newReceipt = generateReceiptNumber(saleData._type === 'wholesale' ? 'WSL' : 'RCP') + 
+            '-' + Date.now().toString(36).slice(-4).toUpperCase();
+        saleData.receiptNumber = newReceipt;
+        console.log('🔄 Generated new receipt number: ' + newReceipt);
+      }
+      
       var batch = writeBatch(db);
       var customerId = saleData.customerId || '';
       
@@ -3093,6 +3419,7 @@
       var cleanData = Object.assign({}, saleData);
       delete cleanData._type; delete cleanData._stockUpdates; delete cleanData._movements; delete cleanData._localId;
       delete cleanData._newCustomer; delete cleanData._customerData; delete cleanData._customerType; delete cleanData._borrowedItems;
+      delete cleanData._receiptGeneration; delete cleanData._duplicateFixed;
       cleanData.customerId = customerId;
       cleanData.createdAt = serverTimestamp();
       batch.set(saleRef, cleanData);
@@ -3143,9 +3470,6 @@
     }
   }
 
-  // ============================================
-  // VIEW COMPANY RECORD
-  // ============================================
   window.viewCompanyRecord = function(id) {
     var s = findSaleByIdentifier(id);
     if (!s) { showToast('Sale not found', 'error'); return; }
@@ -3375,9 +3699,6 @@
     }
   };
 
-  // ============================================
-  // OPEN RETURN PAGE
-  // ============================================
   window.openReturnPage = function(saleId) {
     var sale = findSaleByIdentifier(saleId);
     if (!sale) { showToast('Sale not found', 'error'); return; }
@@ -3396,9 +3717,6 @@
     window.location.href = 'returns.html';
   };
 
-  // ============================================
-  // COMPANY SALE MODAL (simplified for space)
-  // ============================================
   async function openCompanySaleModalWithDraft(draft) {
     await loadCustomersAndStock();
     currentModalType = 'company';
@@ -3651,7 +3969,6 @@
     var itemCountEl = safeGetEl('companyItemCount'); if (itemCountEl) itemCountEl.textContent = count;
     var totalEl = safeGetEl('companyTotal'); if (totalEl) totalEl.textContent = formatCurrency(total);
     
-    // Validate split payment for company
     var container = safeGetEl('companyPaymentContainer');
     if (container) {
       var selectedMethod = container.querySelector('.payment-method.selected');
@@ -3690,7 +4007,6 @@
     
     if (!window._updateCompanySummary()) { showToast('Some items exceed stock. Please adjust quantities.', 'error'); return; }
     
-    // Validate split payment for company
     var container = safeGetEl('companyPaymentContainer');
     if (container) {
       var selectedMethod = container.querySelector('.payment-method.selected');
@@ -3761,17 +4077,11 @@
     }, 'attendant');
   };
 
-  // ============================================
-  // WHOLESALE SALE MODAL
-  // ============================================
   async function openWholesaleSaleModalWithDraft(draft) {
     await loadCustomersAndStock();
     currentModalType = 'wholesale';
     
-    // Store items with stock
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
-    
-    // ALL stock items with quantity > 0 are borrowable
     var borrowableItems = allStockItems.filter(function(si) {
       return (si.unitQty || 0) > 0;
     });
@@ -3942,10 +4252,7 @@
     
     await loadCustomersAndStock();
     
-    // Store items with stock
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
-    
-    // ALL stock items with quantity > 0 are borrowable
     var borrowableItems = allStockItems.filter(function(si) {
       return (si.unitQty || 0) > 0;
     });
@@ -4051,7 +4358,6 @@
 
   window._addWSItem = function() {
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
-    
     var borrowableItems = allStockItems.filter(function(si) {
       return (si.unitQty || 0) > 0;
     });
@@ -4160,7 +4466,6 @@
     var requiredEl = safeGetEl('wsRequiredPieces'); if (requiredEl) requiredEl.textContent = packSize;
     var amountEl = safeGetEl('wsTotalAmount'); if (amountEl) amountEl.textContent = formatCurrency(totalAmount);
     
-    // Validate split payment for wholesale
     var container = safeGetEl('wsPaymentContainer');
     if (container) {
       var selectedMethod = container.querySelector('.payment-method.selected');
@@ -4217,7 +4522,6 @@
     var packSize = parseInt(safeGetVal('wsPackSize', '50')) || 50;
     var customerId = '', customerName = '', customerPhone = '', isNewCustomer = false, customerData = null;
     
-    // Validate split payment for wholesale
     var container = safeGetEl('wsPaymentContainer');
     if (container) {
       var selectedMethod = container.querySelector('.payment-method.selected');
@@ -4277,7 +4581,6 @@
       var avail = parseInt(opt.getAttribute('data-avail')) || 0;
       var isBorrow = opt.getAttribute('data-borrow') === 'true';
       
-      // Check both store and inventory for availability
       var storeItem = allStoreItems.find(function(si) { return si.id === sel.value; });
       var invItem = allStockItems.find(function(si) { return si.id === sel.value || si.name === opt.getAttribute('data-name'); });
       var storeAvail = storeItem ? safeNumber(storeItem.unitQty, 0) : 0;
@@ -4333,9 +4636,6 @@
     }, 'attendant');
   };
 
-  // ============================================
-  // LOAD CUSTOMERS AND STOCK
-  // ============================================
   async function loadCustomersAndStock() {
     try {
       var custSnap = await getDocs(query(collection(db, 'customers'), where('status', '==', 'approved')));
@@ -4381,9 +4681,6 @@
     }
   }
 
-  // ============================================
-  // EXPORT & REFRESH
-  // ============================================
   window.exportSalesData = function() {
     var headers = ['Receipt #', 'Date', 'Customer', 'Phone', 'Items', 'Total', 'Payment', 'Type', 'Customer Type', 'Status', 'Attendant'];
     var rows = allSales.map(function(s) { 
@@ -4432,9 +4729,15 @@
     });
   }
 
-  // ============================================
-  // AUTH & INIT
-  // ============================================
+  setInterval(function() {
+    const now = Date.now();
+    for (let [key, timestamp] of activeTransactionLocks) {
+      if ((now - timestamp) > 120000) {
+        activeTransactionLocks.delete(key);
+      }
+    }
+  }, 60000);
+
   onAuthStateChanged(auth, async function(u) {
     if (!u) { window.location.href = 'auth.html'; return; }
     currentUser = u;
@@ -4487,6 +4790,7 @@
   }
 
   window.addEventListener('beforeunload', function() {
+    activeTransactionLocks.clear();
     saveDraftsToStorage();
     saveReturnHistory();
     cleanup();
