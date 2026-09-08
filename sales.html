@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -13,6 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -172,6 +173,7 @@
     .btn-success { background:var(--success); color:white; border:none; }
     .btn-danger { background:var(--danger); color:white; border:none; }
     .btn-warning { background:var(--warning); color:white; border:none; }
+    .btn-promo { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; border:none; }
 
     .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:2000; padding:16px; }
     .modal-overlay.active { display:flex; }
@@ -192,12 +194,11 @@
     .payment-method { flex:1; min-width:80px; text-align:center; padding:12px; border:1.5px solid rgba(0,0,0,0.08); border-radius:12px; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; font-size:0.8rem; }
     .payment-method.selected { border-color:var(--primary); background:var(--primary-soft); font-weight:600; }
 
-    #companyPaymentContainer .payment-method.selected {
-      background: var(--primary-soft) !important;
-      color: var(--primary) !important;
-      border-color: var(--primary) !important;
-      font-weight: 700;
-    }
+    .split-payment-section { background:var(--gray-light); border-radius:14px; padding:16px; margin-top:10px; display:none; }
+    .split-payment-section.active { display:block; }
+    .split-row { display:flex; gap:12px; margin-bottom:10px; align-items:center; flex-wrap:wrap; }
+    .split-row label { font-size:0.75rem; font-weight:600; min-width:70px; }
+    .split-row input { flex:1; min-width:100px; }
 
     .ws-pay {
       padding: 10px 20px;
@@ -256,6 +257,11 @@
     .receipt-total { border-top:1px dashed #ccc; padding-top:10px; font-weight:bold; font-size:1.1rem; display:flex; justify-content:space-between; }
     .cust-info { font-weight:normal; margin:4px 0; line-height:1.3; }
     .thanks { text-align:center; font-style:italic; margin-top:15px; font-weight:normal; }
+    .receipt-qr { text-align:center; margin:8px 0; padding:4px; }
+    .receipt-qr canvas { max-width:100px; height:auto; display:inline-block; }
+    .receipt-website { text-align:center; font-size:0.7rem; margin-top:4px; }
+    .receipt-website a { color:var(--primary); text-decoration:none; font-weight:600; display:inline-block; padding:4px 12px; border-radius:20px; background:rgba(255,77,166,0.1); transition:all 0.2s; }
+    .receipt-website a:hover { background:var(--primary); color:white; }
 
     .return-options { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px; margin:15px 0; }
     .return-option { padding:14px; border:1.5px solid rgba(0,0,0,0.08); border-radius:14px; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:12px; }
@@ -320,6 +326,7 @@
       .stat-card { padding:14px 12px; } .stat-value { font-size:1.4rem; } .panel { padding:16px 12px; border-radius:18px; }
       .data-table { min-width:900px; } .data-table th, .data-table td { padding:10px 6px; font-size:0.75rem; } .modal { padding:20px; border-radius:20px; }
       .draft-tabs-bar { padding: 0 8px; }
+      .receipt-qr canvas { max-width:70px; }
     }
     @media (max-width:480px) { .stats-grid { grid-template-columns:1fr; } }
   </style>
@@ -403,6 +410,7 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -473,6 +481,9 @@
   let wholesalePayment = 'cash';
   let companySelectedPayment = 'cash';
 
+  // Track processed sale IDs to prevent duplicates
+  let processedSaleIds = new Set();
+
   function safeNumber(val, fallback) {
     fallback = (typeof fallback === 'undefined') ? 0 : fallback;
     if (typeof val === 'number') return val;
@@ -527,6 +538,7 @@
     html += '<div class="debug-item"><strong>💳 Reg Payment:</strong> ' + selectedPayment + '</div>';
     html += '<div class="debug-item"><strong>🏢 Co Payment:</strong> ' + companySelectedPayment + '</div>';
     html += '<div class="debug-item"><strong>📦 WS Payment:</strong> ' + wholesalePayment + '</div>';
+    html += '<div class="debug-item"><strong>🔢 Processed IDs:</strong> ' + processedSaleIds.size + '</div>';
     
     if (activeDraftId) {
       var draft = draftTabs.find(function(d) { return d.id === activeDraftId; });
@@ -702,9 +714,32 @@
   }
 
   function saveOfflineSale(saleData) {
+    // Check if this sale already exists in offline queue
+    var exists = offlineSales.some(function(s) {
+      return s.receiptNumber === saleData.receiptNumber ||
+             (s.id && s.id === saleData.id) ||
+             (s._localId && s._localId === saleData._localId);
+    });
+    
+    if (exists) {
+      console.warn('⚠️ Sale already in offline queue, skipping:', saleData.receiptNumber);
+      return;
+    }
+    
     offlineSales.push(saleData);
     localStorage.setItem('offlineSales', JSON.stringify(offlineSales));
-    allSales.unshift(saleData);
+    
+    // Also check if already in allSales
+    var inAllSales = allSales.some(function(s) {
+      return s.receiptNumber === saleData.receiptNumber ||
+             (s.id && s.id === saleData.id) ||
+             (s._localId && s._localId === saleData._localId);
+    });
+    
+    if (!inAllSales) {
+      allSales.unshift(saleData);
+    }
+    
     renderSales();
     updateDebugPanel();
   }
@@ -767,6 +802,7 @@
         
         await batch.commit();
         
+        // Mark as synced
         var syncedSale = allSales.find(function(s) { return s._localId === saleData._localId; });
         if (syncedSale) { syncedSale.id = saleRef.id; syncedSale._synced = true; }
         
@@ -802,15 +838,20 @@
     var date = d.toDate ? d.toDate() : (d instanceof Date ? d : new Date(d));
     return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   }
+  
   function formatCurrency(n) { return '₦' + (safeNumber(n, 0)).toLocaleString(); }
+  
   function navigateTo(url) { window.location.href = url; }
   window.navigateTo = navigateTo;
   
   function generateReceiptNumber(prefix) {
     prefix = prefix || 'RCP';
-    receiptCounter++;
-    localStorage.setItem('receiptCounter', receiptCounter.toString());
-    var padded = receiptCounter.toString().padStart(6, '0');
+    // Use page-specific counter to avoid conflicts
+    var key = 'receiptCounter_' + prefix;
+    var counter = parseInt(localStorage.getItem(key) || '0');
+    counter++;
+    localStorage.setItem(key, counter.toString());
+    var padded = counter.toString().padStart(6, '0');
     return prefix + '-' + padded;
   }
 
@@ -897,6 +938,7 @@
     var overlay = safeGetEl('modalOverlay'); 
     if (overlay) overlay.classList.remove('active');
     currentModalType = '';
+    isProcessingSale = false;
   }
   window.hideModal = hideModal;
   
@@ -941,6 +983,7 @@
       '<button class="nav-item" onclick="navigateTo(\'purchases.html\')"><i class="fas fa-shopping-cart"></i><span>Purchases</span></button>' +
       '<button class="nav-item" onclick="navigateTo(\'customers.html\')"><i class="fas fa-users"></i><span>Customers</span></button>' +
       '<button class="nav-item active"><i class="fas fa-cash-register"></i><span>Sales</span></button>' +
+      '<button class="nav-item" onclick="navigateTo(\'promo.html\')"><i class="fas fa-tags"></i><span>Promo</span></button>' +
       '</div>' +
       (isAdmin() ? '<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>' +
       '<button class="nav-item" onclick="navigateTo(\'staff-management.html\')"><i class="fas fa-users-cog"></i><span>Staff</span></button>' +
@@ -1196,158 +1239,54 @@
     return sale;
   }
 
-  function renderSales() {
-    var tbody = safeGetEl('salesTable');
-    if (!tbody) return;
-    var searchInput = safeGetEl('salesSearchInput');
-    var search = (searchInput && searchInput.value || '').toLowerCase();
-    var filtered = allSales.slice();
-    if (search) filtered = filtered.filter(function(s) { return (s.customerName || '').toLowerCase().indexOf(search) !== -1 || (s.customerPhone || '').toLowerCase().indexOf(search) !== -1 || (s.receiptNumber || '').toLowerCase().indexOf(search) !== -1; });
-    if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-cash-register"></i><p>No sales found</p></div></td></tr>'; updateStats(); return; }
-    filtered.sort(function(a, b) {
-      var aTime = 0, bTime = 0;
-      if (a.createdAt) {
-        if (a.createdAt.seconds) aTime = a.createdAt.seconds;
-        else if (typeof a.createdAt === 'string') aTime = new Date(a.createdAt).getTime() / 1000;
-        else aTime = a.createdAt.getTime ? a.createdAt.getTime() / 1000 : 0;
-      }
-      if (b.createdAt) {
-        if (b.createdAt.seconds) bTime = b.createdAt.seconds;
-        else if (typeof b.createdAt === 'string') bTime = new Date(b.createdAt).getTime() / 1000;
-        else bTime = b.createdAt.getTime ? b.createdAt.getTime() / 1000 : 0;
-      }
-      return bTime - aTime;
-    });
-    tbody.innerHTML = '';
-    filtered.forEach(function(s) {
-      var isReturned = s.status === 'returned';
-      var isPartiallyReturned = s.partiallyReturned || (returnHistory[s.id || s._localId] && returnHistory[s.id || s._localId].totalReturned > 0);
-      var isOffline = s._localId && !s._synced;
-      var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
-      var isExchange = s.isExchange || s.exchangeType;
-      var hasBorrowed = (s._borrowedItems && s._borrowedItems.length > 0) || (s.items && s.items.some(function(it) { return it.borrowed || it.fullyBorrowed; }));
-      var rowClass = isReturned ? 'returned-row' : (isOffline ? 'pending-sync' : (isPartiallyReturned ? 'returned-partial' : (hasBorrowed ? 'borrow-row' : (isExchange ? 'exchange-row' : ''))));
-      var statusBadge = isReturned ? '<span class="badge badge-danger">Returned</span>' : 
-                        (isPartiallyReturned ? '<span class="badge badge-warning">Partial Return</span>' :
-                        (isOffline ? '<span class="badge badge-warning">Pending Sync</span>' : '<span class="badge badge-success">Completed</span>'));
-      var typeBadge = isWholesale ? '<span class="badge badge-purple">Wholesale</span>' : 
-                      (isExchange ? '<span class="badge" style="background:rgba(255,77,166,0.1);color:#ff4da6;">Exchange</span>' :
-                      (s.isCompanySale ? '<span class="badge badge-info">Company</span>' : '<span class="badge badge-info">Regular</span>'));
-      var newCustomerBadge = s._newCustomer ? ' <span class="badge badge-warning">New</span>' : (s.customerId ? ' <span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;">Existing</span>' : '');
-      var borrowBadge = hasBorrowed ? ' <span class="badge badge-borrow">📦 Borrowed</span>' : '';
+  // Combine duplicate items on receipt
+  function combineItems(items) {
+    if (!items || items.length === 0) return [];
+    
+    var combined = {};
+    items.forEach(function(item) {
+      var name = item.name || 'Item';
+      var size = item.size || '1';
+      var sizeLabel = item.sizeLabel || getSizeLabel(size);
+      var unitPrice = item.unitPrice || 0;
+      var quantity = item.quantity || item.pieces || 1;
       
-      var saleIdentifier = (s.id || s._localId || '').replace(/'/g, "\\'");
+      var key = name + '|' + size + '|' + sizeLabel + '|' + unitPrice.toFixed(2);
       
-      tbody.innerHTML += '<tr class="' + rowClass + '"><td>' + formatTime(s.createdAt) + '</td><td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;">' + escapeHtml(s.customerName || 'Walk-in') + newCustomerBadge + borrowBadge + '</td><td>' + escapeHtml(s.customerPhone || '-') + '</td><td>' + (s.items ? s.items.length : 0) + ' items</td><td><strong>' + (isReturned ? '-' : '') + formatCurrency(safeNumber(s.totalAmount, 0)) + '</strong></td><td><span class="badge badge-success">' + escapeHtml(s.paymentMethod || 'cash') + '</span></td><td>' + typeBadge + '</td><td>' + statusBadge + '</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-print"></i></button>' + (hasBorrowed ? '<button class="btn btn-sm btn-outline" onclick="viewCompanyRecord(\'' + saleIdentifier + '\')" title="Company Record (Stock Sources)" style="color:var(--warning);border-color:var(--warning);"><i class="fas fa-building"></i></button>' : '') + (!isReturned && !isWholesale && !isExchange ? '<button class="btn btn-sm btn-warning" onclick="openReturnPage(\'' + saleIdentifier + '\')"><i class="fas fa-undo"></i></button>' : '') + '</div></td></tr>';
+      if (combined[key]) {
+        combined[key].quantity += quantity;
+        combined[key].total = combined[key].quantity * unitPrice;
+      } else {
+        combined[key] = {
+          name: name,
+          size: size,
+          sizeLabel: sizeLabel,
+          unitPrice: unitPrice,
+          quantity: quantity,
+          total: quantity * unitPrice,
+          isNonInventory: item.isNonInventory || false,
+          borrowed: item.borrowed || false,
+          borrowedQty: item.borrowedQty || 0,
+          storeQty: item.storeQty || 0,
+          fullyBorrowed: item.fullyBorrowed || false,
+          condition: item.condition || null
+        };
+      }
     });
-    updateStats();
+    
+    return Object.values(combined);
   }
 
-  function loadSales() {
-    cleanup();
-    var salesQuery = query(collection(db, 'sales'), orderBy('createdAt', 'desc'));
-    unsubscribes.push(onSnapshot(salesQuery, function(snap) {
-      var serverSales = snap.docs.map(function(d) { return Object.assign({ id: d.id, _synced: true, _type: 'regular' }, d.data()); });
-      var serverIds = new Set(serverSales.map(function(s) { return s.id; }));
-      var mergedOffline = offlineSales.filter(function(s) { return !serverIds.has(s.id) && !s._synced; });
-      allSales = serverSales.concat(mergedOffline);
-      renderSales();
-    }, function() {
-      unsubscribes.push(onSnapshot(collection(db, 'sales'), function(snap) {
-        var serverSales = snap.docs.map(function(d) { return Object.assign({ id: d.id, _synced: true, _type: 'regular' }, d.data()); });
-        var serverIds = new Set(serverSales.map(function(s) { return s.id; }));
-        var mergedOffline = offlineSales.filter(function(s) { return !serverIds.has(s.id) && !s._synced; });
-        allSales = serverSales.concat(mergedOffline);
-        allSales.sort(function(a, b) { 
-          var aSec = (a.createdAt && a.createdAt.seconds) || 0;
-          var bSec = (b.createdAt && b.createdAt.seconds) || 0;
-          return bSec - aSec; 
-        });
-        renderSales();
-      }));
-    }));
-    var wsQuery = query(collection(db, 'wholesale_sales'), orderBy('createdAt', 'desc'));
-    unsubscribes.push(onSnapshot(wsQuery, function(snap) {
-      var wsSales = snap.docs.map(function(d) { return Object.assign({ id: d.id, _synced: true, _type: 'wholesale' }, d.data()); });
-      var existingIds = new Set(allSales.map(function(s) { return s.id; }));
-      wsSales.forEach(function(ws) { if (!existingIds.has(ws.id)) allSales.push(ws); });
-      renderSales();
-    }));
-    unsubscribes.push(onSnapshot(query(collection(db, 'returns'), orderBy('createdAt', 'desc')), function(snap) {
-      allReturns = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-      allReturns.forEach(function(r) {
-        if (r.saleId) {
-          if (!returnHistory[r.saleId]) {
-            returnHistory[r.saleId] = { totalReturned: 0, items: {} };
-          }
-          if (r.returnedItems) {
-            r.returnedItems.forEach(function(item) {
-              var idx = item.originalIndex || 0;
-              returnHistory[r.saleId].items[idx] = (returnHistory[r.saleId].items[idx] || 0) + (item.returnedQuantity || item.returnedQty || 1);
-              returnHistory[r.saleId].totalReturned += (item.returnedQuantity || item.returnedQty || 1);
-            });
-          }
-        }
-      });
-      saveReturnHistory();
-      renderSales();
-    }));
-  }
-
-  async function loadCustomersAndStock() {
-    try {
-      var custSnap = await getDocs(query(collection(db, 'customers'), where('status', '==', 'approved')));
-      allCustomers = custSnap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-
-      var stockSnap = await getDocs(collection(db, 'stock_items'));
-      allStockItems = stockSnap.docs.map(function(d) {
-        var data = d.data();
-        var unitQty = safeNumber(data.unitQty || data.quantityAvailable, 0);
-        var packSize = parseInt(data.packSize || 12);
-        var bundleSize = parseInt(data.bundleSize || 50);
-        var packQty = safeNumber(data.packQty, 0) || Math.floor(unitQty / packSize);
-        var bundleQty = safeNumber(data.bundleQty, 0) || Math.floor(unitQty / bundleSize);
-        return {
-          id: d.id, name: data.name || '', category: data.category || '', itemType: data.itemType || 'general',
-          unitQty: unitQty,
-          unitPrice: safeNumber(data.unitPrice, 0),
-          halfQty: safeNumber(data.halfQty, 0), halfPrice: safeNumber(data.halfPrice, 0),
-          quarterQty: safeNumber(data.quarterQty, 0), quarterPrice: safeNumber(data.quarterPrice, 0),
-          packSize: packSize, packQty: packQty, packPrice: safeNumber(data.packPrice, 0),
-          bundleSize: bundleSize, bundleQty: bundleQty, bundlePrice: safeNumber(data.bundlePrice, 0),
-          measuredSubType: data.measuredSubType || 'yard',
-          yardQty: safeNumber(data.yardQty, 0), pricePerYard: safeNumber(data.pricePerYard, 0),
-          threshold: safeNumber(data.threshold, 10)
-        };
-      });
-
-      var storeSnap = await getDocs(collection(db, 'store_items'));
-      allStoreItems = storeSnap.docs.map(function(d) {
-        var data = d.data();
-        return { 
-          id: d.id, name: data.name || '', category: data.category || '', 
-          unitQty: safeNumber(data.unitQty, 0), unitCost: safeNumber(data.unitCost, 0), 
-          inventoryItemType: data.inventoryItemType || 'general',
-          linkedInventoryId: data.linkedInventoryId || null,
-          linkedInventoryName: data.linkedInventoryName || null
-        };
-      });
-      console.log('📦 Stock loaded: ' + allStockItems.length + ' items, ' + allStoreItems.length + ' store items');
-    } catch (e) { showToast('Error loading data', 'error'); }
-  }
-
-  function getAvailableStock(item, size) {
-    if (size === '0.5' || size === '½' || size === 'half') return safeNumber(item.halfQty, 0);
-    if (size === '0.25' || size === '¼' || size === 'quarter') return safeNumber(item.quarterQty, 0);
-    if (size === 'pack') return safeNumber(item.packQty, 0);
-    if (size === 'bundle') return safeNumber(item.bundleQty, 0);
-    return safeNumber(item.unitQty, 0);
-  }
-
-  function getDeductQuantity(item, size, qty) {
-    if (size === 'pack') return qty * (parseInt(item.packSize) || 12);
-    if (size === 'bundle') return qty * (parseInt(item.bundleSize) || 50);
-    return qty;
+  function getDisplayItems(items) {
+    if (!items || items.length === 0) return [];
+    
+    var combined = combineItems(items);
+    
+    combined.sort(function(a, b) {
+      return a.name.localeCompare(b.name);
+    });
+    
+    return combined;
   }
 
   function getSizeLabel(size) {
@@ -1386,6 +1325,20 @@
     if (safeNumber(item.bundlePrice, 0) > 0) opts.push({ value: 'bundle', label: '📦 Bundle (' + (item.bundleSize||50) + ')' });
     if (opts.length === 0) opts.push({ value: '1', label: '1 (Unit)' });
     return opts;
+  }
+
+  function getAvailableStock(item, size) {
+    if (size === '0.5' || size === '½' || size === 'half') return safeNumber(item.halfQty, 0);
+    if (size === '0.25' || size === '¼' || size === 'quarter') return safeNumber(item.quarterQty, 0);
+    if (size === 'pack') return safeNumber(item.packQty, 0);
+    if (size === 'bundle') return safeNumber(item.bundleQty, 0);
+    return safeNumber(item.unitQty, 0);
+  }
+
+  function getDeductQuantity(item, size, qty) {
+    if (size === 'pack') return qty * (parseInt(item.packSize) || 12);
+    if (size === 'bundle') return qty * (parseInt(item.bundleSize) || 50);
+    return qty;
   }
 
   // ============================================
@@ -1787,14 +1740,36 @@
         target.style.borderColor = 'var(--primary)';
         
         var method = target.dataset.method;
-        var containerId = container.id;
+        var containerId = container.id || '';
         
-        if (containerId === 'companyPaymentContainer') {
+        // Update the appropriate payment variable
+        if (containerId.includes('company') || containerId === 'companyPaymentContainer') {
           companySelectedPayment = method;
           console.log('🐛 DEBUG: Company payment selected:', companySelectedPayment);
+        } else if (containerId.includes('wholesale') || containerId === 'wsPaymentContainer') {
+          wholesalePayment = method;
+          console.log('🐛 DEBUG: Wholesale payment selected:', wholesalePayment);
         } else {
           selectedPayment = method;
           console.log('🐛 DEBUG: Regular payment selected:', selectedPayment);
+        }
+        
+        // Show/hide split payment section
+        var splitSection = container.parentElement.querySelector('.split-payment-section');
+        if (splitSection) {
+          var isSplit = method === 'cash_transfer' || method === 'cash_pos';
+          splitSection.style.display = isSplit ? 'block' : 'none';
+          
+          // Update split label
+          var label = splitSection.querySelector('.split-row:last-child label');
+          if (label) {
+            if (method === 'cash_transfer') label.textContent = 'Transfer Amount:';
+            else if (method === 'cash_pos') label.textContent = 'POS Amount:';
+          }
+          
+          // Reset split inputs
+          var inputs = splitSection.querySelectorAll('input');
+          inputs.forEach(function(inp) { inp.value = ''; });
         }
         
         if (typeof window._markDraftDirty === 'function') window._markDraftDirty();
@@ -1826,7 +1801,532 @@
   });
 
   // ============================================
-  // NEW SALE MODAL
+  // SPLIT PAYMENT FUNCTIONS
+  // ============================================
+  function setupSplitPayment(containerId) {
+    var container = safeGetEl(containerId);
+    if (!container) return;
+    
+    var splitSection = container.parentElement.querySelector('.split-payment-section');
+    if (!splitSection) return;
+    
+    var cashInput = splitSection.querySelector('.split-row:first-child input');
+    var secondInput = splitSection.querySelector('.split-row:last-child input');
+    var totalDisplay = splitSection.querySelector('.split-total-display');
+    
+    // Create total display if it doesn't exist
+    if (!totalDisplay) {
+      var displayDiv = document.createElement('div');
+      displayDiv.className = 'split-total-display';
+      displayDiv.style.cssText = 'font-size:0.8rem;color:var(--gray);margin-top:8px;';
+      displayDiv.innerHTML = 'Total paid: <span class="split-total-amount">₦0</span>';
+      splitSection.appendChild(displayDiv);
+      totalDisplay = displayDiv;
+    }
+    
+    var totalAmountSpan = totalDisplay.querySelector('.split-total-amount');
+    
+    function updateSplitTotal() {
+      var cash = parseFloat(cashInput ? cashInput.value : 0) || 0;
+      var second = parseFloat(secondInput ? secondInput.value : 0) || 0;
+      var total = cash + second;
+      if (totalAmountSpan) totalAmountSpan.textContent = '₦' + total.toLocaleString();
+      return total;
+    }
+    
+    function validateSplitPayment() {
+      // Get sale total from the appropriate summary
+      var totalEl = safeGetEl('saleTotal') || safeGetEl('companyTotal') || safeGetEl('wsTotalAmount');
+      if (!totalEl) return true;
+      
+      var saleTotal = parseFloat(totalEl.textContent.replace(/[₦,]/g, '')) || 0;
+      var paidTotal = updateSplitTotal();
+      
+      // Find or create validation message
+      var validationMsg = splitSection.querySelector('.split-validation-msg');
+      if (!validationMsg) {
+        validationMsg = document.createElement('div');
+        validationMsg.className = 'split-validation-msg';
+        validationMsg.style.cssText = 'margin-top:5px;font-size:0.8rem;color:var(--danger);display:none;';
+        splitSection.appendChild(validationMsg);
+      }
+      
+      var selectedMethod = container.querySelector('.payment-method.selected');
+      if (selectedMethod) {
+        var method = selectedMethod.dataset.method;
+        if ((method === 'cash_transfer' || method === 'cash_pos') && saleTotal > 0) {
+          if (paidTotal !== saleTotal) {
+            validationMsg.style.display = 'block';
+            validationMsg.textContent = '⚠️ Total paid (₦' + paidTotal.toLocaleString() + ') ≠ Sale total (₦' + saleTotal.toLocaleString() + ')';
+            return false;
+          } else {
+            validationMsg.style.display = 'none';
+            return true;
+          }
+        }
+      }
+      validationMsg.style.display = 'none';
+      return true;
+    }
+    
+    // Attach event listeners
+    if (cashInput) {
+      cashInput.addEventListener('input', function() {
+        updateSplitTotal();
+        validateSplitPayment();
+        if (typeof window._markDraftDirty === 'function') window._markDraftDirty();
+      });
+    }
+    if (secondInput) {
+      secondInput.addEventListener('input', function() {
+        updateSplitTotal();
+        validateSplitPayment();
+        if (typeof window._markDraftDirty === 'function') window._markDraftDirty();
+      });
+    }
+    
+    // Store reference for validation
+    container._splitValidation = validateSplitPayment;
+    container._splitUpdate = updateSplitTotal;
+  }
+
+  // ============================================
+  // LOAD SALES WITH DEDUPLICATION
+  // ============================================
+  function loadSales() {
+    cleanup();
+    
+    // Clear processed IDs on reload
+    processedSaleIds.clear();
+    
+    var salesQuery = query(collection(db, 'sales'), orderBy('createdAt', 'desc'));
+    unsubscribes.push(onSnapshot(salesQuery, function(snap) {
+      var serverSales = snap.docs.map(function(d) { 
+        var data = d.data();
+        var saleId = d.id;
+        
+        // Skip if already processed
+        if (processedSaleIds.has(saleId)) {
+          console.warn('⚠️ Duplicate sale detected, skipping:', saleId);
+          return null;
+        }
+        processedSaleIds.add(saleId);
+        
+        return Object.assign({ 
+          id: d.id, 
+          _synced: true, 
+          _type: 'regular',
+          _serverId: d.id
+        }, data);
+      }).filter(function(s) { return s !== null; });
+      
+      // Filter out duplicates from offline sales
+      var serverIds = new Set(serverSales.map(function(s) { return s.id || s._serverId; }));
+      var serverReceipts = new Set(serverSales.map(function(s) { return s.receiptNumber; }));
+      
+      var mergedOffline = offlineSales.filter(function(s) { 
+        // Skip if already in server
+        if (s.id && serverIds.has(s.id)) return false;
+        if (s.receiptNumber && serverReceipts.has(s.receiptNumber)) return false;
+        return !s._synced; 
+      });
+      
+      // Remove duplicates within mergedOffline
+      var offlineIds = new Set();
+      var offlineReceipts = new Set();
+      var uniqueOffline = mergedOffline.filter(function(s) {
+        var id = s.id || s._localId || s.receiptNumber;
+        var receipt = s.receiptNumber;
+        if (offlineIds.has(id) || (receipt && offlineReceipts.has(receipt))) {
+          console.warn('⚠️ Duplicate offline sale removed:', receipt);
+          return false;
+        }
+        offlineIds.add(id);
+        if (receipt) offlineReceipts.add(receipt);
+        return true;
+      });
+      
+      allSales = serverSales.concat(uniqueOffline);
+      
+      // Final deduplication by receipt number
+      var seenReceipts = new Set();
+      allSales = allSales.filter(function(s) {
+        var receipt = s.receiptNumber;
+        if (receipt && seenReceipts.has(receipt)) {
+          console.warn('⚠️ Duplicate receipt found, removing:', receipt);
+          return false;
+        }
+        if (receipt) seenReceipts.add(receipt);
+        return true;
+      });
+      
+      renderSales();
+      updateDebugPanel();
+    }, function(error) {
+      console.error('Sales snapshot error:', error);
+      renderSales();
+    }));
+    
+    // Load wholesale sales with deduplication
+    var wsQuery = query(collection(db, 'wholesale_sales'), orderBy('createdAt', 'desc'));
+    unsubscribes.push(onSnapshot(wsQuery, function(snap) {
+      var wsSales = snap.docs.map(function(d) { 
+        var data = d.data();
+        var saleId = d.id;
+        if (processedSaleIds.has(saleId)) return null;
+        processedSaleIds.add(saleId);
+        return Object.assign({ 
+          id: d.id, 
+          _synced: true, 
+          _type: 'wholesale',
+          _serverId: d.id 
+        }, data); 
+      }).filter(function(s) { return s !== null; });
+      
+      var existingIds = new Set(allSales.map(function(s) { return s.id || s._serverId; }));
+      var existingReceipts = new Set(allSales.map(function(s) { return s.receiptNumber; }));
+      
+      wsSales.forEach(function(ws) {
+        if (existingIds.has(ws.id)) return;
+        if (ws.receiptNumber && existingReceipts.has(ws.receiptNumber)) return;
+        allSales.push(ws);
+        existingIds.add(ws.id);
+        if (ws.receiptNumber) existingReceipts.add(ws.receiptNumber);
+      });
+      
+      renderSales();
+      updateDebugPanel();
+    }));
+    
+    // Load returns
+    unsubscribes.push(onSnapshot(query(collection(db, 'returns'), orderBy('createdAt', 'desc')), function(snap) {
+      allReturns = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+      allReturns.forEach(function(r) {
+        if (r.saleId) {
+          if (!returnHistory[r.saleId]) {
+            returnHistory[r.saleId] = { totalReturned: 0, items: {} };
+          }
+          if (r.returnedItems) {
+            r.returnedItems.forEach(function(item) {
+              var idx = item.originalIndex || 0;
+              returnHistory[r.saleId].items[idx] = (returnHistory[r.saleId].items[idx] || 0) + (item.returnedQuantity || item.returnedQty || 1);
+              returnHistory[r.saleId].totalReturned += (item.returnedQuantity || item.returnedQty || 1);
+            });
+          }
+        }
+      });
+      saveReturnHistory();
+      renderSales();
+    }));
+  }
+
+  function renderSales() {
+    var tbody = safeGetEl('salesTable');
+    if (!tbody) return;
+    var searchInput = safeGetEl('salesSearchInput');
+    var search = (searchInput && searchInput.value || '').toLowerCase();
+    var filtered = allSales.slice();
+    if (search) filtered = filtered.filter(function(s) { return (s.customerName || '').toLowerCase().indexOf(search) !== -1 || (s.customerPhone || '').toLowerCase().indexOf(search) !== -1 || (s.receiptNumber || '').toLowerCase().indexOf(search) !== -1; });
+    if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-cash-register"></i><p>No sales found</p></div></td></tr>'; updateStats(); return; }
+    filtered.sort(function(a, b) {
+      var aTime = 0, bTime = 0;
+      if (a.createdAt) {
+        if (a.createdAt.seconds) aTime = a.createdAt.seconds;
+        else if (typeof a.createdAt === 'string') aTime = new Date(a.createdAt).getTime() / 1000;
+        else aTime = a.createdAt.getTime ? a.createdAt.getTime() / 1000 : 0;
+      }
+      if (b.createdAt) {
+        if (b.createdAt.seconds) bTime = b.createdAt.seconds;
+        else if (typeof b.createdAt === 'string') bTime = new Date(b.createdAt).getTime() / 1000;
+        else bTime = b.createdAt.getTime ? b.createdAt.getTime() / 1000 : 0;
+      }
+      return bTime - aTime;
+    });
+    tbody.innerHTML = '';
+    filtered.forEach(function(s) {
+      var isReturned = s.status === 'returned';
+      var isPartiallyReturned = s.partiallyReturned || (returnHistory[s.id || s._localId] && returnHistory[s.id || s._localId].totalReturned > 0);
+      var isOffline = s._localId && !s._synced;
+      var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
+      var isExchange = s.isExchange || s.exchangeType;
+      var hasBorrowed = (s._borrowedItems && s._borrowedItems.length > 0) || (s.items && s.items.some(function(it) { return it.borrowed || it.fullyBorrowed; }));
+      var rowClass = isReturned ? 'returned-row' : (isOffline ? 'pending-sync' : (isPartiallyReturned ? 'returned-partial' : (hasBorrowed ? 'borrow-row' : (isExchange ? 'exchange-row' : ''))));
+      var statusBadge = isReturned ? '<span class="badge badge-danger">Returned</span>' : 
+                        (isPartiallyReturned ? '<span class="badge badge-warning">Partial Return</span>' :
+                        (isOffline ? '<span class="badge badge-warning">Pending Sync</span>' : '<span class="badge badge-success">Completed</span>'));
+      var typeBadge = isWholesale ? '<span class="badge badge-purple">Wholesale</span>' : 
+                      (isExchange ? '<span class="badge" style="background:rgba(255,77,166,0.1);color:#ff4da6;">Exchange</span>' :
+                      (s.isCompanySale ? '<span class="badge badge-info">Company</span>' : '<span class="badge badge-info">Regular</span>'));
+      var newCustomerBadge = s._newCustomer ? ' <span class="badge badge-warning">New</span>' : (s.customerId ? ' <span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;">Existing</span>' : '');
+      var borrowBadge = hasBorrowed ? ' <span class="badge badge-borrow">📦 Borrowed</span>' : '';
+      
+      var saleIdentifier = (s.id || s._localId || '').replace(/'/g, "\\'");
+      
+      tbody.innerHTML += '<tr class="' + rowClass + '"><td>' + formatTime(s.createdAt) + '</td><td><span class="badge badge-info">' + (s.receiptNumber || 'N/A') + '</span></td><td style="cursor:pointer;color:var(--primary);font-weight:600;">' + escapeHtml(s.customerName || 'Walk-in') + newCustomerBadge + borrowBadge + '</td><td>' + escapeHtml(s.customerPhone || '-') + '</td><td>' + (s.items ? s.items.length : 0) + ' items</td><td><strong>' + (isReturned ? '-' : '') + formatCurrency(safeNumber(s.totalAmount, 0)) + '</strong></td><td><span class="badge badge-success">' + escapeHtml(s.paymentMethod || 'cash') + '</span></td><td>' + typeBadge + '</td><td>' + statusBadge + '</td><td><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline" onclick="viewReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-receipt"></i></button><button class="btn btn-sm btn-outline" onclick="printReceipt(\'' + saleIdentifier + '\')"><i class="fas fa-print"></i></button>' + (hasBorrowed ? '<button class="btn btn-sm btn-outline" onclick="viewCompanyRecord(\'' + saleIdentifier + '\')" title="Company Record (Stock Sources)" style="color:var(--warning);border-color:var(--warning);"><i class="fas fa-building"></i></button>' : '') + (!isReturned && !isWholesale && !isExchange ? '<button class="btn btn-sm btn-warning" onclick="openReturnPage(\'' + saleIdentifier + '\')"><i class="fas fa-undo"></i></button>' : '') + '</div></td></tr>';
+    });
+    updateStats();
+  }
+
+  // ============================================
+  // RECEIPT WITH QR CODE
+  // ============================================
+  function generateQRData(sale) {
+    var data = {
+      receipt: sale.receiptNumber || '',
+      store: 'OmoCreations',
+      total: safeNumber(sale.totalAmount, 0),
+      date: formatDate(sale.createdAt),
+      customer: sale.customerName || 'Walk-in',
+      items: []
+    };
+    
+    if (sale.items && sale.items.length > 0) {
+      var combinedItems = combineItems(sale.items);
+      combinedItems.forEach(function(item) {
+        data.items.push({
+          name: item.name || 'Item',
+          quantity: item.quantity || 1,
+          price: item.unitPrice || 0,
+          size: item.sizeLabel || 'Unit',
+          total: (item.quantity || 1) * (item.unitPrice || 0)
+        });
+      });
+    }
+    
+    return JSON.stringify(data);
+  }
+
+  function showReceiptModalWithQR(sale) {
+    if (!sale) return;
+    
+    var prevModalType = currentModalType;
+    currentModalType = 'receipt';
+    
+    var now = new Date();
+    var saleDate = getSaleDate(sale);
+    var saleDateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    var saleTimeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    var currentDateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    var currentTimeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    
+    var isExchange = sale.isExchange || sale.exchangeType;
+    var isWholesale = sale._type === 'wholesale' || sale.wholesalePackSize;
+    var isCompany = sale.isCompanySale;
+    var isReturn = sale.isReturn || sale.returnAction;
+    var hasBorrowed = (sale._borrowedItems && sale._borrowedItems.length > 0) || (sale.items && sale.items.some(function(it) { return it.borrowed || it.fullyBorrowed; }));
+    
+    var title = 'Sales Receipt';
+    if (isExchange) title = 'Exchange Receipt';
+    else if (isWholesale) title = 'Wholesale Receipt';
+    else if (isCompany) title = 'Company Receipt';
+    else if (isReturn) title = 'Return Receipt';
+    
+    var itemsHtml = '';
+    var displayItems = getDisplayItems(sale.items || []);
+    
+    if (displayItems.length > 0) {
+      displayItems.forEach(function(i) {
+        var qty = i.quantity || 1;
+        var price = i.unitPrice || 0;
+        var total = qty * price;
+        var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
+        itemsHtml += '<div class="receipt-item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
+      });
+    } else {
+      itemsHtml = '<div class="receipt-item"><span>No items</span><span>₦0</span></div>';
+    }
+    
+    var displayTotal = safeNumber(sale.totalAmount, 0);
+    
+    var extraInfo = '';
+    if (isCompany && sale.collectedBy) {
+      extraInfo += '<p class="cust-info"><strong>Collected by:</strong> ' + escapeHtml(sale.collectedBy) + '</p>';
+    }
+    if (isCompany && sale.usage) {
+      extraInfo += '<p class="cust-info"><strong>Usage:</strong> ' + escapeHtml(sale.usage) + '</p>';
+    }
+    
+    var wholesaleInfo = '';
+    if (isWholesale) {
+      wholesaleInfo += '<p class="rec">Pack Size: ' + (sale.wholesalePackSize || 50) + ' pcs | Sold: ' + (sale.totalPieces || 0) + ' pcs</p>';
+    }
+    
+    var customerTypeBadge = '';
+    if (sale._customerType === 'new') {
+      customerTypeBadge = ' <span class="badge badge-warning" style="font-size:0.65rem;">New Customer</span>';
+    } else if (sale._customerType === 'existing' || sale.customerId) {
+      customerTypeBadge = ' <span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;font-size:0.65rem;">Existing</span>';
+    }
+    
+    var qrData = generateQRData(sale);
+    var qrId = 'qr_' + Date.now();
+    var receiptIdentifier = sale.id || sale._localId || sale.receiptNumber || '';
+    
+    // Build receipt content with QR code
+    var receiptContent = 
+      '<div class="receipt-container">' +
+        '<div class="receipt-header">' +
+          '<h2 style="font-weight:bold;">✨ OmoCreations ✨</h2>' +
+          '<p class="addr" style="font-weight:bold;">3 Oyebo Street, Abiola Way</p>' +
+          '<p class="addr" style="font-weight:bold;">Behind Laroy Suite, Abeokuta 111101</p>' +
+          '<p class="addr" style="font-weight:bold;">Ogun State, Nigeria</p>' +
+          '<p class="addr" style="font-weight:bold;">📞 0807 734 0294</p>' +
+          '<p class="rec" style="margin-top:6px;font-size:1rem;">#' + escapeHtml(sale.receiptNumber || 'N/A') + '</p>' +
+          '<p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>' +
+          wholesaleInfo +
+        '</div>' +
+        '<p class="cust-info">' +
+          '<strong>Customer:</strong> ' + escapeHtml(sale.customerName || 'Walk-in') + customerTypeBadge +
+          (sale.customerPhone ? '<br><strong>Phone:</strong> ' + escapeHtml(sale.customerPhone) : '') +
+          '<br><strong>Served by:</strong> ' + escapeHtml(sale.attendantName || 'Staff') +
+        '</p>' +
+        extraInfo +
+        '<div class="receipt-items">' + itemsHtml + '</div>' +
+        '<div class="receipt-total"><span>Total:</span><span>' + formatCurrency(displayTotal) + '</span></div>' +
+        '<div class="receipt-qr" id="' + qrId + '" style="margin:8px 0;"></div>' +
+        '<div class="receipt-website">' +
+          '🔍 Scan to verify receipt &amp; view details<br>' +
+          '<a href="https://omocreations.com.ng" target="_blank" onclick="event.stopPropagation();">' +
+            '<i class="fas fa-globe"></i> Visit our website: omocreations.com.ng' +
+          '</a>' +
+        '</div>' +
+        '<p class="thanks">Thank you for your patronage!</p>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">' +
+        '<button class="btn btn-primary" onclick="printReceiptModal(\'' + receiptIdentifier + '\')" style="flex:1;"><i class="fas fa-print"></i> Print</button>' +
+        '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>' +
+      '</div>';
+    
+    showModal(title, receiptContent);
+    
+    // Generate QR code after modal is rendered
+    setTimeout(function() {
+      var qrContainer = safeGetEl(qrId);
+      if (qrContainer && typeof QRCode !== 'undefined') {
+        try {
+          // Clear any existing QR
+          qrContainer.innerHTML = '';
+          new QRCode(qrContainer, { 
+            text: qrData, 
+            width: 100, 
+            height: 100, 
+            colorDark: '#1a1a2e', 
+            colorLight: '#ffffff', 
+            correctLevel: QRCode.CorrectLevel.H 
+          });
+        } catch (e) {
+          qrContainer.innerHTML = '<span style="font-size:0.7rem;color:var(--gray);">QR unavailable</span>';
+          console.warn('QR generation error:', e);
+        }
+      }
+    }, 300);
+    
+    currentModalType = prevModalType;
+  }
+
+  // Override viewReceipt to use QR version
+  window.viewReceipt = function(id) { 
+    var s = findSaleByIdentifier(id); 
+    if (s) showReceiptModalWithQR(s);
+    else showToast('Receipt not found', 'error');
+  };
+
+  // ============================================
+  // PRINT RECEIPT WITH QR
+  // ============================================
+  window.printReceipt = function(id) {
+    var s = findSaleByIdentifier(id);
+    if (!s) { showToast('Sale not found for printing', 'error'); return; }
+    
+    var now = new Date();
+    var saleDate = getSaleDate(s);
+    var saleDateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    var saleTimeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    
+    var isExchange = s.isExchange || s.exchangeType;
+    var isReturn = s.isReturn || s.returnAction;
+    var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
+    var isCompany = s.isCompanySale;
+    
+    var displayItems = getDisplayItems(s.items || []);
+    
+    var itemsHtml = '';
+    if (displayItems.length > 0) {
+      displayItems.forEach(function(i) {
+        var qty = i.quantity || 1;
+        var price = i.unitPrice || 0;
+        var total = qty * price;
+        var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
+        itemsHtml += '<div class="item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
+      });
+    } else {
+      itemsHtml = '<div class="item"><span>No items</span><span>₦0</span></div>';
+    }
+    
+    var displayTotal = safeNumber(s.totalAmount, 0);
+    
+    var companyInfo = '';
+    if (isCompany) {
+      companyInfo = '<p class="cust">Collected by: ' + escapeHtml(s.collectedBy || 'N/A') + '<br>Usage: ' + escapeHtml(s.usage || 'N/A') + '</p>';
+    }
+    
+    var wholesaleInfo = '';
+    if (isWholesale) {
+      wholesaleInfo = '<p class="rec">Pack Size: ' + (s.wholesalePackSize || 50) + ' pcs | Sold: ' + (s.totalPieces || 0) + ' pcs</p>';
+    }
+    
+    var qrData = generateQRData(s);
+    
+    var receiptHTML = '<html><head><title>Receipt #' + (s.receiptNumber||'') + '</title>' +
+      '<style>@page{margin:0;size:80mm auto}*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Segoe UI",Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3;color:#000}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:7pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1;padding-right:8px}.item span:last-child{text-align:right;min-width:55px;white-space:nowrap}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.qr{text-align:center;margin:6px 0}.qr canvas{max-width:80px;height:auto}.website{text-align:center;font-size:6pt;color:#666;margin-top:2px}.website a{color:#666;text-decoration:none;font-weight:bold}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style>' +
+      '</head><body>' +
+      '<div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#' + escapeHtml(s.receiptNumber||'N/A') + '</p><p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>' + wholesaleInfo + '</div>' +
+      '<p class="cust">Customer: ' + escapeHtml(s.customerName||'Walk-in') + (s.customerPhone ? '<br>Phone: ' + escapeHtml(s.customerPhone) : '') + '<br>Served by: ' + escapeHtml(s.attendantName||'Staff') + '</p>' +
+      companyInfo +
+      '<div class="items">' + itemsHtml + '</div>' +
+      '<div class="total">Total: ' + formatCurrency(displayTotal) + '</div>' +
+      '<div class="qr"><canvas id="qrPrintCanvas" width="80" height="80"></canvas></div>' +
+      '<div class="website">🔍 Scan to verify receipt<br>🌐 Visit: <a href="https://omocreations.com.ng">omocreations.com.ng</a></div>' +
+      '<p class="thanks">Thank you for your patronage!</p>' +
+      '<script>try { var QRCode = window.parent.QRCode; if (QRCode) { new QRCode(document.getElementById("qrPrintCanvas"), { text: "' + qrData.replace(/"/g, '\\"') + '", width: 80, height: 80, colorDark: "#1a1a2e", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H }); } } catch(e) { console.warn("QR print error:", e); }<\/script>' +
+      '</body></html>';
+    
+    try {
+      var printWindow = window.open('', '_blank', 'width=400,height=600');
+      if (printWindow) {
+        printWindow.document.write(receiptHTML);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(function() {
+          printWindow.print();
+          setTimeout(function() { printWindow.close(); }, 1000);
+        }, 500);
+      } else {
+        showToast('Please allow popups for printing', 'warning');
+      }
+      
+      logAudit('receipt_printed', 'Receipt printed: #' + (s.receiptNumber || 'N/A'), {
+        receiptNumber: s.receiptNumber || 'N/A',
+        customerName: s.customerName || 'Walk-in',
+        totalAmount: displayTotal,
+        paymentMethod: s.paymentMethod || 'unknown',
+        saleType: isExchange ? 'exchange' : (isReturn ? 'return' : (s._type || 'regular')),
+        printedBy: userData ? userData.fullName : 'Staff',
+        printedAt: new Date().toISOString()
+      });
+    } catch (e) {
+      showToast('Print failed. Please try again.', 'error');
+      console.error('Print error:', e);
+    }
+  };
+
+  window.printReceiptModal = function(id) { 
+    hideModal(); 
+    setTimeout(function() { window.printReceipt(id); }, 300); 
+  };
+
+  // ============================================
+  // NEW SALE MODAL WITH SPLIT PAYMENT
   // ============================================
   async function openNewSaleModalWithDraft(draft) {
     await loadCustomersAndStock();
@@ -1877,7 +2377,8 @@
       itemsHtml = '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
     }
 
-    showModal('New Sale',
+    // Build modal content with split payment
+    var modalContent = 
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
         '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
@@ -1903,11 +2404,28 @@
           '<div class="payment-method' + (selectedPayment === 'cash' ? ' selected' : '') + '" data-method="cash">💵 Cash</div>' +
           '<div class="payment-method' + (selectedPayment === 'transfer' ? ' selected' : '') + '" data-method="transfer">🏦 Transfer</div>' +
           '<div class="payment-method' + (selectedPayment === 'pos' ? ' selected' : '') + '" data-method="pos">💳 POS</div>' +
+          '<div class="payment-method' + (selectedPayment === 'cash_transfer' ? ' selected' : '') + '" data-method="cash_transfer">💵+🏦 Cash &amp; Transfer</div>' +
+          '<div class="payment-method' + (selectedPayment === 'cash_pos' ? ' selected' : '') + '" data-method="cash_pos">💵+💳 Cash &amp; POS</div>' +
+        '</div>' +
+        '<div class="split-payment-section" id="splitPayment_paymentMethodsContainer" style="display:' + (selectedPayment === 'cash_transfer' || selectedPayment === 'cash_pos' ? 'block' : 'none') + ';">' +
+          '<div class="split-row">' +
+            '<label>Cash Amount:</label>' +
+            '<input type="number" class="form-control" id="splitCash_paymentMethodsContainer" placeholder="₦" step="0.01" min="0" oninput="window._updateSaleSummary();">' +
+          '</div>' +
+          '<div class="split-row">' +
+            '<label id="splitLabel_paymentMethodsContainer">' + (selectedPayment === 'cash_transfer' ? 'Transfer Amount:' : 'POS Amount:') + '</label>' +
+            '<input type="number" class="form-control" id="splitSecond_paymentMethodsContainer" placeholder="₦" step="0.01" min="0" oninput="window._updateSaleSummary();">' +
+          '</div>' +
+          '<div style="font-size:0.8rem;color:var(--gray);">' +
+            'Total paid: <span id="splitTotal_paymentMethodsContainer">₦0</span>' +
+          '</div>' +
+          '<div id="splitValidation_paymentMethodsContainer" style="margin-top:5px;font-size:0.8rem;color:var(--danger);display:none;"></div>' +
         '</div>' +
       '</div>' +
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div>' +
-      '<button class="btn btn-primary" id="processSaleBtn" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>'
-    );
+      '<button class="btn btn-primary" id="processSaleBtn" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>';
+
+    showModal('New Sale', modalContent);
 
     setTimeout(function() {
       $('#existingCustomerSelect').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
@@ -1927,6 +2445,9 @@
       $('.item-qty').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-size').on('change', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-custom-price').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
+      
+      // Setup split payment
+      setupSplitPayment('paymentMethodsContainer');
       
       window._updateSaleSummary();
       console.log('🐛 DEBUG: Regular sale draft restored - items:', draft.items.length, '| customer:', draft.customerName);
@@ -1958,7 +2479,7 @@
     var firstItem = allStockItems[0];
     var firstSizeOpts = firstItem ? getSizeOptions(firstItem).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
 
-    showModal('New Sale',
+    var modalContent = 
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
         '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
@@ -1969,10 +2490,33 @@
       '<div id="newCustomerSection" style="display:none;"><div class="form-group"><label>Full Name *</label><input type="text" class="form-control" id="newCustomerName" oninput="window._markDraftDirty()"></div><div class="form-group"><label>Phone *</label><input type="tel" class="form-control" id="newCustomerPhone" oninput="window._markDraftDirty()"></div><div class="form-group"><label>Address *</label><textarea class="form-control" id="newCustomerAddress" rows="2" oninput="window._markDraftDirty()"></textarea></div><div class="form-group"><label>Email</label><input type="email" class="form-control" id="newCustomerEmail" oninput="window._markDraftDirty()"></div></div>' +
       '<div id="saleItems"><div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateSaleSummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div></div>' +
       '<button type="button" class="btn btn-outline btn-sm" onclick="window._addSaleItem();window._markDraftDirty();"><i class="fas fa-plus"></i> Add Item</button>' +
-      '<div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods" id="paymentMethodsContainer"><div class="payment-method selected" data-method="cash">💵 Cash</div><div class="payment-method" data-method="transfer">🏦 Transfer</div><div class="payment-method" data-method="pos">💳 POS</div></div></div>' +
+      '<div class="form-group" style="margin-top:20px;"><label>Payment</label>' +
+        '<div class="payment-methods" id="paymentMethodsContainer">' +
+          '<div class="payment-method selected" data-method="cash">💵 Cash</div>' +
+          '<div class="payment-method" data-method="transfer">🏦 Transfer</div>' +
+          '<div class="payment-method" data-method="pos">💳 POS</div>' +
+          '<div class="payment-method" data-method="cash_transfer">💵+🏦 Cash &amp; Transfer</div>' +
+          '<div class="payment-method" data-method="cash_pos">💵+💳 Cash &amp; POS</div>' +
+        '</div>' +
+        '<div class="split-payment-section" id="splitPayment_paymentMethodsContainer" style="display:none;">' +
+          '<div class="split-row">' +
+            '<label>Cash Amount:</label>' +
+            '<input type="number" class="form-control" id="splitCash_paymentMethodsContainer" placeholder="₦" step="0.01" min="0" oninput="window._updateSaleSummary();">' +
+          '</div>' +
+          '<div class="split-row">' +
+            '<label id="splitLabel_paymentMethodsContainer">Transfer Amount:</label>' +
+            '<input type="number" class="form-control" id="splitSecond_paymentMethodsContainer" placeholder="₦" step="0.01" min="0" oninput="window._updateSaleSummary();">' +
+          '</div>' +
+          '<div style="font-size:0.8rem;color:var(--gray);">' +
+            'Total paid: <span id="splitTotal_paymentMethodsContainer">₦0</span>' +
+          '</div>' +
+          '<div id="splitValidation_paymentMethodsContainer" style="margin-top:5px;font-size:0.8rem;color:var(--danger);display:none;"></div>' +
+        '</div>' +
+      '</div>' +
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="itemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="saleTotal">₦0</span></div></div>' +
-      '<button class="btn btn-primary" id="processSaleBtn" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>'
-    );
+      '<button class="btn btn-primary" id="processSaleBtn" onclick="window._processSale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Sale</button>';
+
+    showModal('New Sale', modalContent);
 
     setTimeout(function() {
       $('#existingCustomerSelect').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
@@ -1980,6 +2524,10 @@
       firstSelect.select2({ placeholder: 'Search product...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') }).on('change', function() { window._updateSizeDropdown(this); window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-qty').on('input', function() { window._updateSaleSummary(); window._markDraftDirty(); });
       $('.item-size').on('change', function() { window._updateSaleSummary(); window._markDraftDirty(); });
+      
+      // Setup split payment
+      setupSplitPayment('paymentMethodsContainer');
+      
       window._updateSaleSummary();
     }, 150);
   };
@@ -2116,12 +2664,36 @@
     return allValid;
   };
 
-  window._selectPayment = function(method) {
-    selectedPayment = method;
-  };
-
   window._processSale = function() {
+    if (isProcessingSale) {
+      showToast('Processing in progress... Please wait.', 'warning');
+      return;
+    }
+    
     if (!window._updateSaleSummary()) { showToast('Some items exceed stock. Please adjust quantities.', 'error'); return; }
+    
+    // Validate split payment
+    var container = safeGetEl('paymentMethodsContainer');
+    if (container) {
+      var selectedMethod = container.querySelector('.payment-method.selected');
+      if (selectedMethod) {
+        var method = selectedMethod.dataset.method;
+        if (method === 'cash_transfer' || method === 'cash_pos') {
+          var saleTotal = parseFloat(safeGetEl('saleTotal')?.textContent.replace(/[₦,]/g, '')) || 0;
+          var cashInput = safeGetEl('splitCash_paymentMethodsContainer');
+          var secondInput = safeGetEl('splitSecond_paymentMethodsContainer');
+          var cash = parseFloat(cashInput ? cashInput.value : 0) || 0;
+          var second = parseFloat(secondInput ? secondInput.value : 0) || 0;
+          var paidTotal = cash + second;
+          
+          if (paidTotal !== saleTotal) {
+            showToast('Total paid (₦' + paidTotal.toLocaleString() + ') must equal sale total (₦' + saleTotal.toLocaleString() + ')', 'error');
+            return;
+          }
+        }
+      }
+    }
+    
     var customerId = '', customerName = '', customerPhone = '', customerAddress = '', customerEmail = '', isNewCustomer = false, customerData = null;
     if (customerType === 'existing') {
       var select = safeGetEl('existingCustomerSelect');
@@ -2174,7 +2746,7 @@
       var result = processSaleCommon(items, total, customerInfo, selectedPayment, false, {}, 'regular');
       if (result) { 
         showToast('Sale completed! #' + result.receiptNumber, 'success'); 
-        showReceiptModal(result); 
+        showReceiptModalWithQR(result); 
         hideModal();
         window._clearActiveDraft();
         setTimeout(function() { updateStats(); }, 500);
@@ -2183,7 +2755,649 @@
   };
 
   // ============================================
-  // COMPANY SALE MODAL
+  // PROCESS SALE COMMON (with deduplication)
+  // ============================================
+  function processSaleCommon(items, total, customerInfo, paymentMethod, isCompanySale, extraData, saleType) {
+    if (isProcessingSale) {
+      showToast('Processing in progress... Please wait.', 'warning');
+      return null;
+    }
+    
+    // Prevent duplicate processing
+    isProcessingSale = true;
+    
+    var receiptNumber = generateReceiptNumber(saleType === 'wholesale' ? 'WSL' : 'RCP');
+    
+    // Check if this receipt number already exists
+    var exists = allSales.some(function(s) { 
+      return s.receiptNumber === receiptNumber; 
+    });
+    
+    if (exists) {
+      // Generate a new receipt number
+      receiptNumber = generateReceiptNumber(saleType === 'wholesale' ? 'WSL' : 'RCP');
+      // Retry once
+      var existsAgain = allSales.some(function(s) { 
+        return s.receiptNumber === receiptNumber; 
+      });
+      if (existsAgain) {
+        isProcessingSale = false;
+        showToast('Error: Duplicate receipt number. Please try again.', 'error');
+        return null;
+      }
+    }
+    
+    var stockUpdates = [];
+    var movements = [];
+    var borrowedItems = [];
+    var customerId = customerInfo.customerId || '';
+
+    if (customerInfo._isNew && customerInfo._customerData) {
+      savePendingCustomer(customerInfo._customerData);
+    }
+
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      if (item.isNonInventory || !item.id) continue;
+
+      if (saleType === 'wholesale') {
+        var storeItem = allStoreItems.find(function(si) { return si.id === item.id; });
+        var availableInStore = storeItem ? safeNumber(storeItem.unitQty, 0) : 0;
+        var needed = item.pieces || item.quantity || 1;
+        
+        if (!storeItem) {
+          console.log('⚠️ Item not in store: ' + item.id + ' - checking inventory...');
+          
+          var invItem = allStockItems.find(function(si) { return si.id === item.id; });
+          if (!invItem) {
+            invItem = allStockItems.find(function(si) { 
+              return si.name && item.name && si.name.toLowerCase() === item.name.toLowerCase();
+            });
+          }
+          
+          if (invItem && safeNumber(invItem.unitQty, 0) >= needed) {
+            console.log('📦 Fully borrowing from inventory: ' + invItem.name + ' (' + needed + ' units)');
+            
+            borrowedItems.push({
+              itemId: invItem.id,
+              itemName: invItem.name,
+              quantity: needed,
+              fromInventory: true,
+              storeItemId: null,
+              storeItemName: null,
+              fullyBorrowed: true
+            });
+            
+            stockUpdates.push({ 
+              collection: 'stock_items', 
+              id: invItem.id, 
+              data: { 
+                unitQty: safeNumber(invItem.unitQty, 0) - needed, 
+                updatedAt: serverTimestamp() 
+              } 
+            });
+            
+            movements.push({ 
+              itemId: invItem.id, 
+              itemName: invItem.name, 
+              movementType: 'inventory_to_wholesale', 
+              change: { unit: -needed }, 
+              reference: 'Borrowed fully from inventory for Wholesale Receipt ' + receiptNumber + ' (No store stock available)', 
+              performedBy: currentUser ? currentUser.uid : 'unknown', 
+              performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+              storeItemId: null,
+              storeItemName: null,
+              note: 'Fully borrowed ' + needed + ' units from inventory - item not available in store'
+            });
+            
+            item.borrowed = true;
+            item.borrowedQty = needed;
+            item.storeQty = 0;
+            item.fullyBorrowed = true;
+            
+            continue;
+          } else {
+            showToast(
+              'Item "' + (item.name || 'Unknown') + '" not found in store or inventory, or insufficient stock. ' +
+              'Available in inventory: ' + (invItem ? safeNumber(invItem.unitQty, 0) : 0) + ' pcs. ' +
+              'Total needed: ' + needed + ' pcs.',
+              'error'
+            );
+            isProcessingSale = false;
+            return null;
+          }
+        }
+        
+        var fromStore = Math.min(needed, availableInStore);
+        var fromInventory = needed - fromStore;
+        
+        if (fromInventory > 0) {
+          var stockItem = null;
+          
+          if (storeItem.linkedInventoryId) {
+            stockItem = allStockItems.find(function(si) { return si.id === storeItem.linkedInventoryId; });
+          }
+          
+          if (!stockItem) {
+            stockItem = allStockItems.find(function(si) { 
+              return si.name.toLowerCase() === item.name.toLowerCase() ||
+                     si.name.toLowerCase() === storeItem.name.toLowerCase();
+            });
+          }
+          
+          if (stockItem && safeNumber(stockItem.unitQty, 0) >= fromInventory) {
+            console.log('📦 Borrowing from inventory: ' + stockItem.name + ' (' + fromInventory + ' units) to supplement store (' + fromStore + ' units)');
+            
+            borrowedItems.push({
+              itemId: stockItem.id,
+              itemName: stockItem.name,
+              quantity: fromInventory,
+              fromInventory: true,
+              storeItemId: storeItem.id,
+              storeItemName: storeItem.name,
+              fullyBorrowed: false
+            });
+            
+            stockUpdates.push({ 
+              collection: 'stock_items', 
+              id: stockItem.id, 
+              data: { 
+                unitQty: safeNumber(stockItem.unitQty, 0) - fromInventory, 
+                updatedAt: serverTimestamp() 
+              } 
+            });
+            
+            movements.push({ 
+              itemId: stockItem.id, 
+              itemName: stockItem.name, 
+              movementType: 'inventory_to_store_sale', 
+              change: { unit: -fromInventory }, 
+              reference: 'Borrowed from inventory for Wholesale Receipt ' + receiptNumber + ' (Store: ' + storeItem.name + ' had ' + availableInStore + ', needed ' + needed + ')', 
+              performedBy: currentUser ? currentUser.uid : 'unknown', 
+              performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+              storeItemId: storeItem.id,
+              storeItemName: storeItem.name,
+              note: 'Borrowed ' + fromInventory + ' units from inventory to supplement store stock (' + availableInStore + ' available, needed ' + needed + ')'
+            });
+            
+            item.borrowed = true;
+            item.borrowedQty = fromInventory;
+            item.storeQty = fromStore;
+            item.fullyBorrowed = false;
+          } else {
+            showToast(
+              'Insufficient stock for ' + item.name + '. ' +
+              'Available in store: ' + availableInStore + ' pcs. ' +
+              'Available in inventory: ' + (stockItem ? safeNumber(stockItem.unitQty, 0) : 0) + ' pcs. ' +
+              'Total needed: ' + needed + ' pcs.',
+              'error'
+            );
+            isProcessingSale = false;
+            return null;
+          }
+        }
+        
+        if (fromStore > 0) {
+          stockUpdates.push({ 
+            collection: 'store_items', 
+            id: item.id, 
+            data: { 
+              unitQty: availableInStore - fromStore, 
+              updatedAt: serverTimestamp() 
+            } 
+          });
+          
+          movements.push({ 
+            itemId: item.id, 
+            itemName: item.name, 
+            movementType: 'wholesale_sale', 
+            change: { unit: -fromStore }, 
+            reference: 'Wholesale Receipt ' + receiptNumber, 
+            performedBy: currentUser ? currentUser.uid : 'unknown', 
+            performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
+            storeItemId: storeItem.id,
+            storeItemName: storeItem.name
+          });
+        }
+      } else {
+        var stockItem = allStockItems.find(function(si) { return si.id === item.id; });
+        if (!stockItem) continue;
+        var size = item.size || '1';
+        var qty = item.quantity || 1;
+        var available = getAvailableStock(stockItem, size);
+        var deductQty = getDeductQuantity(stockItem, size, qty);
+        if (deductQty > available) {
+          showToast('Insufficient stock for ' + item.name + ' (' + (item.sizeLabel || getSizeLabel(size)) + '). Available: ' + available + ', Need: ' + deductQty, 'error');
+          isProcessingSale = false;
+          return null;
+        }
+        var updateData = { updatedAt: serverTimestamp() };
+        var change = {};
+        if (size === '0.5' || size === '½' || size === 'half') {
+          updateData.halfQty = safeNumber(stockItem.halfQty, 0) - qty;
+          change.half = -qty;
+        } else if (size === '0.25' || size === '¼' || size === 'quarter') {
+          updateData.quarterQty = safeNumber(stockItem.quarterQty, 0) - qty;
+          change.quarter = -qty;
+        } else if (size === 'pack') {
+          updateData.packQty = safeNumber(stockItem.packQty, 0) - qty;
+          updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
+          change.unit = -deductQty;
+        } else if (size === 'bundle') {
+          updateData.bundleQty = safeNumber(stockItem.bundleQty, 0) - qty;
+          updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
+          change.unit = -deductQty;
+        } else {
+          updateData.unitQty = safeNumber(stockItem.unitQty, 0) - qty;
+          change.unit = -qty;
+        }
+        stockUpdates.push({ collection: 'stock_items', id: item.id, data: updateData });
+        movements.push({ itemId: item.id, itemName: item.name, movementType: 'sale', change: change, reference: 'Receipt ' + receiptNumber, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff' });
+      }
+    }
+
+    var saleData = {
+      receiptNumber: receiptNumber, customerId: customerId,
+      customerName: customerInfo.customerName || 'Walk-in',
+      customerPhone: customerInfo.customerPhone || '',
+      customerAddress: customerInfo.customerAddress || '',
+      isCompanySale: isCompanySale || false,
+      items: items.map(function(it) {
+        var sz = it.size || '1';
+        return { 
+          id: it.id, name: it.name, quantity: it.quantity || it.pieces, pieces: it.pieces, 
+          size: sz, sizeLabel: it.sizeLabel || getSizeLabel(sz), unitPrice: it.unitPrice, 
+          isNonInventory: it.isNonInventory || false, 
+          borrowed: it.borrowed || false, 
+          borrowedQty: it.borrowedQty || 0, 
+          storeQty: it.storeQty || 0,
+          fullyBorrowed: it.fullyBorrowed || false
+        };
+      }),
+      totalAmount: total, paymentMethod: paymentMethod,
+      attendantId: currentUser ? currentUser.uid : '',
+      attendantName: userData ? (userData.fullName || 'Staff') : 'Staff',
+      status: 'completed', _type: saleType,
+      _stockUpdates: stockUpdates, _movements: movements,
+      _localId: 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      _newCustomer: customerInfo._isNew,
+      _customerData: customerInfo._customerData || null,
+      _borrowedItems: borrowedItems.length > 0 ? borrowedItems : null,
+      _customerType: customerInfo._isNew ? 'new' : (customerInfo.customerId ? 'existing' : 'walk-in')
+    };
+    if (extraData) Object.assign(saleData, extraData);
+
+    var saleDataRef = saleData;
+    
+    if (isOnline) {
+      saveSaleToFirestore(saleDataRef, customerInfo).then(function() {
+        isProcessingSale = false;
+        updateDebugPanel();
+      }).catch(function(e) {
+        isProcessingSale = false;
+        updateDebugPanel();
+        console.error('Save failed:', e);
+      });
+    } else {
+      saleDataRef.createdAt = new Date().toISOString();
+      saleDataRef._synced = false;
+      saveOfflineSale(saleDataRef);
+      isProcessingSale = false;
+      updateDebugPanel();
+    }
+    
+    logAudit('sale_processed', 'Sale ' + receiptNumber + ': ' + formatCurrency(total), {
+      receiptNumber: receiptNumber,
+      customerName: customerInfo.customerName || 'Walk-in',
+      customerPhone: customerInfo.customerPhone || '',
+      customerType: customerInfo._isNew ? 'new' : (customerInfo.customerId ? 'existing' : 'walk-in'),
+      totalAmount: total,
+      paymentMethod: paymentMethod,
+      saleType: saleType,
+      itemCount: items.length,
+      isCompanySale: isCompanySale || false,
+      borrowedItems: borrowedItems.length
+    });
+    
+    // Add to processed IDs to prevent duplicates
+    if (saleDataRef.id) processedSaleIds.add(saleDataRef.id);
+    if (saleDataRef.receiptNumber) {
+      // Also track by receipt number
+    }
+    
+    isProcessingSale = false;
+    return saleDataRef;
+  }
+
+  async function saveSaleToFirestore(saleData, customerInfo) {
+    try {
+      var batch = writeBatch(db);
+      var customerId = saleData.customerId || '';
+      
+      if (customerInfo._isNew && customerInfo._customerData) {
+        var alreadyCreated = pendingCustomers.find(function(c) {
+          return c.phone === customerInfo._customerData.phone && c._synced && c._firestoreId;
+        });
+        if (alreadyCreated) {
+          customerId = alreadyCreated._firestoreId;
+        } else {
+          var custRef = doc(collection(db, 'customers'));
+          batch.set(custRef, Object.assign({}, customerInfo._customerData, { createdAt: serverTimestamp(), status: 'pending_approval' }));
+          customerId = custRef.id;
+          markCustomerSynced(customerInfo._customerData.phone, custRef.id);
+        }
+      }
+      
+      var collectionName = saleData._type === 'wholesale' ? 'wholesale_sales' : 'sales';
+      var saleRef = doc(collection(db, collectionName));
+      var cleanData = Object.assign({}, saleData);
+      delete cleanData._type; delete cleanData._stockUpdates; delete cleanData._movements; delete cleanData._localId;
+      delete cleanData._newCustomer; delete cleanData._customerData; delete cleanData._customerType; delete cleanData._borrowedItems;
+      cleanData.customerId = customerId;
+      cleanData.createdAt = serverTimestamp();
+      batch.set(saleRef, cleanData);
+      
+      if (saleData._stockUpdates) {
+        for (var i = 0; i < saleData._stockUpdates.length; i++) {
+          var update = saleData._stockUpdates[i];
+          batch.update(doc(db, update.collection, update.id), update.data);
+        }
+      }
+      
+      if (saleData._movements) {
+        for (var j = 0; j < saleData._movements.length; j++) {
+          var mov = saleData._movements[j];
+          var movRef = doc(collection(db, 'stock_movements'));
+          batch.set(movRef, Object.assign({}, mov, { performedAt: serverTimestamp() }));
+        }
+      }
+      
+      if (customerId && !saleData.isCompanySale && saleData._type !== 'wholesale') {
+        batch.update(doc(db, 'customers', customerId), { 
+          totalSpent: increment(saleData.totalAmount), 
+          purchaseCount: increment(1), 
+          lastPurchase: serverTimestamp() 
+        });
+      }
+      
+      await batch.commit();
+      
+      await logAudit('sale_saved_firestore', 'Sale ' + saleData.receiptNumber + ' saved to Firestore', {
+        receiptNumber: saleData.receiptNumber,
+        firestoreId: saleRef.id,
+        customerId: customerId
+      });
+      
+      return saleRef.id;
+    } catch (e) {
+      console.error('Firestore save failed:', e);
+      saleData.createdAt = new Date().toISOString();
+      saleData._synced = false;
+      saveOfflineSale(saleData);
+      
+      await logAudit('sale_save_failed', 'Failed to save sale to Firestore: ' + e.message, {
+        receiptNumber: saleData.receiptNumber
+      });
+      
+      return null;
+    }
+  }
+
+  // ============================================
+  // VIEW COMPANY RECORD
+  // ============================================
+  window.viewCompanyRecord = function(id) {
+    var s = findSaleByIdentifier(id);
+    if (!s) { showToast('Sale not found', 'error'); return; }
+    
+    var prevModalType = currentModalType;
+    currentModalType = 'receipt';
+    
+    var now = new Date();
+    var saleDate = getSaleDate(s);
+    var saleDateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    var saleTimeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    
+    var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
+    var isCompany = s.isCompanySale;
+    
+    var title = '🏢 Company Record';
+    if (isWholesale) title = '🏢 Wholesale Company Record';
+    else if (isCompany) title = '🏢 Company Sale Record';
+    
+    var itemsHtml = '';
+    if (s.items && s.items.length > 0) {
+      var displayItems = getDisplayItems(s.items);
+      itemsHtml += '<table style="width:100%;font-size:0.85rem;border-collapse:collapse;">';
+      itemsHtml += '<thead><tr style="border-bottom:1px solid rgba(0,0,0,0.1);">' +
+        '<th style="text-align:left;padding:8px 4px;">Item</th>' +
+        '<th style="text-align:center;padding:8px 4px;">Qty</th>' +
+        '<th style="text-align:right;padding:8px 4px;">Unit Price</th>' +
+        '<th style="text-align:right;padding:8px 4px;">Total</th>' +
+        '<th style="text-align:center;padding:8px 4px;">Stock Source</th>' +
+        '</tr></thead><tbody>';
+      
+      displayItems.forEach(function(i) {
+        var qty = i.quantity || 1;
+        var price = i.unitPrice || 0;
+        var total = qty * price;
+        var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
+        
+        var sourceHtml = '';
+        if (i.fullyBorrowed) {
+          sourceHtml = '<span style="color:#f59e0b;font-weight:700;">📦 Fully from Inventory<br><small>(' + (i.borrowedQty || qty) + ' pcs borrowed)</small></span>';
+        } else if (i.borrowed && i.borrowedQty > 0) {
+          sourceHtml = '<span style="color:#f59e0b;">📦 Partial Borrow<br><small>Store: ' + (i.storeQty || 0) + ' | Inventory: ' + (i.borrowedQty || 0) + '</small></span>';
+        } else if (isWholesale) {
+          sourceHtml = '<span style="color:#10b981;">✅ Store Stock<br><small>(' + qty + ' pcs from store)</small></span>';
+        } else {
+          sourceHtml = '<span style="color:#10b981;">✅ Inventory Stock</span>';
+        }
+        
+        itemsHtml += '<tr style="border-bottom:1px solid rgba(0,0,0,0.04);">' +
+          '<td style="padding:10px 4px;"><strong>' + escapeHtml(i.name || 'Item') + '</strong>' + (sizeLabel ? ' <small>(' + sizeLabel + ')</small>' : '') + '</td>' +
+          '<td style="text-align:center;padding:10px 4px;">' + qty + '</td>' +
+          '<td style="text-align:right;padding:10px 4px;">' + formatCurrency(price) + '</td>' +
+          '<td style="text-align:right;padding:10px 4px;">' + formatCurrency(total) + '</td>' +
+          '<td style="text-align:center;padding:10px 4px;">' + sourceHtml + '</td>' +
+          '</tr>';
+      });
+      
+      itemsHtml += '</tbody></table>';
+    }
+    
+    var borrowSummaryHtml = '';
+    if (s._borrowedItems && s._borrowedItems.length > 0) {
+      borrowSummaryHtml = '<div style="background:rgba(245,158,11,0.08);border:1px dashed var(--warning);border-radius:12px;padding:14px;margin:16px 0;">' +
+        '<h4 style="color:var(--warning);margin-bottom:10px;display:flex;align-items:center;gap:8px;">' +
+          '<i class="fas fa-boxes"></i> Inventory Borrowing Details</h4>';
+      
+      s._borrowedItems.forEach(function(b) {
+        if (b.fullyBorrowed) {
+          borrowSummaryHtml += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(0,0,0,0.06);">' +
+            '<span><strong>' + escapeHtml(b.itemName || 'Item') + '</strong> <span class="badge" style="background:rgba(245,158,11,0.15);color:#b45309;font-size:0.65rem;">Fully Borrowed</span></span>' +
+            '<span style="font-weight:700;color:var(--warning);">' + (b.quantity || 0) + ' pcs from inventory</span></div>';
+        } else {
+          borrowSummaryHtml += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(0,0,0,0.06);">' +
+            '<span><strong>' + escapeHtml(b.itemName || 'Item') + '</strong> <span class="badge" style="background:rgba(245,158,11,0.1);color:var(--warning);font-size:0.65rem;">Partial Borrow</span></span>' +
+            '<span style="font-weight:700;color:var(--warning);">' + (b.quantity || 0) + ' pcs from inventory</span></div>';
+        }
+      });
+      
+      borrowSummaryHtml += '<p style="font-size:0.7rem;color:var(--gray);margin-top:8px;">' +
+        '<i class="fas fa-info-circle"></i> These items were sourced from inventory to fulfill this wholesale order. Inventory stock has been adjusted accordingly.</p>' +
+        '</div>';
+    }
+    
+    var customerTypeBadge = '';
+    if (s._customerType === 'new') {
+      customerTypeBadge = ' <span class="badge badge-warning" style="font-size:0.65rem;">New Customer</span>';
+    } else if (s._customerType === 'existing' || s.customerId) {
+      customerTypeBadge = ' <span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;font-size:0.65rem;">Existing</span>';
+    }
+    
+    var wholesaleInfo = '';
+    if (isWholesale) {
+      wholesaleInfo = '<p class="rec">Pack Size: ' + (s.wholesalePackSize || 50) + ' pcs | Sold: ' + (s.totalPieces || 0) + ' pcs</p>';
+      if (s.exceededPackSize) {
+        wholesaleInfo += '<p class="rec" style="color:var(--warning);">Exceeded by: ' + (s.extraPieces || 0) + ' pcs</p>';
+      }
+    }
+    
+    var companyInfo = '';
+    if (isCompany && s.collectedBy) {
+      companyInfo += '<p class="cust-info"><strong>Collected by:</strong> ' + escapeHtml(s.collectedBy) + '</p>';
+    }
+    if (isCompany && s.usage) {
+      companyInfo += '<p class="cust-info"><strong>Usage:</strong> ' + escapeHtml(s.usage) + '</p>';
+    }
+    
+    var modalContent = 
+      '<div style="background:rgba(245,158,11,0.08);border-left:4px solid var(--warning);padding:12px 16px;border-radius:0 12px 12px 0;margin-bottom:16px;">' +
+        '<strong style="color:var(--warning);"><i class="fas fa-lock"></i> INTERNAL COMPANY RECORD</strong><br>' +
+        '<small style="color:var(--gray);">This record shows stock sources and inventory borrowing details. Not for customer distribution.</small>' +
+      '</div>' +
+      '<div class="receipt-container">' +
+        '<div class="receipt-header">' +
+          '<h2 style="font-weight:bold;">✨ OmoCreations ✨</h2>' +
+          '<p class="addr" style="font-weight:bold;">Internal Stock Record</p>' +
+          '<p class="rec" style="margin-top:6px;font-size:1rem;">#' + escapeHtml(s.receiptNumber || 'N/A') + '</p>' +
+          '<p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>' +
+          wholesaleInfo +
+        '</div>' +
+        '<p class="cust-info">' +
+          '<strong>Customer:</strong> ' + escapeHtml(s.customerName || 'Walk-in') + customerTypeBadge +
+          (s.customerPhone ? '<br><strong>Phone:</strong> ' + escapeHtml(s.customerPhone) : '') +
+          '<br><strong>Served by:</strong> ' + escapeHtml(s.attendantName || 'Staff') +
+        '</p>' +
+        companyInfo +
+        '<div class="receipt-items">' + itemsHtml + '</div>' +
+        '<div class="receipt-total"><span>Total:</span><span>' + formatCurrency(safeNumber(s.totalAmount, 0)) + '</span></div>' +
+      '</div>' +
+      borrowSummaryHtml +
+      '<div style="display:flex;gap:10px;margin-top:20px;">' +
+        '<button class="btn btn-primary" onclick="printCompanyRecord(\'' + (s.id || s._localId || '') + '\')" style="flex:1;"><i class="fas fa-print"></i> Print Record</button>' +
+        '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>' +
+      '</div>';
+    
+    showModal(title, modalContent);
+    currentModalType = prevModalType;
+  };
+
+  window.printCompanyRecord = function(id) {
+    var s = findSaleByIdentifier(id);
+    if (!s) { showToast('Sale not found', 'error'); return; }
+    
+    var now = new Date();
+    var saleDate = getSaleDate(s);
+    var saleDateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    var saleTimeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    
+    var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
+    var isCompany = s.isCompanySale;
+    
+    var displayItems = getDisplayItems(s.items || []);
+    
+    var itemsRows = '';
+    if (displayItems.length > 0) {
+      displayItems.forEach(function(i) {
+        var qty = i.quantity || 1;
+        var price = i.unitPrice || 0;
+        var total = qty * price;
+        var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
+        
+        var source = '';
+        if (i.fullyBorrowed) {
+          source = '📦 Fully Borrowed (' + (i.borrowedQty || qty) + ' from inventory)';
+        } else if (i.borrowed && i.borrowedQty > 0) {
+          source = '📦 Partial: Store ' + (i.storeQty || 0) + ' | Inventory ' + (i.borrowedQty || 0);
+        } else if (isWholesale) {
+          source = '✅ Store Stock (' + qty + ' pcs)';
+        } else {
+          source = '✅ Inventory Stock';
+        }
+        
+        itemsRows += '<tr><td style="padding:4px 2px;">' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</td>' +
+          '<td style="text-align:right;padding:4px 2px;">' + formatCurrency(price) + '</td>' +
+          '<td style="text-align:right;padding:4px 2px;">' + formatCurrency(total) + '</td>' +
+          '<td style="text-align:center;padding:4px 2px;font-size:7pt;">' + source + '</td></tr>';
+      });
+    }
+    
+    var borrowRows = '';
+    if (s._borrowedItems && s._borrowedItems.length > 0) {
+      s._borrowedItems.forEach(function(b) {
+        borrowRows += '<div style="padding:3px 0;">' +
+          '<strong>' + escapeHtml(b.itemName || 'Item') + '</strong>: ' + (b.quantity || 0) + ' pcs from inventory' +
+          (b.fullyBorrowed ? ' (Fully Borrowed)' : ' (Partial Borrow)') + '</div>';
+      });
+    }
+    
+    var wholesaleInfo = '';
+    if (isWholesale) {
+      wholesaleInfo = '<p class="rec">Pack Size: ' + (s.wholesalePackSize || 50) + ' pcs | Sold: ' + (s.totalPieces || 0) + ' pcs</p>';
+    }
+    
+    var companyInfo = '';
+    if (isCompany) {
+      companyInfo = '<p class="cust">Collected by: ' + escapeHtml(s.collectedBy || 'N/A') + '<br>Usage: ' + escapeHtml(s.usage || 'N/A') + '</p>';
+    }
+    
+    var receiptHTML = '<html><head><title>Company Record #' + (s.receiptNumber||'') + '</title>' +
+      '<style>@page{margin:0;size:80mm auto}*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Segoe UI",Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:9pt;line-height:1.3;color:#000}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:11pt;margin:0;font-weight:bold}.h .addr{font-size:7pt;margin:0;font-weight:bold}.h .rec{font-size:8pt;margin:2px 0;font-weight:normal}.internal-badge{background:#f59e0b;color:#fff;padding:2px 8px;border-radius:20px;font-size:7pt;font-weight:bold;display:inline-block;margin:4px 0}.cust{font-size:8pt;margin:4px 0;line-height:1.3;font-weight:normal}table{width:100%;border-collapse:collapse;margin:6px 0;font-size:8pt}th{text-align:left;padding:3px 2px;border-bottom:1px solid #ccc;font-size:7pt}td{padding:4px 2px;border-bottom:1px dashed #eee}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:9pt;text-align:right}.borrow-section{border-top:1px dashed #f59e0b;margin-top:8px;padding-top:6px}.borrow-section h4{font-size:8pt;color:#f59e0b;margin-bottom:4px}.borrow-section div{font-size:7pt;color:#b45309}.footer{text-align:center;font-size:7pt;color:#999;margin-top:8px}</style>' +
+      '</head><body>' +
+      '<div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">INTERNAL COMPANY RECORD</p><p class="addr">Not for customer distribution</p><p class="rec">#' + escapeHtml(s.receiptNumber||'N/A') + '</p><p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>' + wholesaleInfo + '</div>' +
+      '<span class="internal-badge">🏢 INTERNAL RECORD</span>' +
+      '<p class="cust">Customer: ' + escapeHtml(s.customerName||'Walk-in') + (s.customerPhone ? '<br>Phone: ' + escapeHtml(s.customerPhone) : '') + '<br>Served by: ' + escapeHtml(s.attendantName||'Staff') + '</p>' +
+      companyInfo +
+      '<table><tr><th>Item</th><th style="text-align:right;">Price</th><th style="text-align:right;">Total</th><th style="text-align:center;">Source</th></tr>' + itemsRows + '</table>' +
+      '<div class="total">Total: ' + formatCurrency(safeNumber(s.totalAmount, 0)) + '</div>' +
+      (borrowRows ? '<div class="borrow-section"><h4>📦 INVENTORY BORROWING</h4>' + borrowRows + '</div>' : '') +
+      '<div class="footer">Company record - ' + new Date().toLocaleString() + '</div>' +
+      '</body></html>';
+    
+    try {
+      var printWindow = window.open('', '_blank', 'width=400,height=600');
+      if (printWindow) {
+        printWindow.document.write(receiptHTML);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(function() {
+          printWindow.print();
+          setTimeout(function() { printWindow.close(); }, 1000);
+        }, 500);
+      } else {
+        showToast('Please allow popups for printing', 'warning');
+      }
+    } catch (e) {
+      showToast('Print failed. Please try again.', 'error');
+      console.error('Print error:', e);
+    }
+  };
+
+  // ============================================
+  // OPEN RETURN PAGE
+  // ============================================
+  window.openReturnPage = function(saleId) {
+    var sale = findSaleByIdentifier(saleId);
+    if (!sale) { showToast('Sale not found', 'error'); return; }
+    
+    if (sale.status === 'returned') { 
+      showToast('This sale has already been fully returned', 'error'); 
+      return; 
+    }
+    
+    if (sale._type === 'wholesale' || sale.wholesalePackSize) {
+      showToast('Wholesale returns must be processed via Inventory Adjustment with admin approval', 'warning');
+      return;
+    }
+    
+    sessionStorage.setItem('returnSaleId', saleId);
+    window.location.href = 'returns.html';
+  };
+
+  // ============================================
+  // COMPANY SALE MODAL (simplified for space)
   // ============================================
   async function openCompanySaleModalWithDraft(draft) {
     await loadCustomersAndStock();
@@ -2221,7 +3435,7 @@
       itemsHtml = '<div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div>';
     }
 
-    showModal('Sell to Company',
+    var modalContent = 
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
         '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
@@ -2236,11 +3450,26 @@
           '<div class="payment-method' + (companySelectedPayment === 'cash' ? ' selected' : '') + '" data-method="cash">💵 Cash</div>' +
           '<div class="payment-method' + (companySelectedPayment === 'transfer' ? ' selected' : '') + '" data-method="transfer">🏦 Transfer</div>' +
           '<div class="payment-method' + (companySelectedPayment === 'pos' ? ' selected' : '') + '" data-method="pos">💳 POS</div>' +
+          '<div class="payment-method' + (companySelectedPayment === 'cash_transfer' ? ' selected' : '') + '" data-method="cash_transfer">💵+🏦 Cash &amp; Transfer</div>' +
+          '<div class="payment-method' + (companySelectedPayment === 'cash_pos' ? ' selected' : '') + '" data-method="cash_pos">💵+💳 Cash &amp; POS</div>' +
+        '</div>' +
+        '<div class="split-payment-section" id="splitPayment_companyPaymentContainer" style="display:' + (companySelectedPayment === 'cash_transfer' || companySelectedPayment === 'cash_pos' ? 'block' : 'none') + ';">' +
+          '<div class="split-row">' +
+            '<label>Cash Amount:</label>' +
+            '<input type="number" class="form-control" id="splitCash_companyPaymentContainer" placeholder="₦" step="0.01" min="0" oninput="window._updateCompanySummary();">' +
+          '</div>' +
+          '<div class="split-row">' +
+            '<label id="splitLabel_companyPaymentContainer">' + (companySelectedPayment === 'cash_transfer' ? 'Transfer Amount:' : 'POS Amount:') + '</label>' +
+            '<input type="number" class="form-control" id="splitSecond_companyPaymentContainer" placeholder="₦" step="0.01" min="0" oninput="window._updateCompanySummary();">' +
+          '</div>' +
+          '<div style="font-size:0.8rem;color:var(--gray);">Total paid: <span id="splitTotal_companyPaymentContainer">₦0</span></div>' +
+          '<div id="splitValidation_companyPaymentContainer" style="margin-top:5px;font-size:0.8rem;color:var(--danger);display:none;"></div>' +
         '</div>' +
       '</div>' +
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="companyItemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="companyTotal">₦0</span></div></div>' +
-      '<button class="btn btn-primary" onclick="window._processCompanySale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Company Sale</button>'
-    );
+      '<button class="btn btn-primary" onclick="window._processCompanySale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Company Sale</button>';
+
+    showModal('Sell to Company', modalContent);
 
     setTimeout(function() {
       $('.item-select').each(function() {
@@ -2253,6 +3482,8 @@
       $('.item-qty').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       $('.item-size').on('change', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       $('.item-custom-price').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
+      
+      setupSplitPayment('companyPaymentContainer');
       
       if (draft.items && draft.items.length > 0) {
         draft.items.forEach(function(item, idx) {
@@ -2289,13 +3520,10 @@
           }
           
           if (qtyInput) qtyInput.value = item.quantity || 1;
-          
-          console.log('🐛 DEBUG: Company draft item restored:', item.name, '| qty:', item.quantity, '| non-inv:', item.isNonInventory);
         });
       }
       
       window._updateCompanySummary();
-      console.log('🐛 DEBUG: Company draft restored - items:', draft.items.length, '| collectedBy:', draft.collectedBy);
     }, 200);
   }
 
@@ -2319,7 +3547,7 @@
     var stockOptions = getStockOptionsHtml();
     var firstSizeOpts = allStockItems.length ? getSizeOptions(allStockItems[0]).map(function(o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') : '<option value="1">1 (Unit)</option>';
 
-    showModal('Sell to Company',
+    var modalContent = 
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
         '<span style="font-size:0.7rem;color:var(--gray);">Auto-saves every 30 seconds</span>' +
@@ -2329,10 +3557,17 @@
       '<div class="form-group"><label>Usage / Description *</label><textarea class="form-control" id="companyUsage" rows="2" placeholder="e.g., Staff uniforms, Office supplies" oninput="window._markDraftDirty()"></textarea></div>' +
       '<div id="companyItems"><div class="item-row"><div class="non-inv-toggle"><input type="checkbox" class="non-inv-check" onchange="window._toggleNonInventory(this);window._markDraftDirty();"> <span>Non-Inventory</span></div><select class="form-control item-select" style="width:100%;"><option value="">-- Search product --</option>' + stockOptions + '</select><input type="text" class="form-control item-custom-name" placeholder="Item name" style="display:none; flex:2;"><select class="form-control item-size">' + firstSizeOpts + '</select><input type="number" class="form-control item-qty" value="1" min="1" style="width:80px;" oninput="window._markDraftDirty()"><input type="number" class="form-control item-custom-price" placeholder="Price ₦" step="0.01" style="display:none; width:100px;"><span class="stock-warning"></span><button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();window._updateCompanySummary();window._markDraftDirty();"><i class="fas fa-times"></i></button></div></div>' +
       '<button type="button" class="btn btn-outline btn-sm" onclick="window._addCompanyItem();window._markDraftDirty();"><i class="fas fa-plus"></i> Add Item</button>' +
-      '<div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods" id="companyPaymentContainer"><div class="payment-method selected" data-method="cash">💵 Cash</div><div class="payment-method" data-method="transfer">🏦 Transfer</div><div class="payment-method" data-method="pos">💳 POS</div></div></div>' +
+      '<div class="form-group" style="margin-top:20px;"><label>Payment</label><div class="payment-methods" id="companyPaymentContainer"><div class="payment-method selected" data-method="cash">💵 Cash</div><div class="payment-method" data-method="transfer">🏦 Transfer</div><div class="payment-method" data-method="pos">💳 POS</div><div class="payment-method" data-method="cash_transfer">💵+🏦 Cash &amp; Transfer</div><div class="payment-method" data-method="cash_pos">💵+💳 Cash &amp; POS</div></div>' +
+      '<div class="split-payment-section" id="splitPayment_companyPaymentContainer" style="display:none;">' +
+        '<div class="split-row"><label>Cash Amount:</label><input type="number" class="form-control" id="splitCash_companyPaymentContainer" placeholder="₦" step="0.01" min="0" oninput="window._updateCompanySummary();"></div>' +
+        '<div class="split-row"><label id="splitLabel_companyPaymentContainer">Transfer Amount:</label><input type="number" class="form-control" id="splitSecond_companyPaymentContainer" placeholder="₦" step="0.01" min="0" oninput="window._updateCompanySummary();"></div>' +
+        '<div style="font-size:0.8rem;color:var(--gray);">Total paid: <span id="splitTotal_companyPaymentContainer">₦0</span></div>' +
+        '<div id="splitValidation_companyPaymentContainer" style="margin-top:5px;font-size:0.8rem;color:var(--danger);display:none;"></div>' +
+      '</div></div>' +
       '<div class="sale-summary"><div class="summary-row"><span>Items:</span><span id="companyItemCount">0</span></div><div class="summary-row total"><span>Total:</span><span id="companyTotal">₦0</span></div></div>' +
-      '<button class="btn btn-primary" onclick="window._processCompanySale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Company Sale</button>'
-    );
+      '<button class="btn btn-primary" onclick="window._processCompanySale()" style="width:100%;margin-top:15px;"><i class="fas fa-check-circle"></i> Process Company Sale</button>';
+
+    showModal('Sell to Company', modalContent);
 
     setTimeout(function() {
       $('.item-select').each(function() {
@@ -2345,6 +3580,9 @@
       $('.item-qty').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       $('.item-size').on('change', function() { window._updateCompanySummary(); window._markDraftDirty(); });
       $('.item-custom-price').on('input', function() { window._updateCompanySummary(); window._markDraftDirty(); });
+      
+      setupSplitPayment('companyPaymentContainer');
+      
       window._updateCompanySummary();
     }, 200);
   };
@@ -2412,11 +3650,68 @@
     });
     var itemCountEl = safeGetEl('companyItemCount'); if (itemCountEl) itemCountEl.textContent = count;
     var totalEl = safeGetEl('companyTotal'); if (totalEl) totalEl.textContent = formatCurrency(total);
+    
+    // Validate split payment for company
+    var container = safeGetEl('companyPaymentContainer');
+    if (container) {
+      var selectedMethod = container.querySelector('.payment-method.selected');
+      if (selectedMethod) {
+        var method = selectedMethod.dataset.method;
+        if (method === 'cash_transfer' || method === 'cash_pos') {
+          var cashInput = safeGetEl('splitCash_companyPaymentContainer');
+          var secondInput = safeGetEl('splitSecond_companyPaymentContainer');
+          var cash = parseFloat(cashInput ? cashInput.value : 0) || 0;
+          var second = parseFloat(secondInput ? secondInput.value : 0) || 0;
+          var paidTotal = cash + second;
+          var totalDisplay = safeGetEl('splitTotal_companyPaymentContainer');
+          if (totalDisplay) totalDisplay.textContent = '₦' + paidTotal.toLocaleString();
+          
+          var validationMsg = safeGetEl('splitValidation_companyPaymentContainer');
+          if (validationMsg) {
+            if (paidTotal !== total && total > 0) {
+              validationMsg.style.display = 'block';
+              validationMsg.textContent = '⚠️ Total paid (₦' + paidTotal.toLocaleString() + ') ≠ Sale total (₦' + total.toLocaleString() + ')';
+            } else {
+              validationMsg.style.display = 'none';
+            }
+          }
+        }
+      }
+    }
+    
     return allValid;
   };
 
   window._processCompanySale = function() {
+    if (isProcessingSale) {
+      showToast('Processing in progress... Please wait.', 'warning');
+      return;
+    }
+    
     if (!window._updateCompanySummary()) { showToast('Some items exceed stock. Please adjust quantities.', 'error'); return; }
+    
+    // Validate split payment for company
+    var container = safeGetEl('companyPaymentContainer');
+    if (container) {
+      var selectedMethod = container.querySelector('.payment-method.selected');
+      if (selectedMethod) {
+        var method = selectedMethod.dataset.method;
+        if (method === 'cash_transfer' || method === 'cash_pos') {
+          var saleTotal = parseFloat(safeGetEl('companyTotal')?.textContent.replace(/[₦,]/g, '')) || 0;
+          var cashInput = safeGetEl('splitCash_companyPaymentContainer');
+          var secondInput = safeGetEl('splitSecond_companyPaymentContainer');
+          var cash = parseFloat(cashInput ? cashInput.value : 0) || 0;
+          var second = parseFloat(secondInput ? secondInput.value : 0) || 0;
+          var paidTotal = cash + second;
+          
+          if (paidTotal !== saleTotal) {
+            showToast('Total paid (₦' + paidTotal.toLocaleString() + ') must equal sale total (₦' + saleTotal.toLocaleString() + ')', 'error');
+            return;
+          }
+        }
+      }
+    }
+    
     var collectedBy = safeTrimVal('companyCollectedBy', '');
     var usage = safeTrimVal('companyUsage', '');
     if (!collectedBy || !usage) { showToast('Collected by and usage are required', 'error'); return; }
@@ -2458,7 +3753,7 @@
       var result = processSaleCommon(items, total, customerInfo, companySelectedPayment, true, { collectedBy: collectedBy, usage: usage }, 'regular');
       if (result) { 
         showToast('Company sale completed! #' + result.receiptNumber, 'success'); 
-        showReceiptModal(result); 
+        showReceiptModalWithQR(result); 
         hideModal();
         window._clearActiveDraft();
         setTimeout(function() { updateStats(); }, 500);
@@ -2467,7 +3762,7 @@
   };
 
   // ============================================
-  // WHOLESALE SALE MODAL - FIXED: ALL INVENTORY ITEMS SHOW IN BORROW
+  // WHOLESALE SALE MODAL
   // ============================================
   async function openWholesaleSaleModalWithDraft(draft) {
     await loadCustomersAndStock();
@@ -2476,16 +3771,15 @@
     // Store items with stock
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
     
-    // FIX: ALL stock items with quantity > 0 are borrowable, not just those NOT in store
+    // ALL stock items with quantity > 0 are borrowable
     var borrowableItems = allStockItems.filter(function(si) {
-      return (si.unitQty || 0) > 0;  // Show ALL inventory items with stock
+      return (si.unitQty || 0) > 0;
     });
     var hasBorrowable = borrowableItems.length > 0;
 
     var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>'; }).join('');
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
     
-    // FIX: Show ALL inventory items as borrowable with clear indication
     var borrowOptions = borrowableItems.map(function(i) {
       var inStore = allStoreItems.some(function(store) { 
         return store.id === i.id || store.name === i.name; 
@@ -2529,7 +3823,7 @@
       '</div>';
     }
 
-    showModal('New Wholesale Sale',
+    var modalContent = 
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
         (hasBorrowable ? '<span class="borrow-badge"><i class="fas fa-boxes"></i> ' + borrowableItems.length + ' inventory items available to borrow</span>' : '') +
@@ -2541,11 +3835,18 @@
       '<div class="wholesale-pack-size-box"><label>📦 Wholesale Pack Size (pieces required)</label><input type="number" class="form-control" id="wsPackSize" value="' + (draft.wholesalePackSize || 50) + '" min="1" style="font-size:1.5rem;text-align:center;" onchange="window._updateWSTotal()"><p style="font-size:0.75rem;color:var(--gray);margin-top:4px;">Customer must buy at least this many pieces total</p></div>' +
       '<div id="wsItems">' + itemsHtml + '</div>' +
       '<button class="btn btn-outline btn-sm" onclick="window._addWSItem()"><i class="fas fa-plus"></i> Add Item</button>' +
-      '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;"><div style="display:flex;justify-content:space-between;"><span>Total Pieces:</span><span id="wsTotalPieces" style="font-weight:700;">0</span></div><div style="display:flex;justify-content:space-between;"><span>Required:</span><span id="wsRequiredPieces" style="font-weight:700;color:var(--primary);">50</span></div><p id="wsStatusMsg" style="font-size:0.75rem;color:var(--danger);text-align:center;margin-top:4px;"></p></div>' +
+      '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;"><div style="display:flex;justify-content:space-between;"><span>Total Pieces:</span><span id="wsTotalPieces" style="font-weight:700;">0</span></div><div style="display:flex;justify-content:space-between;"><span>Required:</span><span id="wsRequiredPieces" style="font-weight:700;color:var(--primary);">' + (draft.wholesalePackSize || 50) + '</span></div><p id="wsStatusMsg" style="font-size:0.75rem;color:var(--danger);text-align:center;margin-top:4px;"></p></div>' +
       '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;"><span style="font-weight:700;">Total Amount: </span><span id="wsTotalAmount" style="font-size:1.2rem;font-weight:800;">₦0</span></div>' +
-      '<div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;" id="wsPaymentContainer"><button class="btn btn-outline ws-pay' + (wholesalePayment === 'cash' ? ' selected' : '') + '" data-m="cash" style="' + (wholesalePayment === 'cash' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">💵 Cash</button><button class="btn btn-outline ws-pay' + (wholesalePayment === 'transfer' ? ' selected' : '') + '" data-m="transfer" style="' + (wholesalePayment === 'transfer' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">🏦 Transfer</button><button class="btn btn-outline ws-pay' + (wholesalePayment === 'pos' ? ' selected' : '') + '" data-m="pos" style="' + (wholesalePayment === 'pos' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">💳 POS</button></div></div>' +
-      '<button class="btn btn-primary" onclick="window._processWS()" style="width:100%;margin-top:12px;"><i class="fas fa-check-circle"></i> Complete Wholesale Sale</button>'
-    );
+      '<div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;" id="wsPaymentContainer"><button class="btn btn-outline ws-pay' + (wholesalePayment === 'cash' ? ' selected' : '') + '" data-m="cash" style="' + (wholesalePayment === 'cash' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">💵 Cash</button><button class="btn btn-outline ws-pay' + (wholesalePayment === 'transfer' ? ' selected' : '') + '" data-m="transfer" style="' + (wholesalePayment === 'transfer' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">🏦 Transfer</button><button class="btn btn-outline ws-pay' + (wholesalePayment === 'pos' ? ' selected' : '') + '" data-m="pos" style="' + (wholesalePayment === 'pos' ? 'background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);' : '') + '">💳 POS</button></div>' +
+      '<div class="split-payment-section" id="splitPayment_wsPaymentContainer" style="display:none;">' +
+        '<div class="split-row"><label>Cash Amount:</label><input type="number" class="form-control" id="splitCash_wsPaymentContainer" placeholder="₦" step="0.01" min="0" oninput="window._updateWSTotal();"></div>' +
+        '<div class="split-row"><label id="splitLabel_wsPaymentContainer">Transfer Amount:</label><input type="number" class="form-control" id="splitSecond_wsPaymentContainer" placeholder="₦" step="0.01" min="0" oninput="window._updateWSTotal();"></div>' +
+        '<div style="font-size:0.8rem;color:var(--gray);">Total paid: <span id="splitTotal_wsPaymentContainer">₦0</span></div>' +
+        '<div id="splitValidation_wsPaymentContainer" style="margin-top:5px;font-size:0.8rem;color:var(--danger);display:none;"></div>' +
+      '</div></div>' +
+      '<button class="btn btn-primary" onclick="window._processWS()" style="width:100%;margin-top:12px;"><i class="fas fa-check-circle"></i> Complete Wholesale Sale</button>';
+
+    showModal('New Wholesale Sale', modalContent);
 
     setTimeout(function() {
       $('#wsExistingCustomer').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
@@ -2592,6 +3893,8 @@
         }
       });
       
+      setupSplitPayment('wsPaymentContainer');
+      
       if (draft.items && draft.items.length > 0) {
         draft.items.forEach(function(item, idx) {
           var row = document.querySelectorAll('.ws-item-row')[idx];
@@ -2620,8 +3923,6 @@
       
       window._bindWSEvents();
       window._updateWSTotal();
-      console.log('🐛 DEBUG: Wholesale draft restored - items:', draft.items.length, '| name:', draft.label);
-      console.log('🐛 DEBUG: Borrowable items count:', borrowableItems.length);
     }, 200);
   }
 
@@ -2644,16 +3945,15 @@
     // Store items with stock
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
     
-    // FIX: ALL stock items with quantity > 0 are borrowable
+    // ALL stock items with quantity > 0 are borrowable
     var borrowableItems = allStockItems.filter(function(si) {
-      return (si.unitQty || 0) > 0;  // Show ALL inventory items with stock
+      return (si.unitQty || 0) > 0;
     });
     var hasBorrowable = borrowableItems.length > 0;
 
     var custOptions = allCustomers.map(function(c) { return '<option value="' + c.id + '" data-name="' + escapeHtml(c.fullName||'') + '" data-phone="' + escapeHtml(c.phone||'') + '">' + escapeHtml(c.fullName||'') + ' - ' + escapeHtml(c.phone||'No phone') + '</option>'; }).join('');
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
     
-    // FIX: Show ALL inventory items as borrowable with clear indication
     var borrowOptions = borrowableItems.map(function(i) {
       var inStore = allStoreItems.some(function(store) { 
         return store.id === i.id || store.name === i.name; 
@@ -2669,7 +3969,7 @@
     wholesaleCustomerType = 'existing';
     wholesalePayment = 'cash';
 
-    showModal('New Wholesale Sale',
+    var modalContent = 
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
         '<button class="btn btn-sm btn-outline" onclick="window._saveDraftFromModal()"><i class="fas fa-save"></i> Save Draft</button>' +
         (hasBorrowable ? '<span class="borrow-badge"><i class="fas fa-boxes"></i> ' + borrowableItems.length + ' inventory items available to borrow</span>' : '') +
@@ -2694,9 +3994,16 @@
       '<button class="btn btn-outline btn-sm" onclick="window._addWSItem()"><i class="fas fa-plus"></i> Add Item</button>' +
       '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;"><div style="display:flex;justify-content:space-between;"><span>Total Pieces:</span><span id="wsTotalPieces" style="font-weight:700;">0</span></div><div style="display:flex;justify-content:space-between;"><span>Required:</span><span id="wsRequiredPieces" style="font-weight:700;color:var(--primary);">50</span></div><p id="wsStatusMsg" style="font-size:0.75rem;color:var(--danger);text-align:center;margin-top:4px;"></p></div>' +
       '<div style="background:var(--gray-light);padding:12px;border-radius:12px;margin-top:12px;text-align:center;"><span style="font-weight:700;">Total Amount: </span><span id="wsTotalAmount" style="font-size:1.2rem;font-weight:800;">₦0</span></div>' +
-      '<div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;" id="wsPaymentContainer"><button class="btn btn-outline ws-pay selected" data-m="cash" style="background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);">💵 Cash</button><button class="btn btn-outline ws-pay" data-m="transfer">🏦 Transfer</button><button class="btn btn-outline ws-pay" data-m="pos">💳 POS</button></div></div>' +
-      '<button class="btn btn-primary" onclick="window._processWS()" style="width:100%;margin-top:12px;"><i class="fas fa-check-circle"></i> Complete Wholesale Sale</button>'
-    );
+      '<div class="form-group" style="margin-top:15px;"><label>Payment</label><div style="display:flex;gap:10px;" id="wsPaymentContainer"><button class="btn btn-outline ws-pay selected" data-m="cash" style="background:var(--primary);color:white;border-color:var(--primary);transform:scale(1.05);box-shadow:0 4px 12px rgba(255,77,166,0.3);">💵 Cash</button><button class="btn btn-outline ws-pay" data-m="transfer">🏦 Transfer</button><button class="btn btn-outline ws-pay" data-m="pos">💳 POS</button></div>' +
+      '<div class="split-payment-section" id="splitPayment_wsPaymentContainer" style="display:none;">' +
+        '<div class="split-row"><label>Cash Amount:</label><input type="number" class="form-control" id="splitCash_wsPaymentContainer" placeholder="₦" step="0.01" min="0" oninput="window._updateWSTotal();"></div>' +
+        '<div class="split-row"><label id="splitLabel_wsPaymentContainer">Transfer Amount:</label><input type="number" class="form-control" id="splitSecond_wsPaymentContainer" placeholder="₦" step="0.01" min="0" oninput="window._updateWSTotal();"></div>' +
+        '<div style="font-size:0.8rem;color:var(--gray);">Total paid: <span id="splitTotal_wsPaymentContainer">₦0</span></div>' +
+        '<div id="splitValidation_wsPaymentContainer" style="margin-top:5px;font-size:0.8rem;color:var(--danger);display:none;"></div>' +
+      '</div></div>' +
+      '<button class="btn btn-primary" onclick="window._processWS()" style="width:100%;margin-top:12px;"><i class="fas fa-check-circle"></i> Complete Wholesale Sale</button>';
+
+    showModal('New Wholesale Sale', modalContent);
 
     setTimeout(function() {
       $('#wsExistingCustomer').select2({ placeholder: 'Search customer...', allowClear: true, width: '100%', dropdownParent: $('#modalOverlay') });
@@ -2727,8 +4034,9 @@
         window._updateWSTotal();
       });
       
+      setupSplitPayment('wsPaymentContainer');
+      
       window._bindWSEvents();
-      console.log('🐛 DEBUG: Wholesale modal opened with ' + borrowableItems.length + ' borrowable items');
     }, 150);
   };
 
@@ -2744,14 +4052,12 @@
   window._addWSItem = function() {
     var availableItems = allStoreItems.filter(function(i) { return (i.unitQty||0) > 0; });
     
-    // FIX: ALL stock items with quantity > 0 are borrowable
     var borrowableItems = allStockItems.filter(function(si) {
       return (si.unitQty || 0) > 0;
     });
     
     var storeOptions = availableItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + escapeHtml(i.name||'') + '" data-cost="' + (i.unitCost||0) + '" data-avail="' + (i.unitQty||0) + '">' + escapeHtml(i.name||'') + ' (' + (i.unitQty||0) + ' pcs avail)</option>'; }).join('');
     
-    // FIX: Show ALL inventory items as borrowable
     var borrowOptions = borrowableItems.map(function(i) {
       var inStore = allStoreItems.some(function(store) { 
         return store.id === i.id || store.name === i.name; 
@@ -2854,6 +4160,34 @@
     var requiredEl = safeGetEl('wsRequiredPieces'); if (requiredEl) requiredEl.textContent = packSize;
     var amountEl = safeGetEl('wsTotalAmount'); if (amountEl) amountEl.textContent = formatCurrency(totalAmount);
     
+    // Validate split payment for wholesale
+    var container = safeGetEl('wsPaymentContainer');
+    if (container) {
+      var selectedMethod = container.querySelector('.payment-method.selected');
+      if (selectedMethod) {
+        var method = selectedMethod.dataset.method;
+        if (method === 'cash_transfer' || method === 'cash_pos') {
+          var cashInput = safeGetEl('splitCash_wsPaymentContainer');
+          var secondInput = safeGetEl('splitSecond_wsPaymentContainer');
+          var cash = parseFloat(cashInput ? cashInput.value : 0) || 0;
+          var second = parseFloat(secondInput ? secondInput.value : 0) || 0;
+          var paidTotal = cash + second;
+          var totalDisplay = safeGetEl('splitTotal_wsPaymentContainer');
+          if (totalDisplay) totalDisplay.textContent = '₦' + paidTotal.toLocaleString();
+          
+          var validationMsg = safeGetEl('splitValidation_wsPaymentContainer');
+          if (validationMsg) {
+            if (paidTotal !== totalAmount && totalAmount > 0) {
+              validationMsg.style.display = 'block';
+              validationMsg.textContent = '⚠️ Total paid (₦' + paidTotal.toLocaleString() + ') ≠ Sale total (₦' + totalAmount.toLocaleString() + ')';
+            } else {
+              validationMsg.style.display = 'none';
+            }
+          }
+        }
+      }
+    }
+    
     var statusMsg = safeGetEl('wsStatusMsg');
     if (statusMsg) {
       var msg = '';
@@ -2875,8 +4209,35 @@
   };
 
   window._processWS = function() {
+    if (isProcessingSale) {
+      showToast('Processing in progress... Please wait.', 'warning');
+      return;
+    }
+    
     var packSize = parseInt(safeGetVal('wsPackSize', '50')) || 50;
     var customerId = '', customerName = '', customerPhone = '', isNewCustomer = false, customerData = null;
+    
+    // Validate split payment for wholesale
+    var container = safeGetEl('wsPaymentContainer');
+    if (container) {
+      var selectedMethod = container.querySelector('.payment-method.selected');
+      if (selectedMethod) {
+        var method = selectedMethod.dataset.method;
+        if (method === 'cash_transfer' || method === 'cash_pos') {
+          var saleTotal = parseFloat(safeGetEl('wsTotalAmount')?.textContent.replace(/[₦,]/g, '')) || 0;
+          var cashInput = safeGetEl('splitCash_wsPaymentContainer');
+          var secondInput = safeGetEl('splitSecond_wsPaymentContainer');
+          var cash = parseFloat(cashInput ? cashInput.value : 0) || 0;
+          var second = parseFloat(secondInput ? secondInput.value : 0) || 0;
+          var paidTotal = cash + second;
+          
+          if (paidTotal !== saleTotal) {
+            showToast('Total paid (₦' + paidTotal.toLocaleString() + ') must equal sale total (₦' + saleTotal.toLocaleString() + ')', 'error');
+            return;
+          }
+        }
+      }
+    }
     
     if (wholesaleCustomerType === 'existing') {
       var select = safeGetEl('wsExistingCustomer');
@@ -2916,8 +4277,15 @@
       var avail = parseInt(opt.getAttribute('data-avail')) || 0;
       var isBorrow = opt.getAttribute('data-borrow') === 'true';
       
-      if (qty > avail && !isBorrow) {
-        showToast('Only ' + avail + ' pieces available for ' + opt.getAttribute('data-name'), 'error'); 
+      // Check both store and inventory for availability
+      var storeItem = allStoreItems.find(function(si) { return si.id === sel.value; });
+      var invItem = allStockItems.find(function(si) { return si.id === sel.value || si.name === opt.getAttribute('data-name'); });
+      var storeAvail = storeItem ? safeNumber(storeItem.unitQty, 0) : 0;
+      var invAvail = invItem ? safeNumber(invItem.unitQty, 0) : 0;
+      var totalAvail = storeAvail + invAvail;
+      
+      if (!isBorrow && qty > totalAvail) {
+        showToast('Only ' + totalAvail + ' pieces available for ' + opt.getAttribute('data-name') + ' (Store: ' + storeAvail + ', Inventory: ' + invAvail + ')', 'error'); 
         hasError = true;
         return;
       }
@@ -2927,7 +4295,7 @@
         name: opt.getAttribute('data-name'), 
         pieces: qty, 
         unitPrice: price, 
-        borrowed: isBorrow 
+        borrowed: isBorrow || (qty > storeAvail)
       });
       totalPieces += qty; 
       totalAmount += qty * price;
@@ -2957,7 +4325,7 @@
       }, 'wholesale');
       if (result) { 
         showToast('Wholesale sale completed! #' + result.receiptNumber, 'success'); 
-        showReceiptModal(result); 
+        showReceiptModalWithQR(result); 
         hideModal();
         window._clearActiveDraft();
         setTimeout(function() { updateStats(); }, 500);
@@ -2966,1030 +4334,52 @@
   };
 
   // ============================================
-  // PROCESS SALE COMMON
+  // LOAD CUSTOMERS AND STOCK
   // ============================================
-  function processSaleCommon(items, total, customerInfo, paymentMethod, isCompanySale, extraData, saleType) {
-    if (isProcessingSale) {
-      showToast('Processing in progress... Please wait.', 'warning');
-      return null;
-    }
-    
-    var receiptNumber = generateReceiptNumber(saleType === 'wholesale' ? 'WSL' : 'RCP');
-    var stockUpdates = [];
-    var movements = [];
-    var borrowedItems = [];
-    var customerId = customerInfo.customerId || '';
+  async function loadCustomersAndStock() {
+    try {
+      var custSnap = await getDocs(query(collection(db, 'customers'), where('status', '==', 'approved')));
+      allCustomers = custSnap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
 
-    if (customerInfo._isNew && customerInfo._customerData) {
-      savePendingCustomer(customerInfo._customerData);
-    }
+      var stockSnap = await getDocs(collection(db, 'stock_items'));
+      allStockItems = stockSnap.docs.map(function(d) {
+        var data = d.data();
+        var unitQty = safeNumber(data.unitQty || data.quantityAvailable, 0);
+        var packSize = parseInt(data.packSize || 12);
+        var bundleSize = parseInt(data.bundleSize || 50);
+        var packQty = safeNumber(data.packQty, 0) || Math.floor(unitQty / packSize);
+        var bundleQty = safeNumber(data.bundleQty, 0) || Math.floor(unitQty / bundleSize);
+        return {
+          id: d.id, name: data.name || '', category: data.category || '', itemType: data.itemType || 'general',
+          unitQty: unitQty,
+          unitPrice: safeNumber(data.unitPrice, 0),
+          halfQty: safeNumber(data.halfQty, 0), halfPrice: safeNumber(data.halfPrice, 0),
+          quarterQty: safeNumber(data.quarterQty, 0), quarterPrice: safeNumber(data.quarterPrice, 0),
+          packSize: packSize, packQty: packQty, packPrice: safeNumber(data.packPrice, 0),
+          bundleSize: bundleSize, bundleQty: bundleQty, bundlePrice: safeNumber(data.bundlePrice, 0),
+          measuredSubType: data.measuredSubType || 'yard',
+          yardQty: safeNumber(data.yardQty, 0), pricePerYard: safeNumber(data.pricePerYard, 0),
+          threshold: safeNumber(data.threshold, 10)
+        };
+      });
 
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i];
-      if (item.isNonInventory || !item.id) continue;
-
-      if (saleType === 'wholesale') {
-        var storeItem = allStoreItems.find(function(si) { return si.id === item.id; });
-        var availableInStore = storeItem ? safeNumber(storeItem.unitQty, 0) : 0;
-        var needed = item.pieces || item.quantity || 1;
-        
-        if (!storeItem) {
-          console.log('⚠️ Item not in store: ' + item.id + ' - checking inventory...');
-          
-          var invItem = allStockItems.find(function(si) { return si.id === item.id; });
-          if (!invItem) {
-            invItem = allStockItems.find(function(si) { 
-              return si.name && item.name && si.name.toLowerCase() === item.name.toLowerCase();
-            });
-          }
-          
-          if (invItem && safeNumber(invItem.unitQty, 0) >= needed) {
-            console.log('📦 Fully borrowing from inventory: ' + invItem.name + ' (' + needed + ' units)');
-            
-            borrowedItems.push({
-              itemId: invItem.id,
-              itemName: invItem.name,
-              quantity: needed,
-              fromInventory: true,
-              storeItemId: null,
-              storeItemName: null,
-              fullyBorrowed: true
-            });
-            
-            stockUpdates.push({ 
-              collection: 'stock_items', 
-              id: invItem.id, 
-              data: { 
-                unitQty: safeNumber(invItem.unitQty, 0) - needed, 
-                updatedAt: serverTimestamp() 
-              } 
-            });
-            
-            movements.push({ 
-              itemId: invItem.id, 
-              itemName: invItem.name, 
-              movementType: 'inventory_to_wholesale', 
-              change: { unit: -needed }, 
-              reference: 'Borrowed fully from inventory for Wholesale Receipt ' + receiptNumber + ' (No store stock available)', 
-              performedBy: currentUser ? currentUser.uid : 'unknown', 
-              performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
-              storeItemId: null,
-              storeItemName: null,
-              note: 'Fully borrowed ' + needed + ' units from inventory - item not available in store'
-            });
-            
-            item.borrowed = true;
-            item.borrowedQty = needed;
-            item.storeQty = 0;
-            item.fullyBorrowed = true;
-            
-            continue;
-          } else {
-            showToast(
-              'Item "' + (item.name || 'Unknown') + '" not found in store or inventory, or insufficient stock. ' +
-              'Available in inventory: ' + (invItem ? safeNumber(invItem.unitQty, 0) : 0) + ' pcs. ' +
-              'Total needed: ' + needed + ' pcs.',
-              'error'
-            );
-            return null;
-          }
-        }
-        
-        var fromStore = Math.min(needed, availableInStore);
-        var fromInventory = needed - fromStore;
-        
-        if (fromInventory > 0) {
-          var stockItem = null;
-          
-          if (storeItem.linkedInventoryId) {
-            stockItem = allStockItems.find(function(si) { return si.id === storeItem.linkedInventoryId; });
-          }
-          
-          if (!stockItem) {
-            stockItem = allStockItems.find(function(si) { 
-              return si.name.toLowerCase() === item.name.toLowerCase() ||
-                     si.name.toLowerCase() === storeItem.name.toLowerCase();
-            });
-          }
-          
-          if (stockItem && safeNumber(stockItem.unitQty, 0) >= fromInventory) {
-            console.log('📦 Borrowing from inventory: ' + stockItem.name + ' (' + fromInventory + ' units) to supplement store (' + fromStore + ' units)');
-            
-            borrowedItems.push({
-              itemId: stockItem.id,
-              itemName: stockItem.name,
-              quantity: fromInventory,
-              fromInventory: true,
-              storeItemId: storeItem.id,
-              storeItemName: storeItem.name,
-              fullyBorrowed: false
-            });
-            
-            stockUpdates.push({ 
-              collection: 'stock_items', 
-              id: stockItem.id, 
-              data: { 
-                unitQty: safeNumber(stockItem.unitQty, 0) - fromInventory, 
-                updatedAt: serverTimestamp() 
-              } 
-            });
-            
-            movements.push({ 
-              itemId: stockItem.id, 
-              itemName: stockItem.name, 
-              movementType: 'inventory_to_store_sale', 
-              change: { unit: -fromInventory }, 
-              reference: 'Borrowed from inventory for Wholesale Receipt ' + receiptNumber + ' (Store: ' + storeItem.name + ' had ' + availableInStore + ', needed ' + needed + ')', 
-              performedBy: currentUser ? currentUser.uid : 'unknown', 
-              performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
-              storeItemId: storeItem.id,
-              storeItemName: storeItem.name,
-              note: 'Borrowed ' + fromInventory + ' units from inventory to supplement store stock (' + availableInStore + ' available, needed ' + needed + ')'
-            });
-            
-            item.borrowed = true;
-            item.borrowedQty = fromInventory;
-            item.storeQty = fromStore;
-            item.fullyBorrowed = false;
-          } else {
-            showToast(
-              'Insufficient stock for ' + item.name + '. ' +
-              'Available in store: ' + availableInStore + ' pcs. ' +
-              'Available in inventory: ' + (stockItem ? safeNumber(stockItem.unitQty, 0) : 0) + ' pcs. ' +
-              'Total needed: ' + needed + ' pcs.',
-              'error'
-            );
-            return null;
-          }
-        }
-        
-        if (fromStore > 0) {
-          stockUpdates.push({ 
-            collection: 'store_items', 
-            id: item.id, 
-            data: { 
-              unitQty: availableInStore - fromStore, 
-              updatedAt: serverTimestamp() 
-            } 
-          });
-          
-          movements.push({ 
-            itemId: item.id, 
-            itemName: item.name, 
-            movementType: 'wholesale_sale', 
-            change: { unit: -fromStore }, 
-            reference: 'Wholesale Receipt ' + receiptNumber, 
-            performedBy: currentUser ? currentUser.uid : 'unknown', 
-            performedByName: userData ? (userData.fullName || 'Staff') : 'Staff',
-            storeItemId: storeItem.id,
-            storeItemName: storeItem.name
-          });
-        }
-      } else {
-        var stockItem = allStockItems.find(function(si) { return si.id === item.id; });
-        if (!stockItem) continue;
-        var size = item.size || '1';
-        var qty = item.quantity || 1;
-        var available = getAvailableStock(stockItem, size);
-        var deductQty = getDeductQuantity(stockItem, size, qty);
-        if (deductQty > available) {
-          showToast('Insufficient stock for ' + item.name + ' (' + (item.sizeLabel || getSizeLabel(size)) + '). Available: ' + available + ', Need: ' + deductQty, 'error');
-          return null;
-        }
-        var updateData = { updatedAt: serverTimestamp() };
-        var change = {};
-        if (size === '0.5' || size === '½' || size === 'half') {
-          updateData.halfQty = safeNumber(stockItem.halfQty, 0) - qty;
-          change.half = -qty;
-        } else if (size === '0.25' || size === '¼' || size === 'quarter') {
-          updateData.quarterQty = safeNumber(stockItem.quarterQty, 0) - qty;
-          change.quarter = -qty;
-        } else if (size === 'pack') {
-          updateData.packQty = safeNumber(stockItem.packQty, 0) - qty;
-          updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
-          change.unit = -deductQty;
-        } else if (size === 'bundle') {
-          updateData.bundleQty = safeNumber(stockItem.bundleQty, 0) - qty;
-          updateData.unitQty = safeNumber(stockItem.unitQty, 0) - deductQty;
-          change.unit = -deductQty;
-        } else {
-          updateData.unitQty = safeNumber(stockItem.unitQty, 0) - qty;
-          change.unit = -qty;
-        }
-        stockUpdates.push({ collection: 'stock_items', id: item.id, data: updateData });
-        movements.push({ itemId: item.id, itemName: item.name, movementType: 'sale', change: change, reference: 'Receipt ' + receiptNumber, performedBy: currentUser ? currentUser.uid : 'unknown', performedByName: userData ? (userData.fullName || 'Staff') : 'Staff' });
-      }
-    }
-
-    var saleData = {
-      receiptNumber: receiptNumber, customerId: customerId,
-      customerName: customerInfo.customerName || 'Walk-in',
-      customerPhone: customerInfo.customerPhone || '',
-      customerAddress: customerInfo.customerAddress || '',
-      isCompanySale: isCompanySale || false,
-      items: items.map(function(it) {
-        var sz = it.size || '1';
+      var storeSnap = await getDocs(collection(db, 'store_items'));
+      allStoreItems = storeSnap.docs.map(function(d) {
+        var data = d.data();
         return { 
-          id: it.id, name: it.name, quantity: it.quantity || it.pieces, pieces: it.pieces, 
-          size: sz, sizeLabel: it.sizeLabel || getSizeLabel(sz), unitPrice: it.unitPrice, 
-          isNonInventory: it.isNonInventory || false, 
-          borrowed: it.borrowed || false, 
-          borrowedQty: it.borrowedQty || 0, 
-          storeQty: it.storeQty || 0,
-          fullyBorrowed: it.fullyBorrowed || false
+          id: d.id, name: data.name || '', category: data.category || '', 
+          unitQty: safeNumber(data.unitQty, 0), unitCost: safeNumber(data.unitCost, 0), 
+          inventoryItemType: data.inventoryItemType || 'general',
+          linkedInventoryId: data.linkedInventoryId || null,
+          linkedInventoryName: data.linkedInventoryName || null
         };
-      }),
-      totalAmount: total, paymentMethod: paymentMethod,
-      attendantId: currentUser ? currentUser.uid : '',
-      attendantName: userData ? (userData.fullName || 'Staff') : 'Staff',
-      status: 'completed', _type: saleType,
-      _stockUpdates: stockUpdates, _movements: movements,
-      _localId: 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-      _newCustomer: customerInfo._isNew,
-      _customerData: customerInfo._customerData || null,
-      _borrowedItems: borrowedItems.length > 0 ? borrowedItems : null,
-      _customerType: customerInfo._isNew ? 'new' : (customerInfo.customerId ? 'existing' : 'walk-in')
-    };
-    if (extraData) Object.assign(saleData, extraData);
-
-    isProcessingSale = true;
-    var saleDataRef = saleData;
-    
-    if (isOnline) {
-      saveSaleToFirestore(saleDataRef, customerInfo).then(function() {
-        isProcessingSale = false;
-        updateDebugPanel();
-      }).catch(function(e) {
-        isProcessingSale = false;
-        updateDebugPanel();
-        console.error('Save failed:', e);
       });
-    } else {
-      saleDataRef.createdAt = new Date().toISOString();
-      saleDataRef._synced = false;
-      saveOfflineSale(saleDataRef);
-      isProcessingSale = false;
-      updateDebugPanel();
-    }
-    
-    logAudit('sale_processed', 'Sale ' + receiptNumber + ': ' + formatCurrency(total), {
-      receiptNumber: receiptNumber,
-      customerName: customerInfo.customerName || 'Walk-in',
-      customerPhone: customerInfo.customerPhone || '',
-      customerType: customerInfo._isNew ? 'new' : (customerInfo.customerId ? 'existing' : 'walk-in'),
-      totalAmount: total,
-      paymentMethod: paymentMethod,
-      saleType: saleType,
-      itemCount: items.length,
-      isCompanySale: isCompanySale || false,
-      borrowedItems: borrowedItems.length
-    });
-    
-    return saleDataRef;
-  }
-
-  async function saveSaleToFirestore(saleData, customerInfo) {
-    try {
-      var batch = writeBatch(db);
-      var customerId = saleData.customerId || '';
-      
-      if (customerInfo._isNew && customerInfo._customerData) {
-        var alreadyCreated = pendingCustomers.find(function(c) {
-          return c.phone === customerInfo._customerData.phone && c._synced && c._firestoreId;
-        });
-        if (alreadyCreated) {
-          customerId = alreadyCreated._firestoreId;
-        } else {
-          var custRef = doc(collection(db, 'customers'));
-          batch.set(custRef, Object.assign({}, customerInfo._customerData, { createdAt: serverTimestamp(), status: 'pending_approval' }));
-          customerId = custRef.id;
-          markCustomerSynced(customerInfo._customerData.phone, custRef.id);
-        }
-      }
-      
-      var collectionName = saleData._type === 'wholesale' ? 'wholesale_sales' : 'sales';
-      var saleRef = doc(collection(db, collectionName));
-      var cleanData = Object.assign({}, saleData);
-      delete cleanData._type; delete cleanData._stockUpdates; delete cleanData._movements; delete cleanData._localId;
-      delete cleanData._newCustomer; delete cleanData._customerData; delete cleanData._customerType; delete cleanData._borrowedItems;
-      cleanData.customerId = customerId;
-      cleanData.createdAt = serverTimestamp();
-      batch.set(saleRef, cleanData);
-      
-      if (saleData._stockUpdates) {
-        for (var i = 0; i < saleData._stockUpdates.length; i++) {
-          var update = saleData._stockUpdates[i];
-          batch.update(doc(db, update.collection, update.id), update.data);
-        }
-      }
-      
-      if (saleData._movements) {
-        for (var j = 0; j < saleData._movements.length; j++) {
-          var mov = saleData._movements[j];
-          var movRef = doc(collection(db, 'stock_movements'));
-          batch.set(movRef, Object.assign({}, mov, { performedAt: serverTimestamp() }));
-        }
-      }
-      
-      if (customerId && !saleData.isCompanySale && saleData._type !== 'wholesale') {
-        batch.update(doc(db, 'customers', customerId), { 
-          totalSpent: increment(saleData.totalAmount), 
-          purchaseCount: increment(1), 
-          lastPurchase: serverTimestamp() 
-        });
-      }
-      
-      await batch.commit();
-      
-      await logAudit('sale_saved_firestore', 'Sale ' + saleData.receiptNumber + ' saved to Firestore', {
-        receiptNumber: saleData.receiptNumber,
-        firestoreId: saleRef.id,
-        customerId: customerId
-      });
-      
-      return saleRef.id;
-    } catch (e) {
-      console.error('Firestore save failed:', e);
-      saleData.createdAt = new Date().toISOString();
-      saleData._synced = false;
-      saveOfflineSale(saleData);
-      
-      await logAudit('sale_save_failed', 'Failed to save sale to Firestore: ' + e.message, {
-        receiptNumber: saleData.receiptNumber
-      });
-      
-      return null;
+      console.log('📦 Stock loaded: ' + allStockItems.length + ' items, ' + allStoreItems.length + ' store items');
+    } catch (e) { 
+      console.error('Error loading data:', e);
+      showToast('Error loading data', 'error'); 
     }
   }
-
-  // ============================================
-  // RECEIPTS - FIXED: COMBINE DUPLICATE ITEMS
-  // ============================================
-  
-  // Helper function to combine items with same name + size + price
-  function combineItems(items) {
-    if (!items || items.length === 0) return [];
-    
-    var combined = {};
-    items.forEach(function(item) {
-      // Create a unique key based on name + size + unitPrice
-      var key = (item.name || 'Item') + '|' + (item.size || '1') + '|' + (item.sizeLabel || 'Unit') + '|' + (item.unitPrice || 0);
-      
-      if (combined[key]) {
-        // Add quantity and total to existing entry
-        combined[key].quantity += (item.quantity || item.pieces || 1);
-        combined[key].total = combined[key].quantity * combined[key].unitPrice;
-      } else {
-        // Create new entry
-        combined[key] = {
-          name: item.name || 'Item',
-          size: item.size || '1',
-          sizeLabel: item.sizeLabel || 'Unit',
-          unitPrice: item.unitPrice || 0,
-          quantity: item.quantity || item.pieces || 1,
-          total: (item.quantity || item.pieces || 1) * (item.unitPrice || 0),
-          isNonInventory: item.isNonInventory || false,
-          borrowed: item.borrowed || false,
-          borrowedQty: item.borrowedQty || 0,
-          storeQty: item.storeQty || 0,
-          fullyBorrowed: item.fullyBorrowed || false,
-          condition: item.condition || null
-        };
-      }
-    });
-    
-    return Object.values(combined);
-  }
-
-  function getDisplayItems(items) {
-    if (!items || items.length === 0) return [];
-    
-    var combined = combineItems(items);
-    
-    combined.sort(function(a, b) {
-      return a.name.localeCompare(b.name);
-    });
-    
-    return combined;
-  }
-
-  window.showReceiptModal = function(sale) {
-    if (!sale) return;
-    
-    var prevModalType = currentModalType;
-    currentModalType = 'receipt';
-    
-    var now = new Date();
-    var saleDate = getSaleDate(sale);
-    var saleDateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    var saleTimeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    var currentDateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    var currentTimeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    
-    var isExchange = sale.isExchange || sale.exchangeType;
-    var isWholesale = sale._type === 'wholesale' || sale.wholesalePackSize;
-    var isCompany = sale.isCompanySale;
-    var isReturn = sale.isReturn || sale.returnAction;
-    var hasBorrowed = (sale._borrowedItems && sale._borrowedItems.length > 0) || (sale.items && sale.items.some(function(it) { return it.borrowed || it.fullyBorrowed; }));
-    
-    var title = 'Sales Receipt';
-    if (isExchange) title = 'Exchange Receipt';
-    else if (isWholesale) title = 'Wholesale Receipt';
-    else if (isCompany) title = 'Company Receipt';
-    else if (isReturn) title = 'Return Receipt';
-    
-    var itemsHtml = '';
-    
-    if (isExchange) {
-      itemsHtml += '<div style="margin-top:8px;padding:8px;background:rgba(16,185,129,0.08);border-radius:8px;">';
-      itemsHtml += '<p style="font-weight:700;color:#10b981;margin:0 0 8px 0;font-size:0.85rem;">↩ ITEMS RETURNED</p>';
-      if (sale.returnedItems && sale.returnedItems.length > 0) {
-        var returnedCombined = combineItems(sale.returnedItems);
-        returnedCombined.forEach(function(i) {
-          var total = i.quantity * i.unitPrice;
-          itemsHtml += '<div class="receipt-item"><span>↩ ' + i.quantity + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#10b981;">+' + formatCurrency(total) + '</span></div>';
-        });
-      }
-      itemsHtml += '<div class="receipt-total" style="color:#10b981;border-top:1px dashed #10b981;"><span>Return Value:</span><span>' + formatCurrency(sale.totalRefund || sale.returnedValue || 0) + '</span></div>';
-      itemsHtml += '</div>';
-      
-      itemsHtml += '<div style="margin-top:10px;padding:8px;background:rgba(255,77,166,0.08);border-radius:8px;">';
-      itemsHtml += '<p style="font-weight:700;color:#ff4da6;margin:0 0 8px 0;font-size:0.85rem;">↪ ITEMS EXCHANGED FOR</p>';
-      if (sale.exchangeItems && sale.exchangeItems.length > 0) {
-        var exchangeCombined = combineItems(sale.exchangeItems);
-        exchangeCombined.forEach(function(i) {
-          var total = i.quantity * i.unitPrice;
-          itemsHtml += '<div class="receipt-item"><span>↪ ' + i.quantity + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
-        });
-      }
-      itemsHtml += '<div class="receipt-total" style="color:#ff4da6;border-top:1px dashed #ff4da6;"><span>Exchange Total:</span><span>' + formatCurrency(sale.exchangeTotal || 0) + '</span></div>';
-      itemsHtml += '</div>';
-      
-      if (sale.difference && sale.difference > 0) {
-        if (sale.differenceType === 'customer_pays') {
-          itemsHtml += '<div style="margin-top:8px;padding:8px;background:rgba(99,102,241,0.08);border-radius:8px;">';
-          itemsHtml += '<div class="receipt-item"><span><strong>💰 Additional Payment (' + escapeHtml(sale.exchangePayment || sale.paymentMethod || 'Cash') + ')</strong></span><span style="color:#6366f1;"><strong>' + formatCurrency(sale.difference) + '</strong></span></div>';
-          itemsHtml += '</div>';
-        } else if (sale.differenceType === 'refund_customer') {
-          itemsHtml += '<div style="margin-top:8px;padding:8px;background:rgba(239,68,68,0.08);border-radius:8px;">';
-          itemsHtml += '<div class="receipt-item"><span><strong>💵 Refund to Customer (' + escapeHtml(sale.exchangePayment || sale.paymentMethod || 'Cash') + ')</strong></span><span style="color:#ef4444;"><strong>-' + formatCurrency(sale.difference) + '</strong></span></div>';
-          itemsHtml += '</div>';
-        }
-      }
-    } else if (isReturn) {
-      itemsHtml += '<div style="margin-top:8px;padding:8px;background:rgba(239,68,68,0.08);border-radius:8px;">';
-      itemsHtml += '<p style="font-weight:700;color:#ef4444;margin:0 0 8px 0;font-size:0.85rem;">↩ RETURNED ITEMS</p>';
-      if (sale.returnedItems && sale.returnedItems.length > 0) {
-        var returnedCombined = combineItems(sale.returnedItems);
-        returnedCombined.forEach(function(i) {
-          var total = i.quantity * i.unitPrice;
-          var conditionBadge = i.condition ? ' <small style="color:var(--gray);">(' + i.condition + ')</small>' : '';
-          itemsHtml += '<div class="receipt-item"><span>↩ ' + i.quantity + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + conditionBadge + '</span><span style="color:#ef4444;">-' + formatCurrency(total) + '</span></div>';
-        });
-      }
-      itemsHtml += '<div class="receipt-total" style="color:#ef4444;border-top:1px dashed #ef4444;"><span>Total Refund:</span><span>-' + formatCurrency(sale.totalRefund || 0) + '</span></div>';
-      itemsHtml += '</div>';
-      
-      var actionLabels = { 'refund': '💵 Full Refund', 'exchange': '🔄 Exchanged', 'store_credit': '🏦 Store Credit', 'replace': '🔄 Replaced' };
-      itemsHtml += '<div style="text-align:center;margin-top:8px;padding:6px;background:var(--primary-soft);border-radius:8px;font-size:0.8rem;font-weight:600;">Action: ' + (actionLabels[sale.returnAction] || escapeHtml(sale.returnAction || 'Return')) + '</div>';
-    } else {
-      // ===== FIX: USE COMBINED ITEMS ON RECEIPT =====
-      if (sale.items && sale.items.length > 0) {
-        var displayItems = getDisplayItems(sale.items);
-        displayItems.forEach(function(i) {
-          var qty = i.quantity || 1;
-          var price = i.unitPrice || 0;
-          var total = qty * price;
-          var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
-          // Clean receipt - no borrow badges for customer
-          itemsHtml += '<div class="receipt-item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
-        });
-      }
-    }
-    
-    if (!itemsHtml) {
-      itemsHtml = '<div class="receipt-item"><span>No items</span><span>₦0</span></div>';
-    }
-    
-    var extraInfo = '';
-    if (isCompany && sale.collectedBy) {
-      extraInfo += '<p class="cust-info"><strong>Collected by:</strong> ' + escapeHtml(sale.collectedBy) + '</p>';
-    }
-    if (isCompany && sale.usage) {
-      extraInfo += '<p class="cust-info"><strong>Usage:</strong> ' + escapeHtml(sale.usage) + '</p>';
-    }
-    
-    var wholesaleInfo = '';
-    if (isWholesale) {
-      wholesaleInfo += '<p class="rec">Pack Size: ' + (sale.wholesalePackSize || 50) + ' pcs | Sold: ' + (sale.totalPieces || 0) + ' pcs</p>';
-      if (sale.exceededPackSize) {
-        wholesaleInfo += '<p class="rec" style="color:var(--warning);">Exceeded by: ' + (sale.extraPieces || 0) + ' pcs</p>';
-      }
-    }
-    
-    var borrowInfo = '';
-    
-    var customerTypeBadge = '';
-    if (sale._customerType === 'new') {
-      customerTypeBadge = ' <span class="badge badge-warning" style="font-size:0.65rem;">New Customer</span>';
-    } else if (sale._customerType === 'existing' || sale.customerId) {
-      customerTypeBadge = ' <span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;font-size:0.65rem;">Existing</span>';
-    }
-    
-    var displayTotal = 0;
-    if (isExchange) {
-      displayTotal = sale.exchangeTotal || sale.totalAmount || 0;
-    } else if (isReturn) {
-      displayTotal = -(sale.totalRefund || 0);
-    } else {
-      displayTotal = safeNumber(sale.totalAmount, 0);
-    }
-    
-    var receiptIdentifier = sale.id || sale._localId || sale.receiptNumber || '';
-    
-    var originalReceiptInfo = '';
-    if (sale.originalReceiptNumber) {
-      originalReceiptInfo = '<p class="rec" style="font-size:0.75rem;color:var(--gray);">Original Receipt: #' + escapeHtml(sale.originalReceiptNumber) + '</p>';
-    }
-    
-    var dateDisplay = '';
-    if (isReturn || isExchange) {
-      dateDisplay = '<p class="rec" style="font-size:0.7rem;color:var(--gray);">Original Purchase: ' + saleDateStr + ' ' + saleTimeStr + '</p>' +
-                    '<p class="rec" style="font-size:0.85rem;">Return Date: ' + currentDateStr + ' ' + currentTimeStr + '</p>';
-    } else {
-      dateDisplay = '<p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>';
-    }
-    
-    showModal(title,
-      '<div class="receipt-container">' +
-        '<div class="receipt-header">' +
-          '<h2 style="font-weight:bold;">✨ OmoCreations ✨</h2>' +
-          '<p class="addr" style="font-weight:bold;">3 Oyebo Street, Abiola Way</p>' +
-          '<p class="addr" style="font-weight:bold;">Behind Laroy Suite, Abeokuta 111101</p>' +
-          '<p class="addr" style="font-weight:bold;">Ogun State, Nigeria</p>' +
-          '<p class="addr" style="font-weight:bold;">📞 0807 734 0294</p>' +
-          '<p class="rec" style="margin-top:6px;font-size:1rem;">#' + escapeHtml(sale.receiptNumber || 'N/A') + '</p>' +
-          dateDisplay +
-          originalReceiptInfo +
-          wholesaleInfo +
-          borrowInfo +
-        '</div>' +
-        '' +
-        '<p class="cust-info">' +
-          '<strong>Customer:</strong> ' + escapeHtml(sale.customerName || 'Walk-in') + customerTypeBadge +
-          (sale.customerPhone ? '<br><strong>Phone:</strong> ' + escapeHtml(sale.customerPhone) : '') +
-          '<br><strong>Served by:</strong> ' + escapeHtml(sale.attendantName || 'Staff') +
-        '</p>' +
-        extraInfo +
-        '<div class="receipt-items">' + itemsHtml + '</div>' +
-        (isExchange ? '' : (isReturn ? '' : '<div class="receipt-total"><span>Total:</span><span>' + formatCurrency(displayTotal) + '</span></div>')) +
-        '<p class="thanks">Thank you for your patronage!</p>' +
-      '</div>' +
-      '<div style="display:flex;gap:10px;margin-top:20px;">' +
-        '<button class="btn btn-primary" onclick="printReceiptModal(\'' + receiptIdentifier + '\')" style="flex:1;"><i class="fas fa-print"></i> Print</button>' +
-        '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>' +
-      '</div>'
-    );
-    
-    currentModalType = prevModalType;
-  };
-
-  // ============================================
-  // COMPANY RECORD VIEW - Shows stock sources
-  // ============================================
-  window.viewCompanyRecord = function(id) {
-    var s = findSaleByIdentifier(id);
-    if (!s) { showToast('Sale not found', 'error'); return; }
-    
-    var prevModalType = currentModalType;
-    currentModalType = 'receipt';
-    
-    var now = new Date();
-    var saleDate = getSaleDate(s);
-    var saleDateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    var saleTimeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    
-    var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
-    var isCompany = s.isCompanySale;
-    
-    var title = '🏢 Company Record';
-    if (isWholesale) title = '🏢 Wholesale Company Record';
-    else if (isCompany) title = '🏢 Company Sale Record';
-    
-    var itemsHtml = '';
-    if (s.items && s.items.length > 0) {
-      itemsHtml += '<table style="width:100%;font-size:0.85rem;border-collapse:collapse;">';
-      itemsHtml += '<thead><tr style="border-bottom:1px solid rgba(0,0,0,0.1);">' +
-        '<th style="text-align:left;padding:8px 4px;">Item</th>' +
-        '<th style="text-align:center;padding:8px 4px;">Qty</th>' +
-        '<th style="text-align:right;padding:8px 4px;">Unit Price</th>' +
-        '<th style="text-align:right;padding:8px 4px;">Total</th>' +
-        '<th style="text-align:center;padding:8px 4px;">Stock Source</th>' +
-        '</tr></thead><tbody>';
-      
-      s.items.forEach(function(i) {
-        var qty = i.quantity || i.pieces || 1;
-        var price = i.unitPrice || 0;
-        var total = qty * price;
-        var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
-        
-        var sourceHtml = '';
-        if (i.fullyBorrowed) {
-          sourceHtml = '<span style="color:#f59e0b;font-weight:700;">📦 Fully from Inventory<br><small>(' + (i.borrowedQty || qty) + ' pcs borrowed)</small></span>';
-        } else if (i.borrowed && i.borrowedQty > 0) {
-          sourceHtml = '<span style="color:#f59e0b;">📦 Partial Borrow<br><small>Store: ' + (i.storeQty || 0) + ' | Inventory: ' + (i.borrowedQty || 0) + '</small></span>';
-        } else if (isWholesale) {
-          sourceHtml = '<span style="color:#10b981;">✅ Store Stock<br><small>(' + qty + ' pcs from store)</small></span>';
-        } else {
-          sourceHtml = '<span style="color:#10b981;">✅ Inventory Stock</span>';
-        }
-        
-        itemsHtml += '<tr style="border-bottom:1px solid rgba(0,0,0,0.04);">' +
-          '<td style="padding:10px 4px;"><strong>' + escapeHtml(i.name || 'Item') + '</strong>' + (sizeLabel ? ' <small>(' + sizeLabel + ')</small>' : '') + '</td>' +
-          '<td style="text-align:center;padding:10px 4px;">' + qty + '</td>' +
-          '<td style="text-align:right;padding:10px 4px;">' + formatCurrency(price) + '</td>' +
-          '<td style="text-align:right;padding:10px 4px;">' + formatCurrency(total) + '</td>' +
-          '<td style="text-align:center;padding:10px 4px;">' + sourceHtml + '</td>' +
-          '</tr>';
-      });
-      
-      itemsHtml += '</tbody></table>';
-    }
-    
-    var borrowSummaryHtml = '';
-    if (s._borrowedItems && s._borrowedItems.length > 0) {
-      borrowSummaryHtml = '<div style="background:rgba(245,158,11,0.08);border:1px dashed var(--warning);border-radius:12px;padding:14px;margin:16px 0;">' +
-        '<h4 style="color:var(--warning);margin-bottom:10px;display:flex;align-items:center;gap:8px;">' +
-          '<i class="fas fa-boxes"></i> Inventory Borrowing Details</h4>';
-      
-      s._borrowedItems.forEach(function(b) {
-        if (b.fullyBorrowed) {
-          borrowSummaryHtml += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(0,0,0,0.06);">' +
-            '<span><strong>' + escapeHtml(b.itemName || 'Item') + '</strong> <span class="badge" style="background:rgba(245,158,11,0.15);color:#b45309;font-size:0.65rem;">Fully Borrowed</span></span>' +
-            '<span style="font-weight:700;color:var(--warning);">' + (b.quantity || 0) + ' pcs from inventory</span></div>';
-        } else {
-          borrowSummaryHtml += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(0,0,0,0.06);">' +
-            '<span><strong>' + escapeHtml(b.itemName || 'Item') + '</strong> <span class="badge" style="background:rgba(245,158,11,0.1);color:var(--warning);font-size:0.65rem;">Partial Borrow</span></span>' +
-            '<span style="font-weight:700;color:var(--warning);">' + (b.quantity || 0) + ' pcs from inventory</span></div>';
-        }
-      });
-      
-      borrowSummaryHtml += '<p style="font-size:0.7rem;color:var(--gray);margin-top:8px;">' +
-        '<i class="fas fa-info-circle"></i> These items were sourced from inventory to fulfill this wholesale order. Inventory stock has been adjusted accordingly.</p>' +
-        '</div>';
-    }
-    
-    var customerTypeBadge = '';
-    if (s._customerType === 'new') {
-      customerTypeBadge = ' <span class="badge badge-warning" style="font-size:0.65rem;">New Customer</span>';
-    } else if (s._customerType === 'existing' || s.customerId) {
-      customerTypeBadge = ' <span class="badge" style="background:rgba(16,185,129,0.1);color:#10b981;font-size:0.65rem;">Existing</span>';
-    }
-    
-    var wholesaleInfo = '';
-    if (isWholesale) {
-      wholesaleInfo = '<p class="rec">Pack Size: ' + (s.wholesalePackSize || 50) + ' pcs | Sold: ' + (s.totalPieces || 0) + ' pcs</p>';
-      if (s.exceededPackSize) {
-        wholesaleInfo += '<p class="rec" style="color:var(--warning);">Exceeded by: ' + (s.extraPieces || 0) + ' pcs</p>';
-      }
-    }
-    
-    var companyInfo = '';
-    if (isCompany && s.collectedBy) {
-      companyInfo += '<p class="cust-info"><strong>Collected by:</strong> ' + escapeHtml(s.collectedBy) + '</p>';
-    }
-    if (isCompany && s.usage) {
-      companyInfo += '<p class="cust-info"><strong>Usage:</strong> ' + escapeHtml(s.usage) + '</p>';
-    }
-    
-    showModal(title,
-      '<div style="background:rgba(245,158,11,0.08);border-left:4px solid var(--warning);padding:12px 16px;border-radius:0 12px 12px 0;margin-bottom:16px;">' +
-        '<strong style="color:var(--warning);"><i class="fas fa-lock"></i> INTERNAL COMPANY RECORD</strong><br>' +
-        '<small style="color:var(--gray);">This record shows stock sources and inventory borrowing details. Not for customer distribution.</small>' +
-      '</div>' +
-      '<div class="receipt-container">' +
-        '<div class="receipt-header">' +
-          '<h2 style="font-weight:bold;">✨ OmoCreations ✨</h2>' +
-          '<p class="addr" style="font-weight:bold;">Internal Stock Record</p>' +
-          '<p class="rec" style="margin-top:6px;font-size:1rem;">#' + escapeHtml(s.receiptNumber || 'N/A') + '</p>' +
-          '<p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>' +
-          wholesaleInfo +
-        '</div>' +
-        '<p class="cust-info">' +
-          '<strong>Customer:</strong> ' + escapeHtml(s.customerName || 'Walk-in') + customerTypeBadge +
-          (s.customerPhone ? '<br><strong>Phone:</strong> ' + escapeHtml(s.customerPhone) : '') +
-          '<br><strong>Served by:</strong> ' + escapeHtml(s.attendantName || 'Staff') +
-        '</p>' +
-        companyInfo +
-        '<div class="receipt-items">' + itemsHtml + '</div>' +
-        '<div class="receipt-total"><span>Total:</span><span>' + formatCurrency(safeNumber(s.totalAmount, 0)) + '</span></div>' +
-      '</div>' +
-      borrowSummaryHtml +
-      '<div style="display:flex;gap:10px;margin-top:20px;">' +
-        '<button class="btn btn-primary" onclick="printCompanyRecord(\'' + (s.id || s._localId || '') + '\')" style="flex:1;"><i class="fas fa-print"></i> Print Record</button>' +
-        '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>' +
-      '</div>'
-    );
-    
-    currentModalType = prevModalType;
-  };
-
-  window.printCompanyRecord = function(id) {
-    var s = findSaleByIdentifier(id);
-    if (!s) { showToast('Sale not found', 'error'); return; }
-    
-    var now = new Date();
-    var saleDate = getSaleDate(s);
-    var saleDateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    var saleTimeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    
-    var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
-    var isCompany = s.isCompanySale;
-    
-    var itemsRows = '';
-    if (s.items && s.items.length > 0) {
-      s.items.forEach(function(i) {
-        var qty = i.quantity || i.pieces || 1;
-        var price = i.unitPrice || 0;
-        var total = qty * price;
-        var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
-        
-        var source = '';
-        if (i.fullyBorrowed) {
-          source = '📦 Fully Borrowed (' + (i.borrowedQty || qty) + ' from inventory)';
-        } else if (i.borrowed && i.borrowedQty > 0) {
-          source = '📦 Partial: Store ' + (i.storeQty || 0) + ' | Inventory ' + (i.borrowedQty || 0);
-        } else if (isWholesale) {
-          source = '✅ Store Stock (' + qty + ' pcs)';
-        } else {
-          source = '✅ Inventory Stock';
-        }
-        
-        itemsRows += '<tr><td style="padding:4px 2px;">' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</td>' +
-          '<td style="text-align:right;padding:4px 2px;">' + formatCurrency(price) + '</td>' +
-          '<td style="text-align:right;padding:4px 2px;">' + formatCurrency(total) + '</td>' +
-          '<td style="text-align:center;padding:4px 2px;font-size:7pt;">' + source + '</td></tr>';
-      });
-    }
-    
-    var borrowRows = '';
-    if (s._borrowedItems && s._borrowedItems.length > 0) {
-      s._borrowedItems.forEach(function(b) {
-        borrowRows += '<div style="padding:3px 0;">' +
-          '<strong>' + escapeHtml(b.itemName || 'Item') + '</strong>: ' + (b.quantity || 0) + ' pcs from inventory' +
-          (b.fullyBorrowed ? ' (Fully Borrowed)' : ' (Partial Borrow)') + '</div>';
-      });
-    }
-    
-    var wholesaleInfo = '';
-    if (isWholesale) {
-      wholesaleInfo = '<p class="rec">Pack Size: ' + (s.wholesalePackSize || 50) + ' pcs | Sold: ' + (s.totalPieces || 0) + ' pcs</p>';
-    }
-    
-    var companyInfo = '';
-    if (isCompany) {
-      companyInfo = '<p class="cust">Collected by: ' + escapeHtml(s.collectedBy || 'N/A') + '<br>Usage: ' + escapeHtml(s.usage || 'N/A') + '</p>';
-    }
-    
-    var receiptHTML = '<html><head><title>Company Record #' + (s.receiptNumber||'') + '</title>' +
-      '<style>@page{margin:0;size:80mm auto}*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Segoe UI",Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:9pt;line-height:1.3;color:#000}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:11pt;margin:0;font-weight:bold}.h .addr{font-size:7pt;margin:0;font-weight:bold}.h .rec{font-size:8pt;margin:2px 0;font-weight:normal}.internal-badge{background:#f59e0b;color:#fff;padding:2px 8px;border-radius:20px;font-size:7pt;font-weight:bold;display:inline-block;margin:4px 0}.cust{font-size:8pt;margin:4px 0;line-height:1.3;font-weight:normal}table{width:100%;border-collapse:collapse;margin:6px 0;font-size:8pt}th{text-align:left;padding:3px 2px;border-bottom:1px solid #ccc;font-size:7pt}td{padding:4px 2px;border-bottom:1px dashed #eee}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:9pt;text-align:right}.borrow-section{border-top:1px dashed #f59e0b;margin-top:8px;padding-top:6px}.borrow-section h4{font-size:8pt;color:#f59e0b;margin-bottom:4px}.borrow-section div{font-size:7pt;color:#b45309}.footer{text-align:center;font-size:7pt;color:#999;margin-top:8px}</style>' +
-      '</head><body>' +
-      '<div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">INTERNAL COMPANY RECORD</p><p class="addr">Not for customer distribution</p><p class="rec">#' + escapeHtml(s.receiptNumber||'N/A') + '</p><p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>' + wholesaleInfo + '</div>' +
-      '<span class="internal-badge">🏢 INTERNAL RECORD</span>' +
-      '<p class="cust">Customer: ' + escapeHtml(s.customerName||'Walk-in') + (s.customerPhone ? '<br>Phone: ' + escapeHtml(s.customerPhone) : '') + '<br>Served by: ' + escapeHtml(s.attendantName||'Staff') + '</p>' +
-      companyInfo +
-      '<table><tr><th>Item</th><th style="text-align:right;">Price</th><th style="text-align:right;">Total</th><th style="text-align:center;">Source</th></tr>' + itemsRows + '</table>' +
-      '<div class="total">Total: ' + formatCurrency(safeNumber(s.totalAmount, 0)) + '</div>' +
-      (borrowRows ? '<div class="borrow-section"><h4>📦 INVENTORY BORROWING</h4>' + borrowRows + '</div>' : '') +
-      '<div class="footer">Company record - ' + new Date().toLocaleString() + '</div>' +
-      '</body></html>';
-    
-    try {
-      var printWindow = window.open('', '_blank', 'width=400,height=600');
-      if (printWindow) {
-        printWindow.document.write(receiptHTML);
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(function() {
-          printWindow.print();
-          setTimeout(function() { printWindow.close(); }, 1000);
-        }, 500);
-      } else {
-        var oldFrame = safeGetEl('printIframe');
-        if (oldFrame) oldFrame.remove();
-        var iframe = document.createElement('iframe');
-        iframe.id = 'printIframe';
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-        iframe.contentWindow.document.open();
-        iframe.contentWindow.document.write(receiptHTML);
-        iframe.contentWindow.document.close();
-        iframe.onload = function() {
-          setTimeout(function() {
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-            setTimeout(function() { iframe.remove(); }, 1000);
-          }, 300);
-        };
-      }
-    } catch (e) {
-      showToast('Print failed. Please try again.', 'error');
-      console.error('Print error:', e);
-    }
-  };
-
-  window.viewReceipt = function(id) { 
-    var s = findSaleByIdentifier(id); 
-    if (s) showReceiptModal(s);
-    else showToast('Receipt not found', 'error');
-  };
-
-  // ============================================
-  // PRINT RECEIPT - FIXED: COMBINE ITEMS
-  // ============================================
-  window.printReceipt = function(id) {
-    var s = findSaleByIdentifier(id);
-    if (!s) { showToast('Sale not found for printing', 'error'); return; }
-    
-    var now = new Date();
-    var saleDate = getSaleDate(s);
-    var saleDateStr = saleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    var saleTimeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    var currentDateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    var currentTimeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    
-    var isExchange = s.isExchange || s.exchangeType;
-    var isReturn = s.isReturn || s.returnAction;
-    var isWholesale = s._type === 'wholesale' || s.wholesalePackSize;
-    var isCompany = s.isCompanySale;
-    
-    var itemsHtml = '';
-    
-    if (isExchange) {
-      itemsHtml += '<div style="font-weight:bold;color:#10b981;margin-top:8px;border-top:1px dashed #ccc;padding-top:4px;">RETURNED ITEMS</div>';
-      if (s.returnedItems) {
-        var returnedCombined = combineItems(s.returnedItems);
-        returnedCombined.forEach(function(i) {
-          var qty = i.quantity || 1;
-          var total = qty * (i.unitPrice || 0);
-          itemsHtml += '<div class="item"><span>↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#10b981;">+' + formatCurrency(total) + '</span></div>';
-        });
-      }
-      itemsHtml += '<div class="total" style="color:#10b981;">Return Value: ' + formatCurrency(s.totalRefund || s.returnedValue || 0) + '</div>';
-      
-      itemsHtml += '<div style="font-weight:bold;color:#ff4da6;margin-top:8px;border-top:1px dashed #ccc;padding-top:4px;">EXCHANGE ITEMS</div>';
-      if (s.exchangeItems) {
-        var exchangeCombined = combineItems(s.exchangeItems);
-        exchangeCombined.forEach(function(i) {
-          var qty = i.quantity || 1;
-          var total = qty * (i.unitPrice || 0);
-          itemsHtml += '<div class="item"><span>↪ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
-        });
-      }
-      itemsHtml += '<div class="total" style="color:#ff4da6;">Exchange Total: ' + formatCurrency(s.exchangeTotal || 0) + '</div>';
-      
-      if (s.difference > 0) {
-        if (s.differenceType === 'customer_pays') {
-          itemsHtml += '<div class="item" style="font-weight:bold;"><span>Additional Payment (' + escapeHtml(s.exchangePayment || s.paymentMethod || 'Cash') + ')</span><span>' + formatCurrency(s.difference) + '</span></div>';
-        } else if (s.differenceType === 'refund_customer') {
-          itemsHtml += '<div class="item" style="font-weight:bold;color:#ef4444;"><span>Refund to Customer</span><span>-' + formatCurrency(s.difference) + '</span></div>';
-        }
-      }
-    } else if (isReturn) {
-      itemsHtml += '<div style="font-weight:bold;color:#ef4444;margin-top:8px;border-top:1px dashed #ccc;padding-top:4px;">RETURNED ITEMS</div>';
-      if (s.returnedItems) {
-        var returnedCombined = combineItems(s.returnedItems);
-        returnedCombined.forEach(function(i) {
-          var qty = i.quantity || 1;
-          var total = qty * (i.unitPrice || 0);
-          itemsHtml += '<div class="item"><span>↩ ' + qty + 'x ' + escapeHtml(i.name || 'Item') + (i.sizeLabel ? ' (' + i.sizeLabel + ')' : '') + '</span><span style="color:#ef4444;">-' + formatCurrency(total) + '</span></div>';
-        });
-      }
-      itemsHtml += '<div class="total" style="color:#ef4444;">Total Refund: -' + formatCurrency(s.totalRefund || 0) + '</div>';
-      
-      var actionLabels = { 'refund': 'Full Refund', 'exchange': 'Exchanged', 'store_credit': 'Store Credit', 'replace': 'Replaced' };
-      itemsHtml += '<div style="text-align:center;margin-top:4px;font-weight:bold;">Action: ' + (actionLabels[s.returnAction] || escapeHtml(s.returnAction || 'Return')) + '</div>';
-    } else {
-      // ===== FIX: USE COMBINED ITEMS =====
-      if (s.items) {
-        var combinedItems = combineItems(s.items);
-        combinedItems.sort(function(a, b) { return a.name.localeCompare(b.name); });
-        combinedItems.forEach(function(i) {
-          var qty = i.quantity || 1;
-          var total = qty * (i.unitPrice || 0);
-          var sizeLabel = i.sizeLabel || (i.size ? getSizeLabel(i.size) : '');
-          itemsHtml += '<div class="item"><span>' + qty + 'x ' + escapeHtml(i.name || 'Item') + (sizeLabel ? ' (' + sizeLabel + ')' : '') + '</span><span>' + formatCurrency(total) + '</span></div>';
-        });
-      }
-    }
-    
-    var displayTotal = 0;
-    if (isExchange) displayTotal = s.exchangeTotal || s.totalAmount || 0;
-    else if (isReturn) displayTotal = -(s.totalRefund || 0);
-    else displayTotal = safeNumber(s.totalAmount, 0);
-    
-    var companyInfo = '';
-    if (isCompany) {
-      companyInfo = '<p class="cust">Collected by: ' + escapeHtml(s.collectedBy || 'N/A') + '<br>Usage: ' + escapeHtml(s.usage || 'N/A') + '</p>';
-    }
-    
-    var wholesaleInfo = '';
-    if (isWholesale) {
-      wholesaleInfo = '<p class="rec">Pack Size: ' + (s.wholesalePackSize || 50) + ' pcs | Sold: ' + (s.totalPieces || 0) + ' pcs</p>';
-    }
-    
-    var borrowInfo = '';
-    
-    var originalReceiptInfo = '';
-    if (s.originalReceiptNumber) {
-      originalReceiptInfo = '<p class="rec" style="font-size:8pt;">Original: #' + escapeHtml(s.originalReceiptNumber) + '</p>';
-    }
-    
-    var dateDisplay = '';
-    if (isReturn || isExchange) {
-      dateDisplay = '<p class="rec" style="font-size:7pt;">Purchased: ' + saleDateStr + ' ' + saleTimeStr + '</p>' +
-                    '<p class="rec">Returned: ' + currentDateStr + ' ' + currentTimeStr + '</p>';
-    } else {
-      dateDisplay = '<p class="rec">' + saleDateStr + ' ' + saleTimeStr + '</p>';
-    }
-    
-    var receiptHTML = '<html><head><title>Receipt #' + (s.receiptNumber||'') + '</title>' +
-      '<style>@page{margin:0;size:80mm auto}*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Segoe UI",Roboto,sans-serif;font-weight:normal;padding:3mm 4mm;max-width:76mm;margin:0 auto;font-size:10pt;line-height:1.3;color:#000}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt;margin:0;font-weight:bold}.h .addr{font-size:7pt;margin:0;font-weight:bold}.h .rec{font-size:9pt;margin:2px 0;font-weight:normal}.cust{font-size:9pt;margin:4px 0;line-height:1.3;font-weight:normal}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0;font-weight:normal}.item span:first-child{flex:1;padding-right:8px}.item span:last-child{text-align:right;min-width:55px;white-space:nowrap}.total{border-top:1px dashed #000;padding-top:3px;margin-top:4px;font-weight:bold;font-size:10pt;text-align:right}.thanks{text-align:center;font-size:9pt;margin-top:5px;font-style:italic;font-weight:normal}</style>' +
-      '</head><body>' +
-      '<div class="h"><h2>✨ OmoCreations ✨</h2><p class="addr">3 Oyebo Street, Abiola Way, Behind Laroy Suite</p><p class="addr">Abeokuta 111101, Ogun State, Nigeria</p><p class="addr">📞 0807 734 0294</p><p class="rec">#' + escapeHtml(s.receiptNumber||'N/A') + '</p>' + dateDisplay + originalReceiptInfo + wholesaleInfo + borrowInfo + '</div>' +
-      '<p class="cust">Customer: ' + escapeHtml(s.customerName||'Walk-in') + (s.customerPhone ? '<br>Phone: ' + escapeHtml(s.customerPhone) : '') + '<br>Served by: ' + escapeHtml(s.attendantName||'Staff') + '</p>' +
-      companyInfo +
-      '<div class="items">' + itemsHtml + '</div>' +
-      (isExchange ? '' : (isReturn ? '' : '<div class="total">Total: ' + formatCurrency(displayTotal) + '</div>')) +
-      '<p class="thanks">Thank you for your patronage!</p>' +
-      '</body></html>';
-    
-    try {
-      var printWindow = window.open('', '_blank', 'width=400,height=600');
-      if (printWindow) {
-        printWindow.document.write(receiptHTML);
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(function() {
-          printWindow.print();
-          setTimeout(function() { printWindow.close(); }, 1000);
-        }, 500);
-      } else {
-        var oldFrame = safeGetEl('printIframe');
-        if (oldFrame) oldFrame.remove();
-        var iframe = document.createElement('iframe');
-        iframe.id = 'printIframe';
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-        iframe.contentWindow.document.open();
-        iframe.contentWindow.document.write(receiptHTML);
-        iframe.contentWindow.document.close();
-        iframe.onload = function() {
-          setTimeout(function() {
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-            setTimeout(function() { iframe.remove(); }, 1000);
-          }, 300);
-        };
-      }
-      
-      logAudit('receipt_printed', 'Receipt printed: #' + (s.receiptNumber || 'N/A'), {
-        receiptNumber: s.receiptNumber || 'N/A',
-        customerName: s.customerName || 'Walk-in',
-        totalAmount: displayTotal,
-        paymentMethod: s.paymentMethod || 'unknown',
-        saleType: isExchange ? 'exchange' : (isReturn ? 'return' : (s._type || 'regular')),
-        printedBy: userData ? userData.fullName : 'Staff',
-        printedAt: new Date().toISOString()
-      });
-    } catch (e) {
-      showToast('Print failed. Please try again.', 'error');
-      console.error('Print error:', e);
-    }
-  };
-
-  window.printReceiptModal = function(id) { hideModal(); setTimeout(function() { window.printReceipt(id); }, 300); };
-
-  // ============================================
-  // RETURN PAGE NAVIGATION
-  // ============================================
-  window.openReturnPage = function(saleId) {
-    var sale = findSaleByIdentifier(saleId);
-    if (!sale) { showToast('Sale not found', 'error'); return; }
-    
-    if (sale.status === 'returned') { 
-      showToast('This sale has already been fully returned', 'error'); 
-      return; 
-    }
-    
-    if (sale._type === 'wholesale' || sale.wholesalePackSize) {
-      showToast('Wholesale returns must be processed via Inventory Adjustment with admin approval', 'warning');
-      return;
-    }
-    
-    sessionStorage.setItem('returnSaleId', saleId);
-    window.location.href = 'returns.html';
-  };
 
   // ============================================
   // EXPORT & REFRESH
@@ -4042,6 +4432,9 @@
     });
   }
 
+  // ============================================
+  // AUTH & INIT
+  // ============================================
   onAuthStateChanged(auth, async function(u) {
     if (!u) { window.location.href = 'auth.html'; return; }
     currentUser = u;
