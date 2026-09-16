@@ -461,7 +461,6 @@
       return num;
     } catch (e) {
       addDebugLog('Firebase return counter failed: ' + e.message + ' — using timestamp fallback', 'error');
-      // Fallback: timestamp-based unique number so process never blocks
       const fallback = 'RET-' + Date.now().toString().slice(-6);
       addDebugLog('Fallback return number: ' + fallback, 'warn');
       return fallback;
@@ -1283,7 +1282,7 @@
   };
 
   // ============================================
-  // PRINT REMAINING ITEMS RECEIPT (revised sale receipt)
+  // PRINT REMAINING ITEMS RECEIPT (revised sale receipt — live session)
   // ============================================
   window.printRemainingItemsReceipt = function() {
     if (!lastReturnContext) { showToast('No return context available', 'error'); return; }
@@ -1329,7 +1328,6 @@
       return;
     }
 
-    // Build print HTML (80mm thermal)
     var rowsHtml = '';
     remainingItems.forEach(function(it) {
       rowsHtml += '<div class="item"><span>' + it.quantity + 'x ' + escapeHtml(it.name) + (it.sizeLabel ? ' (' + escapeHtml(it.sizeLabel) + ')' : '') + '</span><span>' + formatCurrency(it.lineTotal) + '</span></div>';
@@ -1394,7 +1392,8 @@
       tbody.innerHTML = returns.map(function(r) {
         var actionLabel = r.returnAction === 'exchange' ? '🔄 Exchange' : r.returnAction === 'store_credit' ? '🏦 Credit' : r.returnAction === 'replace' ? '🔧 Replace' : '💰 Refund';
         var returnNum = r.returnNumber || (r.id ? r.id.substring(0, 8) : 'N/A');
-        return '<tr><td>' + formatDate(r.createdAt) + '</td><td><span class="badge badge-info">' + escapeHtml(returnNum) + '</span></td><td>' + escapeHtml(r.saleReceiptNumber || 'N/A') + '</td><td>' + escapeHtml(r.customerName || '-') + '</td><td>' + actionLabel + '</td><td><strong style="color:var(--danger);">' + formatCurrency(r.totalRefund || 0) + '</strong></td><td>' + escapeHtml(r.processedByName || '-') + '</td><td><button class="btn btn-sm btn-outline" onclick="viewReturnReceipt(\'' + r.id + '\')"><i class="fas fa-receipt"></i></button></td></tr>';
+        var partialTag = r.isPartialReturn ? ' <span class="badge badge-warning" style="font-size:0.6rem;">Partial</span>' : '';
+        return '<tr><td>' + formatDate(r.createdAt) + '</td><td><span class="badge badge-info">' + escapeHtml(returnNum) + '</span>' + partialTag + '</td><td>' + escapeHtml(r.saleReceiptNumber || 'N/A') + '</td><td>' + escapeHtml(r.customerName || '-') + '</td><td>' + actionLabel + '</td><td><strong style="color:var(--danger);">' + formatCurrency(r.totalRefund || 0) + '</strong></td><td>' + escapeHtml(r.processedByName || '-') + '</td><td><button class="btn btn-sm btn-outline" onclick="viewReturnReceipt(\'' + r.id + '\')"><i class="fas fa-receipt"></i></button></td></tr>';
       }).join('');
       addDebugLog('Return history loaded: ' + returns.length + ' records', 'info');
     } catch (e) { 
@@ -1404,7 +1403,7 @@
   }
 
   // ============================================
-  // VIEW RETURN RECEIPT (now fully working)
+  // VIEW RETURN RECEIPT (archived — with "Print Remaining Items" if partial)
   // ============================================
   window.viewReturnReceipt = async function(returnId) {
     addDebugLog('Viewing return receipt: ' + returnId, 'info');
@@ -1437,6 +1436,13 @@
       else diffHtml = '<p style="text-align:center;color:var(--danger);font-weight:700;">Refunded to customer: ' + formatCurrency(Math.abs(r.exchangeDifference)) + '</p>';
     }
 
+    // Only offer "Print Remaining Items" if this was a partial return AND we have a sale snapshot
+    var hasSnapshot = r.saleSnapshot && r.saleSnapshot.items && r.saleSnapshot.items.length > 0;
+    var canPrintRemaining = r.isPartialReturn === true && hasSnapshot;
+    var remainingBtnHtml = canPrintRemaining
+      ? '<button class="btn btn-success" onclick="printRemainingFromArchive(\'' + r.id + '\')" style="flex:1.5;min-width:170px;"><i class="fas fa-print"></i> Print Remaining Items</button>'
+      : '';
+
     showModal('Return Receipt #' + escapeHtml(r.returnNumber || ''),
       '<div class="receipt-container">' +
         '<div class="receipt-header"><h2>✨ OmoCreations ✨</h2><p style="font-weight:bold;">3 Oyebo Street, Abiola Way</p><p style="font-size:0.8rem;">Return Receipt</p><p class="receipt-total" style="justify-content:center;font-size:1.2rem;">#' + escapeHtml(r.returnNumber || 'N/A') + '</p></div>' +
@@ -1449,10 +1455,12 @@
         '<div class="receipt-items">' + itemsHtml + '</div>' +
         '<div class="receipt-total"><span>Total Return Value:</span><span>' + formatCurrency(r.totalRefund || 0) + '</span></div>' +
         diffHtml +
+        (canPrintRemaining ? '<p style="text-align:center;font-size:0.75rem;color:var(--warning);margin-top:10px;"><i class="fas fa-info-circle"></i> Partial return — you can reprint the customer\'s remaining-items receipt below</p>' : '') +
       '</div>' +
-      '<div style="display:flex;gap:10px;margin-top:20px;">' +
-        '<button class="btn btn-primary" onclick="printReturnReceiptFromDoc()" style="flex:1;"><i class="fas fa-print"></i> Print</button>' +
-        '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;">Close</button>' +
+      '<div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">' +
+        '<button class="btn btn-primary" onclick="printReturnReceiptFromDoc()" style="flex:1;min-width:120px;"><i class="fas fa-print"></i> Print Return</button>' +
+        remainingBtnHtml +
+        '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;min-width:100px;">Close</button>' +
       '</div>'
     );
     window._viewReturnDoc = r;
@@ -1484,6 +1492,132 @@
     var w = window.open('', '_blank', 'width=400,height=600');
     if (w) { w.document.write(receiptHTML); w.document.close(); w.focus(); setTimeout(function() { w.print(); }, 500); }
     addDebugLog('Printed archived return receipt ' + r.returnNumber, 'success');
+  };
+
+  // ============================================
+  // PRINT REMAINING ITEMS FROM ARCHIVE (any device, any time)
+  // ============================================
+  window.printRemainingFromArchive = async function(returnId) {
+    try {
+      addDebugLog('Reconstructing remaining-items receipt from archive: ' + returnId, 'info');
+      showToast('Fetching return history...', 'info');
+
+      var r = window._viewReturnDoc;
+      if (!r || r.id !== returnId) {
+        var snap = await getDoc(doc(db, 'returns', returnId));
+        if (!snap.exists()) { showToast('Return not found', 'error'); return; }
+        r = Object.assign({ id: snap.id }, snap.data());
+      }
+
+      if (!r.saleSnapshot || !r.saleSnapshot.items || r.saleSnapshot.items.length === 0) {
+        showToast('No sale snapshot stored for this return — cannot reconstruct remaining items', 'error');
+        addDebugLog('Missing saleSnapshot on return ' + returnId, 'error');
+        return;
+      }
+
+      // Fetch ALL returns for the same sale to sum up returned quantities per item index
+      var saleIdForQuery = r.saleId || '';
+      var allRelatedReturns = [];
+      if (saleIdForQuery) {
+        var q = query(collection(db, 'returns'), where('saleId', '==', saleIdForQuery));
+        var qSnap = await getDocs(q);
+        qSnap.forEach(function(d) { allRelatedReturns.push(Object.assign({ id: d.id }, d.data())); });
+      } else {
+        // Fallback: match by saleReceiptNumber
+        var q2 = query(collection(db, 'returns'), where('saleReceiptNumber', '==', r.saleReceiptNumber || ''));
+        var qSnap2 = await getDocs(q2);
+        qSnap2.forEach(function(d) { allRelatedReturns.push(Object.assign({ id: d.id }, d.data())); });
+      }
+
+      addDebugLog('Found ' + allRelatedReturns.length + ' return(s) for sale ' + (r.saleReceiptNumber || r.saleId), 'info');
+
+      // Sum returned qty per item index across ALL returns of this sale
+      var returnedMap = {};
+      allRelatedReturns.forEach(function(ret) {
+        (ret.returnedItems || []).forEach(function(item) {
+          var idx = item.originalIndex;
+          if (idx === undefined || idx === null) return;
+          returnedMap[idx] = (returnedMap[idx] || 0) + (parseInt(item.returnedQuantity) || 0);
+        });
+      });
+
+      // Compute remaining from the stored saleSnapshot
+      var sale = r.saleSnapshot;
+      var remainingItems = [];
+      var remainingTotal = 0;
+      sale.items.forEach(function(item, idx) {
+        var originalQty = parseInt(item.quantity || item.pieces || 1) || 1;
+        var returnedQty = returnedMap[idx] || 0;
+        var remainingQty = originalQty - returnedQty;
+        if (remainingQty > 0) {
+          var unitPrice = parseFloat(item.unitPrice) || 0;
+          var lineTotal = remainingQty * unitPrice;
+          remainingTotal += lineTotal;
+          remainingItems.push({
+            name: item.name || 'Item',
+            sizeLabel: item.sizeLabel || (item.size ? getSizeLabel(item.size) : ''),
+            quantity: remainingQty,
+            unitPrice: unitPrice,
+            lineTotal: lineTotal
+          });
+        }
+      });
+
+      if (remainingItems.length === 0) {
+        showToast('No remaining items — sale is fully returned', 'warning');
+        addDebugLog('Archive reprint: sale fully returned, nothing to print', 'warn');
+        return;
+      }
+
+      // Build print HTML
+      var rowsHtml = '';
+      remainingItems.forEach(function(it) {
+        rowsHtml += '<div class="item"><span>' + it.quantity + 'x ' + escapeHtml(it.name) + (it.sizeLabel ? ' (' + escapeHtml(it.sizeLabel) + ')' : '') + '</span><span>' + formatCurrency(it.lineTotal) + '</span></div>';
+        rowsHtml += '<div class="item sub"><span>' + formatCurrency(it.unitPrice) + ' each</span><span></span></div>';
+      });
+
+      var receiptHTML = '<html><head><title>Revised Receipt (Archive)</title><style>' +
+        '@page{margin:0;size:80mm auto}' +
+        '*{margin:0;padding:0;box-sizing:border-box}' +
+        'body{font-family:Segoe UI,Roboto,sans-serif;padding:3mm 4mm;font-size:10pt;line-height:1.3;color:#000}' +
+        '.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:4px;margin-bottom:6px}' +
+        '.h h2{font-size:14pt;letter-spacing:1px}' +
+        '.h p{font-size:9pt}' +
+        '.badge-revised{display:inline-block;background:#fff0f6;color:#ff4da6;border:1px solid #ff4da6;padding:2px 8px;border-radius:10px;font-size:8pt;margin-top:4px}' +
+        '.meta{font-size:8.5pt;margin-bottom:6px;border-bottom:1px dashed #ccc;padding-bottom:6px}' +
+        '.meta div{display:flex;justify-content:space-between;margin:1px 0}' +
+        '.items{margin:6px 0}' +
+        '.item{display:flex;justify-content:space-between;font-size:9pt;margin:2px 0}' +
+        '.item.sub{font-size:7.5pt;color:#666;padding-left:8px;margin-top:-1px;margin-bottom:3px}' +
+        '.total{border-top:1px dashed #000;padding-top:6px;margin-top:6px;font-weight:bold;font-size:11pt;display:flex;justify-content:space-between}' +
+        '.note{text-align:center;font-size:8pt;color:#666;margin-top:8px;font-style:italic}' +
+        '.stamp{text-align:center;font-size:8pt;color:#ff4da6;border:1px dashed #ff4da6;padding:4px;margin-top:6px;border-radius:4px}' +
+        '.archive-badge{text-align:center;font-size:7.5pt;color:#666;margin-top:4px;font-style:italic}' +
+        '</style></head><body>' +
+        '<div class="h"><h2>OmoCreations</h2><p>3 Oyebo Street, Abiola Way</p><div class="badge-revised">REVISED RECEIPT (archived)</div></div>' +
+        '<div class="meta">' +
+          '<div><span>Original Receipt:</span><span><b>' + escapeHtml(sale.receiptNumber || 'N/A') + '</b></span></div>' +
+          '<div><span>Return Ref:</span><span><b>' + escapeHtml(r.returnNumber || '') + '</b></span></div>' +
+          '<div><span>Customer:</span><span>' + escapeHtml(sale.customerName || 'Walk-in') + '</span></div>' +
+          (sale.customerPhone ? '<div><span>Phone:</span><span>' + escapeHtml(sale.customerPhone) + '</span></div>' : '') +
+          (sale.attendantName ? '<div><span>Attendant:</span><span>' + escapeHtml(sale.attendantName) + '</span></div>' : '') +
+          '<div><span>Reprinted:</span><span>' + formatDate(new Date()) + '</span></div>' +
+        '</div>' +
+        '<div class="items">' + rowsHtml + '</div>' +
+        '<div class="total"><span>REMAINING TOTAL:</span><span>' + formatCurrency(remainingTotal) + '</span></div>' +
+        '<div class="stamp">Items shown are those still with customer. Returned items excluded.</div>' +
+        '<p class="archive-badge">Reprinted from Return History · ' + allRelatedReturns.length + ' return(s) accounted</p>' +
+        '<p class="note">Thank you for shopping with OmoCreations!</p>' +
+        '</body></html>';
+
+      var w = window.open('', '_blank', 'width=400,height=650');
+      if (w) { w.document.write(receiptHTML); w.document.close(); w.focus(); setTimeout(function() { w.print(); }, 500); }
+      addDebugLog('Printed archived revised receipt: ' + remainingItems.length + ' remaining items (total ' + formatCurrency(remainingTotal) + ')', 'success');
+      showToast('Remaining-items receipt ready to print', 'success');
+    } catch (e) {
+      addDebugLog('Archive reprint failed: ' + e.message, 'error');
+      showToast('Failed to reconstruct receipt: ' + e.message, 'error');
+    }
   };
 
   window.loadReturnHistory = loadReturnHistory;
