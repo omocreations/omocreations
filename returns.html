@@ -286,7 +286,7 @@
       </div>
       <div class="table-wrapper">
         <table class="data-table">
-          <thead><tr><th>Date</th><th>Return #</th><th>Original Receipt</th><th>Customer</th><th>Action</th><th>Amount</th><th>Processed By</th><th>View</th></tr></thead>
+          <thead><tr><th>Date</th><th>Return #</th><th>Original Receipt</th><th>Customer</th><th>Action</th><th>Amount</th><th>Processed By</th><th>Actions</th></tr></thead>
           <tbody id="returnHistoryTable"><tr><td colspan="8"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></td></tr></tbody>
         </table>
       </div>
@@ -1158,7 +1158,8 @@
         saleSnapshot: saleSnapshot
       });
 
-      if (checkIfFullReturn(allItems)) { 
+      var fullReturn = checkIfFullReturn(allItems);
+      if (fullReturn) { 
         batch.update(doc(db, 'sales', currentSale.id), { status: 'returned', returnedAt: serverTimestamp(), returnedBy: currentUser?.uid || 'unknown', returnedByName: userData?.fullName || 'Staff', totalRefund: totalRefundAmount, returnReason: reason }); 
         addDebugLog('Sale marked as FULLY returned', 'success');
       } else { 
@@ -1183,13 +1184,22 @@
       lastReturnContext = {
         returnNumber: returnNumber,
         sale: saleSnapshot,
-        returnedItems: allItems.map(function(i) { return { originalIndex: i.originalIndex, returnedQuantity: i.returnedQuantity }; })
+        returnedItems: allItems.map(function(i) { return { originalIndex: i.originalIndex, returnedQuantity: i.returnedQuantity }; }),
+        isFullReturn: fullReturn
       };
 
       addDebugLog('Return ' + returnNumber + ' committed successfully! Movements: ' + movements.length, 'success');
       showToast('Return #' + returnNumber + ' processed successfully!', 'success');
       await logAudit('return_processed', 'Return ' + returnNumber + ' for Receipt ' + (currentSale.receiptNumber || ''), { totalRefund: totalRefundAmount, itemCount: allItems.length, returnNumber: returnNumber });
-      showReturnReceipt(allItems, reason, returnNumber, totalRefundAmount, totalExchangeAmount, overallExchangeDiff, exchangePaymentMethod, storeCreditAmount);
+
+      // Show receipt modal (with auto-print after modal shows)
+      showReturnReceipt(allItems, reason, returnNumber, totalRefundAmount, totalExchangeAmount, overallExchangeDiff, exchangePaymentMethod, storeCreditAmount, fullReturn);
+
+      // AUTO-PRINT: fire after modal + toast appear so staff sees confirmation first
+      setTimeout(function() {
+        autoPrintReceipts(fullReturn);
+      }, 700);
+
       resetReturnForm();
       loadReturnHistory();
     } catch (e) { 
@@ -1219,9 +1229,33 @@
   }
 
   // ============================================
-  // SHOW RETURN RECEIPT (with "Print Remaining Items" for partial returns)
+  // AUTO-PRINT RECEIPTS (partial: both slips; full: return receipt only)
   // ============================================
-  function showReturnReceipt(allItems, reason, returnNumber, totalRefund, totalExchange, exchangeDiff, exchangePayMethod, storeCredit) {
+  function autoPrintReceipts(isFullReturn) {
+    try {
+      addDebugLog('Auto-print triggered (fullReturn=' + isFullReturn + ')', 'info');
+      // Slip 1: Return Receipt
+      printReturnReceipt();
+      // Slip 2: Revised Sale Receipt (remaining items) — only for partial returns
+      if (!isFullReturn) {
+        setTimeout(function() {
+          try {
+            printRemainingItemsReceipt();
+          } catch (e) {
+            addDebugLog('Auto-print of remaining-items receipt failed: ' + e.message, 'error');
+          }
+        }, 900);
+      }
+    } catch (e) {
+      addDebugLog('Auto-print failed: ' + e.message + ' — use buttons in modal to print manually', 'error');
+      showToast('Auto-print blocked. Use the buttons in the modal to print.', 'warning');
+    }
+  }
+
+  // ============================================
+  // SHOW RETURN RECEIPT (with print buttons + "Print Both")
+  // ============================================
+  function showReturnReceipt(allItems, reason, returnNumber, totalRefund, totalExchange, exchangeDiff, exchangePayMethod, storeCredit, isFullReturn) {
     var itemsHtml = '';
     allItems.forEach(function(item) {
       var actionLabel = item.action === 'exchange' ? '🔄 Exchanged' : item.action === 'store_credit' ? '🏦 Store Credit' : item.action === 'replace' ? '🔧 Replaced' : '💰 Refunded';
@@ -1237,9 +1271,13 @@
     }
     var creditHtml = storeCredit > 0 ? '<p style="text-align:center;color:var(--warning);font-weight:700;">Store Credit Issued: ' + formatCurrency(storeCredit) + '</p>' : '';
 
-    var isPartial = !checkIfFullReturn(allItems);
+    // Buttons for modal
+    var isPartial = !isFullReturn;
     var remainingBtnHtml = isPartial
-      ? '<button class="btn btn-success" onclick="printRemainingItemsReceipt()" style="flex:1.5;min-width:160px;"><i class="fas fa-print"></i> Print Remaining Items</button>'
+      ? '<button class="btn btn-success" onclick="printRemainingItemsReceipt()" style="flex:1.2;min-width:150px;"><i class="fas fa-print"></i> Print Remaining Items</button>'
+      : '';
+    var bothBtnHtml = isPartial
+      ? '<button class="btn btn-warning" onclick="printBothReceipts()" style="flex:1.2;min-width:140px;"><i class="fas fa-print"></i> Print Both</button>'
       : '';
 
     showModal('Return Receipt',
@@ -1253,17 +1291,29 @@
         '<div class="receipt-items">' + itemsHtml + '</div>' +
         '<div class="receipt-total"><span>Total Return Value:</span><span>' + formatCurrency(totalRefund) + '</span></div>' +
         diffHtml + creditHtml +
-        (isPartial ? '<p style="text-align:center;font-size:0.75rem;color:var(--warning);margin-top:10px;"><i class="fas fa-info-circle"></i> Partial return — some items remain with customer</p>' : '') +
+        (isFullReturn ? '<p style="text-align:center;font-size:0.8rem;color:var(--danger);font-weight:700;margin-top:10px;border:2px solid var(--danger);padding:8px;border-radius:8px;">ALL ITEMS RETURNED — SALE CLOSED</p>' : '<p style="text-align:center;font-size:0.75rem;color:var(--warning);margin-top:10px;"><i class="fas fa-info-circle"></i> Partial return — some items remain with customer</p>') +
         '<p style="text-align:center;font-style:italic;margin-top:10px;">Thank you!</p>' +
       '</div>' +
       '<div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">' +
         '<button class="btn btn-primary" onclick="printReturnReceipt()" style="flex:1;min-width:120px;"><i class="fas fa-print"></i> Print Return</button>' +
         remainingBtnHtml +
+        bothBtnHtml +
         '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;min-width:100px;">Close</button>' +
       '</div>'
     );
     window._lastReturnReceiptData = { allItems, reason, returnNumber, totalRefund, totalExchange, exchangeDiff, exchangePayMethod, storeCredit };
   }
+
+  // ============================================
+  // PRINT BOTH RECEIPTS (button in modal)
+  // ============================================
+  window.printBothReceipts = function() {
+    addDebugLog('Manual "Print Both" triggered', 'info');
+    printReturnReceipt();
+    setTimeout(function() {
+      try { printRemainingItemsReceipt(); } catch (e) { addDebugLog('Second slip failed: ' + e.message, 'error'); }
+    }, 900);
+  };
 
   window.printReturnReceipt = function() {
     if (!window._lastReturnReceiptData) return;
@@ -1276,7 +1326,9 @@
         itemsHtml += '<div class="item" style="padding-left:15px;font-size:9pt;color:#ff4da6;"><span>-> ' + item.exchangeItemQty + 'x ' + escapeHtml(item.exchangeItemName) + ' (' + (item.exchangeItemSizeLabel || 'Unit') + ')</span><span>' + formatCurrency(item.exchangeItemPrice * item.exchangeItemQty) + '</span></div>';
       }
     });
-    var receiptHTML = '<html><head><title>Return #' + d.returnNumber + '</title><style>@page{margin:0;size:80mm auto}*{margin:0;padding:0}body{font-family:Segoe UI,sans-serif;padding:3mm 4mm;font-size:10pt;line-height:1.3}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0}.total{border-top:1px dashed #000;padding-top:3px;font-weight:bold;text-align:right}</style></head><body><div class="h"><h2>OmoCreations</h2><p>Return Receipt</p><p>#' + d.returnNumber + '</p></div><p>Original: ' + escapeHtml(currentSale.receiptNumber || '') + '<br>Customer: ' + escapeHtml(currentSale.customerName || '') + '<br>Reason: ' + escapeHtml(d.reason) + '</p><div class="items">' + itemsHtml + '</div><div class="total">Total: ' + formatCurrency(d.totalRefund) + '</div></body></html>';
+    var fullReturn = lastReturnContext ? lastReturnContext.isFullReturn : false;
+    var banner = fullReturn ? '<div style="text-align:center;border:2px solid #ef4444;color:#ef4444;padding:4px;margin-top:6px;font-weight:bold;font-size:9pt;">ALL ITEMS RETURNED - SALE CLOSED</div>' : '<div style="text-align:center;font-size:8pt;color:#f59e0b;margin-top:4px;">Partial return - some items remain with customer</div>';
+    var receiptHTML = '<html><head><title>Return #' + d.returnNumber + '</title><style>@page{margin:0;size:80mm auto}*{margin:0;padding:0}body{font-family:Segoe UI,sans-serif;padding:3mm 4mm;font-size:10pt;line-height:1.3}.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:3px;margin-bottom:4px}.h h2{font-size:12pt}.items{margin:4px 0}.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0}.total{border-top:1px dashed #000;padding-top:3px;font-weight:bold;text-align:right}</style></head><body><div class="h"><h2>OmoCreations</h2><p>Return Receipt</p><p>#' + d.returnNumber + '</p></div><p>Original: ' + escapeHtml(currentSale ? (currentSale.receiptNumber || '') : '') + '<br>Customer: ' + escapeHtml(currentSale ? (currentSale.customerName || '') : '') + '<br>Reason: ' + escapeHtml(d.reason) + '</p><div class="items">' + itemsHtml + '</div><div class="total">Total: ' + formatCurrency(d.totalRefund) + '</div>' + banner + '</body></html>';
     var w = window.open('', '_blank', 'width=400,height=600');
     if (w) { w.document.write(receiptHTML); w.document.close(); w.focus(); setTimeout(function() { w.print(); }, 500); }
   };
@@ -1392,8 +1444,12 @@
       tbody.innerHTML = returns.map(function(r) {
         var actionLabel = r.returnAction === 'exchange' ? '🔄 Exchange' : r.returnAction === 'store_credit' ? '🏦 Credit' : r.returnAction === 'replace' ? '🔧 Replace' : '💰 Refund';
         var returnNum = r.returnNumber || (r.id ? r.id.substring(0, 8) : 'N/A');
-        var partialTag = r.isPartialReturn ? ' <span class="badge badge-warning" style="font-size:0.6rem;">Partial</span>' : '';
-        return '<tr><td>' + formatDate(r.createdAt) + '</td><td><span class="badge badge-info">' + escapeHtml(returnNum) + '</span>' + partialTag + '</td><td>' + escapeHtml(r.saleReceiptNumber || 'N/A') + '</td><td>' + escapeHtml(r.customerName || '-') + '</td><td>' + actionLabel + '</td><td><strong style="color:var(--danger);">' + formatCurrency(r.totalRefund || 0) + '</strong></td><td>' + escapeHtml(r.processedByName || '-') + '</td><td><button class="btn btn-sm btn-outline" onclick="viewReturnReceipt(\'' + r.id + '\')"><i class="fas fa-receipt"></i></button></td></tr>';
+        var partialTag = r.isPartialReturn ? ' <span class="badge badge-warning" style="font-size:0.6rem;">Partial</span>' : ' <span class="badge badge-danger" style="font-size:0.6rem;">Full</span>';
+        var canPrintSale = r.saleSnapshot && r.saleSnapshot.items && r.saleSnapshot.items.length > 0;
+        var saleReceiptBtn = canPrintSale
+          ? '<button class="btn btn-sm btn-success" onclick="event.stopPropagation();printArchivedSaleReceipt(\'' + r.id + '\')" title="Print customer sale receipt (remaining items)" style="margin-left:4px;"><i class="fas fa-file-invoice"></i> Sale Receipt</button>'
+          : '';
+        return '<tr><td>' + formatDate(r.createdAt) + '</td><td><span class="badge badge-info">' + escapeHtml(returnNum) + '</span>' + partialTag + '</td><td>' + escapeHtml(r.saleReceiptNumber || 'N/A') + '</td><td>' + escapeHtml(r.customerName || '-') + '</td><td>' + actionLabel + '</td><td><strong style="color:var(--danger);">' + formatCurrency(r.totalRefund || 0) + '</strong></td><td>' + escapeHtml(r.processedByName || '-') + '</td><td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();viewReturnReceipt(\'' + r.id + '\')" title="View return receipt"><i class="fas fa-receipt"></i></button>' + saleReceiptBtn + '</td></tr>';
       }).join('');
       addDebugLog('Return history loaded: ' + returns.length + ' records', 'info');
     } catch (e) { 
@@ -1436,11 +1492,14 @@
       else diffHtml = '<p style="text-align:center;color:var(--danger);font-weight:700;">Refunded to customer: ' + formatCurrency(Math.abs(r.exchangeDifference)) + '</p>';
     }
 
-    // Only offer "Print Remaining Items" if this was a partial return AND we have a sale snapshot
     var hasSnapshot = r.saleSnapshot && r.saleSnapshot.items && r.saleSnapshot.items.length > 0;
     var canPrintRemaining = r.isPartialReturn === true && hasSnapshot;
+    var canPrintSale = hasSnapshot;
     var remainingBtnHtml = canPrintRemaining
-      ? '<button class="btn btn-success" onclick="printRemainingFromArchive(\'' + r.id + '\')" style="flex:1.5;min-width:170px;"><i class="fas fa-print"></i> Print Remaining Items</button>'
+      ? '<button class="btn btn-success" onclick="printRemainingFromArchive(\'' + r.id + '\')" style="flex:1.2;min-width:170px;"><i class="fas fa-print"></i> Print Remaining Items</button>'
+      : '';
+    var saleReceiptBtnHtml = canPrintSale
+      ? '<button class="btn btn-warning" onclick="printArchivedSaleReceipt(\'' + r.id + '\')" style="flex:1.2;min-width:160px;"><i class="fas fa-file-invoice"></i> Print Sale Receipt</button>'
       : '';
 
     showModal('Return Receipt #' + escapeHtml(r.returnNumber || ''),
@@ -1455,11 +1514,12 @@
         '<div class="receipt-items">' + itemsHtml + '</div>' +
         '<div class="receipt-total"><span>Total Return Value:</span><span>' + formatCurrency(r.totalRefund || 0) + '</span></div>' +
         diffHtml +
-        (canPrintRemaining ? '<p style="text-align:center;font-size:0.75rem;color:var(--warning);margin-top:10px;"><i class="fas fa-info-circle"></i> Partial return — you can reprint the customer\'s remaining-items receipt below</p>' : '') +
+        (r.isPartialReturn ? '<p style="text-align:center;font-size:0.75rem;color:var(--warning);margin-top:10px;"><i class="fas fa-info-circle"></i> Partial return — customer retains some items</p>' : '<p style="text-align:center;font-size:0.8rem;color:var(--danger);font-weight:700;margin-top:10px;border:2px solid var(--danger);padding:8px;border-radius:8px;">ALL ITEMS RETURNED — SALE CLOSED</p>') +
       '</div>' +
       '<div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">' +
         '<button class="btn btn-primary" onclick="printReturnReceiptFromDoc()" style="flex:1;min-width:120px;"><i class="fas fa-print"></i> Print Return</button>' +
         remainingBtnHtml +
+        saleReceiptBtnHtml +
         '<button class="btn btn-outline" onclick="hideModal()" style="flex:1;min-width:100px;">Close</button>' +
       '</div>'
     );
@@ -1477,6 +1537,7 @@
         itemsHtml += '<div class="item" style="padding-left:15px;font-size:9pt;color:#ff4da6;"><span>-> ' + (item.exchangeItemQty || 1) + 'x ' + escapeHtml(item.exchangeItemName) + ' (' + escapeHtml(item.exchangeItemSizeLabel || 'Unit') + ')</span><span>' + formatCurrency((item.exchangeItemPrice || 0) * (item.exchangeItemQty || 1)) + '</span></div>';
       }
     });
+    var banner = r.isPartialReturn ? '<div style="text-align:center;font-size:8pt;color:#f59e0b;margin-top:4px;">Partial return - some items remain with customer</div>' : '<div style="text-align:center;border:2px solid #ef4444;color:#ef4444;padding:4px;margin-top:6px;font-weight:bold;font-size:9pt;">ALL ITEMS RETURNED - SALE CLOSED</div>';
     var receiptHTML = '<html><head><title>Return #' + (r.returnNumber || '') + '</title><style>' +
       '@page{margin:0;size:80mm auto}' +
       '*{margin:0;padding:0}body{font-family:Segoe UI,sans-serif;padding:3mm 4mm;font-size:10pt;line-height:1.3}' +
@@ -1488,6 +1549,7 @@
       '<p>Original: ' + escapeHtml(r.saleReceiptNumber || '') + '<br>Customer: ' + escapeHtml(r.customerName || '') + '<br>Reason: ' + escapeHtml(r.reason || '') + '<br>Date: ' + formatDate(r.createdAt) + '</p>' +
       '<div class="items">' + itemsHtml + '</div>' +
       '<div class="total">Total: ' + formatCurrency(r.totalRefund || 0) + '</div>' +
+      banner +
       '</body></html>';
     var w = window.open('', '_blank', 'width=400,height=600');
     if (w) { w.document.write(receiptHTML); w.document.close(); w.focus(); setTimeout(function() { w.print(); }, 500); }
@@ -1515,7 +1577,6 @@
         return;
       }
 
-      // Fetch ALL returns for the same sale to sum up returned quantities per item index
       var saleIdForQuery = r.saleId || '';
       var allRelatedReturns = [];
       if (saleIdForQuery) {
@@ -1523,7 +1584,6 @@
         var qSnap = await getDocs(q);
         qSnap.forEach(function(d) { allRelatedReturns.push(Object.assign({ id: d.id }, d.data())); });
       } else {
-        // Fallback: match by saleReceiptNumber
         var q2 = query(collection(db, 'returns'), where('saleReceiptNumber', '==', r.saleReceiptNumber || ''));
         var qSnap2 = await getDocs(q2);
         qSnap2.forEach(function(d) { allRelatedReturns.push(Object.assign({ id: d.id }, d.data())); });
@@ -1531,7 +1591,6 @@
 
       addDebugLog('Found ' + allRelatedReturns.length + ' return(s) for sale ' + (r.saleReceiptNumber || r.saleId), 'info');
 
-      // Sum returned qty per item index across ALL returns of this sale
       var returnedMap = {};
       allRelatedReturns.forEach(function(ret) {
         (ret.returnedItems || []).forEach(function(item) {
@@ -1541,7 +1600,6 @@
         });
       });
 
-      // Compute remaining from the stored saleSnapshot
       var sale = r.saleSnapshot;
       var remainingItems = [];
       var remainingTotal = 0;
@@ -1569,7 +1627,6 @@
         return;
       }
 
-      // Build print HTML
       var rowsHtml = '';
       remainingItems.forEach(function(it) {
         rowsHtml += '<div class="item"><span>' + it.quantity + 'x ' + escapeHtml(it.name) + (it.sizeLabel ? ' (' + escapeHtml(it.sizeLabel) + ')' : '') + '</span><span>' + formatCurrency(it.lineTotal) + '</span></div>';
@@ -1617,6 +1674,146 @@
     } catch (e) {
       addDebugLog('Archive reprint failed: ' + e.message, 'error');
       showToast('Failed to reconstruct receipt: ' + e.message, 'error');
+    }
+  };
+
+  // ============================================
+  // PRINT ARCHIVED SALE RECEIPT (NEW — for any past return, weeks later)
+  // ============================================
+  window.printArchivedSaleReceipt = async function(returnId) {
+    try {
+      addDebugLog('Printing archived sale receipt for return: ' + returnId, 'info');
+      showToast('Reconstructing sale receipt...', 'info');
+
+      var r = window._viewReturnDoc;
+      if (!r || r.id !== returnId) {
+        var snap = await getDoc(doc(db, 'returns', returnId));
+        if (!snap.exists()) { showToast('Return not found', 'error'); return; }
+        r = Object.assign({ id: snap.id }, snap.data());
+      }
+
+      if (!r.saleSnapshot || !r.saleSnapshot.items || r.saleSnapshot.items.length === 0) {
+        showToast('No sale snapshot stored — cannot reconstruct sale receipt', 'error');
+        addDebugLog('Missing saleSnapshot on return ' + returnId, 'error');
+        return;
+      }
+
+      // Gather all returns for the same sale
+      var saleIdForQuery = r.saleId || '';
+      var allRelatedReturns = [];
+      if (saleIdForQuery) {
+        var q = query(collection(db, 'returns'), where('saleId', '==', saleIdForQuery));
+        var qSnap = await getDocs(q);
+        qSnap.forEach(function(d) { allRelatedReturns.push(Object.assign({ id: d.id }, d.data())); });
+      } else {
+        var q2 = query(collection(db, 'returns'), where('saleReceiptNumber', '==', r.saleReceiptNumber || ''));
+        var qSnap2 = await getDocs(q2);
+        qSnap2.forEach(function(d) { allRelatedReturns.push(Object.assign({ id: d.id }, d.data())); });
+      }
+
+      // Sum returned qty per item index
+      var returnedMap = {};
+      var returnedRefs = [];
+      allRelatedReturns.forEach(function(ret) {
+        if (ret.returnNumber) returnedRefs.push(ret.returnNumber);
+        (ret.returnedItems || []).forEach(function(item) {
+          var idx = item.originalIndex;
+          if (idx === undefined || idx === null) return;
+          returnedMap[idx] = (returnedMap[idx] || 0) + (parseInt(item.returnedQuantity) || 0);
+        });
+      });
+
+      // Build full sale receipt (original) + remaining summary
+      var sale = r.saleSnapshot;
+      var originalRows = '';
+      var remainingItems = [];
+      var originalTotal = 0;
+      var remainingTotal = 0;
+
+      sale.items.forEach(function(item, idx) {
+        var originalQty = parseInt(item.quantity || item.pieces || 1) || 1;
+        var returnedQty = returnedMap[idx] || 0;
+        var remainingQty = originalQty - returnedQty;
+        var unitPrice = parseFloat(item.unitPrice) || 0;
+        var lineTotal = originalQty * unitPrice;
+        originalTotal += lineTotal;
+
+        var sizeLbl = item.sizeLabel || (item.size ? getSizeLabel(item.size) : '');
+        originalRows += '<div class="item"><span>' + originalQty + 'x ' + escapeHtml(item.name || 'Item') + (sizeLbl ? ' (' + escapeHtml(sizeLbl) + ')' : '') + '</span><span>' + formatCurrency(lineTotal) + '</span></div>';
+
+        if (remainingQty > 0) {
+          var remLine = remainingQty * unitPrice;
+          remainingTotal += remLine;
+          remainingItems.push({
+            name: item.name || 'Item',
+            sizeLabel: sizeLbl,
+            quantity: remainingQty,
+            unitPrice: unitPrice,
+            lineTotal: remLine
+          });
+        }
+      });
+
+      var remainingRows = '';
+      remainingItems.forEach(function(it) {
+        remainingRows += '<div class="item"><span>' + it.quantity + 'x ' + escapeHtml(it.name) + (it.sizeLabel ? ' (' + escapeHtml(it.sizeLabel) + ')' : '') + '</span><span>' + formatCurrency(it.lineTotal) + '</span></div>';
+      });
+
+      var fullyReturned = remainingItems.length === 0;
+      var bannerClass = fullyReturned ? 'banner-full' : 'banner-partial';
+      var bannerText = fullyReturned
+        ? 'ALL ITEMS RETURNED — SALE CLOSED'
+        : 'CURRENT SALE RECEIPT — ' + remainingItems.length + ' ITEM(S) REMAINING';
+
+      var receiptHTML = '<html><head><title>Sale Receipt — ' + escapeHtml(sale.receiptNumber || '') + '</title><style>' +
+        '@page{margin:0;size:80mm auto}' +
+        '*{margin:0;padding:0;box-sizing:border-box}' +
+        'body{font-family:Segoe UI,Roboto,sans-serif;padding:3mm 4mm;font-size:10pt;line-height:1.3;color:#000}' +
+        '.h{text-align:center;border-bottom:1px dashed #000;padding-bottom:4px;margin-bottom:6px}' +
+        '.h h2{font-size:14pt;letter-spacing:1px}' +
+        '.h p{font-size:9pt}' +
+        '.meta{font-size:8.5pt;margin-bottom:6px;border-bottom:1px dashed #ccc;padding-bottom:6px}' +
+        '.meta div{display:flex;justify-content:space-between;margin:1px 0}' +
+        '.section-title{font-size:9pt;font-weight:bold;background:#f3f4f6;padding:3px 6px;margin:6px 0 3px 0;text-align:center;letter-spacing:0.5px}' +
+        '.items{margin:2px 0}' +
+        '.item{display:flex;justify-content:space-between;font-size:9pt;margin:1px 0}' +
+        '.item.strike{color:#888;text-decoration:line-through}' +
+        '.total{border-top:1px dashed #000;padding-top:6px;margin-top:6px;font-weight:bold;font-size:11pt;display:flex;justify-content:space-between}' +
+        '.banner-partial{text-align:center;background:#fff0f6;color:#ff4da6;border:1px dashed #ff4da6;padding:5px;margin-top:8px;font-size:9pt;font-weight:bold;border-radius:4px}' +
+        '.banner-full{text-align:center;background:#fee;color:#ef4444;border:1px dashed #ef4444;padding:5px;margin-top:8px;font-size:9pt;font-weight:bold;border-radius:4px}' +
+        '.note{text-align:center;font-size:8pt;color:#666;margin-top:6px;font-style:italic}' +
+        '.refs{text-align:center;font-size:7.5pt;color:#666;margin-top:4px;border-top:1px dashed #ccc;padding-top:4px}' +
+        '</style></head><body>' +
+        '<div class="h"><h2>OmoCreations</h2><p>3 Oyebo Street, Abiola Way</p><p style="font-size:8pt;">Sale Receipt (Reprinted)</p></div>' +
+        '<div class="meta">' +
+          '<div><span>Receipt No:</span><span><b>' + escapeHtml(sale.receiptNumber || 'N/A') + '</b></span></div>' +
+          '<div><span>Customer:</span><span>' + escapeHtml(sale.customerName || 'Walk-in') + '</span></div>' +
+          (sale.customerPhone ? '<div><span>Phone:</span><span>' + escapeHtml(sale.customerPhone) + '</span></div>' : '') +
+          (sale.attendantName ? '<div><span>Attendant:</span><span>' + escapeHtml(sale.attendantName) + '</span></div>' : '') +
+          '<div><span>Sale Date:</span><span>' + formatDate(sale.createdAt) + '</span></div>' +
+          '<div><span>Reprinted:</span><span>' + formatDate(new Date()) + '</span></div>' +
+        '</div>' +
+        '<div class="section-title">ORIGINAL ITEMS</div>' +
+        '<div class="items">' + originalRows + '</div>' +
+        '<div class="total"><span>Original Total:</span><span>' + formatCurrency(originalTotal) + '</span></div>' +
+        (fullyReturned
+          ? ''
+          : '<div class="section-title">ITEMS STILL WITH CUSTOMER</div>' +
+            '<div class="items">' + remainingRows + '</div>' +
+            '<div class="total"><span>REMAINING TOTAL:</span><span>' + formatCurrency(remainingTotal) + '</span></div>'
+        ) +
+        '<div class="' + bannerClass + '">' + bannerText + '</div>' +
+        (returnedRefs.length > 0 ? '<div class="refs">Return refs: ' + escapeHtml(returnedRefs.join(', ')) + '</div>' : '') +
+        '<p class="note">Thank you for shopping with OmoCreations!</p>' +
+        '</body></html>';
+
+      var w = window.open('', '_blank', 'width=400,height=700');
+      if (w) { w.document.write(receiptHTML); w.document.close(); w.focus(); setTimeout(function() { w.print(); }, 500); }
+      addDebugLog('Printed archived sale receipt: ' + sale.receiptNumber + ' | remaining: ' + remainingItems.length + ' items (' + formatCurrency(remainingTotal) + ')', 'success');
+      showToast('Sale receipt ready to print', 'success');
+    } catch (e) {
+      addDebugLog('Archived sale receipt failed: ' + e.message, 'error');
+      showToast('Failed to reconstruct sale receipt: ' + e.message, 'error');
     }
   };
 
