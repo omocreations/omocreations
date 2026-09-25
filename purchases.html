@@ -7,22 +7,18 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Purchases · OmoCreations</title>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
   <style>
-    /* … all existing CSS (unchanged) … */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    :root { --primary: #ff4da6; --primary-dark: #e6398c; --primary-light: #ffb3d9; --primary-soft: #fff0f6; --dark: #1a1a2e; --gray: #6b7280; --gray-light: #f3f4f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --info: #3b82f6; --purple: #8b5cf6; --sidebar-width: 280px; --header-height: 70px; }
+    :root { --primary:#ff4da6;--primary-dark:#e6398c;--primary-light:#ffb3d9;--primary-soft:#fff0f6;--dark:#1a1a2e;--gray:#6b7280;--gray-light:#f3f4f6;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;--purple:#8b5cf6;--sidebar-width:280px;--header-height:70px; }
     html { font-size: 16px; -webkit-text-size-adjust: 100%; }
     body { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #f9fafb 0%, #fff0f6 100%); display: flex; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
     @keyframes flameRing { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,166,0.4)}50%{box-shadow:0 0 0 10px rgba(255,77,166,0)} }
     @keyframes fadeInUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
     @keyframes slideIn { from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1} }
-    @keyframes pulseGlow { 0%,100%{box-shadow:0 0 5px #ff4da6}50%{box-shadow:0 0 20px #ff4da6} }
     .sidebar { width: var(--sidebar-width); min-width: var(--sidebar-width); background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%); color: white; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; overflow-x: hidden; transition: transform 0.3s ease; z-index: 1000; border-right: 1px solid rgba(255,77,166,0.2); }
     .sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); } .sidebar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
     .sidebar-header { padding: 24px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,77,166,0.2); position: sticky; top: 0; z-index: 10; background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%); }
@@ -51,7 +47,6 @@
     .stat-header span { font-size: 0.65rem; color: var(--gray); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
     .stat-icon { width: 36px; height: 36px; border-radius: 12px; background: var(--primary-soft); display: flex; align-items: center; justify-content: center; color: var(--primary); }
     .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--dark); font-family: 'Playfair Display', serif; line-height: 1; }
-    .stat-change { font-size: 0.65rem; margin-top: 4px; color: var(--gray); }
     .info-banner { background: rgba(59,130,246,0.08); border-left: 4px solid var(--info); padding: 14px 18px; border-radius: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .info-banner i { color: var(--info); font-size: 1.3rem; }
     .lowstock-banner { background: rgba(245,158,11,0.1); border-left: 4px solid var(--warning); padding: 14px 18px; border-radius: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -71,6 +66,8 @@
     .badge-success { background: rgba(16,185,129,0.1); color: var(--success); } .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
     .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); } .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
     .badge-pending { background: rgba(107,114,128,0.1); color: var(--gray); } .badge-purple { background: rgba(139,92,246,0.1); color: var(--purple); }
+    .badge-await { background: rgba(245,158,11,0.15); color: #b45309; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.5} }
     .btn { padding: 8px 16px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background: white; border: 1px solid rgba(0,0,0,0.08); transition: all 0.2s; font-family: 'Poppins', sans-serif; white-space: nowrap; }
     .btn:hover { transform: translateY(-2px); } .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; }
     .btn-outline { border: 1.5px solid rgba(255,77,166,0.3); color: var(--primary); background: transparent; } .btn-sm { padding: 6px 12px; font-size: 0.7rem; }
@@ -110,17 +107,16 @@
 
   <div class="content-wrapper">
 
-    <!-- INFO BANNER – explains the staging flow for inventory purchases -->
     <div class="info-banner">
       <i class="fas fa-info-circle"></i>
-      <div style="flex:1;"><strong>Inventory purchases</strong> now go to <strong>Incoming Inventory</strong> for review. Visit <a href="store.html" style="color:var(--info);font-weight:600;">Store → Incoming Inventory</a> to confirm them.<br>
-      <strong>Store purchases</strong> are added directly to the store's bulk stock as before.</div>
+      <div style="flex:1;"><strong>Inventory purchases</strong> go to <strong>Incoming Inventory</strong> for review. Visit <a href="store.html" style="color:var(--info);font-weight:600;">Store → Incoming Inventory</a> to confirm them.<br>
+      <strong>Store purchases</strong> are added directly to the store's bulk stock.</div>
     </div>
 
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-header"><span>Total Requests</span><div class="stat-icon"><i class="fas fa-clipboard-list"></i></div></div><div class="stat-value" id="totalRequests">0</div></div>
       <div class="stat-card"><div class="stat-header"><span>Pending</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-value" id="pendingRequests">0</div></div>
-      <div class="stat-card"><div class="stat-header"><span>Store Purchases</span><div class="stat-icon"><i class="fas fa-store"></i></div></div><div class="stat-value" id="totalStorePurchases">0</div></div>
+      <div class="stat-card"><div class="stat-header"><span>Awaiting Confirmation</span><div class="stat-icon"><i class="fas fa-truck-loading"></i></div></div><div class="stat-value" id="awaitingConfirmation">0</div></div>
       <div class="stat-card"><div class="stat-header"><span>Total Spent</span><div class="stat-icon"><i class="fas fa-naira-sign"></i></div></div><div class="stat-value" id="totalSpent">₦0</div></div>
     </div>
 
@@ -135,7 +131,6 @@
       <button class="tab" data-main="store"><i class="fas fa-store"></i> Store Purchase</button>
     </div>
 
-    <!-- ==================== PURCHASE REQUESTS SECTION ==================== -->
     <div id="requestsSection">
       <div class="tabs-container">
         <button class="tab active" data-tab="all"><i class="fas fa-list"></i> All <span class="count" id="allCount">0</span></button>
@@ -156,10 +151,9 @@
       <div id="draftPanel" class="page-view"><div class="panel"><div class="panel-header"><h3><i class="fas fa-pen"></i> Draft Requests</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Items</th><th>Total</th><th>Actions</th></tr></thead><tbody id="draftTable"></tbody></table></div></div></div>
       <div id="pendingPanel" class="page-view"><div class="panel"><div class="panel-header"><h3><i class="fas fa-clock"></i> Pending Approval</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Items</th><th>Total</th><th>Actions</th></tr></thead><tbody id="pendingTable"></tbody></table></div></div></div>
       <div id="approvedPanel" class="page-view"><div class="panel"><div class="panel-header"><h3><i class="fas fa-check-circle"></i> Approved — Ready to Purchase</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Items</th><th>Total</th><th>Actions</th></tr></thead><tbody id="approvedTable"></tbody></table></div></div></div>
-      <div id="purchasedPanel" class="page-view"><div class="panel"><div class="panel-header"><h3><i class="fas fa-truck"></i> Purchased — Completed</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Items</th><th>Total</th><th>Expected vs Received</th></tr></thead><tbody id="purchasedTable"></tbody></table></div></div></div>
+      <div id="purchasedPanel" class="page-view"><div class="panel"><div class="panel-header"><h3><i class="fas fa-truck"></i> Purchased — Completed</h3></div><div class="table-wrapper"><table class="data-table"><thead><tr><th>Date</th><th>Items</th><th>Total</th><th>Confirmation Status</th></tr></thead><tbody id="purchasedTable"></tbody></table></div></div></div>
     </div>
 
-    <!-- ==================== STORE PURCHASE SECTION ==================== -->
     <div id="storeSection" style="display:none;">
       <div class="panel">
         <div class="panel-header"><h3><i class="fas fa-truck-loading"></i> New Store Purchase (Bulk Stock)</h3></div>
@@ -189,7 +183,7 @@
   const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
 
   let currentUser = null, userData = null, unsubscribes = [];
-  let allRequests = [], lowStockItems = [], storePurchases = [], categories = [];
+  let allRequests = [], lowStockItems = [], storePurchases = [], categories = [], pendingIncoming = [];
   let currentMainTab = 'requests', currentTab = 'all';
   let storeItemCount = 0;
 
@@ -223,22 +217,17 @@
     if (isAdmin()) {
       navHTML += `<div class="nav-section"><div class="nav-section-title">MANAGEMENT</div>
         <button class="nav-item" onclick="navigateTo('staff-management.html')"><i class="fas fa-users-cog"></i><span>Staff</span></button>
-        <button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span><span class="nav-badge" id="navApprovalsBadge">0</span></button>
+        <button class="nav-item" onclick="navigateTo('approvals.html')"><i class="fas fa-check-circle"></i><span>Approvals</span></button>
         <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
         <button class="nav-item" onclick="navigateTo('orders.html')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button>
         <button class="nav-item" onclick="navigateTo('finance.html')"><i class="fas fa-chart-line"></i><span>Finance</span></button>
-        <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit</span></button></div>
-      <div class="nav-section"><div class="nav-section-title">SHOP</div>
-        <button class="nav-item" onclick="navigateTo('shop.html')"><i class="fas fa-store"></i><span>Shop</span></button>
-        <button class="nav-item" onclick="navigateTo('catalog.html')"><i class="fas fa-book-open"></i><span>Catalog</span></button></div>`;
+        <button class="nav-item" onclick="navigateTo('audit.html')"><i class="fas fa-history"></i><span>Audit</span></button></div>`;
     } else {
       navHTML += `<div class="nav-section"><div class="nav-section-title">WORK</div>
         <button class="nav-item" onclick="navigateTo('tasks.html')"><i class="fas fa-tasks"></i><span>Tasks</span></button>
         <button class="nav-item" onclick="navigateTo('orders.html')"><i class="fas fa-clipboard-list"></i><span>Orders</span></button>
         <button class="nav-item" onclick="navigateTo('announcements.html')"><i class="fas fa-bullhorn"></i><span>Announcements</span></button>
-        <button class="nav-item" onclick="navigateTo('notifications.html')"><i class="fas fa-bell"></i><span>Notifications</span></button></div>
-      <div class="nav-section"><div class="nav-section-title">ACCOUNT</div>
-        <button class="nav-item" onclick="navigateTo('attendant-profile.html')"><i class="fas fa-user"></i><span>My Profile</span></button></div>`;
+        <button class="nav-item" onclick="navigateTo('notifications.html')"><i class="fas fa-bell"></i><span>Notifications</span></button></div>`;
     }
     navHTML += `<button class="nav-item logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>`;
     nav.innerHTML = navHTML;
@@ -255,7 +244,6 @@
   window.switchMainTab = function(tab) { currentMainTab=tab; document.querySelectorAll('[data-main]').forEach(t=>t.classList.remove('active')); document.querySelector(`[data-main="${tab}"]`).classList.add('active'); document.getElementById('requestsSection').style.display=tab==='requests'?'block':'none'; document.getElementById('storeSection').style.display=tab==='store'?'block':'none'; };
   document.querySelectorAll('[data-main]').forEach(t=>{t.addEventListener('click',function(){switchMainTab(this.dataset.main);});});
 
-  // ========== CATEGORIES ==========
   async function loadCategories() {
     try { const snap = await getDocs(collection(db, 'categories')); if (!snap.empty) { categories = snap.docs.map(d => d.data().name); } else { categories = ['rhinestones','beads','bridal','paperstones','other']; const batch = writeBatch(db); categories.forEach(c => batch.set(doc(db,'categories',c),{name:c,createdAt:serverTimestamp()})); await batch.commit(); } } catch(e) { categories = ['rhinestones','beads','bridal','paperstones','other']; }
   }
@@ -269,12 +257,19 @@
     try { await setDoc(doc(db, 'categories', name), { name, createdAt: serverTimestamp() }); categories.push(name); document.querySelectorAll('.store-cat').forEach(el => { const val = el.value; el.innerHTML = getCategoryOptions(); el.value = val || name; }); showToast(`Category "${name}" added`, 'success'); } catch(e) { showToast('Failed', 'error'); }
   };
 
-  // ========== PURCHASE REQUESTS ==========
   function loadLowStockItems() {
     unsubscribes.push(onSnapshot(query(collection(db,'stock_items'),where('status','in',['low','out_of_stock'])),snap=>{
       lowStockItems=snap.docs.map(d=>({id:d.id,...d.data()}));
       const banner=document.getElementById('lowStockBanner');
       if(lowStockItems.length>0){banner.style.display='flex';document.getElementById('lowStockMsg').textContent=`${lowStockItems.length} item(s) running low.`;}else{banner.style.display='none';}
+    }));
+  }
+
+  // Track pending incoming so we know which purchases are still awaiting confirmation
+  function loadPendingIncoming() {
+    unsubscribes.push(onSnapshot(collection(db, 'incoming_inventory'), snap => {
+      pendingIncoming = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderRequestTables();
     }));
   }
 
@@ -284,22 +279,50 @@
     document.getElementById('allCount').textContent=all.length;document.getElementById('draftCount').textContent=drafts.length;document.getElementById('pendingCount').textContent=pending.length;document.getElementById('approvedCount').textContent=approved.length;document.getElementById('purchasedCount').textContent=purchased.length;
     document.getElementById('totalRequests').textContent=all.length;document.getElementById('pendingRequests').textContent=pending.length;
 
+    // Count purchases still awaiting store confirmation
+    const awaitingCount = purchased.filter(r => {
+      if (!r.items) return false;
+      return r.items.some(it => pendingIncoming.some(inc =>
+        inc.targetInventoryId === it.id || inc.sourcePurchaseId === r.id
+      ));
+    }).length;
+    document.getElementById('awaitingConfirmation').textContent = awaitingCount;
+
     function makeRow(r,showFull){
       const total=r.items?.reduce((s,i)=>s+((i.suggested||i.quantity||0)*(i.price||i.unitPrice||0)),0)||0;
-      if(showFull) return `<tr><td>${formatDate(r.createdAt)}</td><td>${r.requestedByName||'-'}</td><td>${r.items?.length||0} items</td><td>${formatCurrency(total)}</td><td><span class="badge badge-${r.status==='approved'?'success':r.status==='purchased'?'info':r.status==='pending_approval'?'warning':'pending'}">${r.status.replace(/_/g,' ')}</span></td><td style="display:flex;gap:5px;"><button class="btn btn-sm btn-outline" onclick="viewRequest('${r.id}')"><i class="fas fa-eye"></i></button>${r.status==='draft'?`<button class="btn btn-sm btn-primary" onclick="submitRequest('${r.id}')"><i class="fas fa-paper-plane"></i></button>`:''}${r.status==='pending_approval'&&isAdmin()?`<button class="btn btn-sm btn-success" onclick="approveRequest('${r.id}')"><i class="fas fa-check"></i></button>`:''}${r.status==='approved'?`<button class="btn btn-sm btn-success" onclick="openMarkPurchased('${r.id}')"><i class="fas fa-truck"></i></button>`:''}</td></tr>`;
-      return `<tr><td>${formatDate(r.createdAt)}</td><td>${r.items?.length||0} items</td><td>${formatCurrency(total)}</td><td style="display:flex;gap:5px;"><button class="btn btn-sm btn-outline" onclick="viewRequest('${r.id}')"><i class="fas fa-eye"></i></button>${r.status==='draft'?`<button class="btn btn-sm btn-primary" onclick="submitRequest('${r.id}')"><i class="fas fa-paper-plane"></i></button>`:''}${r.status==='pending_approval'&&isAdmin()?`<button class="btn btn-sm btn-success" onclick="approveRequest('${r.id}')"><i class="fas fa-check"></i></button>`:''}${r.status==='approved'?`<button class="btn btn-sm btn-success" onclick="openMarkPurchased('${r.id}')"><i class="fas fa-truck"></i></button>`:''}</td></tr>`;
+      if(showFull) return `<tr><td>${formatDate(r.createdAt)}</td><td>${r.requestedByName||'-'}</td><td>${r.items?.length||0} items</td><td>${formatCurrency(total)}</td><td><span class="badge badge-${r.status==='approved'?'success':r.status==='purchased'?'info':r.status==='pending_approval'?'warning':'pending'}">${r.status.replace(/_/g,' ')}</span></td><td style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" onclick="viewRequest('${r.id}')"><i class="fas fa-eye"></i></button>${r.status==='draft'?`<button class="btn btn-sm btn-primary" onclick="submitRequest('${r.id}')"><i class="fas fa-paper-plane"></i></button>`:''}${r.status==='pending_approval'&&isAdmin()?`<button class="btn btn-sm btn-success" onclick="approveRequest('${r.id}')"><i class="fas fa-check"></i></button>`:''}${r.status==='approved'?`<button class="btn btn-sm btn-success" onclick="openMarkPurchased('${r.id}')"><i class="fas fa-truck"></i></button>`:''}</td></tr>`;
+      return `<tr><td>${formatDate(r.createdAt)}</td><td>${r.items?.length||0} items</td><td>${formatCurrency(total)}</td><td style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" onclick="viewRequest('${r.id}')"><i class="fas fa-eye"></i></button>${r.status==='draft'?`<button class="btn btn-sm btn-primary" onclick="submitRequest('${r.id}')"><i class="fas fa-paper-plane"></i></button>`:''}${r.status==='pending_approval'&&isAdmin()?`<button class="btn btn-sm btn-success" onclick="approveRequest('${r.id}')"><i class="fas fa-check"></i></button>`:''}${r.status==='approved'?`<button class="btn btn-sm btn-success" onclick="openMarkPurchased('${r.id}')"><i class="fas fa-truck"></i></button>`:''}</td></tr>`;
     }
     document.getElementById('requestsTable').innerHTML=all.length===0?'<tr><td colspan="6"><div class="empty-state"><i class="fas fa-shopping-cart"></i><p>No purchase requests yet</p></div></td></tr>':all.map(r=>makeRow(r,true)).join('');
     document.getElementById('draftTable').innerHTML=drafts.length===0?'<tr><td colspan="4"><div class="empty-state"><i class="fas fa-pen"></i><p>No drafts</p></div></td></tr>':drafts.map(r=>makeRow(r,false)).join('');
     document.getElementById('pendingTable').innerHTML=pending.length===0?'<tr><td colspan="4"><div class="empty-state"><i class="fas fa-clock"></i><p>No pending requests</p></div></td></tr>':pending.map(r=>makeRow(r,false)).join('');
     document.getElementById('approvedTable').innerHTML=approved.length===0?'<tr><td colspan="4"><div class="empty-state"><i class="fas fa-check-circle"></i><p>No approved requests</p></div></td></tr>':approved.map(r=>makeRow(r,false)).join('');
+
     const pTbody=document.getElementById('purchasedTable');
     if(purchased.length===0){pTbody.innerHTML='<tr><td colspan="4"><div class="empty-state"><i class="fas fa-truck"></i><p>No completed purchases</p></div></td></tr>';}else{
-      pTbody.innerHTML=purchased.map(r=>{const total=r.items?.reduce((s,i)=>s+((i.suggested||i.quantity||0)*(i.price||i.unitPrice||0)),0)||0;let diffHtml='';if(r.receivedItems){r.receivedItems.forEach(i=>{const e=i.expected||i.suggested||0,rec=i.received||0,d=rec-e;diffHtml+=`<div style="margin-bottom:3px;"><strong>${i.name}:</strong> ${rec}/${e} <span class="${d<0?'diff-negative':'diff-positive'}">(${d>0?'+':''}${d})</span></div>`;});}else diffHtml='<span style="color:var(--gray);">Sent to Incoming Inventory</span>';return`<tr><td>${formatDate(r.purchasedAt||r.createdAt)}</td><td>${r.items?.length||0} items</td><td>${formatCurrency(total)}</td><td>${diffHtml}</td></tr>`;}).join('');
+      pTbody.innerHTML=purchased.map(r=>{
+        const total=r.items?.reduce((s,i)=>s+((i.suggested||i.quantity||0)*(i.price||i.unitPrice||0)),0)||0;
+        // Check which of this purchase's items still await confirmation
+        const stillPending = (r.items || []).filter(it =>
+          pendingIncoming.some(inc =>
+            (inc.targetInventoryId && inc.targetInventoryId === it.id) ||
+            (inc.sourcePurchaseId && inc.sourcePurchaseId === r.id) ||
+            (!inc.targetInventoryId && inc.newInventoryName && inc.newInventoryName === it.name)
+          )
+        );
+        let statusHtml = '';
+        if (stillPending.length > 0) {
+          statusHtml = '<span class="badge badge-await">⏳ ' + stillPending.length + ' awaiting confirmation</span><br>' +
+                       '<a href="store.html" style="color:var(--primary);font-weight:600;font-size:0.75rem;margin-top:6px;display:inline-block;">Go to Store → Incoming →</a>';
+        } else {
+          statusHtml = '<span class="badge badge-success">✅ Confirmed in Inventory</span>';
+        }
+        return `<tr><td>${formatDate(r.purchasedAt||r.createdAt)}</td><td>${r.items?.length||0} items</td><td>${formatCurrency(total)}</td><td>${statusHtml}</td></tr>`;
+      }).join('');
     }
   }
 
-  function loadRequests() { unsubscribes.push(onSnapshot(collection(db,'purchase_requests'),snap=>{allRequests=snap.docs.map(d=>({id:d.id,...d.data()}));renderRequestTables();})); loadLowStockItems(); }
+  function loadRequests() { unsubscribes.push(onSnapshot(collection(db,'purchase_requests'),snap=>{allRequests=snap.docs.map(d=>({id:d.id,...d.data()}));renderRequestTables();})); loadLowStockItems(); loadPendingIncoming(); }
 
   window.viewRequest=(id)=>{const r=allRequests.find(x=>x.id===id);if(!r)return;let html=`<p><strong>By:</strong> ${r.requestedByName||'-'} | <strong>Status:</strong> <span class="badge badge-${r.status==='approved'?'success':r.status==='purchased'?'info':'warning'}">${r.status}</span></p><p>Note: ${r.note||'-'}</p><h4 style="margin:15px 0 10px;">Items:</h4><table style="width:100%;font-size:0.85rem;"><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>`;let total=0;r.items?.forEach(i=>{const q=i.suggested||i.quantity||0,p=i.price||i.unitPrice||0,t=q*p;total+=t;html+=`<tr><td>${i.name}</td><td>${q}</td><td>${formatCurrency(p)}</td><td>${formatCurrency(t)}</td></tr>`;});html+=`<tr><td colspan="3"><strong>Total</strong></td><td><strong>${formatCurrency(total)}</strong></td></tr></table>`;if(r.receivedItems?.length){html+='<h4 style="margin:15px 0 10px;">Actual:</h4><table style="width:100%;font-size:0.85rem;"><tr><th>Item</th><th>Planned</th><th>Actual</th><th>Diff</th></tr>';r.receivedItems.forEach(i=>{const e=i.expected||i.suggested||0,rec=i.received||0;html+=`<tr><td>${i.name}</td><td>${e}</td><td>${rec}</td><td class="${rec-e<0?'diff-negative':'diff-positive'}">${rec-e>0?'+':''}${rec-e}</td></tr>`;});html+='</table>';}html+='<button class="btn btn-primary" onclick="hideModal()" style="margin-top:16px;width:100%;">Close</button>';showModal('Request Details',html);};
 
@@ -307,7 +330,7 @@
     getDocs(collection(db, 'stock_items')).then(snap => {
       let opts = '';
       if (snap.empty) { opts = '<option value="">No stock items available</option>'; }
-      else { snap.forEach(d => { const i = d.data(); const tq = (i.unitStock||0)+(i.halfStock||0)+(i.quarterStock||0); opts += `<option value="${d.id}" data-name="${i.name}" data-price="${i.unitPrice||0}">${i.name} (Stock: ${tq})</option>`; }); }
+      else { snap.forEach(d => { const i = d.data(); const tq = (i.unitQty||0); opts += `<option value="${d.id}" data-name="${i.name}" data-price="${i.unitPrice||0}">${i.name} (Stock: ${tq})</option>`; }); }
       showModal('New Purchase Request', `<div id="itemsContainer"><div class="item-row"><select class="form-control item-select">${opts}</select><input type="number" class="form-control item-qty" placeholder="Qty" value="10" min="1"></div></div><button class="btn btn-outline btn-sm" onclick="addItemRow()"><i class="fas fa-plus"></i> Add Item</button><div class="form-group" style="margin-top:15px;"><label>Note (optional)</label><textarea class="form-control" id="reqNote" rows="2"></textarea></div><div style="display:flex;gap:10px;"><button class="btn btn-outline" onclick="saveAsDraft()"><i class="fas fa-save"></i> Save Draft</button><button class="btn btn-primary" onclick="submitNewRequest()"><i class="fas fa-paper-plane"></i> Submit</button></div>`);
     }).catch(e => { showToast('Error loading stock items', 'error'); });
   };
@@ -333,45 +356,89 @@
   window.submitRequest=(id)=>{showPinModal('Submit','submit request',async()=>{await updateDoc(doc(db,'purchase_requests',id),{status:'pending_approval'});showToast('Submitted','success');});};
   window.approveRequest=(id)=>{if(!isAdmin()){showToast('Admin only','error');return;}showPinModal('Approve','approve',async()=>{await updateDoc(doc(db,'purchase_requests',id),{status:'approved',approvedBy:currentUser.uid,approvedByName:userData.fullName,approvedAt:serverTimestamp()});showToast('Approved','success');});};
 
-  // ========== UPDATED: Mark Purchased → saves to incoming_inventory ==========
-  window.openMarkPurchased=(id)=>{const r=allRequests.find(x=>x.id===id);if(!r)return;let html='<p style="margin-bottom:15px;color:var(--gray);">Enter actual quantities received. Items will go to <strong>Incoming Inventory</strong> for review before being added to stock.</p>';r.items?.forEach((item,idx)=>{html+=`<div class="form-group"><label>${item.name} <span style="color:var(--gray);">(Planned: ${item.suggested||item.quantity||0})</span></label><input type="number" class="form-control" id="rec-${idx}" value="${item.suggested||item.quantity||0}" min="0"></div>`;});html+=`<button class="btn btn-primary" onclick="markPurchased('${id}')"><i class="fas fa-check"></i> Send to Incoming Inventory</button>`;showModal('Mark Purchased',html);};
+  window.openMarkPurchased=(id)=>{const r=allRequests.find(x=>x.id===id);if(!r)return;let html='<p style="margin-bottom:15px;color:var(--gray);">Enter actual quantities received. Items will go to <strong>Incoming Inventory</strong> at the store, where you can split them into Unit / ½ / ¼ (or Pack / Bundle / Yard) and link them to inventory.</p>';r.items?.forEach((item,idx)=>{html+=`<div class="form-group"><label>${item.name} <span style="color:var(--gray);">(Planned: ${item.suggested||item.quantity||0})</span></label><input type="number" class="form-control" id="rec-${idx}" value="${item.suggested||item.quantity||0}" min="0"></div>`;});html+=`<button class="btn btn-primary" onclick="markPurchased('${id}')"><i class="fas fa-check"></i> Send to Incoming Inventory</button>`;showModal('Mark Purchased',html);};
 
-  window.markPurchased=(id)=>{showPinModal('Confirm','send to incoming inventory',async()=>{const r=allRequests.find(x=>x.id===id);if(!r)return;const receivedItems=r.items.map((item,idx)=>{const e=item.suggested||item.quantity||0,inputEl=document.getElementById(`rec-${idx}`),rec=inputEl?parseInt(inputEl.value)||0:e;return{...item,expected:e,received:rec};});
-    // Save each received item to incoming_inventory
+  window.markPurchased=(id)=>{showPinModal('Confirm','send to incoming inventory',async()=>{
+    const r=allRequests.find(x=>x.id===id);if(!r)return;
+    const receivedItems=r.items.map((item,idx)=>{const e=item.suggested||item.quantity||0,inputEl=document.getElementById(`rec-${idx}`),rec=inputEl?parseInt(inputEl.value)||0:e;return{...item,expected:e,received:rec};});
+
     for(const item of receivedItems){
       if(item.received<=0)continue;
+
+      // Look up the item in inventory to know its type + category
       let invType='general';
-      if(item.id){try{const snap=await getDoc(doc(db,'stock_items',item.id));if(snap.exists()){invType=snap.data().itemType||'general';}}catch(e){}}
+      let invCategory='other';
+      let targetInventoryName = item.name;
+      let targetInventoryId = item.id || null;
+
+      if(item.id){
+        try{
+          const snap=await getDoc(doc(db,'stock_items',item.id));
+          if(snap.exists()){
+            const d = snap.data();
+            invType = d.itemType || 'general';
+            invCategory = d.category || 'other';
+            targetInventoryName = d.name || item.name;
+          }
+        }catch(e){}
+      }
+
       await addDoc(collection(db,'incoming_inventory'),{
-        storeItemId:null,storeItemName:item.name,storeItemCategory:item.category||'other',
-        bulkQty:item.received,totalPieces:item.received,
-        targetInventoryId:item.id||null,
-        targetInventoryName:item.id?item.name:null,
-        newInventoryName:!item.id?item.name:null,
-        newInventoryCategory:'other',
-        allocation:{unit:item.received,half:0,quarter:0,pack:0,bundle:0},
-        prices:{unit:item.price||item.unitPrice||0,half:0,quarter:0,pack:0,bundle:0},
-        inventoryItemType:invType,
-        unitsPerBulk:1,
-        source:'purchase_request',
-        requestedBy:currentUser?.uid,
-        requestedByName:userData?.fullName||'Staff',
-        status:'pending',
-        createdAt:serverTimestamp()
+        // Identity
+        storeItemId: null,                        // Purchases have no store side
+        hasStoreSide: false,                      // Tells store.html: skip store deduction
+        source: 'purchase_request',
+        sourcePurchaseId: id,
+
+        storeItemName: item.name,
+        storeItemCategory: invCategory,
+
+        // Raw quantity being received
+        totalPieces: item.received,
+        bulkQty: item.received,
+        unitsPerBulk: 1,
+
+        // Target: existing or new inventory item
+        targetInventoryId: targetInventoryId,
+        targetInventoryName: targetInventoryName,
+        newInventoryName: !targetInventoryId ? item.name : null,
+        newInventoryCategory: invCategory,
+
+        // Blank allocation — store.html will fill this in when confirming
+        allocation: { unit: 0, half: 0, quarter: 0, pack: 0, bundle: 0 },
+        prices: { unit: item.price || item.unitPrice || 0, half: 0, quarter: 0, pack: 0, bundle: 0 },
+        packSize: 12,
+        bundleSize: 50,
+
+        inventoryItemType: invType,
+        measuredSubType: 'yard',
+
+        requestedBy: currentUser?.uid,
+        requestedByName: userData?.fullName || 'Staff',
+        status: 'pending',
+        createdAt: serverTimestamp()
       });
     }
+
     await updateDoc(doc(db,'purchase_requests',id),{status:'purchased',receivedItems,purchasedBy:currentUser.uid,purchasedByName:userData.fullName,purchasedAt:serverTimestamp()});
     await logAudit('purchase_completed',`Purchase ${id} → Incoming Inventory`);
-    showToast('Sent to Incoming Inventory! Review in Store → Incoming.','success');hideModal();});};
+    showToast('Sent to Incoming Inventory! Open Store → Incoming to confirm each item.','success');
+    hideModal();
 
-  // ========== STORE PURCHASE (unchanged – goes directly to store_items) ==========
+    // Optional: prompt user to jump to store
+    setTimeout(() => {
+      if (confirm('Items are now waiting at the store. Go to Store → Incoming Inventory to split and confirm them?')) {
+        window.location.href = 'store.html';
+      }
+    }, 800);
+  });};
+
   function loadStorePurchases() {
     unsubscribes.push(onSnapshot(query(collection(db,'store_purchases'),orderBy('date','desc')),snap=>{storePurchases=snap.docs.map(d=>({id:d.id,...d.data()}));renderStoreHistory();}));
   }
 
   function renderStoreHistory() {
     const tbody=document.getElementById('storeHistoryTable');
-    document.getElementById('totalStorePurchases').textContent=storePurchases.length;
     let totalSpent=storePurchases.reduce((s,p)=>s+(p.totalCost||0),0);
     document.getElementById('totalSpent').textContent=formatCurrency(totalSpent);
     if(storePurchases.length===0){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="fas fa-receipt"></i><p>No store purchases yet</p></div></td></tr>';}else{tbody.innerHTML=storePurchases.map(p=>{const il=(p.items||[]).map(i=>`${i.name} (${i.unitQty||0}U/${i.halfQty||0}H/${i.quarterQty||0}Q)`).join(', ');return`<tr><td>${formatDate(p.date)}</td><td>${p.supplier||'-'}</td><td title="${il}">${(p.items||[]).length} items</td><td>${formatCurrency(p.totalCost)}</td><td>${p.purchasedBy||'-'}</td><td><span class="badge badge-success">${p.status||'completed'}</span></td></tr>`;}).join('');}
@@ -452,12 +519,12 @@
           const threshold = 20;
           const status = totalQty <= 0 ? 'out_of_stock' : totalQty <= threshold ? 'low' : 'available';
           if(es.empty){
-            await addDoc(collection(db,'store_items'),{name:item.name,category:item.category,inventoryItemType:item.inventoryItemType||'general',unitsPerBulk:item.unitsPerBulk||1,unitStock:item.unitQty,halfStock:item.halfQty,quarterStock:item.quarterQty,unitCost:item.unitCost,halfCost:item.halfCost,quarterCost:item.quarterCost,threshold,status,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+            await addDoc(collection(db,'store_items'),{name:item.name,category:item.category,inventoryItemType:item.inventoryItemType||'general',unitsPerBulk:item.unitsPerBulk||1,unitQty:item.unitQty,halfQty:item.halfQty,quarterQty:item.quarterQty,unitCost:item.unitCost,halfCost:item.halfCost,quarterCost:item.quarterCost,threshold,status,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
           } else {
             const ed = es.docs[0]; const ex = ed.data();
-            const nus = (ex.unitStock||0)+item.unitQty, nhs = (ex.halfStock||0)+item.halfQty, nqs = (ex.quarterStock||0)+item.quarterQty;
+            const nus = (ex.unitQty||0)+item.unitQty, nhs = (ex.halfQty||0)+item.halfQty, nqs = (ex.quarterQty||0)+item.quarterQty;
             const newTotal = nus+nhs+nqs;
-            await updateDoc(doc(db,'store_items',ed.id),{unitStock:nus,halfStock:nhs,quarterStock:nqs,unitCost:item.unitCost||ex.unitCost,halfCost:item.halfCost||ex.halfCost,quarterCost:item.quarterCost||ex.quarterCost,status:newTotal<=0?'out_of_stock':newTotal<=(ex.threshold||20)?'low':'available',updatedAt:serverTimestamp()});
+            await updateDoc(doc(db,'store_items',ed.id),{unitQty:nus,halfQty:nhs,quarterQty:nqs,unitCost:item.unitCost||ex.unitCost,halfCost:item.halfCost||ex.halfCost,quarterCost:item.quarterCost||ex.quarterCost,status:newTotal<=0?'out_of_stock':newTotal<=(ex.threshold||20)?'low':'available',updatedAt:serverTimestamp()});
           }
         }
         await logAudit('store_purchase',`Store: ${supplier} | ${items.map(i=>i.name).join(', ')} | ₦${totalCost}`);
@@ -486,7 +553,7 @@
       loadStorePurchases();
       addStoreItemRow();
       await logAudit('view_purchases','Viewed purchases');
-    } catch(e) { showToast('Error','error'); }
+    } catch(e) { console.error(e); showToast('Error','error'); }
   });
   window.addEventListener('beforeunload',cleanup);
 </script>
